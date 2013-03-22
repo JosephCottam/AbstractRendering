@@ -1,0 +1,82 @@
+body {
+    background-color: #ccc;
+}
+
+footer {
+    width: 800px;
+    margin-right: auto;
+    margin-left: auto;
+
+    text-align: center;
+}
+
+.rotateL {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+}
+
+a {
+    color: black;
+}
+
+footer iframe {
+    position: relative;
+    top: 7px;
+    left: 12px;
+    border: none;
+}
+
+div#controls {
+    padding: 6px;
+
+    width: 163px;
+    height: 538px;
+    margin: 0;
+    position: absolute;
+    top: 25px;
+    left: 600px;
+
+    background-color: #ccc;
+    border-radius: 6px;
+
+    box-shadow: inset 0 0 6px #444;
+    
+    overflow: scroll;
+}
+
+div#main {
+    position: relative;
+
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 30px;
+
+    width: 800px;
+    height: 600px;
+
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 15px;
+
+    box-shadow: 0 25px 5px -12px #444;
+    
+    background-color: #888
+}
+
+div#viewer {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+}
+
+div#advanced_controls {
+    display: none;
+}
+
+input#pitch {
+    width: 80px;
+}
+
+input#aperture {
+    width: 65px;
+}

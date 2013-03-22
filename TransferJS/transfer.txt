@@ -1,0 +1,49 @@
+// -*- c -*-
+
+/*
+    Copyright 2012 Joseph Cottam 
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+precision highp float;
+
+varying vec2 vtex_coord;
+uniform sampler2D tex;  //Maybe change to 'uniform float[]' (or related syntax)
+uniform highp float num_micro_images_x, num_micro_images_y;
+uniform highp float pitch;
+uniform highp float view_x, view_y;
+uniform highp float aperture;
+
+uniform highp float maxv;
+uniform highp float minv;
+
+vec4 redBlackLinear(vec2 pixelish) { 
+  vec4 raw = texture2D(tex, pixelish); 
+  float value = raw.a;
+  value *= 256.0;
+  value += raw.b;
+  value *= 256.0;
+  value += raw.g;
+  value *= 256.0;
+  value += raw.r;
+  value *= 256.0;
+
+  value = (value-minv)/(maxv-minv);
+
+  return vec4(value,0.0,0.0,1.0);
+}
+
+
+void main() { gl_FragColor = redBlackLinear(vtex_coord); }
