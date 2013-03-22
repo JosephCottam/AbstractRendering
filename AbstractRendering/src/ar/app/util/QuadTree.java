@@ -1,6 +1,5 @@
 package ar.app.util;
 
-import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -87,7 +86,7 @@ public abstract class QuadTree implements GlyphSet {
 		}
 		
 		public boolean add(Glyph glyph) {
-			Rectangle glyphBounds = glyph.shape.getBounds();
+			Rectangle2D glyphBounds = glyph.shape.getBounds2D();
 			if (NW.concernBounds.contains(glyphBounds)) {
 				QuadTree q=addTo(NW, glyph);
 				if (q!=NW) {NW = q;}

@@ -115,7 +115,6 @@ public class ARPanel<A,B> extends JPanel {
         catch (NoninvertibleTransformException e ) {
         	try {setViewTransform(new AffineTransform());}
 			catch (NoninvertibleTransformException e1) {}	//Default transform is invertible...so everything is safe
-        	throw new Error("Supposedly impossible error occured.", e);
         }
 	}
 	
