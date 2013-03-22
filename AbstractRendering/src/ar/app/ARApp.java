@@ -80,11 +80,7 @@ public class ARApp {
 	}
 	
 	public <A,B> void changeImage(ARPanel<A,B> newImage) {
-		JPanel old = this.image;
-		
-		try {newImage.setViewTransform(image.viewTransform());}
-		catch (NoninvertibleTransformException e) {throw new Error("Supposedly impossible error...", e);}
-		
+		JPanel old = this.image;		
 		frame.remove(old);
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;
