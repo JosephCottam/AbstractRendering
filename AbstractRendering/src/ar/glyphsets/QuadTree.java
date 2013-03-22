@@ -1,4 +1,4 @@
-package ar.app.util;
+package ar.glyphsets;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import ar.GlyphSet;
+import ar.app.util.Util;
 
 public abstract class QuadTree implements GlyphSet {
 	/**How many items before exploring subdivisions.**/

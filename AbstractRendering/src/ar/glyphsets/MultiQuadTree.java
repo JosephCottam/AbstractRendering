@@ -1,4 +1,4 @@
-package ar.app.util;
+package ar.glyphsets;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import ar.GlyphSet;
+import ar.app.util.Util;
 
 public abstract class MultiQuadTree implements GlyphSet {
 	private static final double MIN_DIM = .01d;

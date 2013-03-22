@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import ar.GlyphSet;
+import ar.glyphsets.MultiQuadTree;
 
 import static ar.GlyphSet.Glyph;
 

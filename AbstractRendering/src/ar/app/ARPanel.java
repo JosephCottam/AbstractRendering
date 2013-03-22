@@ -90,6 +90,8 @@ public class ARPanel<A,B> extends JPanel {
 		return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);
 	}
 	
+	public Aggregates<?> getAggregates() {return aggregates;}
+	
 	
 	
 	

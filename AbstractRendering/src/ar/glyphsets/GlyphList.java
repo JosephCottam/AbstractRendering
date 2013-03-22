@@ -1,10 +1,11 @@
-package ar.app.util;
+package ar.glyphsets;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
 import ar.GlyphSet;
+import ar.app.util.Util;
 
 public class GlyphList implements GlyphSet {
 	Collection<Glyph> glyphs = new ArrayList<Glyph>();

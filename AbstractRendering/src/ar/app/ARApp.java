@@ -2,6 +2,9 @@ package ar.app;
 
 import javax.swing.*;
 
+import ar.Aggregates;
+import ar.app.util.AggregatesToJSON;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,11 +12,12 @@ import java.awt.geom.NoninvertibleTransformException;
 
 public class ARApp {
 	private ARPanel<?,?> image;
-	private JFrame frame = new JFrame();
-	private JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
-	private JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
+	private final JFrame frame = new JFrame();
+	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
+	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
 	
-	private JComboBox<Dataset> dataset = new JComboBox<Dataset>();
+	private final JComboBox<Dataset> dataset = new JComboBox<Dataset>();
+	private final JButton export = new JButton("Export");
 
 	
 	public ARApp() {
@@ -23,7 +27,7 @@ public class ARApp {
 		
 
 		JPanel controls = new JPanel();
-		controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
+//		controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
 		JPanel outer = new JPanel();
 		outer.setLayout(new BorderLayout());
 		outer.add(controls, BorderLayout.WEST);
@@ -32,13 +36,13 @@ public class ARApp {
 		controls.add(dataset);
 		controls.add(reductions);
 		controls.add(transfers);
+		controls.add(export);
 		final ARApp app = this;
 		
 		reductions.addItem(new WrappedReduction.SolidBlue());
 		reductions.addItem(new WrappedReduction.OverplotFirst());
 		reductions.addItem(new WrappedReduction.OverplotLast());
 		reductions.addItem(new WrappedReduction.Count());
-		
 		
 		transfers.addItem(new WrappedTransfer.EchoColor());
 		transfers.addItem(new WrappedTransfer.RedWhiteInterpolate());
@@ -67,6 +71,17 @@ public class ARApp {
 				app.changeImage(image.withTransfer(t));
 			}});
 	
+		
+		export.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
+				 int returnVal = fd.showDialog(frame, "Export");
+				 if (returnVal == JFileChooser.APPROVE_OPTION) {
+					 AggregatesToJSON.export(image.getAggregates(),fd.getSelectedFile());
+				 }
+			}
+			
+		});
 		
 		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
 							((WrappedTransfer) transfers.getSelectedItem()), 
