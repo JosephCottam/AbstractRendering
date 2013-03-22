@@ -117,12 +117,15 @@ function reformat(data) {
 
 function loadTexture(aggsFile) {
   $.ajax(aggsFile, { success: function(info) {
-//    console.info(info.size);
-    var size = info.size
+    var width = info.width;
+    var height = info.aggs.length/width;
     var rslt = reformat(info.aggs);
     var aggs = rslt.aggs;
     var minv = rslt.min;
     var maxv = rslt.max;
+
+    console.info(width);
+    console.info(height);
 
     var minl = gl.getUniformLocation(prog, "minv") 
     var maxl = gl.getUniformLocation(prog, "maxv")
@@ -134,7 +137,7 @@ function loadTexture(aggsFile) {
     checkgl();
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, 2, 0, gl.RGBA,
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA,
       gl.UNSIGNED_BYTE, new Uint8Array(aggs));
     //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.INT32, aggs);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);

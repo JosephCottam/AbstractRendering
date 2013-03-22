@@ -18,19 +18,17 @@ public class AggregatesToJSON {
 			w.write(content);
 			w.close();
 		} catch (IOException e) {throw new RuntimeException("Error writing JSON.", e);}
-		System.out.println("done exporting to " + file.getName());
+		System.out.printf("Done exporting to (%d x %d) aggregates to %s", aggs.width(), aggs.height(), file.getName());
 	}
 	
 	public static String export(Aggregates<Integer> aggs) {
 		StringBuilder b = new StringBuilder();
 		b.append("{");
-		b.append("\"size\":");
-		b.append(aggs.width());
-		b.append(",\n");
+		b.append("\"width\":" + aggs.width() + ",\n");
 		b.append("\"aggs\":");
 		b.append("[");
-		for (int x=0; x<aggs.width(); x++) {
-			for (int y=0; y<aggs.height();y++) {
+		for (int y=0; y<aggs.height();y++) {
+			for (int x=0; x<aggs.width(); x++) {
 				b.append(aggs.at(x, y));
 				b.append(",");
 			}

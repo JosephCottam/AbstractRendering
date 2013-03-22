@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 
 public class ARApp {
 	private ARPanel<?,?> image;
@@ -52,6 +53,7 @@ public class ARApp {
 		transfers.addItem(new WrappedTransfer.OutlierHighlight());
 		
 		dataset.addItem(new Dataset.SyntheticScatterplot());
+		dataset.addItem(new Dataset.Checkers());
 		dataset.addItem(new Dataset.Memory());
 		dataset.addItem(new Dataset.MPIPhases());
 		
@@ -78,6 +80,7 @@ public class ARApp {
 		export.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
+				 fd.setSelectedFile(new File("aggregates.json"));
 				 int returnVal = fd.showDialog(frame, "Export");
 				 if (returnVal == JFileChooser.APPROVE_OPTION) {
 					 AggregatesToJSON.export(image.getAggregates(),fd.getSelectedFile());
