@@ -42,8 +42,10 @@ public class CSVtoGlyphSet {
 	
 	public static GlyphSet load(String filename, int skip, double size, int xField, int yField) {
 		CSVtoGlyphSet loader = new CSVtoGlyphSet(filename, skip);
-		GlyphSet glyphs = QuadTree.make(10, 0,0,10);
+		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,10);
+		//GlyphSet glyphs = QuadTree.make(100, 0,0,10);
 		//GlyphSet glyphs = new GlyphList();
+		int count =0;
 		while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
@@ -53,8 +55,14 @@ public class CSVtoGlyphSet {
 			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size); 
 	        Glyph g = new ar.GlyphSet.Glyph(rect, Color.red);
 	        glyphs.add(g);
+	        count++;
 		}
-		System.out.println(glyphs);
+		
+		if (count != glyphs.size()) {throw new RuntimeException("Error loading data; Read and retained glyph counts don't match.");}
+		System.out.printf("Read %d entries\n", count);
+		
+		//System.out.println(glyphs);
+
 		return glyphs;
 	}
 	

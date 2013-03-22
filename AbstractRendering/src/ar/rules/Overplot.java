@@ -3,6 +3,7 @@ package ar.rules;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.util.Collection;
 
 import ar.*;
 import ar.GlyphSet.Glyph;
@@ -13,11 +14,9 @@ public class Overplot {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
-			
-			for (Glyph g:glyphs) {
-				if (g.shape.contains(p)) {return g.color;}
-			}
-			return Util.CLEAR;
+			Collection<Glyph> hits = glyphs.containing(p);
+			if (hits.size()>0) {return hits.iterator().next().color;}
+			else {return Util.CLEAR;}
 		}		
 	}
 	
@@ -25,10 +24,10 @@ public class Overplot {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
-			
-			Color last= Util.CLEAR;
-			for (Glyph g:glyphs) {if (g.shape.contains(p)) {last = g.color;}}
-			return last;
+			Collection<Glyph> hits = glyphs.containing(p);
+			Color color = Util.CLEAR;
+			for (Glyph g:hits) {color = g.color;}
+			return color;
 		}		
 	}
 	

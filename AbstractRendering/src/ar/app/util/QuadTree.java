@@ -5,7 +5,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import ar.GlyphSet;
@@ -15,7 +14,6 @@ public abstract class QuadTree implements GlyphSet {
 	private final int loading;
 	private final List<Glyph> items = new ArrayList<Glyph>();
 	protected final Rectangle2D concernBounds;
-	protected Rectangle2D contentBounds = null;
 
 	public static QuadTree make(int loading, Rectangle2D canvasBounds) {return new QuadTree.InnerNode(loading, canvasBounds);}
 	public static QuadTree make(int loading, int centerX, int centerY, int span) {
@@ -55,16 +53,9 @@ public abstract class QuadTree implements GlyphSet {
 		public int size() {return 0;}
 
 		public Rectangle2D bounds() {return new Rectangle2D.Double(0,0,-1,-1);}
-		public Iterator<Glyph> iterator() {return new EmptyIterator();}
 		public boolean add(Glyph glyph) {return false;}
 		protected void containing(Point2D p, Collection<Glyph> collector) {}
 		public String toString(int indent) {return indent(indent) + "Empty node\n";}
-
-		private static final class EmptyIterator implements Iterator<Glyph> {
-			public boolean hasNext() {return false;}
-			public Glyph next() {return null;}
-			public void remove() {}
-		}
 	}
 	
 	private static final class InnerNode extends QuadTree {
@@ -141,10 +132,6 @@ public abstract class QuadTree implements GlyphSet {
 
 		public Rectangle2D bounds() {return Util.fullBounds(NW.bounds(), NE.bounds(), SW.bounds(), SE.bounds(), Util.bounds(super.items));}
 
-		@Override
-		public Iterator<Glyph> iterator() {
-			return new ConcatenateIterator<Glyph>(super.items.iterator(), NW.iterator(), NE.iterator(), SW.iterator(), SE.iterator());
-		}
 		public String toString() {return toString(0);}
 		public String toString(int indent) {
 			return String.format("%sNode: %d items (%d local)\n", indent(indent), size(), super.items.size())
