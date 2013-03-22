@@ -29,11 +29,14 @@ public class AggregatesToJSON {
 		b.append(",\n");
 		b.append("\"aggs\":");
 		b.append("[");
-		for (Integer item:aggs) {
-			b.append(item);
-			b.append(",");
+		for (int x=0; x<aggs.width(); x++) {
+			for (int y=0; y<aggs.height();y++) {
+				b.append(aggs.at(x, y));
+				b.append(",");
+			}
+			b.append("\n");
 		}
-		b.deleteCharAt(b.length()-1);
+		b.delete(b.length()-2, b.length()-1);
 		b.append("]}");
 		return b.toString();
 	}

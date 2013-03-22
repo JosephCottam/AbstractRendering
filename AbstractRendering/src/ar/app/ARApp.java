@@ -9,6 +9,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class ARApp {
 	private ARPanel<?,?> image;
@@ -17,7 +19,7 @@ public class ARApp {
 	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
 	
 	private final JComboBox<Dataset> dataset = new JComboBox<Dataset>();
-	private final JButton export = new JButton("Export");
+	private final JButton export = new JButton("Export Aggregates");
 
 	
 	public ARApp() {
@@ -27,22 +29,22 @@ public class ARApp {
 		
 
 		JPanel controls = new JPanel();
-//		controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
+		controls.setLayout(new GridLayout(2,2));
 		JPanel outer = new JPanel();
 		outer.setLayout(new BorderLayout());
 		outer.add(controls, BorderLayout.WEST);
 		frame.add(outer, BorderLayout.SOUTH);
 		
-		controls.add(dataset);
 		controls.add(reductions);
 		controls.add(transfers);
+		controls.add(dataset);
 		controls.add(export);
 		final ARApp app = this;
 		
-		reductions.addItem(new WrappedReduction.SolidBlue());
 		reductions.addItem(new WrappedReduction.OverplotFirst());
 		reductions.addItem(new WrappedReduction.OverplotLast());
 		reductions.addItem(new WrappedReduction.Count());
+		reductions.addItem(new WrappedReduction.SolidBlue());
 		
 		transfers.addItem(new WrappedTransfer.EchoColor());
 		transfers.addItem(new WrappedTransfer.RedWhiteInterpolate());
@@ -57,6 +59,7 @@ public class ARApp {
 			public void actionPerformed(ActionEvent e) {
 				Dataset glyphs = (Dataset) dataset.getSelectedItem();
 				app.changeImage(image.withDataset(glyphs));
+				app.zoomFit();
 			}});
 		
 		reductions.addActionListener(new ActionListener() {
@@ -89,9 +92,10 @@ public class ARApp {
 		
 		frame.add(image, BorderLayout.CENTER);
 
-		frame.setSize(400, 200);
+		frame.setSize(390, 390);
 		frame.invalidate();
 		frame.setVisible(true);
+		zoomFit();
 	}
 	
 	public <A,B> void changeImage(ARPanel<A,B> newImage) {
@@ -100,6 +104,22 @@ public class ARApp {
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;
 		frame.revalidate();
+	}
+	
+	public void zoomFit() {
+		try {Thread.sleep(100);} //Delay a beat to let layout (if any) occur, then do the zoom fit. 
+		catch (InterruptedException e1) {}
+
+		Rectangle2D content = image.dataset().glyphs().bounds();
+
+		double w = image.getWidth()/content.getWidth();
+		double h = image.getHeight()/content.getHeight();
+		double scale = Math.min(w, h);
+		scale = scale/image.getScale();
+		Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
+				
+		image.zoomAbs(center, scale);
+		image.panToAbs(center);
 	}
 
 	/**

@@ -117,7 +117,7 @@ function reformat(data) {
 
 function loadTexture(aggsFile) {
   $.ajax(aggsFile, { success: function(info) {
-    //console.info(info.size);
+//    console.info(info.size);
     var size = info.size
     var rslt = reformat(info.aggs);
     var aggs = rslt.aggs;

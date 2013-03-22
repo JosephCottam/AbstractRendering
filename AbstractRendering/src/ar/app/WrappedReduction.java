@@ -33,7 +33,7 @@ public interface WrappedReduction<A> {
 	public class Count implements WrappedReduction<Integer> {
 		public Reduction<Integer> op() {return HomoAlpha.R();}
 		public Class<Integer> type() {return Integer.class;}
-		public String toString() {return "Count (Integer)";}
+		public String toString() {return "Count (int)";}
 	}
 	
 

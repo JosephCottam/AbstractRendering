@@ -41,6 +41,7 @@ vec4 redBlackLinear(vec2 pixelish) {
   value *= 256.0;
 
   value = (value-minv)/(maxv-minv);
+  //if (value==0.0) {value = 1.0;}
 
   return vec4(value,0.0,0.0,1.0);
 }
