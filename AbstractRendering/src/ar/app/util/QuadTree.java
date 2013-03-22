@@ -55,11 +55,11 @@ public abstract class QuadTree implements GlyphSet {
 		public boolean isEmpty() {return true;}
 		public int size() {return 0;}
 
-		public Rectangle2D bounds() {return super.concernBounds;}
+		public Rectangle2D bounds() {return new Rectangle2D.Double(0,0,-1,-1);}
 		public Iterator<Glyph> iterator() {return new EmptyIterator();}
 		public boolean add(Glyph glyph) {return false;}
 		protected void containing(Point2D p, Collection<Glyph> collector) {}
-		public String toString(int indent) {return indent(indent) + "Empty node";}
+		public String toString(int indent) {return indent(indent) + "Empty node\n";}
 
 		private static final class EmptyIterator implements Iterator<Glyph> {
 			public boolean hasNext() {return false;}
@@ -77,13 +77,13 @@ public abstract class QuadTree implements GlyphSet {
 			double w = concernBounds.getWidth()/2;
 			double h = concernBounds.getHeight()/2;
 			Rectangle2D r = new Rectangle2D.Double(concernBounds.getX(), concernBounds.getY(),w,h);
-			NW = new QuadTree.LeafNode(loading, r);
+			NW = new QuadTree.EmptyNode(loading, r);
 			r = new Rectangle2D.Double(concernBounds.getCenterX(), concernBounds.getY(), w,h);
-			NE = new QuadTree.LeafNode(loading, r);
+			NE = new QuadTree.EmptyNode(loading, r);
 			r = new Rectangle2D.Double(concernBounds.getX(), concernBounds.getCenterY(), w,h);
-			SW = new QuadTree.LeafNode(loading, r);
+			SW = new QuadTree.EmptyNode(loading, r);
 			r = new Rectangle2D.Double(concernBounds.getCenterX(), concernBounds.getCenterY(), w,h);
-			SE = new QuadTree.LeafNode(loading, r);
+			SE = new QuadTree.EmptyNode(loading, r);
 		}
 		
 		public boolean add(Glyph glyph) {
@@ -154,29 +154,5 @@ public abstract class QuadTree implements GlyphSet {
 						+ "SW " + SW.toString(indent+1)
 						+ "SE " + SE.toString(indent+1);
 		}
-	}
-	
-	private static final class LeafNode extends QuadTree {
-
-		private LeafNode(int loading, Rectangle2D concernBounds) {super(loading,concernBounds);}
-		public int size() {return super.items.size();}
-		public Iterator<Glyph> iterator() {return super.items.iterator();}
-		
-		/**Add an item to this node.  Returns true if the item was added.  False otherwise.**/
-		public boolean add(Glyph glyph) {
-			if (super.items.size() == super.loading) {
-				return false;
-			} else {
-				super.items.add(glyph);
-				return true;
-			}
-		}
-		
-		/**Content bounds**/
-		public Rectangle2D bounds() {return Util.bounds(super.items);}
-		public boolean isEmpty() {return super.items.size()==0;}
-		protected void containing(Point2D p, Collection<Glyph> collector) {super.itemsContains(p, collector);}
-		public String toString() {return toString(0);}
-		public String toString(int level) {return indent(level) + "Leaf: " + super.items.size() + " items\n";}
 	}
 }
