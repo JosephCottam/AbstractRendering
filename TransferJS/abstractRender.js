@@ -124,8 +124,8 @@ function loadTexture(aggsFile) {
     var minv = rslt.min;
     var maxv = rslt.max;
 
-    console.info(width);
-    console.info(height);
+    //console.info(width);
+    //console.info(height);
 
     var minl = gl.getUniformLocation(prog, "minv") 
     var maxl = gl.getUniformLocation(prog, "maxv")
