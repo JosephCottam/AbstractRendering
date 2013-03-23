@@ -8,9 +8,8 @@ import ar.*;
 
 public class HomoAlpha {
 	public static class Count implements Reduction<Integer> {
-		private Point2D p = new Point2D.Double();
 		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			p.setLocation(x, y);
+			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
 			return glyphs.containing(p).size();
 		}

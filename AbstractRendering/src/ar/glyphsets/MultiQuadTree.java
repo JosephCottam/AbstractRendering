@@ -66,14 +66,16 @@ public abstract class MultiQuadTree implements GlyphSet {
 				return true;
 			}
 		}
+
+		protected void containing(Point2D p, Collection<Glyph> collector) {
+			
+			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);} g.shape.contains(3d,4d);}
+		}
+		
 		
 		protected void items(Collection<Glyph> collector) {collector.addAll(items);}
 		public Rectangle2D bounds() {return Util.bounds(items);}
 		public boolean isEmpty() {return items.size()==0;}
-		protected void containing(Point2D p, Collection<Glyph> collector) {
-			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);}}
-		}
-		
 		public String toString() {return toString(0);}
 		public String toString(int level) {return Util.indent(level) + "Leaf: " + items.size() + " items\n";}
 	}	

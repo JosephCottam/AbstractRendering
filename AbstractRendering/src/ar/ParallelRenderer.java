@@ -9,9 +9,7 @@ public final class ParallelRenderer implements Renderer {
 	private final int taskSize;
 	private final ForkJoinPool pool = new ForkJoinPool();
 	
-	public ParallelRenderer(int taskSize) {
-		this.taskSize = taskSize;
-	}
+	public ParallelRenderer(int taskSize) {this.taskSize = taskSize;}
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
 			final Reduction<A> r, final int width, final int height) {		
