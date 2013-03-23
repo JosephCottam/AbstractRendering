@@ -18,6 +18,8 @@ public class ARPanel<A,B> extends JPanel {
 	private final Dataset dataset;
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
+	private Renderer renderer = new ParallelRenderer(40000);
+	//private Renderer renderer = new SerialRenderer();
 
 	private BufferedImage image;
 	private Aggregates<A> aggregates;
@@ -51,13 +53,13 @@ public class ARPanel<A,B> extends JPanel {
 
 		if (aggregates == null || differentSizes(image, this)) { 
 			long start = System.currentTimeMillis();
-			aggregates = AbstractCanvas.render(dataset.glyphs(), inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
-			image = AbstractCanvas.render(aggregates, (Transfer<A>) transfer.op());
+			aggregates = renderer.reduce(dataset.glyphs(), inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());
 			long end = System.currentTimeMillis();
 			System.out.println("Time to (fully) abstractly render: " + (end-start));			
 		} else {
 			long start = System.currentTimeMillis();
-			image = AbstractCanvas.render(aggregates, (Transfer<A>) transfer.op());			
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());			
 			long end = System.currentTimeMillis();
 			System.out.println("Time to (transfer) render: " + (end-start));			
 		}

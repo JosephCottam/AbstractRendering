@@ -5,7 +5,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.*;
 
 import ar.GlyphSet;
-import ar.app.util.Util;
+import ar.Util;
 
 public class GlyphList implements GlyphSet {
 	Collection<Glyph> glyphs = new ArrayList<Glyph>();

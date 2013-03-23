@@ -1,12 +1,57 @@
 package ar;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+
+import ar.GlyphSet.Glyph;
 
 public final class Util {
 	public static final Color CLEAR = new Color(0,0,0,0);
 
 	private Util() {}
 
+
+	public static String indent(int x) {
+		char[] chars = new char[x*2];
+		Arrays.fill(chars,' ');
+		return new String(chars);
+	}
+	
+	public static Rectangle2D bounds(Iterable<Glyph> glyphs) {
+		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		for (Glyph g: glyphs) {
+			Rectangle2D bound = g.shape.getBounds2D();
+			if (bound != null) {add(bounds, bound);}
+		}
+		return bounds;
+	}
+
+	public static Rectangle2D fullBounds(Rectangle2D... rs) {
+		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		for (Rectangle2D r: rs) {
+			if (r != null) {add(bounds, r);}
+		}
+		return bounds;
+	}
+
+	public static void add(Rectangle2D target, Rectangle2D more) {
+		double x = more.getX();
+		double y = more.getY();
+		double w = more.getWidth();
+		double h = more.getHeight();
+		
+		x = Double.isNaN(x) ? 0 : x;
+		y = Double.isNaN(y) ? 0 : y;
+		w = Double.isNaN(w) ? 0 : w;
+		h = Double.isNaN(h) ? 0 : h;
+	
+		if (target.isEmpty()) {
+			target.setFrame(x,y,w,h);
+		} else if (!more.isEmpty()) {
+			target.add(new Rectangle2D.Double(x,y,w,h));
+		}
+	}
 	
 	public static Color interpolate(Color low, Color high, double min, double max, double v) {
 		double distance = 1-((max-v)/(max-min));

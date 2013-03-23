@@ -29,14 +29,14 @@ public abstract class Dataset {
 	public static final class SyntheticScatterplot extends Dataset {
 		public SyntheticScatterplot() {super("Scatterplot (Synthetic)");}
 		protected GlyphSet load() {
-			return CSVtoGlyphSet.load("./data/circlepoints.csv", 1, .1, 2, 3);
+			return CSVtoGlyphSet.load("./data/circlepoints.csv", 1, .1, 2, 3,-1);
 		}
 	}
 	
 	public static final class Checkers extends Dataset{
 		public Checkers() {super("Checkers");}
 		protected GlyphSet load() {
-			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, 0,1);
+			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, 0,1,2);
 		}
 	}
 }

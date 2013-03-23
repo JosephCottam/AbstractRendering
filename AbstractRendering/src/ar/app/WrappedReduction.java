@@ -12,11 +12,16 @@ public interface WrappedReduction<A> {
 	public Class<A> type();
 	
 	public class SolidBlue implements WrappedReduction<Color> {
-		public Reduction<Color> op() {return TestPatterns.R(Color.BLUE);}
+		public Reduction<Color> op() {return new TestPatterns.IDColor(Color.BLUE);}
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Blue (color)";}
 	} 
 
+	public class Gradient implements WrappedReduction<Color> {
+		public Reduction<Color> op() {return new TestPatterns.Gradient(500, 500);}
+		public Class<Color> type() {return Color.class;}
+		public String toString() {return "Gradient 500 (color)";}
+	} 
 
 	public class OverplotFirst implements WrappedReduction<Color> {
 		public Reduction<Color> op() {return Overplot.R(true);}
@@ -31,7 +36,7 @@ public interface WrappedReduction<A> {
 	} 
 
 	public class Count implements WrappedReduction<Integer> {
-		public Reduction<Integer> op() {return HomoAlpha.R();}
+		public Reduction<Integer> op() {return new HomoAlpha.Count();}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Count (int)";}
 	}

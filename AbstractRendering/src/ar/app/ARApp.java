@@ -46,6 +46,7 @@ public class ARApp {
 		reductions.addItem(new WrappedReduction.OverplotLast());
 		reductions.addItem(new WrappedReduction.Count());
 		reductions.addItem(new WrappedReduction.SolidBlue());
+		reductions.addItem(new WrappedReduction.Gradient());
 		
 		transfers.addItem(new WrappedTransfer.EchoColor());
 		transfers.addItem(new WrappedTransfer.RedWhiteInterpolate());

@@ -18,8 +18,8 @@ public class HomoAlpha {
 	
 	public static final class Direct implements Transfer<Integer> {
 		final Color low, high;
-		Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
-		Util.Stats extrema;
+		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
+		private Util.Stats extrema;
 		
 		public Direct(Color low, Color high) {
 			this.low = low;
@@ -37,9 +37,9 @@ public class HomoAlpha {
 	
 	public static final class ZScore implements Transfer<Integer> {
 		final Color low, high;
-		Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
-		Aggregates<Double> scored;
-		Util.Stats stats;
+		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
+		private Aggregates<Double> scored;
+		private Util.Stats stats;
 		
 		public ZScore(Color low, Color high) {
 			this.low = low;
@@ -57,12 +57,5 @@ public class HomoAlpha {
 			if (aggregates.at(x, y) ==0 ) {return Util.CLEAR;}
 			return Util.interpolate(low, high, stats.min, stats.max, scored.at(x, y));
 		}
-	}
-	
-	public static Reduction<Integer> R() {return new Count();}
-	
-	public static Transfer<Integer> T(Color low, Color high, boolean zscore) {
-		if (zscore) {return new ZScore(low,high);}
-		else {return new Direct(low,high);}
 	}
 }

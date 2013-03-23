@@ -11,19 +11,19 @@ public interface WrappedTransfer<A> {
 	public Class<A> type();
 	
 	public class RedWhiteInterpolate implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return HomoAlpha.T(Color.white, Color.red, false);}
+		public Transfer<Integer> op() {return new HomoAlpha.Direct(Color.white, Color.red);}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Red/White Linear (int)";}
 	}
 	
 	public class RedBlueInterpolate implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return HomoAlpha.T(Color.blue, Color.red, false);}
+		public Transfer<Integer> op() {return new HomoAlpha.Direct(Color.blue, Color.red);}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Red/Blue Linear (int)";}
 	}
 	
 	public class OutlierHighlight implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return HomoAlpha.T(Color.white, Color.red, true);}
+		public Transfer<Integer> op() {return new HomoAlpha.ZScore(Color.white, Color.red);}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Outlier Highlight (int)";}
 	}

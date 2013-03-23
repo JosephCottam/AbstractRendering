@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import ar.GlyphSet;
-import ar.app.util.Util;
+import ar.Util;
 
 public abstract class QuadTree implements GlyphSet {
 	/**How many items before exploring subdivisions.**/

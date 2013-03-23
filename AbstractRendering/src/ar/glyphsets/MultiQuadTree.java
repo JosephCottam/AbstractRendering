@@ -3,13 +3,12 @@ package ar.glyphsets;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
 import ar.GlyphSet;
-import ar.app.util.Util;
+import ar.Util;
 
 public abstract class MultiQuadTree implements GlyphSet {
 	private static final double MIN_DIM = .01d;
@@ -47,12 +46,6 @@ public abstract class MultiQuadTree implements GlyphSet {
 	}
 	protected abstract void containing(Point2D p, Collection<Glyph> collector);
 	
-	private static String indent(int x) {
-		char[] chars = new char[x*2];
-		Arrays.fill(chars,' ');
-		return new String(chars);
-	}
-	
 	public abstract String toString(int indent);
 	
 	private static final class LeafNode extends MultiQuadTree {
@@ -62,10 +55,6 @@ public abstract class MultiQuadTree implements GlyphSet {
 		private LeafNode(int loading, Rectangle2D concernBounds) {
 			super(loading,concernBounds);
 			bottom = concernBounds.getWidth()<=MIN_DIM;
-		}
-		protected void items(Collection<Glyph> collector) {collector.addAll(items);}
-		public void itemsContains(Point2D p, Collection<Glyph> collector) {
-			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);}}
 		}
 		
 		/**Add an item to this node.  Returns true if the item was added.  False otherwise.**/
@@ -78,12 +67,15 @@ public abstract class MultiQuadTree implements GlyphSet {
 			}
 		}
 		
-		/**Content bounds**/
+		protected void items(Collection<Glyph> collector) {collector.addAll(items);}
 		public Rectangle2D bounds() {return Util.bounds(items);}
 		public boolean isEmpty() {return items.size()==0;}
-		protected void containing(Point2D p, Collection<Glyph> collector) {itemsContains(p, collector);}
+		protected void containing(Point2D p, Collection<Glyph> collector) {
+			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);}}
+		}
+		
 		public String toString() {return toString(0);}
-		public String toString(int level) {return indent(level) + "Leaf: " + items.size() + " items\n";}
+		public String toString(int level) {return Util.indent(level) + "Leaf: " + items.size() + " items\n";}
 	}	
 	
 	private static final class InnerNode extends MultiQuadTree {
@@ -170,7 +162,7 @@ public abstract class MultiQuadTree implements GlyphSet {
 
 		public String toString() {return toString(0);}
 		public String toString(int indent) {
-			return String.format("%sNode: %d items\n", indent(indent), size())
+			return String.format("%sNode: %d items\n", Util.indent(indent), size())
 						+ "NW " + NW.toString(indent+1)
 						+ "NE " + NE.toString(indent+1)
 						+ "SW " + SW.toString(indent+1)

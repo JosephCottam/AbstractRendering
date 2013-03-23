@@ -41,7 +41,7 @@ public class CSVtoGlyphSet {
 	
 	protected boolean hasNext() {return reader != null;}
 	
-	public static GlyphSet load(String filename, int skip, double size, int xField, int yField) {
+	public static GlyphSet load(String filename, int skip, double size, int xField, int yField, int colorField) {
 		CSVtoGlyphSet loader = new CSVtoGlyphSet(filename, skip);
 		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,10);
 		//GlyphSet glyphs = QuadTree.make(100, 0,0,10);
@@ -53,8 +53,15 @@ public class CSVtoGlyphSet {
 			
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]);
-			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size); 
-	        Glyph g = new ar.GlyphSet.Glyph(rect, Color.red);
+			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size);
+			Color color;
+			if (colorField >=0) {
+				try {
+					color = (Color) Color.class.getField(parts[colorField].toUpperCase()).get(null);
+				} catch (Exception e) {throw new RuntimeException("Error loading color: " + parts[colorField]);}
+			} else {color = Color.RED;}
+			
+	        Glyph g = new ar.GlyphSet.Glyph(rect, color);
 	        glyphs.add(g);
 	        count++;
 		}
