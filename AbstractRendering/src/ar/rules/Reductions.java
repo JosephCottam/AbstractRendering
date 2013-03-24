@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,49 +62,69 @@ public class Reductions {
 	}
 
 
-	public static final class CountPair {
-		public final int one;
-		public final int two;
-		public CountPair(int one, int two) {this.one = one; this.two = two;}
-	}
-
 	public static final class RLE {
-		public final List<Object> value = new ArrayList<Object>();
+		public final List<Object> keys = new ArrayList<Object>();
 		public final List<Integer> counts = new ArrayList<Integer>();
 		public void add(Object key, int count) {
-			value.add(key);
+			keys.add(key);
 			counts.add(count);
 		}
+		public int count(int i) {return counts.get(i);}
+		public Object key(int i) {return keys.get(i);}
+		public int size() {return keys.size();}
+		public int fullSize() {
+			int count=0;
+			for (Integer i:counts) {count+=i;}
+			return count;
+		}
+		public String toString() {return "RLE: " + Arrays.deepToString(counts.toArray());}
 	}	
 
 	
-	public static final class RLESortedColor implements Reduction<CountPair> {
+	public static final class RLEColor implements Reduction<RLE> {
 		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
 			public int compare(Glyph o1, Glyph o2) {return Integer.compare(o1.color.getRGB(), o2.color.getRGB());}
 		};
+		
+		private final boolean sort;
+		public RLEColor(boolean sort) {this.sort = sort;}
 		
 		private List<Glyph> sortColors(Collection<Glyph> glyphs) {
 			ArrayList<Glyph> l = new ArrayList<Glyph>(glyphs);
 			Collections.sort(l, glyphColorSorter);
 			return l;
 		}
-		
-		private CountPair RedBlueRuns(List<Glyph> glyphs) {
-			if (glyphs.size() ==0) {return new CountPair(0,0);}
-			int blues = 0;
+				
+		private RLE encode(List<Glyph> glyphs) {
+			RLE rle = new RLE();
+			Color key = null;
+			int count=0;
+
+			if (glyphs.size() ==0) {return rle;}
 			for (Glyph g: glyphs) {
-				if (g.color == Color.RED) {break;}
-				else {blues++;}
+				Color val = g.color;
+				if ((key == null && val == null) || (key != null && key.equals(val))) {count++;}
+				else if (count == 0) {
+					key = val;
+					count = 1;
+				} else if (count > 0) {
+					rle.add(key, count);
+					key = val;
+					count = 1;
+				}
 			}
-			return new CountPair(blues, glyphs.size()-blues);
+			if (count >0) {rle.add(key, count);}
+			return rle;
 		}
 		
-		public CountPair at(int x, int y, GlyphSet glyphs, AffineTransform v) {
+		public RLE at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
 			Collection<Glyph> hits = glyphs.containing(p);
-			List<Glyph> sorted = sortColors(hits);
-			return RedBlueRuns(sorted);
+			List<Glyph> ordered;
+			if (sort) {ordered = sortColors(hits);}
+			else {ordered = new ArrayList<Glyph>(hits);}
+			return encode(ordered);
 		}		
 	}
 

@@ -28,18 +28,23 @@ public interface WrappedTransfer<A> {
 		public String toString() {return "Outlier Highlight (int)";}
 	}
 	
-	public class Percent90 implements WrappedTransfer<Reductions.CountPair> {
-		public Transfer<Reductions.CountPair> op() {return new Transfers.CountPercent(.9, Color.white, Color.blue, Color.red);}
-		public Class<Reductions.CountPair> type() {return Reductions.CountPair.class;}
-		public String toString() {return "Percent 90% (Pairs)";}
+	public class Percent90 implements WrappedTransfer<Reductions.RLE> {
+		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.9, Color.white, Color.blue, Color.red);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "90% Percent (RLE)";}
 	}
 
-	public class Percent95 implements WrappedTransfer<Reductions.CountPair> {
-		public Transfer<Reductions.CountPair> op() {return new Transfers.CountPercent(.95, Color.white, Color.blue, Color.red);}
-		public Class<Reductions.CountPair> type() {return Reductions.CountPair.class;}
-		public String toString() {return "Percent 95% (Pairs)";}
+	public class Percent95 implements WrappedTransfer<Reductions.RLE> {
+		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.95, Color.white, Color.blue, Color.red);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "95% Percent (RLE)";}
 	}
 
+	public class Percent25 implements WrappedTransfer<Reductions.RLE> {
+		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.25, Color.white, Color.blue, Color.red);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "25% Percent (RLE)";}
+	}
 	
 	public class EchoColor implements WrappedTransfer<Color> {
 		public Transfer<Color> op() {return new Transfers.IDColor();}

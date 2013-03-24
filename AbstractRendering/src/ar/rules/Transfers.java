@@ -5,7 +5,6 @@ import java.awt.Color;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.Util;
-import ar.rules.Reductions.CountPair;
 
 public class Transfers {
 
@@ -56,20 +55,23 @@ public class Transfers {
 		}
 	}
 	
-	public static final class CountPercent implements Transfer<Reductions.CountPair> {
+	/**Percent of total contributed by the first item**/
+	public static final class FirstPercent implements Transfer<Reductions.RLE> {
 		private final double ratio;
 		private final Color background, match, noMatch;
-		public CountPercent(double ratio, Color background, Color match, Color noMatch) {
+		public FirstPercent(double ratio, Color background, Color match, Color noMatch) {
 			this.ratio = ratio;
 			this.background = background;
 			this.match = match;
 			this.noMatch = noMatch;
 		}
-		public Color at(int x, int y, Aggregates<CountPair> aggregates) {
-			Reductions.CountPair pair = aggregates.at(x,y);
-			double sum = pair.two + pair.one;
-			if (sum == 0) {return background;}
-			if (pair.one/sum >= ratio) {return match;}
+		public Color at(int x, int y, Aggregates<Reductions.RLE> aggregates) {
+			Reductions.RLE rle = aggregates.at(x,y);
+			double size = rle.fullSize();
+			
+			if (size == 0) {return background;}
+			else if (rle.key(0).equals(Color.RED)) {return noMatch;}	//HACK: The use of "RED" here derives from the BGL vis and is not general purpose 
+			else if (rle.count(0)/size >= ratio) {return match;}
 			else {return noMatch;}
 		}
 		

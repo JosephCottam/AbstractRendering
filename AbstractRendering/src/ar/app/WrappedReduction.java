@@ -39,13 +39,17 @@ public interface WrappedReduction<A> {
 		public String toString() {return "Count (int)";}
 	}
 	
-	public class CountPairs implements WrappedReduction<Reductions.CountPair> {
-		public Reduction<Reductions.CountPair> op() {return new Reductions.RLESortedColor();}
-		public Class<Reductions.CountPair> type() {return Reductions.CountPair.class;}
-		public String toString() {return "RLE Pairs (Pairs)";}
-
+	public class RLEColors implements WrappedReduction<Reductions.RLE> {
+		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(true);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "RLE sorted (RLE/Color)";}
 	}
 	
+	public class RLEUnsortColors implements WrappedReduction<Reductions.RLE> {
+		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(false);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "RLE (RLE/Color)";}
+	}
 
 
 	

@@ -2,16 +2,15 @@ package ar.app;
 
 import javax.swing.*;
 
-import ar.Aggregates;
 import ar.app.util.AggregatesToJSON;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 
 public class ARApp {
 	private ARPanel<?,?> image;
@@ -19,7 +18,7 @@ public class ARApp {
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
 	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
 	
-	private final JComboBox<Dataset> dataset = new JComboBox<Dataset>();
+	private final JComboBox<Dataset> datasets = new JComboBox<Dataset>();
 	private final JButton export = new JButton("Export Aggregates");
 
 	
@@ -38,32 +37,23 @@ public class ARApp {
 		
 		controls.add(reductions);
 		controls.add(transfers);
-		controls.add(dataset);
+		controls.add(datasets);
 		controls.add(export);
 		final ARApp app = this;
 		
-		reductions.addItem(new WrappedReduction.OverplotFirst());
-		reductions.addItem(new WrappedReduction.OverplotLast());
-		reductions.addItem(new WrappedReduction.Count());
-		reductions.addItem(new WrappedReduction.CountPairs());
-		reductions.addItem(new WrappedReduction.SolidBlue());
-		reductions.addItem(new WrappedReduction.Gradient());
+		loadInstances(reductions, WrappedReduction.class);
+		loadInstances(transfers, WrappedTransfer.class);
+		loadInstances(datasets, Dataset.class);
+
 		
-		transfers.addItem(new WrappedTransfer.EchoColor());
-		transfers.addItem(new WrappedTransfer.RedWhiteInterpolate());
-		transfers.addItem(new WrappedTransfer.RedBlueInterpolate());
-		transfers.addItem(new WrappedTransfer.OutlierHighlight());
-		transfers.addItem(new WrappedTransfer.Percent90());
-		transfers.addItem(new WrappedTransfer.Percent95());
-		
-		dataset.addItem(new Dataset.SyntheticScatterplot());
-		dataset.addItem(new Dataset.Checkers());
-		dataset.addItem(new Dataset.Memory());
-		dataset.addItem(new Dataset.MPIPhases());
-		
-		dataset.addActionListener(new ActionListener() {
+		//TODO: Select some sensible items so it render right away 
+//		datasets.setSelectedItem(new Dataset.SyntheticScatterplot());
+//		reductions.setSelectedItem(new WrappedReduction.OverplotFirst());
+//		transfers.setSelectedItem(new WrappedTransfer.EchoColor());
+
+		datasets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Dataset glyphs = (Dataset) dataset.getSelectedItem();
+				Dataset glyphs = (Dataset) datasets.getSelectedItem();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}});
@@ -95,7 +85,7 @@ public class ARApp {
 		
 		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
 							((WrappedTransfer) transfers.getSelectedItem()), 
-							(Dataset) dataset.getSelectedItem());
+							(Dataset) datasets.getSelectedItem());
 		
 		frame.add(image, BorderLayout.CENTER);
 
@@ -103,6 +93,23 @@ public class ARApp {
 		frame.invalidate();
 		frame.setVisible(true);
 		zoomFit();
+	}
+	
+	private <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
+		Class<?>[] clss = source.getClasses();
+		for (Class<?> cls:clss) {
+			try {
+				@SuppressWarnings("unchecked")
+				B i = (B) cls.getConstructor().newInstance();
+				target.addItem(i);
+			} catch (InstantiationException | IllegalAccessException
+					| IllegalArgumentException | InvocationTargetException
+					| NoSuchMethodException | SecurityException e) {
+				
+				throw new RuntimeException("Error intializing GUI.", e);
+			}
+		}
+		
 	}
 	
 	public <A,B> void changeImage(ARPanel<A,B> newImage) {
