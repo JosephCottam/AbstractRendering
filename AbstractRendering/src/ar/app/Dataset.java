@@ -18,7 +18,9 @@ public abstract class Dataset {
 	
 	public static final class Memory extends Dataset {
 		public Memory() {super("BGL Memory");}
-		protected GlyphSet load() {return null;}
+		protected GlyphSet load() {
+			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .01, 0, 1,2);
+		}
 	}
 	
 	public static final class MPIPhases extends Dataset {
@@ -39,4 +41,5 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, 0,1,2);
 		}
 	}
+	
 }

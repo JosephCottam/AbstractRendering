@@ -56,12 +56,12 @@ public class ARPanel<A,B> extends JPanel {
 			aggregates = renderer.reduce(dataset.glyphs(), inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());
 			long end = System.currentTimeMillis();
-			System.out.println("Time to (fully) abstractly render: " + (end-start));			
+			System.out.println((end-start) + " ms (full)");			
 		} else {
 			long start = System.currentTimeMillis();
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());			
 			long end = System.currentTimeMillis();
-			System.out.println("Time to (transfer) render: " + (end-start));			
+			System.out.println((end-start) + " ms (transfer)");			
 		}
 		
 		g2.drawRenderedImage(image,g2.getTransform());

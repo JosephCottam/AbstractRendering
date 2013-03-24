@@ -45,6 +45,7 @@ public class ARApp {
 		reductions.addItem(new WrappedReduction.OverplotFirst());
 		reductions.addItem(new WrappedReduction.OverplotLast());
 		reductions.addItem(new WrappedReduction.Count());
+		reductions.addItem(new WrappedReduction.CountPairs());
 		reductions.addItem(new WrappedReduction.SolidBlue());
 		reductions.addItem(new WrappedReduction.Gradient());
 		
@@ -52,6 +53,8 @@ public class ARApp {
 		transfers.addItem(new WrappedTransfer.RedWhiteInterpolate());
 		transfers.addItem(new WrappedTransfer.RedBlueInterpolate());
 		transfers.addItem(new WrappedTransfer.OutlierHighlight());
+		transfers.addItem(new WrappedTransfer.Percent90());
+		transfers.addItem(new WrappedTransfer.Percent95());
 		
 		dataset.addItem(new Dataset.SyntheticScatterplot());
 		dataset.addItem(new Dataset.Checkers());
