@@ -76,5 +76,82 @@ public class Transfers {
 		}
 		
 	}
+	
+	public static final class HighAlpha implements Transfer<Reductions.RLE> {
+		private final Color background;
+		private boolean log;
+		private double omin;
+		private Aggregates<Color> colors;
+		private Aggregates<Reductions.RLE> cacheKey;
+		
+		public HighAlpha(Color background, double omin, boolean log) {
+			this.background = background;
+			this.log = log;
+			this.omin = omin;
+		}
+		
+		private Color fullInterpolate(Reductions.RLE rle) {
+			double total = rle.fullSize();
+			double r = 0;
+			double g = 0;
+			double b = 0;
+			
+			for (int i=0; i< rle.size(); i++) {
+				Color c = (Color) rle.key(i);
+				double a2 = rle.count(i)/total;
+				double r2 = (c.getRed()/255.0) * a2;
+				double g2 = (c.getGreen()/255.0) * a2;
+				double b2 = (c.getBlue()/255.0) * a2;
+
+				r += r2;
+				g += g2;
+				b += b2;
+			}
+			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
+		}
+		
+		public Color at(int x, int y, Aggregates<Reductions.RLE> aggregates) {
+			if (aggregates!=cacheKey) {
+				System.out.println("----------------------");
+				double max =0;
+				colors = new Aggregates<Color>(aggregates.width(), aggregates.height());
+				for (Reductions.RLE rle:aggregates) {max = Math.max(max,rle.fullSize());}
+				for (int xi=0; xi<aggregates.width(); xi++) {
+					for (int yi =0; yi<aggregates.height(); yi++) {
+						Reductions.RLE rle = aggregates.at(xi, yi);
+						Color c;
+						if (rle.fullSize() == 0) {c = background;}
+						else {
+							c = fullInterpolate(rle);
+							double alpha;
+							if (log) {
+								alpha = omin + ((1-omin) * (rle.fullSize()/max)); 
+							} else {
+								alpha = omin + ((1-omin) * (Math.log(rle.fullSize())/Math.log(max)));
+							}
+							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
+						}
+						colors.set(xi, yi, c);
+					}
+				}
+				cacheKey = aggregates;
+			}
+			return colors.at(x, y);			
+		}
+	}
+	
+	public static final class FirstItem implements Transfer<Reductions.RLE> {
+		private final Color background;
+		public FirstItem(Color background) {
+			this.background = background;
+		}
+		public Color at(int x, int y, Aggregates<Reductions.RLE> aggregates) {
+			Reductions.RLE rle = aggregates.at(x,y);
+			double size = rle.fullSize();			
+			if (size == 0) {return background;}
+			else {return (Color) rle.key(0);}
+		}
+		
+	}
 
 }

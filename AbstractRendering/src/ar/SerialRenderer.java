@@ -22,7 +22,8 @@ public final class SerialRenderer implements Renderer {
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
-				i.setRGB(x, y, t.at(x, y, aggregates).getRGB());
+				try {i.setRGB(x, y, t.at(x, y, aggregates).getRGB());}
+				catch (Exception e) {throw new RuntimeException("Error transfering " + x + ", " + y, e);}
 			}
 		}
 		return i;

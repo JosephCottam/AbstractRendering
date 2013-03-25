@@ -46,7 +46,7 @@ public class ARApp {
 		loadInstances(datasets, Dataset.class);
 
 		
-		//TODO: Select some sensible items so it render right away 
+		//TODO: Select some sensible items so it render right away
 //		datasets.setSelectedItem(new Dataset.SyntheticScatterplot());
 //		reductions.setSelectedItem(new WrappedReduction.OverplotFirst());
 //		transfers.setSelectedItem(new WrappedTransfer.EchoColor());

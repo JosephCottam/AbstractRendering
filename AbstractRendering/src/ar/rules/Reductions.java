@@ -65,18 +65,16 @@ public class Reductions {
 	public static final class RLE {
 		public final List<Object> keys = new ArrayList<Object>();
 		public final List<Integer> counts = new ArrayList<Integer>();
+		public int fullSize =0;
 		public void add(Object key, int count) {
 			keys.add(key);
 			counts.add(count);
+			fullSize+=count;
 		}
 		public int count(int i) {return counts.get(i);}
 		public Object key(int i) {return keys.get(i);}
 		public int size() {return keys.size();}
-		public int fullSize() {
-			int count=0;
-			for (Integer i:counts) {count+=i;}
-			return count;
-		}
+		public int fullSize() {return fullSize;}
 		public String toString() {return "RLE: " + Arrays.deepToString(counts.toArray());}
 	}	
 

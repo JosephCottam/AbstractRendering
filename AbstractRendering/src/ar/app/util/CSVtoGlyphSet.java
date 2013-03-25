@@ -41,9 +41,10 @@ public class CSVtoGlyphSet {
 	
 	protected boolean hasNext() {return reader != null;}
 	
-	public static GlyphSet load(String filename, int skip, double size, int xField, int yField, int colorField) {
+	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
 		CSVtoGlyphSet loader = new CSVtoGlyphSet(filename, skip);
 		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,10);
+		final int yflip = flipy?-1:1;
 		//GlyphSet glyphs = QuadTree.make(100, 0,0,10);
 		//GlyphSet glyphs = new GlyphList();
 		int count =0;
@@ -52,7 +53,7 @@ public class CSVtoGlyphSet {
 			if (parts == null) {continue;}
 			
 			double x = Double.parseDouble(parts[xField]);
-			double y = Double.parseDouble(parts[yField]);
+			double y = Double.parseDouble(parts[yField]) * yflip;
 			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size);
 			Color color;
 			if (colorField >=0) {

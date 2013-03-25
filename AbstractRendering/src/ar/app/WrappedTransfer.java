@@ -51,4 +51,16 @@ public interface WrappedTransfer<A> {
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Echo (Color)";}
 	}
+	
+	public class HighAlphaLog implements WrappedTransfer<Reductions.RLE> {
+		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "High-Def Alpha (log)";}
+	}
+	
+	public class HighAlphaLin implements WrappedTransfer<Reductions.RLE> {
+		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "High-Def Alpha (Linear)";}
+	}
 }

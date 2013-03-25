@@ -20,7 +20,7 @@ public abstract class Dataset {
 		public Memory() {super("BGL Memory");}
 		protected GlyphSet load() {
 			System.out.print("Loading BGL Memory...");
-			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .01, 0, 1,2);
+			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
 		}
 	}
 	
@@ -33,7 +33,7 @@ public abstract class Dataset {
 		public SyntheticScatterplot() {super("Scatterplot (Synthetic)");}
 		protected GlyphSet load() {
 			System.out.print("Loading Sythetic Scatterplot...");
-			return CSVtoGlyphSet.load("./data/circlepoints.csv", 1, .1, 2, 3,-1);
+			return CSVtoGlyphSet.load("./data/circlepoints.csv", 1, .1, false, 2, 3,-1);
 		}
 	}
 	
@@ -41,7 +41,7 @@ public abstract class Dataset {
 		public Checkers() {super("Checkers");}
 		protected GlyphSet load() {
 			System.out.print("Loading Checkers...");
-			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, 0,1,2);
+			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, false, 0,1,2);
 		}
 	}
 	
