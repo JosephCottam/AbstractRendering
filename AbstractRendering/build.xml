@@ -1,0 +1,24 @@
+<project name="AbstractRendering" default="Jar" basedir=".">
+
+  <target name="Jar" depends="Compile,Package" />
+
+  <target name="Compile">
+    <mkdir dir="bin"/>
+    <javac destdir="bin" includeantruntime="false" source="1.7">
+      <src>
+        <pathelement path="src"/>
+      </src>
+    </javac>
+  </target>
+
+  <target name="Package">
+    <jar jarfile="AR.jar" includes="*.class" basedir=".">
+      <fileset dir="bin"/>
+      <manifest>
+        <attribute name="Created-By" value=""/>
+        <attribute name="Main-Class" value="ar.app.ARApp"/>
+      </manifest>
+    </jar>
+  </target>
+
+</project>

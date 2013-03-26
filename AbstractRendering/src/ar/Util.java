@@ -54,11 +54,13 @@ public final class Util {
 	}
 	
 	public static Color interpolate(Color low, Color high, double min, double max, double v) {
+		if (v>max) {v=max;}
+		if (v<min) {v=min;}
 		double distance = 1-((max-v)/(max-min));
 		int r = (int) weightedAverage(high.getRed(), low.getRed(), distance);
 		int g = (int) weightedAverage(high.getGreen(), low.getGreen(), distance);
 		int b = (int) weightedAverage(high.getBlue(), low.getBlue(), distance);
-		int a = (int) weightedAverage(high.getAlpha(), low.getAlpha(), distance);						
+		int a = (int) weightedAverage(high.getAlpha(), low.getAlpha(), distance);
 		return new java.awt.Color(r,g,b,a);
 	}
 

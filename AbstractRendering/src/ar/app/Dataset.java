@@ -23,10 +23,18 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
 		}
 	}
+//	
+//	public static final class MPIPhases extends Dataset {
+//		public MPIPhases() {super("MPIPhases");}
+//		protected GlyphSet load() {return null;}
+//	}
 	
-	public static final class MPIPhases extends Dataset {
-		public MPIPhases() {super("MPIPhases");}
-		protected GlyphSet load() {return null;}
+	public static final class FlowersGlyphs extends Dataset {
+		public FlowersGlyphs() {super("Flowerpoints");}
+		protected GlyphSet load() {
+			System.out.print("Loading Anderson's Flower Scatterplot...");
+			return CSVtoGlyphSet.load("./data/flowers.csv", 1, 1, true, 0, 1,2);
+		}
 	}
 	
 	public static final class SyntheticScatterplot extends Dataset {

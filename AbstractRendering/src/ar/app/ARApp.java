@@ -89,7 +89,7 @@ public class ARApp {
 		
 		frame.add(image, BorderLayout.CENTER);
 
-		frame.setSize(390, 390);
+		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
 		zoomFit();

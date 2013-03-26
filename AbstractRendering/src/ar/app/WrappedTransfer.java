@@ -22,11 +22,24 @@ public interface WrappedTransfer<A> {
 		public String toString() {return "Red/Blue Linear (int)";}
 	}
 	
+	public class FixedAlpha implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return "10% Alpha (int)";}
+	}
+	
 	public class OutlierHighlight implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return new Transfers.ZScore(Color.white, Color.red);}
+		public Transfer<Integer> op() {return new Transfers.ZScore(Color.white, Color.red, true);}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Outlier Highlight (int)";}
 	}
+	
+	public class OutlierHighlightB implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.ZScore(Color.white, Color.red, false);}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return "Outlier Highlight w/0's (int)";}
+	}
+
 	
 	public class Percent90 implements WrappedTransfer<Reductions.RLE> {
 		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.9, Color.white, Color.blue, Color.red);}
@@ -55,12 +68,12 @@ public interface WrappedTransfer<A> {
 	public class HighAlphaLog implements WrappedTransfer<Reductions.RLE> {
 		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
 		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
-		public String toString() {return "High-Def Alpha (log)";}
+		public String toString() {return "Log HD Alpha (RLE)";}
 	}
 	
 	public class HighAlphaLin implements WrappedTransfer<Reductions.RLE> {
 		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
 		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
-		public String toString() {return "High-Def Alpha (Linear)";}
+		public String toString() {return "Linear HD Alpha (RLE)";}
 	}
 }

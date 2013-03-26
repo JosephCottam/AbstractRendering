@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import ar.GlyphSet;
@@ -124,6 +125,34 @@ public class Reductions {
 			else {ordered = new ArrayList<Glyph>(hits);}
 			return encode(ordered);
 		}		
+	}
+	
+	public static final class DeltaNeighbors implements Reduction<Integer> {
+		private final int reach;
+		public DeltaNeighbors(int reach) {this.reach = reach;}
+		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
+			Point2D p = new Point2D.Double(x,y);
+			v.transform(p, p);
+			Collection<Glyph> gs = glyphs.containing(p);
+			if (gs.size()==0) {return 0;}
+
+			int count=0;
+			HashSet<Color> colors = new HashSet<Color>();
+			for (Glyph g:gs) {colors.add(g.color);}
+			
+			
+			for (int xs=x-reach; xs<x+reach; xs++) {
+				if (xs<0) {continue;}
+				for (int ys=y-reach; ys<y+reach; ys++) {
+					if (ys<0) {continue;}
+					p.setLocation(xs, ys);
+					v.transform(p, p);
+					gs = glyphs.containing(p);
+					for (Glyph g:gs) {if (!colors.contains(g.color)) {count++;}}
+				}
+			}
+			return count;
+		}
 	}
 
 }

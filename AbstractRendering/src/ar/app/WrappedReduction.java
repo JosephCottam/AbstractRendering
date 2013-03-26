@@ -42,15 +42,20 @@ public interface WrappedReduction<A> {
 	public class RLEColors implements WrappedReduction<Reductions.RLE> {
 		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(true);}
 		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
-		public String toString() {return "RLE sorted (RLE/Color)";}
+		public String toString() {return "Color RLE sorted (RLE)";}
 	}
 	
 	public class RLEUnsortColors implements WrappedReduction<Reductions.RLE> {
 		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(false);}
 		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
-		public String toString() {return "RLE (RLE/Color)";}
+		public String toString() {return "Color RLE (RLE)";}
 	}
-
+	
+	public class DeltaNeighbors implements WrappedReduction<Integer> {
+		public Reduction<Integer> op() {return new Reductions.DeltaNeighbors(5);}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return "Delta neighbors 5 (int)";}
+	}
 
 	
 }

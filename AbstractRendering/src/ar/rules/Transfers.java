@@ -14,18 +14,20 @@ public class Transfers {
 
 	public static final class ZScore implements Transfer<Integer> {
 		final Color low, high;
+		final boolean zeros;
 		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
 		private Aggregates<Double> scored;
 		private Util.Stats stats;
 		
-		public ZScore(Color low, Color high) {
+		public ZScore(Color low, Color high, boolean zeros) {
 			this.low = low;
 			this.high = high;
+			this.zeros = zeros;
 		}
 		
 		public Color at(int x, int y, Aggregates<Integer> aggregates) {
 			if (cacheKey == null || cacheKey != aggregates) {
-				stats = Util.stats(aggregates, true);
+				stats = Util.stats(aggregates, zeros);
 				scored = Util.score(aggregates, stats);
 				stats = Util.stats(scored, false);
 				cacheKey = aggregates;
@@ -33,6 +35,22 @@ public class Transfers {
 			
 			if (aggregates.at(x, y) ==0 ) {return Util.CLEAR;}
 			return Util.interpolate(low, high, stats.min, stats.max, scored.at(x, y));
+		}
+	}
+	
+	public static final class FixedAlpha implements Transfer<Integer> {
+		final Color low, high;
+		final double lowv, highv;
+		
+		public FixedAlpha(Color low, Color high, double lowV, double highV) {
+			this.low = low;
+			this.high = high;
+			this.lowv = lowV;
+			this.highv = highV;
+		}
+		
+		public Color at(int x, int y, Aggregates<Integer> aggregates) {
+			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
 		}
 	}
 
@@ -151,7 +169,8 @@ public class Transfers {
 			if (size == 0) {return background;}
 			else {return (Color) rle.key(0);}
 		}
-		
 	}
+	
+
 
 }
