@@ -39,6 +39,12 @@ public interface WrappedReduction<A> {
 		public String toString() {return "Count (int)";}
 	}
 	
+  public class RLEColorsTL implements WrappedReduction<Reductions.RLE> {
+		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(true,true);}
+		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+		public String toString() {return "Color RLE sorted & TL (RLE)";}
+	}
+	
 	public class RLEColors implements WrappedReduction<Reductions.RLE> {
 		public Reduction<Reductions.RLE> op() {return new Reductions.RLEColor(true);}
 		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
