@@ -2,6 +2,7 @@ package ar.rules;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +87,12 @@ public class Reductions {
 		};
 		
 		private final boolean sort;
-		public RLEColor(boolean sort) {this.sort = sort;}
+    private final boolean topLeft;
+    public RLEColor(boolean sort) {this(sort, false);}
+		public RLEColor(boolean sort, boolean topLeft) {
+      this.sort = sort;
+      this.topLeft = topLeft;
+    }
 		
 		private List<Glyph> sortColors(Collection<Glyph> glyphs) {
 			ArrayList<Glyph> l = new ArrayList<Glyph>(glyphs);
@@ -120,6 +126,23 @@ public class Reductions {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
 			Collection<Glyph> hits = glyphs.containing(p);
+      
+      if (topLeft) {
+        Collection<Glyph> superHits = new ArrayList(hits.size());
+        for (Glyph g: hits) {
+          Rectangle2D bounds = g.shape.getBounds2D();
+          Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
+          r = v.createTransformedShape(r).getBounds2D();
+
+          if (r.contains(bounds.getX(), bounds.getY())) {
+            superHits.add(g);
+          }
+        }
+        hits = superHits;
+        if (hits.size() >0) {System.out.println("SIZE:" + hits.size());}
+      }
+
+
 			List<Glyph> ordered;
 			if (sort) {ordered = sortColors(hits);}
 			else {ordered = new ArrayList<Glyph>(hits);}
