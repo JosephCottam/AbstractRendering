@@ -36,7 +36,15 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/flowers.csv", 1, 1, true, 0, 1,2);
 		}
 	}
-	
+
+	public static final class Sourceforge extends Dataset {
+		public Sourceforge() {super("Sourceforge (VxOrd layout)");}
+		protected GlyphSet load() {
+			System.out.print("Loading Sourceforge layout...");
+			return CSVtoGlyphSet.load("./data/sourceforge.csv", 1, .05, false, 1, 2,-1);
+		}
+	}
+
 	public static final class SyntheticScatterplot extends Dataset {
 		public SyntheticScatterplot() {super("Scatterplot (Synthetic)");}
 		protected GlyphSet load() {

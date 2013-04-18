@@ -18,8 +18,8 @@ public class ARPanel<A,B> extends JPanel {
 	private final Dataset dataset;
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
-	//private Renderer renderer = new ParallelRenderer(40000);
-	private Renderer renderer = new SerialRenderer();
+	private Renderer renderer = new ParallelRenderer(40000);
+	//private Renderer renderer = new SerialRenderer();
 
 	private BufferedImage image;
 	private Aggregates<A> aggregates;
