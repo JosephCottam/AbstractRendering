@@ -16,18 +16,38 @@ import ar.Util;
 public abstract class MultiQuadTree implements GlyphSet {
 	private static final double MIN_DIM = .0001d;
 	
+	private static final class Subs {
+		public final Rectangle2D NW, NE, SW,SE;
+		public final Rectangle2D[] subs = new Rectangle2D[4];
+		public Subs (final Rectangle2D current) {
+			double w = current.getWidth()/2;
+			double h = current.getHeight()/2;
+			NW = new Rectangle2D.Double(current.getX(), current.getY(),w,h);
+			NE  = new Rectangle2D.Double(current.getCenterX(), current.getY(), w,h);
+			SW  = new Rectangle2D.Double(current.getX(), current.getCenterY(), w,h);
+			SE  = new Rectangle2D.Double(current.getCenterX(), current.getCenterY(), w,h);
+			subs[0] = NW;
+			subs[1] = NE;
+			subs[2] = SW;
+			subs[3] = SE;
+		}
+	}
+	
 	/**How many items before exploring subdivisions.**/
 	private final int loading;
 	protected final Rectangle2D concernBounds;
+	protected final Subs subs; //What are the sub-quads; null if at bottom
+
 
 	public static MultiQuadTree make(int loading, Rectangle2D canvasBounds) {return new MultiQuadTree.InnerNode(loading, canvasBounds);}
 	public static MultiQuadTree make(int loading, int centerX, int centerY, int span) {
 		return make(loading, new Rectangle2D.Double(centerX-span,centerY-span,span*2,span*2));
 	}
 	
-	protected MultiQuadTree(int loading, Rectangle2D concernBounds) {
+	protected MultiQuadTree(int loading, Rectangle2D concernBounds, Subs subs) {
 		this.loading=loading;
 		this.concernBounds = concernBounds;
+		this.subs = subs;
 	}
 	
 	public Rectangle2D concernBounds() {return concernBounds;}
@@ -51,57 +71,38 @@ public abstract class MultiQuadTree implements GlyphSet {
 	
 	public abstract String toString(int indent);
 
-	private static final class Subs {
-		public final Rectangle2D NW, NE, SW,SE;
-		public final Rectangle2D[] subs = new Rectangle2D[4];
-		public Subs (final Rectangle2D current) {
-			double w = current.getWidth()/2;
-			double h = current.getHeight()/2;
-			NW = new Rectangle2D.Double(current.getX(), current.getY(),w,h);
-			NE  = new Rectangle2D.Double(current.getCenterX(), current.getY(), w,h);
-			SW  = new Rectangle2D.Double(current.getX(), current.getCenterY(), w,h);
-			SE  = new Rectangle2D.Double(current.getCenterX(), current.getCenterY(), w,h);
-			subs[0] = NW;
-			subs[1] = NE;
-			subs[2] = SW;
-			subs[3] = SE;
-		}
-	}
 	
 	private static final class LeafNode extends MultiQuadTree {
 		private final List<Glyph> items = new ArrayList<Glyph>();
 		private boolean bottom;//If you're at bottom, you don't try to split anymore.
+		private int multiSubItems; //How many items touch more than one sub-quad?
+
 
 		private LeafNode(int loading, Rectangle2D concernBounds) {
-			super(loading,concernBounds);
-			bottom = concernBounds.getWidth()<=MIN_DIM;
+			super(loading,concernBounds, atBottom(concernBounds) ? null: new Subs(concernBounds));
+			bottom = atBottom(concernBounds);
 		}
+		private static final boolean atBottom(Rectangle2D concernBounds) {return concernBounds.getWidth()<=MIN_DIM;}
 		
 		/**Add an item to this node.  Returns true if the item was added.  False otherwise.
 		 * Will return false only if the item count exceeds the load AND the bottom has not been reached AND 
 		 * the split passes the "Advantage."
 		 * **/
 		public boolean add(Glyph glyph) {
-			if (!bottom && items.size() == super.loading && advantageousSplit()) { 
-				//TODO: Improve advantageousSplit efficiency; count the multi-touches as they ar added and pre-compute the subs dims
+			if (!bottom && items.size() >= super.loading && advantageousSplit()) {
+				if (multiSubItems > 0) {System.out.printf("MS %d vs. %d\n", multiSubItems, items.size());}
 				return false;
 			} else {
+				if (!bottom) {
+					multiSubItems = touchesSubs(glyph.shape.getBounds2D(), subs.subs) > 1 ? multiSubItems++ : multiSubItems;
+				}
 				items.add(glyph);
 				return true;
 			}
 		}
 		
 		/**Check that at least half of the items will be uniquely assigned to a sub-region.**/
-		public boolean advantageousSplit() {
-			int multiTouch = 0;
-			final Subs subs = new Subs(concernBounds);
-			for (Glyph item:items) {
-				Rectangle2D b = item.shape.getBounds2D();
-				if (touchesSubs(b, subs.subs) >1) {multiTouch++;}
-			}
-			return (multiTouch <= (items.size()/2));
-		}
-
+		public boolean advantageousSplit() {return multiSubItems > (items.size()/2);}
 		private final int touchesSubs(Rectangle2D bounds, Rectangle2D[] quads) {
 			int count = 0;
 			for (Rectangle2D quad: quads) {if (bounds.intersects(quad)) {count++;}}
@@ -109,10 +110,8 @@ public abstract class MultiQuadTree implements GlyphSet {
 		}
 
 		protected void containing(Point2D p, Collection<Glyph> collector) {
-			
 			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);} g.shape.contains(3d,4d);}
 		}
-		
 		
 		protected void items(Collection<Glyph> collector) {collector.addAll(items);}
 		public Rectangle2D bounds() {return Util.bounds(items);}
@@ -125,9 +124,7 @@ public abstract class MultiQuadTree implements GlyphSet {
 		private MultiQuadTree NW,NE,SW,SE;
 		
 		private InnerNode(int loading, Rectangle2D concernBounds) {
-			super(loading,concernBounds);
-			Subs subs = new Subs(concernBounds);
-
+			super(loading,concernBounds, new Subs(concernBounds));
 			NW = new MultiQuadTree.LeafNode(loading, subs.NW);
 			NE = new MultiQuadTree.LeafNode(loading, subs.NE);
 			SW = new MultiQuadTree.LeafNode(loading, subs.SW);
