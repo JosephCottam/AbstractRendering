@@ -13,36 +13,38 @@ import ar.glyphsets.MultiQuadTree;
 import static ar.GlyphSet.Glyph;
 
 public class CSVtoGlyphSet {
-	private BufferedReader reader;
-	private final Pattern splitter = Pattern.compile("\\s*,\\s*");
+	public static class Reader {
+		private BufferedReader reader;
+		private final Pattern splitter = Pattern.compile("\\s*,\\s*");
+
+		public Reader(String filename, int skip) {
+			try {
+				reader = new BufferedReader(new FileReader(filename));
+				while (skip-- > 0) {reader.readLine();}
+			} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + filename, e);}
+		}
 		
-	private CSVtoGlyphSet(String filename, int skip) {
-		try {
-			reader = new BufferedReader(new FileReader(filename));
-			while (skip-- > 0) {reader.readLine();}
-		} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + filename, e);}
+		protected String[] next() {
+			String line = null;
+			try {line = reader.readLine();}
+			catch (Exception e) {return done();}
+			if (line == null) {return done();}
+			else {return splitter.split(line);}
+		}
+		
+		//Always returns null...
+		protected String[] done() {
+			try {reader.close();}
+			catch (IOException e) {throw new RuntimeException(e);}
+			finally {reader = null;}
+			return null;
+		}
+		protected boolean hasNext() {return reader != null;}
 	}
 	
-	protected String[] next() {
-		String line = null;
-		try {line = reader.readLine();}
-		catch (Exception e) {return done();}
-		if (line == null) {return done();}
-		else {return splitter.split(line);}
-	}
-	
-	//Always returns null...
-	protected String[] done() {
-		try {reader.close();}
-		catch (IOException e) {throw new RuntimeException(e);}
-		finally {reader = null;}
-		return null;
-	}
-	
-	protected boolean hasNext() {return reader != null;}
 	
 	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		CSVtoGlyphSet loader = new CSVtoGlyphSet(filename, skip);
+		Reader loader = new Reader(filename, skip);
 		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
 		final int yflip = flipy?-1:1;
 		//GlyphSet glyphs = QuadTree.make(100, 0,0,10);
@@ -68,7 +70,7 @@ public class CSVtoGlyphSet {
 		}
 		
 		if (count != glyphs.size()) {throw new RuntimeException("Error loading data; Read and retained glyph counts don't match.");}
-		System.out.printf("Read %d entries\n", count);
+		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
 		
 		//System.out.println(glyphs);
 

@@ -10,6 +10,7 @@ import java.util.List;
 import ar.GlyphSet;
 import ar.Util;
 
+/**Quad tree where items appear at the lowest node that fully contains them.**/
 public abstract class QuadTree implements GlyphSet {
 	/**How many items before exploring subdivisions.**/
 	private final int loading;

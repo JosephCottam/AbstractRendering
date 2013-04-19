@@ -2,6 +2,7 @@ package ar.app;
 
 import ar.GlyphSet;
 import ar.app.util.CSVtoGlyphSet;
+import ar.app.util.CharityNetLoader;
 
 public abstract class Dataset {
 	private final String name;
@@ -56,9 +57,17 @@ public abstract class Dataset {
 	public static final class Checkers extends Dataset{
 		public Checkers() {super("Checkers");}
 		protected GlyphSet load() {
-			System.out.print("Loading Checkers...");
+			System.out.print("Loading " + super.name + "...");
 			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, false, 0,1,2);
 		}
 	}
 	
+	public static final class CharityNet extends Dataset {
+		public CharityNet() {super("Charity Net");}
+		protected GlyphSet load() {
+			System.out.println("Loading " + super.name + "...");
+			return CharityNetLoader.load("./data/dateStateXY.csv");
+			//return CharityNetLoader.loadDirect("./data/date_state.csv");
+		}
+	}
 }
