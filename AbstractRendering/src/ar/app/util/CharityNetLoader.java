@@ -53,7 +53,33 @@ public class CharityNetLoader {
 		return glyphs;
 	}
 	
-	
+	public static GlyphSet loadNorm(String filename) {
+		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
+		
+		final int span=1;
+		
+		GlyphSet glyphs = MultiQuadTree.make(10000, 0,0,span+1);
+		Color olive=new Color(107,142,35);
+		
+		int count = 0;
+		while(loader.hasNext()) {
+			count++;
+			if (count % 500000 ==0) {System.out.println("\t loaded " + count + " records");}
+			String[] parts = loader.next();
+			
+			if (parts == null || parts.length <2) {continue;}
+
+			double date = Double.parseDouble(parts[0]);
+			double state = Double.parseDouble(parts[1]);
+			
+			Rectangle2D r = new Rectangle2D.Double(date,state,.01,.01);
+			Glyph g = new ar.GlyphSet.Glyph(r, olive);
+			glyphs.add(g);
+		}
+		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
+		
+		return glyphs;
+	}
 	
 	private static final List<String> STATES = Arrays.asList(new String[]{"AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"});
 

@@ -66,7 +66,8 @@ public abstract class Dataset {
 		public CharityNet() {super("Charity Net");}
 		protected GlyphSet load() {
 			System.out.println("Loading " + super.name + "...");
-			return CharityNetLoader.load("./data/dateStateXY.csv");
+			return CharityNetLoader.loadNorm("./data/date_state_ContribuCountOrderedxynorm.csv");
+			//return CharityNetLoader.load("./data/dateStateXY.csv");
 			//return CharityNetLoader.loadDirect("./data/date_state.csv");
 		}
 	}
