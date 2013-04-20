@@ -22,14 +22,31 @@ public class CharityService {
 
 		
 		//Zoom extent-----
-		Rectangle2D space = new Rectangle2D.Double(0,0, width,height);
 		Rectangle2D content = glyphset.bounds();
-		double w = space.getWidth()/content.getWidth();
-		double h = space.getHeight()/content.getHeight();
+		Rectangle2D image = new Rectangle2D.Double(0,0, width,height);
+		double w = image.getWidth()/(content.getWidth());
+		double h = image.getHeight()/(content.getHeight());
 		double scale = Math.min(w, h);
-		AffineTransform view = AffineTransform.getTranslateInstance(content.getCenterX(), content.getCenterX());
-		view.scale(scale, scale);
 		
+		AffineTransform view = new AffineTransform();
+		view.translate(content.getCenterX(), content.getCenterY());
+		view.scale(scale, scale);
+		view.translate(-content.getCenterX(), -content.getCenterY());
+
+
+		double x = image.getWidth()/(2*scale)- content.getCenterX();
+		double y = image.getHeight()/(2*scale)- content.getCenterY();
+		double dx = x-(view.getTranslateX()/scale);
+		double dy = y-(view.getTranslateY()/scale);		
+		view.translate(dx, dy);
+		
+//		System.out.println("###################");
+//		System.out.println("Bounds:" + content);
+//		System.out.println("Viewport:" + image.getWidth() + " x " + image.getHeight());
+//		System.out.println("Scale:" + view.getScaleX());
+//		System.out.println("Translate: " + view.getTranslateX() + " x " + view.getTranslateY());
+//		System.out.println("###################");
+
 		AffineTransform inverseView;
 		try {inverseView = view.createInverse();}
 		catch (Exception e) {throw new RuntimeException(e);}
@@ -43,6 +60,7 @@ public class CharityService {
 	
 	public static void main(String[] args) {
 		CharityService s = new CharityService();
-		System.out.println(s.JSONaggregates(100,100,0));
+		String aggregates = s.JSONaggregates(500,500,0);
+		System.out.println(aggregates);
 	}
 }

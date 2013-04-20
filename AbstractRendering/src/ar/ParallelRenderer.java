@@ -12,7 +12,7 @@ public final class ParallelRenderer implements Renderer {
 	public ParallelRenderer(int taskSize) {this.taskSize = taskSize;}
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
-			final Reduction<A> r, final int width, final int height) {		
+			final Reduction<A> r, final int width, final int height) {
 		Aggregates<A> aggregates = new Aggregates<A>(width, height); 
 		ReduceTask<A> t = new ReduceTask<A>(glyphs, inverseView, r, aggregates, 0,0, width, height, taskSize, 0);
 		pool.invoke(t);

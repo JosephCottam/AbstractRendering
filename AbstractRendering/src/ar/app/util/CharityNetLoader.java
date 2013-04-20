@@ -4,14 +4,12 @@ import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
 import ar.glyphsets.MultiQuadTree;
-import ar.glyphsets.QuadTree;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {
@@ -39,7 +37,7 @@ public class CharityNetLoader {
 			if (parts == null || parts.length <2) {continue;}
 
 			int date = Integer.parseInt(parts[0]);
-			int state = Integer.parseInt(parts[1]);
+			int state = -Integer.parseInt(parts[1]);
 			
 			double ddate = interpolate(-span, span, 0, maxDate, date);
 			double dstate = interpolate(-span, span, 0, maxState, state);
@@ -70,7 +68,7 @@ public class CharityNetLoader {
 			if (parts == null || parts.length <2) {continue;}
 
 			double date = Double.parseDouble(parts[0]);
-			double state = Double.parseDouble(parts[1]);
+			double state = -Double.parseDouble(parts[1]);
 			
 			Rectangle2D r = new Rectangle2D.Double(date,state,.01,.01);
 			Glyph g = new ar.GlyphSet.Glyph(r, olive);

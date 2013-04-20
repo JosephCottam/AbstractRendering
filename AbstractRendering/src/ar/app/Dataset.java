@@ -24,7 +24,7 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
 		}
 	}
-//	
+
 //	public static final class MPIPhases extends Dataset {
 //		public MPIPhases() {super("MPIPhases");}
 //		protected GlyphSet load() {return null;}

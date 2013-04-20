@@ -7,6 +7,8 @@ import java.io.IOException;
 import ar.Aggregates;
 
 public class AggregatesToJSON {
+	
+	@SuppressWarnings("unchecked")
 	public static void export(Aggregates<?> aggs, File file) {
 		String content;
 		if (aggs == null) {content = "Empty aggregate set.";}

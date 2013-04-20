@@ -231,6 +231,12 @@ public class ARPanel<A,B> extends JPanel {
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
 		this.repaint(this.getBounds());
+//		System.out.println("###################");
+//		System.out.println("Bounds:" + dataset.glyphs().bounds());
+//		System.out.println("Viewport:" + this.getWidth() + " x " + this.getHeight());
+//		System.out.println("Scale:" + viewTransformRef.getScaleX());
+//		System.out.println("Translate: " + viewTransformRef.getTranslateX() + " x " + viewTransformRef.getTranslateY());
+//		System.out.println("###################");
 	}
 	
 	/**Use this transform to convert screen values to the absolute/canvas

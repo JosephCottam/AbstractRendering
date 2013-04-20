@@ -38,7 +38,8 @@ public class Reductions {
 		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
-			return glyphs.containing(p).size();
+			Collection<Glyph> items = glyphs.containing(p);
+			return items.size();
 		}
 	}
 
@@ -128,7 +129,7 @@ public class Reductions {
 			Collection<Glyph> hits = glyphs.containing(p);
       
       if (topLeft) {
-        Collection<Glyph> superHits = new ArrayList(hits.size());
+        Collection<Glyph> superHits = new ArrayList<Glyph>(hits.size());
         for (Glyph g: hits) {
           Rectangle2D bounds = g.shape.getBounds2D();
           Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
