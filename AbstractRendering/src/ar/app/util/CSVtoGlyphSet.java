@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import ar.GlyphSet;
-import ar.glyphsets.MultiQuadTree;
+import ar.glyphsets.*;
 
 import static ar.GlyphSet.Glyph;
 
@@ -44,13 +44,16 @@ public class CSVtoGlyphSet {
 	
 	
 	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		Reader loader = new Reader(filename, skip);
-		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
-		final int yflip = flipy?-1:1;
-		//GlyphSet glyphs = QuadTree.make(100, 0,0,10);
+    GlyphSet glyphs = QuadTree.make(10);
+		//GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
+		//GlyphSet glyphs = SingleHomedQuadTree.make(100, 0,0,10);
 		//GlyphSet glyphs = new GlyphList();
+    //
+		Reader loader = new Reader(filename, skip);
+    final int yflip = flipy?-1:1;
 		int count =0;
-		while (loader.hasNext()) {
+		
+    while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
 			
@@ -69,7 +72,7 @@ public class CSVtoGlyphSet {
 	        count++;
 		}
 		
-		if (count != glyphs.size()) {throw new RuntimeException("Error loading data; Read and retained glyph counts don't match.");}
+		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
 		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
 		
 		//System.out.println(glyphs);
