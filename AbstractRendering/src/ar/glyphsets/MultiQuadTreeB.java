@@ -12,7 +12,10 @@ import ar.Util;
 
 
 /**Quad tree where items appear in each node that they touch.  
- * No items are held in intermediate nodes**/
+ * No items are held in intermediate nodes.
+ * This version pre-computes the bounds of sub-divisions and stores them for later reference
+ * as a possible optimization.  
+ * **/
 public abstract class MultiQuadTreeB implements GlyphSet {
 	private static final double MIN_DIM = .0001d;
 	
