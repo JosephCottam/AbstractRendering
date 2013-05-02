@@ -9,13 +9,12 @@ import java.util.List;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
-import ar.glyphsets.QuadTree;
+import ar.glyphsets.DynamicQuadTree;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {
 		return spanMin + ((v/max)*(spanMax-spanMin));
 	}
-	
 	
 	public static GlyphSet load(String filename) {
 		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
@@ -25,7 +24,7 @@ public class CharityNetLoader {
 		double maxState = Integer.parseInt(header[1]);
 		final int span=9;
 		
-		GlyphSet glyphs = QuadTree.make(10000);
+		GlyphSet glyphs = DynamicQuadTree.make(10000);
 		Color olive=new Color(107,142,35);
 		
 		int count = 0;
@@ -37,7 +36,7 @@ public class CharityNetLoader {
 			if (parts == null || parts.length <2) {continue;}
 
 			int date = Integer.parseInt(parts[0]);
-			int state = -Integer.parseInt(parts[1]);
+			int state = Integer.parseInt(parts[1]);
 			
 			double ddate = interpolate(-span, span, 0, maxDate, date);
 			double dstate = interpolate(-span, span, 0, maxState, state);
@@ -51,39 +50,11 @@ public class CharityNetLoader {
 		return glyphs;
 	}
 	
-	public static GlyphSet loadNorm(String filename) {
-		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
-		
-		final int span=1;
-		
-		GlyphSet glyphs = QuadTree.make(10000);
-		Color olive=new Color(107,142,35);
-		
-		int count = 0;
-		while(loader.hasNext()) {
-			count++;
-			if (count % 500000 ==0) {System.out.println("\t loaded " + count + " records");}
-			String[] parts = loader.next();
-			
-			if (parts == null || parts.length <2) {continue;}
-
-			double date = Double.parseDouble(parts[0]);
-			double state = -Double.parseDouble(parts[1]);
-			
-			Rectangle2D r = new Rectangle2D.Double(date,state,.01,.01);
-			Glyph g = new ar.GlyphSet.Glyph(r, olive);
-			glyphs.add(g);
-		}
-		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
-		
-		return glyphs;
-	}
-	
 	private static final List<String> STATES = Arrays.asList(new String[]{"AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"});
 
 	public static GlyphSet loadDirect(String filename) {
 		double span = 9;
-		GlyphSet glyphs = QuadTree.make(10);
+		GlyphSet glyphs = DynamicQuadTree.make(10);
 		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		

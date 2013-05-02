@@ -7,22 +7,25 @@ import ar.app.util.CharityNetLoader;
 public abstract class Dataset {
 	private final String name;
 	private GlyphSet glyphs;
-	
+
 	protected Dataset(String name) {
 		this.name = name;
-    try {
-    	glyphs = load();
-    }
-    catch (Exception e) {
-      System.err.printf("Error loading data for %s\n", name);
-      e.printStackTrace();
-    } 
+		try {glyphs = load();}
+		catch (Exception e) {
+			glyphs = null;
+			System.err.printf("Error loading data for %s\n", name);
+			e.printStackTrace();
+		} 
 	}
 
-	public String toString() {return name;}
+	public String toString() {
+		if (glyphs == null) {return name + " (Load Failed)";}
+		else {return name;}
+	}
+
 	public GlyphSet glyphs() {return glyphs;}
 	protected abstract GlyphSet load();
-	
+
 	public static final class Memory extends Dataset {
 		public Memory() {super("BGL Memory");}
 		protected GlyphSet load() {
@@ -31,11 +34,11 @@ public abstract class Dataset {
 		}
 	}
 
-//	public static final class MPIPhases extends Dataset {
-//		public MPIPhases() {super("MPIPhases");}
-//		protected GlyphSet load() {return null;}
-//	}
-	
+	//	public static final class MPIPhases extends Dataset {
+	//		public MPIPhases() {super("MPIPhases");}
+	//		protected GlyphSet load() {return null;}
+	//	}
+
 	public static final class FlowersGlyphs extends Dataset {
 		public FlowersGlyphs() {super("Flowerpoints");}
 		protected GlyphSet load() {
@@ -59,7 +62,7 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/circlepoints.csv", 1, .1, false, 2, 3,-1);
 		}
 	}
-	
+
 	public static final class Checkers extends Dataset{
 		public Checkers() {super("Checkers");}
 		protected GlyphSet load() {
@@ -67,13 +70,12 @@ public abstract class Dataset {
 			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, false, 0,1,2);
 		}
 	}
-	
+
 	public static final class CharityNet extends Dataset {
 		public CharityNet() {super("Charity Net");}
 		protected GlyphSet load() {
 			System.out.println("Loading " + super.name + "...");
-			return CharityNetLoader.loadNorm("./data/date_state_ContribuCountOrderedxynorm.csv");
-			//return CharityNetLoader.load("./data/dateStateXY.csv");
+			return CharityNetLoader.load("./data/dateStateXY.csv");
 			//return CharityNetLoader.loadDirect("./data/date_state.csv");
 		}
 	}

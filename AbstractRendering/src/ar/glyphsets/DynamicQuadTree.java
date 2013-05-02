@@ -29,7 +29,7 @@ import ar.Util;
  * 
  * **/
 
-public abstract class QuadTree implements GlyphSet {
+public abstract class DynamicQuadTree implements GlyphSet {
 	private static final double MIN_DIM = .0001d;
 	private static final double CROSS_LOAD_FACTOR = .25;
 	public static int NW = 0;
@@ -54,9 +54,9 @@ public abstract class QuadTree implements GlyphSet {
 	protected final int loading;
 	protected final Rectangle2D concernBounds;
 
-	public static QuadTree make(int loading) {return new QuadTree.RootHolder(loading);}
+	public static DynamicQuadTree make(int loading) {return new DynamicQuadTree.RootHolder(loading);}
 
-	protected QuadTree(int loading, Rectangle2D concernBounds) {
+	protected DynamicQuadTree(int loading, Rectangle2D concernBounds) {
 		this.loading=loading;
 		this.concernBounds = concernBounds;
 	}
@@ -96,21 +96,18 @@ public abstract class QuadTree implements GlyphSet {
 	/**Efficiency method for collecting items touching a point**/
 	protected abstract void containing(Point2D p, Collection<Glyph> collector);
 
+	protected boolean doSplit() {return false;}
+	
 	/**Convert the tree to a string where indentation indicates depth in tree.**/
 	public abstract String toString(int indent);
 	public String toString() {return toString(0);}
 
 
-
-	protected static QuadTree addTo(QuadTree target, Glyph item) {
+	protected static DynamicQuadTree addTo(DynamicQuadTree target, Glyph item) {
 		target.add(item);
 		
-		if (target.concernBounds.getWidth() > MIN_DIM && 
-				target instanceof LeafNode && 
-				((LeafNode) target).doSplit()) {
-			QuadTree inner = new InnerNode(target.loading, target.concernBounds());
-			for (Glyph g:target.items()) {inner.add(g);}
-			return inner;
+		if (target.doSplit()) {
+			return new InnerNode((LeafNode) target);
 		} else {
 			return target;
 		}
@@ -120,8 +117,8 @@ public abstract class QuadTree implements GlyphSet {
 	/**The root node does not actually hold an items, it is to faciliate the "up" direction splits.
 	 * A node of this type is always the initial node of the tree.  Most operations are passed
 	 * through it to its only child.**/
-	private static final class RootHolder extends QuadTree {
-		private QuadTree child;
+	private static final class RootHolder extends DynamicQuadTree {
+		private DynamicQuadTree child;
 		public RootHolder(int loading) {
 			super(loading, null);
 			child = new LeafNode(loading, new Rectangle2D.Double(0,0,0,0));
@@ -136,13 +133,13 @@ public abstract class QuadTree implements GlyphSet {
 					//to fit the data until the loading limit has been reached
 
 					Rectangle2D newBounds = Util.fullBounds(b, child.bounds());
-					QuadTree newChild = new LeafNode(super.loading, newBounds, (LeafNode) child);
+					DynamicQuadTree newChild = new LeafNode(super.loading, newBounds, (LeafNode) child);
 					this.child = newChild;
 				} else {
 					//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
 					//Growth is from the center-out, so the new siblings each get one quadrant from the current root
 					//and have three quadrants that start out vacant.
-					QuadTree.InnerNode iChild = (QuadTree.InnerNode) child;
+					DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) child;
 					Rectangle2D currentBounds = child.concernBounds(); 
 					Rectangle2D newBounds = new Rectangle2D.Double(
 							currentBounds.getX()-currentBounds.getWidth()/2.0d,
@@ -187,7 +184,7 @@ public abstract class QuadTree implements GlyphSet {
 				}
 			}
 
-			child = QuadTree.addTo(child, glyph);
+			child = DynamicQuadTree.addTo(child, glyph);
 		}
 
 
@@ -199,14 +196,25 @@ public abstract class QuadTree implements GlyphSet {
 		public String toString(int indent) {return child.toString(indent);}
 	}
 
-	private static final class InnerNode extends QuadTree {
-		private final QuadTree[] quads =new QuadTree[4];
+	private static final class InnerNode extends DynamicQuadTree {
+		private final DynamicQuadTree[] quads =new DynamicQuadTree[4];
 
+		/**Create a new InnerNode from an existing leaf node.
+		 * The quads of the leaf can be copied directly to the children of this node.
+		 * Only the spanning items of the leaf need to go through the regular add procedure.
+		 */
+		private InnerNode(LeafNode source) {
+			this(source.loading, source.concernBounds);
+			for (int i=0; i<quads.length;i++) {
+				for (Glyph g: source.quads[i].items) {quads[i].add(g);}
+			}
+			for (Glyph g:source.spanningItems) {add(g);}
+		}
 		private InnerNode(int loading, Rectangle2D concernBounds) {
 			super(loading, concernBounds);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new QuadTree.LeafNode(loading, subs.quads[i]);
+				quads[i] = new DynamicQuadTree.LeafNode(loading, subs.quads[i]);
 			}
 		}
 
@@ -215,7 +223,7 @@ public abstract class QuadTree implements GlyphSet {
 			Rectangle2D glyphBounds = glyph.shape.getBounds2D();
 
 			for (int i=0; i<quads.length; i++) {
-				QuadTree quad = quads[i];
+				DynamicQuadTree quad = quads[i];
 				if (quad.concernBounds.intersects(glyphBounds)) {
 					quads[i] = addTo(quad, glyph);
 					added = true;
@@ -228,18 +236,18 @@ public abstract class QuadTree implements GlyphSet {
 		}
 
 		public void containing(Point2D p, Collection<Glyph> collector) {
-			for (QuadTree q: quads) {
+			for (DynamicQuadTree q: quads) {
 				if (q.concernBounds.contains(p)) {q.containing(p, collector); break;}
 			}
 		}
 
 		public boolean isEmpty() {
-			for (QuadTree q: quads) {if (!q.isEmpty()) {return false;}}
+			for (DynamicQuadTree q: quads) {if (!q.isEmpty()) {return false;}}
 			return true;
 		}
 
 		public void items(Collection<Glyph> collector) {
-			for (QuadTree q: quads) {q.items(collector);}
+			for (DynamicQuadTree q: quads) {q.items(collector);}
 		}
 
 		public Rectangle2D bounds() {
@@ -252,14 +260,15 @@ public abstract class QuadTree implements GlyphSet {
 		
 		public String toString(int indent) {
 			StringBuilder b = new StringBuilder();
-			for (QuadTree q: quads) {b.append(q.toString(indent+1));}
+			for (DynamicQuadTree q: quads) {b.append(q.toString(indent+1));}
 			return String.format("%sNode: %d items\n", Util.indent(indent), size()) + b.toString();
 		}
 	}
 	
-	private static final class LeafNode extends QuadTree {
-		private final List<Glyph> items;
+	private static final class LeafNode extends DynamicQuadTree {
+		private final List<Glyph> spanningItems;
 		private final LeafQuad[] quads = new LeafQuad[4];
+		private int size=0;
 
 		private LeafNode(int loading, Rectangle2D concernBounds) {
 			this(loading, concernBounds, new ArrayList<Glyph>());
@@ -274,10 +283,10 @@ public abstract class QuadTree implements GlyphSet {
 
 		private LeafNode(int loading, Rectangle2D concernBounds, Collection<Glyph> glyphs) {
 			super(loading, concernBounds);
-			items = new ArrayList<Glyph>(loading);
+			spanningItems = new ArrayList<Glyph>(loading);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new QuadTree.LeafQuad(loading, subs.quads[i]);
+				quads[i] = new DynamicQuadTree.LeafQuad(loading, subs.quads[i]);
 			}
 			for (Glyph g: glyphs) {add(g);}
 		}
@@ -290,40 +299,45 @@ public abstract class QuadTree implements GlyphSet {
 			for (int i=0; i<quads.length; i++) {
 				LeafQuad quad = quads[i];
 				if (quad.concernBounds.intersects(glyphBounds)) {hits[i]=true; totalHits++;}
+				if (totalHits>2) {break;}
 			}
 			
-			if (totalHits>1) {items.add(glyph);}
+			if (totalHits>1) {spanningItems.add(glyph);}
 			else {for (int i=0; i<hits.length;i++) {if (hits[i]) {quads[i].add(glyph);}}}
+			size++;
 
 			if (totalHits ==0) {
 				throw new Error(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
 			}
 		}
 
+		
+		public int size() {return size;}
 		public String toString(int indent) {
-			return String.format("%sLeafNode: %d items (%s spanning items)\n", Util.indent(indent), size(), items.size());
+			return String.format("%sLeafNode: %d items (%s spanning items)\n", Util.indent(indent), size(), spanningItems.size());
 		}	
 		
 		/**Should this leaf become an inner node?  Yes...but only if it would help one of the quads.**/
 		protected boolean doSplit() {
+			if (size < loading && concernBounds.getWidth() < MIN_DIM) {return false;} 
 			for (LeafQuad q: quads) {
-				if (q.size() >loading && (q.size()/(items.size()+1) > CROSS_LOAD_FACTOR)) {return true;}
+				if (q.size() >loading && (q.size()/(spanningItems.size()+1) > CROSS_LOAD_FACTOR)) {return true;}
 			}
 			return false;
 		}
 		
 		//NEAR Copy
 		public void containing(Point2D p, Collection<Glyph> collector) {
-			for (QuadTree q: quads) {
+			for (DynamicQuadTree q: quads) {
 				if (q.concernBounds.contains(p)) {q.containing(p, collector); break;}
 			}
-			for (Glyph g:items) {if (g.shape.contains(p)) {collector.add(g);}}
+			for (Glyph g:spanningItems) {if (g.shape.contains(p)) {collector.add(g);}}
 		}
 		
 		//NEAR Copy
 		public boolean isEmpty() {
-			for (QuadTree q: quads) {if (!q.isEmpty()) {return false;}}
-			return items.size() == 0;
+			for (DynamicQuadTree q: quads) {if (!q.isEmpty()) {return false;}}
+			return spanningItems.size() == 0;
 		}
 
 		//Copy
@@ -332,14 +346,14 @@ public abstract class QuadTree implements GlyphSet {
 			for (int i=0; i<quads.length; i++) {
 				bounds[i] = quads[i].bounds();
 			}
-			bounds[quads.length] = Util.bounds(items);
+			bounds[quads.length] = Util.bounds(spanningItems);
 			return Util.fullBounds(bounds);
 		}
 
 		//Copy
 		public void items(Collection<Glyph> collector) {
-			collector.addAll(items);
-			for (QuadTree q: quads) {q.items(collector);}
+			collector.addAll(spanningItems);
+			for (DynamicQuadTree q: quads) {q.items(collector);}
 		}
 		
 		
@@ -349,7 +363,7 @@ public abstract class QuadTree implements GlyphSet {
 	 * It represents a set of items that would be entirely in one leaf quadrant if the leaf were to split.
 	 * This class exists so leaf-split decisions can be made efficiently.
 	 */
-	private static final class LeafQuad extends QuadTree {
+	private static final class LeafQuad extends DynamicQuadTree {
 		private final List<Glyph> items;
 		
 		protected LeafQuad(int loading, Rectangle2D concernBounds) {
