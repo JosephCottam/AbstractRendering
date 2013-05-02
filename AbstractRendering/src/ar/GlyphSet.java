@@ -12,7 +12,7 @@ public interface GlyphSet {
 	public boolean isEmpty();
 	public int size();
 	public Rectangle2D bounds();
-	public boolean add(Glyph g);
+	public void add(Glyph g);
 	
 	public static final class Glyph {
 		private static int IDCOUNTER=0;

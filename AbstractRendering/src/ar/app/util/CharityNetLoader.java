@@ -9,7 +9,7 @@ import java.util.List;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
-import ar.glyphsets.MultiQuadTree;
+import ar.glyphsets.QuadTree;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {
@@ -25,7 +25,7 @@ public class CharityNetLoader {
 		double maxState = Integer.parseInt(header[1]);
 		final int span=9;
 		
-		GlyphSet glyphs = MultiQuadTree.make(10000, 0,0,12);
+		GlyphSet glyphs = QuadTree.make(10000);
 		Color olive=new Color(107,142,35);
 		
 		int count = 0;
@@ -56,7 +56,7 @@ public class CharityNetLoader {
 		
 		final int span=1;
 		
-		GlyphSet glyphs = MultiQuadTree.make(10000, 0,0,span+1);
+		GlyphSet glyphs = QuadTree.make(10000);
 		Color olive=new Color(107,142,35);
 		
 		int count = 0;
@@ -83,7 +83,7 @@ public class CharityNetLoader {
 
 	public static GlyphSet loadDirect(String filename) {
 		double span = 9;
-		GlyphSet glyphs = MultiQuadTree.make(10, 0,0,(int) span+1);
+		GlyphSet glyphs = QuadTree.make(10);
 		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		

@@ -13,7 +13,7 @@ public class GlyphList implements GlyphSet {
 	
 	public Iterator<Glyph> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
-	public boolean add(Glyph g) {glyphs.add(g); return true;}
+	public void add(Glyph g) {glyphs.add(g);}
 	public int size() {return glyphs.size();}
 
 	public Collection<Glyph> containing(Point2D p) {

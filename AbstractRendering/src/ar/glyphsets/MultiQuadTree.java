@@ -31,7 +31,8 @@ public abstract class MultiQuadTree implements GlyphSet {
 	}
 	
 	public Rectangle2D concernBounds() {return concernBounds;}
-	public abstract boolean add(Glyph glyph);
+	public abstract void add(Glyph glyph);
+	public abstract boolean maybeAdd(Glyph glyph);
 
 	
 	public int size() {return items().size();}
@@ -77,11 +78,14 @@ public abstract class MultiQuadTree implements GlyphSet {
 			bottom = concernBounds.getWidth()<=MIN_DIM;
 		}
 		
+		@Override
+		public void add(Glyph glyph) {throw new UnsupportedOperationException("Must call maybeAdd instead.");}
+		
 		/**Add an item to this node.  Returns true if the item was added.  False otherwise.
 		 * Will return false only if the item count exceeds the load AND the bottom has not been reached AND 
 		 * the split passes the "Advantage."
 		 * **/
-		public boolean add(Glyph glyph) {
+		public boolean maybeAdd(Glyph glyph) {
 			if (!bottom && items.size() == super.loading && advantageousSplit()) { 
 				//TODO: Improve advantageousSplit efficiency; count the multi-touches as they ar added and pre-compute the subs dims
 				return false;
@@ -134,7 +138,8 @@ public abstract class MultiQuadTree implements GlyphSet {
 			SE = new MultiQuadTree.LeafNode(loading, subs.SE);
 		}
 		
-		public boolean add(Glyph glyph) {
+		public boolean maybeAdd(Glyph glyph) {add(glyph); return true;}
+		public void add(Glyph glyph) {
 			boolean added = false;
 			Rectangle2D glyphBounds = glyph.shape.getBounds2D();
 			
@@ -159,11 +164,10 @@ public abstract class MultiQuadTree implements GlyphSet {
 			if (!added) {
 				throw new Error(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
 			}
-			else{return true;}
 		}
 
 		protected static MultiQuadTree addTo(MultiQuadTree target, Glyph item) {
-			boolean added = target.add(item);
+			boolean added = target.maybeAdd(item);
 			if (added) {return target;}
 			else {
 				MultiQuadTree inner = new InnerNode(target.loading, target.concernBounds);

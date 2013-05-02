@@ -10,7 +10,9 @@ public abstract class Dataset {
 	
 	protected Dataset(String name) {
 		this.name = name;
-    try {glyphs = load();}
+    try {
+    	glyphs = load();
+    }
     catch (Exception e) {
       System.err.printf("Error loading data for %s\n", name);
       e.printStackTrace();
