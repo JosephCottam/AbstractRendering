@@ -25,14 +25,14 @@ public abstract class Dataset {
 
 	public GlyphSet glyphs() {return glyphs;}
 	protected abstract GlyphSet load();
-
-	public static final class Memory extends Dataset {
-		public Memory() {super("BGL Memory");}
-		protected GlyphSet load() {
-			System.out.print("Loading BGL Memory...");
-			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
-		}
-	}
+//
+//	public static final class Memory extends Dataset {
+//		public Memory() {super("BGL Memory");}
+//		protected GlyphSet load() {
+//			System.out.print("Loading BGL Memory...");
+//			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
+//		}
+//	}
 
 	//	public static final class MPIPhases extends Dataset {
 	//		public MPIPhases() {super("MPIPhases");}
@@ -67,16 +67,24 @@ public abstract class Dataset {
 		public Checkers() {super("Checkers");}
 		protected GlyphSet load() {
 			System.out.print("Loading " + super.name + "...");
-			return CSVtoGlyphSet.load("./data/checkerboard.csv", 1, 1, false, 0,1,2);
+			return CSVtoGlyphSet.load("./data/checkerboard.csv", 2, 1, false, 0,1,2);
 		}
 	}
-
-	public static final class CharityNet extends Dataset {
-		public CharityNet() {super("Charity Net");}
+	
+	public static final class CheckersMatrix extends Dataset{
+		public CheckersMatrix() {super("Checkers (Matrix)");}
 		protected GlyphSet load() {
-			System.out.println("Loading " + super.name + "...");
-			return CharityNetLoader.load("./data/dateStateXY.csv");
-			//return CharityNetLoader.loadDirect("./data/date_state.csv");
+			System.out.print("Loading " + super.name + "...");
+			return CSVtoGlyphSet.loadMatrix("./data/checkerboard.csv", 1, 1, 0,1,3,-1, new CSVtoGlyphSet.ToInt(), false);
 		}
 	}
+//
+//	public static final class CharityNet extends Dataset {
+//		public CharityNet() {super("Charity Net");}
+//		protected GlyphSet load() {
+//			System.out.println("Loading " + super.name + "...");
+//			return CharityNetLoader.load("./data/dateStateXY.csv");
+//			//return CharityNetLoader.loadDirect("./data/date_state.csv");
+//		}
+//	}
 }

@@ -12,26 +12,35 @@ public class DirectMatrix<T> implements GlyphSet {
 	private final T[][] matrix;
 	private final double xScale, yScale;
 	private final Painter<T> colorBy;
+	private final boolean nullIsValue;
 
 	public static interface Painter<T> {
 		public java.awt.Color from(T item);
 	}
 	
-	private static final class ConstantPaint<T> implements Painter<T> {
+	private static final class IfNull<T> implements Painter<T> {
 		private final Color color;
-		public ConstantPaint(Color c) {this.color = c;}
-		public Color from(T item) {return color;}
+		private final Color nullColor;
+		public IfNull(Color c, Color nullColor) {
+			this.nullColor = nullColor;
+			this.color = c;
+		}
+		public Color from(T item) {
+			if (item != null) {return color;}
+			else {return nullColor;}
+		}
 	}
 	
-	public DirectMatrix(T[][] matrix, double xScale, double yScale) {
-		this(matrix, xScale, yScale, new ConstantPaint<T>(Color.blue));
+	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue) {
+		this(matrix, xScale, yScale, nullIsValue, new IfNull<T>(Color.blue, Color.white));
 	}
 	
-	public DirectMatrix(T[][] matrix, double xScale, double yScale, Painter<T> colorBy) {
+	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, Painter<T> colorBy) {
 		this.matrix = matrix;
 		this.xScale = xScale;
 		this.yScale = yScale;
 		this.colorBy = colorBy;
+		this.nullIsValue = nullIsValue;
 	}
 
 
@@ -41,6 +50,8 @@ public class DirectMatrix<T> implements GlyphSet {
 
 		if (inBounds(row,col)) {
 			T v = matrix[(int) row][(int) col];
+			if (v == null && !nullIsValue) {return Collections.emptyList();}
+			
 			Rectangle2D s = new Rectangle2D.Double(row*xScale, col*yScale, xScale, yScale);
 			Color c = colorBy.from(v);
 			return Collections.singletonList(new Glyph(s,c,v));

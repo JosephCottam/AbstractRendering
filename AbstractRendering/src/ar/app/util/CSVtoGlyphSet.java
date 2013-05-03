@@ -23,7 +23,7 @@ public class CSVtoGlyphSet {
 				while (skip-- > 0) {reader.readLine();}
 			} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + filename, e);}
 		}
-		
+
 		protected String[] next() {
 			String line = null;
 			try {line = reader.readLine();}
@@ -31,7 +31,7 @@ public class CSVtoGlyphSet {
 			if (line == null) {return done();}
 			else {return splitter.split(line);}
 		}
-		
+
 		//Always returns null...
 		protected String[] done() {
 			try {reader.close();}
@@ -41,21 +41,55 @@ public class CSVtoGlyphSet {
 		}
 		protected boolean hasNext() {return reader != null;}
 	}
+
+	public static interface Converter<T> {public T convert(String[] items, int idx, T defaultValue);}
+	public static class ToInt implements Converter<Integer> {
+		public Integer convert(String[] items, int idx, Integer defaultValue) {
+			try {return Integer.parseInt(items[idx]);}
+			catch (Exception e) {return defaultValue;}
+		}
+	}
 	
+	//Loads a matrix from a file.  Assumes the first line tells the matrix dimensions
+	@SuppressWarnings("unchecked")
+	public static <T> DirectMatrix<T> loadMatrix(String filename, int skip, double size, 
+			int rowField, int colField, int valueField, 
+			T defaultValue, Converter<T> converter,
+			boolean nullIsValue) {
+		
+		Reader loader = new Reader(filename, 0);
+		String[] header = loader.next();
+		int rows = Integer.parseInt(header[1]);
+		int cols = Integer.parseInt(header[2]);
+		Object[][] matrix = new Object[rows][cols];
+		
+		while (skip>0) {loader.next(); skip--;}
+		while (loader.hasNext()) {
+			String[] line = loader.next();
+			if (line == null) {continue;}
+			
+			int row = Integer.parseInt(line[rowField]);
+			int col = Integer.parseInt(line[colField]);
+			T value = converter.convert(line, valueField, defaultValue);
+			matrix[row][col] = value;
+		}
+		return new DirectMatrix<T>((T[][]) matrix,size,size, nullIsValue);
+	}
+
 	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
 		GlyphSet glyphs = DynamicQuadTree.make(10);
 		//GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
 		//GlyphSet glyphs = SingleHomedQuadTree.make(100, 0,0,10);
 		//GlyphSet glyphs = new GlyphList();
-    //
+		//
 		Reader loader = new Reader(filename, skip);
-    final int yflip = flipy?-1:1;
+		final int yflip = flipy?-1:1;
 		int count =0;
-		
-    while (loader.hasNext()) {
+
+		while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
-			
+
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]) * yflip;
 			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size);
@@ -65,18 +99,18 @@ public class CSVtoGlyphSet {
 					color = ColorNames.byName(parts[colorField], Color.red);
 				} catch (Exception e) {throw new RuntimeException("Error loading color: " + parts[colorField]);}
 			} else {color = Color.RED;}
-			
-	        Glyph g = new ar.GlyphSet.Glyph(rect, color);
-	        glyphs.add(g);
-	        count++;
+
+			Glyph g = new ar.GlyphSet.Glyph(rect, color);
+			glyphs.add(g);
+			count++;
 		}
-		
+
 		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
 		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
-		
+
 		//System.out.println(glyphs);
 
 		return glyphs;
 	}
-	
+
 }
