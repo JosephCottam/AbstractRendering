@@ -64,6 +64,7 @@ public class CSVtoGlyphSet {
 		Object[][] matrix = new Object[rows][cols];
 		
 		while (skip>0) {loader.next(); skip--;}
+		int count = 0;
 		while (loader.hasNext()) {
 			String[] line = loader.next();
 			if (line == null) {continue;}
@@ -72,7 +73,10 @@ public class CSVtoGlyphSet {
 			int col = Integer.parseInt(line[colField]);
 			T value = converter.convert(line, valueField, defaultValue);
 			matrix[row][col] = value;
+			count++;
 		}
+		
+		System.out.printf("Read %d entries into a %d x %d matrix.\n", count, rows, cols);
 		return new DirectMatrix<T>((T[][]) matrix,size,size, nullIsValue);
 	}
 

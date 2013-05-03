@@ -4,12 +4,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class Aggregates<A> implements Iterable<A> {
-	private final Object[] values;
+	private final A[] values;
 	private final int width;
 	private final int height;
 	
+	@SuppressWarnings("unchecked")
 	public Aggregates(int width, int height) {
-		values = new Object[width*height];
+		values = (A[]) new Object[width*height];
 		this.width = width;
 		this.height = height;
 	}

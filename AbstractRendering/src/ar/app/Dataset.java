@@ -25,14 +25,14 @@ public abstract class Dataset {
 
 	public GlyphSet glyphs() {return glyphs;}
 	protected abstract GlyphSet load();
-//
-//	public static final class Memory extends Dataset {
-//		public Memory() {super("BGL Memory");}
-//		protected GlyphSet load() {
-//			System.out.print("Loading BGL Memory...");
-//			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
-//		}
-//	}
+
+	public static final class Memory extends Dataset {
+		public Memory() {super("BGL Memory");}
+		protected GlyphSet load() {
+			System.out.print("Loading BGL Memory...");
+			return CSVtoGlyphSet.load("./data/MemVisScaled.csv", 0, .005, true, 0, 1,2);
+		}
+	}
 
 	//	public static final class MPIPhases extends Dataset {
 	//		public MPIPhases() {super("MPIPhases");}

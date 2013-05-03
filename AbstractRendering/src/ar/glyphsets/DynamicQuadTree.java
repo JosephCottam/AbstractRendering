@@ -89,9 +89,9 @@ public abstract class DynamicQuadTree implements GlyphSet {
 
 	/**What items in this sub-tree contain the passed point?**/
 	public Collection<Glyph> containing(Point2D p) {
-		Collection<Glyph> collector = new HashSet<Glyph>();
-		containing(p, collector);
-		return collector;
+		Collection<Glyph> collector2 = new ArrayList<Glyph>();
+		containing(p, collector2);
+		return collector2;
 	}
 	/**Efficiency method for collecting items touching a point**/
 	protected abstract void containing(Point2D p, Collection<Glyph> collector);

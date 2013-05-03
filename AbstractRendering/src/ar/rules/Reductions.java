@@ -84,7 +84,9 @@ public class Reductions {
 	
 	public static final class RLEColor implements Reduction<RLE> {
 		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
-			public int compare(Glyph o1, Glyph o2) {return Integer.compare(o1.color.getRGB(), o2.color.getRGB());}
+			public int compare(Glyph o1, Glyph o2) {
+				return Integer.compare(o1.color.getRGB(), o2.color.getRGB());
+			}
 		};
 		
 		private final boolean sort;
