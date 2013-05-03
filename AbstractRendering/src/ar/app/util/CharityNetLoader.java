@@ -24,7 +24,8 @@ public class CharityNetLoader {
 		double maxState = Integer.parseInt(header[1]);
 		final int span=9;
 		
-		GlyphSet glyphs = DynamicQuadTree.make(10000);
+		DynamicQuadTree.LOADING = 1000;
+		GlyphSet glyphs = DynamicQuadTree.make();
 		Color olive=new Color(107,142,35);
 		
 		int count = 0;
@@ -54,7 +55,9 @@ public class CharityNetLoader {
 
 	public static GlyphSet loadDirect(String filename) {
 		double span = 9;
-		GlyphSet glyphs = DynamicQuadTree.make(10);
+
+		DynamicQuadTree.LOADING = 1000;
+		GlyphSet glyphs = DynamicQuadTree.make();
 		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		

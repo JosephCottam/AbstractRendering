@@ -81,7 +81,7 @@ public class CSVtoGlyphSet {
 	}
 
 	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		GlyphSet glyphs = DynamicQuadTree.make(10);
+		GlyphSet glyphs = DynamicQuadTree.make();
 		//GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
 		//GlyphSet glyphs = SingleHomedQuadTree.make(100, 0,0,10);
 		//GlyphSet glyphs = new GlyphList();

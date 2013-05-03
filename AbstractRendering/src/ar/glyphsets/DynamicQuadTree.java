@@ -30,8 +30,10 @@ import ar.Util;
  * **/
 
 public abstract class DynamicQuadTree implements GlyphSet {
-	private static final double MIN_DIM = .0001d;
-	private static final double CROSS_LOAD_FACTOR = .25;
+	public static double MIN_DIM = .0001d;
+	public static double CROSS_LOAD_FACTOR = .25;
+	public static int LOADING = 10;
+	
 	public static int NW = 0;
 	public static int NE = 1;
 	public static int SW = 2;
@@ -51,13 +53,11 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	}
 	
 	/**How many items before exploring subdivisions.**/
-	protected final int loading;
 	protected final Rectangle2D concernBounds;
 
-	public static DynamicQuadTree make(int loading) {return new DynamicQuadTree.RootHolder(loading);}
+	public static DynamicQuadTree make() {return new DynamicQuadTree.RootHolder();}
 
-	protected DynamicQuadTree(int loading, Rectangle2D concernBounds) {
-		this.loading=loading;
+	protected DynamicQuadTree(Rectangle2D concernBounds) {
 		this.concernBounds = concernBounds;
 	}
 
@@ -119,9 +119,10 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	 * through it to its only child.**/
 	private static final class RootHolder extends DynamicQuadTree {
 		private DynamicQuadTree child;
-		public RootHolder(int loading) {
-			super(loading, null);
-			child = new LeafNode(loading, new Rectangle2D.Double(0,0,0,0));
+		
+		public RootHolder() {
+			super(null);
+			child = new LeafNode(new Rectangle2D.Double(0,0,0,0));
 		}
 
 		public void add(Glyph glyph) {
@@ -133,58 +134,61 @@ public abstract class DynamicQuadTree implements GlyphSet {
 					//to fit the data until the loading limit has been reached
 
 					Rectangle2D newBounds = Util.fullBounds(b, child.bounds());
-					DynamicQuadTree newChild = new LeafNode(super.loading, newBounds, (LeafNode) child);
+					DynamicQuadTree newChild = new LeafNode(newBounds, (LeafNode) child);
 					this.child = newChild;
 				} else {
-					//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
-					//Growth is from the center-out, so the new siblings each get one quadrant from the current root
-					//and have three quadrants that start out vacant.
-					DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) child;
-					Rectangle2D currentBounds = child.concernBounds(); 
-					Rectangle2D newBounds = new Rectangle2D.Double(
-							currentBounds.getX()-currentBounds.getWidth()/2.0d,
-							currentBounds.getY()-currentBounds.getHeight()/2.0d,
-							currentBounds.getWidth()*2,
-							currentBounds.getHeight()*2);
-
-
-					//The following checks prevent empty nodes from proliferating as you split up.  
-					//Leaf nodes in the old tree are rebounded for the new tree.  
-					//Non-leaf nodes are replaced with a quad of nodes
-					InnerNode newChild = new InnerNode(super.loading, newBounds);
-					if (iChild.quads[NE] instanceof InnerNode) {
-						newChild.quads[NE] =new InnerNode(super.loading, newChild.quads[NE].concernBounds());
-						((InnerNode) newChild.quads[NE]).quads[SW] = iChild.quads[NE];
-					} else if (!iChild.quads[NE].isEmpty()) {
-						newChild.quads[NE] = new LeafNode(super.loading, newChild.quads[NE].concernBounds(), (LeafNode) iChild.quads[NE]);
-					}
-
-					if (iChild.quads[NW] instanceof InnerNode) {
-						newChild.quads[NW] = new InnerNode(super.loading, newChild.quads[NW].concernBounds());
-						((InnerNode) newChild.quads[NW]).quads[SE] = iChild.quads[NW];
-					} else if (!iChild.quads[NW].isEmpty()) {
-						newChild.quads[NW] = new LeafNode(super.loading, newChild.quads[NW].concernBounds(), (LeafNode) iChild.quads[NW]);
-					}
-
-					if (iChild.quads[SW] instanceof InnerNode) {
-						newChild.quads[SW] = new InnerNode(super.loading, newChild.quads[SW].concernBounds());
-						((InnerNode) newChild.quads[SW]).quads[NE] = iChild.quads[SW];
-					} else if (!iChild.quads[SW].isEmpty()) {
-						newChild.quads[SW] = new LeafNode(super.loading, newChild.quads[SW].concernBounds(), (LeafNode) iChild.quads[SW]);
-					}
-
-					if (iChild.quads[SE] instanceof InnerNode) {
-						newChild.quads[SE] = new InnerNode(super.loading, newChild.quads[SE].concernBounds());
-						((InnerNode) newChild.quads[SE]).quads[NW] = iChild.quads[SE];
-					} else if (!iChild.quads[SE].isEmpty()) {
-						newChild.quads[SE] = new LeafNode(super.loading, newChild.quads[SE].concernBounds(), (LeafNode) iChild.quads[SE]);
-					}
-
-					this.child = newChild;
+					this.child = growUp(child, b);
 				}
 			}
 
 			child = DynamicQuadTree.addTo(child, glyph);
+		}
+		
+		private static final InnerNode growUp(DynamicQuadTree current, Rectangle2D b) {
+			//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
+			//Growth is from the center-out, so the new siblings each get one quadrant from the current root
+			//and have three quadrants that start out vacant.
+			DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) current;
+			Rectangle2D currentBounds = current.concernBounds(); 
+			Rectangle2D newBounds = new Rectangle2D.Double(
+					currentBounds.getX()-currentBounds.getWidth()/2.0d,
+					currentBounds.getY()-currentBounds.getHeight()/2.0d,
+					currentBounds.getWidth()*2,
+					currentBounds.getHeight()*2);
+
+
+			//The following checks prevent empty nodes from proliferating as you split up.  
+			//Leaf nodes in the old tree are rebounded for the new tree.  
+			//Non-leaf nodes are replaced with a quad of nodes
+			InnerNode newChild = new InnerNode(newBounds);
+			if (iChild.quads[NE] instanceof InnerNode) {
+				newChild.quads[NE] =new InnerNode(newChild.quads[NE].concernBounds());
+				((InnerNode) newChild.quads[NE]).quads[SW] = iChild.quads[NE];
+			} else if (!iChild.quads[NE].isEmpty()) {
+				newChild.quads[NE] = new LeafNode(newChild.quads[NE].concernBounds(), (LeafNode) iChild.quads[NE]);
+			}
+
+			if (iChild.quads[NW] instanceof InnerNode) {
+				newChild.quads[NW] = new InnerNode(newChild.quads[NW].concernBounds());
+				((InnerNode) newChild.quads[NW]).quads[SE] = iChild.quads[NW];
+			} else if (!iChild.quads[NW].isEmpty()) {
+				newChild.quads[NW] = new LeafNode(newChild.quads[NW].concernBounds(), (LeafNode) iChild.quads[NW]);
+			}
+
+			if (iChild.quads[SW] instanceof InnerNode) {
+				newChild.quads[SW] = new InnerNode(newChild.quads[SW].concernBounds());
+				((InnerNode) newChild.quads[SW]).quads[NE] = iChild.quads[SW];
+			} else if (!iChild.quads[SW].isEmpty()) {
+				newChild.quads[SW] = new LeafNode(newChild.quads[SW].concernBounds(), (LeafNode) iChild.quads[SW]);
+			}
+
+			if (iChild.quads[SE] instanceof InnerNode) {
+				newChild.quads[SE] = new InnerNode(newChild.quads[SE].concernBounds());
+				((InnerNode) newChild.quads[SE]).quads[NW] = iChild.quads[SE];
+			} else if (!iChild.quads[SE].isEmpty()) {
+				newChild.quads[SE] = new LeafNode(newChild.quads[SE].concernBounds(), (LeafNode) iChild.quads[SE]);
+			}
+			return newChild;
 		}
 
 
@@ -204,17 +208,17 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		 * Only the spanning items of the leaf need to go through the regular add procedure.
 		 */
 		private InnerNode(LeafNode source) {
-			this(source.loading, source.concernBounds);
+			this(source.concernBounds);
 			for (int i=0; i<quads.length;i++) {
 				for (Glyph g: source.quads[i].items) {quads[i].add(g);}
 			}
 			for (Glyph g:source.spanningItems) {add(g);}
 		}
-		private InnerNode(int loading, Rectangle2D concernBounds) {
-			super(loading, concernBounds);
+		private InnerNode(Rectangle2D concernBounds) {
+			super(concernBounds);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new DynamicQuadTree.LeafNode(loading, subs.quads[i]);
+				quads[i] = new DynamicQuadTree.LeafNode(subs.quads[i]);
 			}
 		}
 
@@ -270,23 +274,23 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		private final LeafQuad[] quads = new LeafQuad[4];
 		private int size=0;
 
-		private LeafNode(int loading, Rectangle2D concernBounds) {
-			this(loading, concernBounds, new ArrayList<Glyph>());
+		private LeafNode(Rectangle2D concernBounds) {
+			this(concernBounds, new ArrayList<Glyph>());
 			
 		}
 
 		//Re-bounding version.
 		//WARNING: This introduces data sharing and should only be done if old will immediately be destroyed
-		private LeafNode(int loading, Rectangle2D concernBounds, LeafNode old) {
-			this(loading, concernBounds, old.items());
+		private LeafNode(Rectangle2D concernBounds, LeafNode old) {
+			this(concernBounds, old.items());
 		}
 
-		private LeafNode(int loading, Rectangle2D concernBounds, Collection<Glyph> glyphs) {
-			super(loading, concernBounds);
-			spanningItems = new ArrayList<Glyph>(loading);
+		private LeafNode(Rectangle2D concernBounds, Collection<Glyph> glyphs) {
+			super(concernBounds);
+			spanningItems = new ArrayList<Glyph>(LOADING);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new DynamicQuadTree.LeafQuad(loading, subs.quads[i]);
+				quads[i] = new DynamicQuadTree.LeafQuad(subs.quads[i]);
 			}
 			for (Glyph g: glyphs) {add(g);}
 		}
@@ -319,9 +323,9 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		
 		/**Should this leaf become an inner node?  Yes...but only if it would help one of the quads.**/
 		protected boolean doSplit() {
-			if (size < loading && concernBounds.getWidth() < MIN_DIM) {return false;} 
+			if (size < LOADING && concernBounds.getWidth() < MIN_DIM) {return false;} 
 			for (LeafQuad q: quads) {
-				if (q.size() >loading && (q.size()/(spanningItems.size()+1) > CROSS_LOAD_FACTOR)) {return true;}
+				if (q.size() > LOADING && (q.size()/(spanningItems.size()+1) > CROSS_LOAD_FACTOR)) {return true;}
 			}
 			return false;
 		}
@@ -366,9 +370,9 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	private static final class LeafQuad extends DynamicQuadTree {
 		private final List<Glyph> items;
 		
-		protected LeafQuad(int loading, Rectangle2D concernBounds) {
-			super (loading, concernBounds);
-			items = new ArrayList<Glyph>(loading);
+		protected LeafQuad(Rectangle2D concernBounds) {
+			super (concernBounds);
+			items = new ArrayList<Glyph>(LOADING);
 		}
 
 		//Assumes the geometry check was done by the parent
