@@ -1,5 +1,6 @@
 package ar.glyphsets;
 
+import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -137,58 +138,74 @@ public abstract class DynamicQuadTree implements GlyphSet {
 					DynamicQuadTree newChild = new LeafNode(newBounds, (LeafNode) child);
 					this.child = newChild;
 				} else {
-					this.child = growUp(child, b);
+					DynamicQuadTree c = child;
+					while (!c.concernBounds.contains(b)) {c = growUp(c, b);}
+					this.child = c;
 				}
 			}
 
 			child = DynamicQuadTree.addTo(child, glyph);
 		}
 		
-		private static final InnerNode growUp(DynamicQuadTree current, Rectangle2D b) {
-			//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
-			//Growth is from the center-out, so the new siblings each get one quadrant from the current root
-			//and have three quadrants that start out vacant.
-			DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) current;
-			Rectangle2D currentBounds = current.concernBounds(); 
-			Rectangle2D newBounds = new Rectangle2D.Double(
-					currentBounds.getX()-currentBounds.getWidth()/2.0d,
-					currentBounds.getY()-currentBounds.getHeight()/2.0d,
-					currentBounds.getWidth()*2,
-					currentBounds.getHeight()*2);
-
-
-			//The following checks prevent empty nodes from proliferating as you split up.  
-			//Leaf nodes in the old tree are rebounded for the new tree.  
-			//Non-leaf nodes are replaced with a quad of nodes
-			InnerNode newChild = new InnerNode(newBounds);
-			if (iChild.quads[NE] instanceof InnerNode) {
-				newChild.quads[NE] =new InnerNode(newChild.quads[NE].concernBounds());
-				((InnerNode) newChild.quads[NE]).quads[SW] = iChild.quads[NE];
-			} else if (!iChild.quads[NE].isEmpty()) {
-				newChild.quads[NE] = new LeafNode(newChild.quads[NE].concernBounds(), (LeafNode) iChild.quads[NE]);
+		private static final InnerNode growUp(DynamicQuadTree current, Rectangle2D toward) {
+			Rectangle2D currentBounds = current.concernBounds();
+			
+			if (toward.intersects(currentBounds)) {
+				//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
+				//Growth is from the center-out, so the new siblings each get one quadrant from the current root
+				//and have three quadrants that start out vacant.
+				DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) current;
+				Rectangle2D newBounds = new Rectangle2D.Double(
+						currentBounds.getX()-currentBounds.getWidth()/2.0d,
+						currentBounds.getY()-currentBounds.getHeight()/2.0d,
+						currentBounds.getWidth()*2,
+						currentBounds.getHeight()*2);
+	
+				
+				
+				
+				//The following checks prevent empty nodes from proliferating as you split up.  
+				//Leaf nodes in the old tree are rebounded for the new tree.  
+				//Non-leaf nodes are replaced with a quad of nodes
+				InnerNode newChild = new InnerNode(newBounds);
+				if (iChild.quads[NE] instanceof InnerNode) {
+					newChild.quads[NE] =new InnerNode(newChild.quads[NE].concernBounds());
+					((InnerNode) newChild.quads[NE]).quads[SW] = iChild.quads[NE];
+				} else if (!iChild.quads[NE].isEmpty()) {
+					newChild.quads[NE] = new LeafNode(newChild.quads[NE].concernBounds(), (LeafNode) iChild.quads[NE]);
+				}
+	
+				if (iChild.quads[NW] instanceof InnerNode) {
+					newChild.quads[NW] = new InnerNode(newChild.quads[NW].concernBounds());
+					((InnerNode) newChild.quads[NW]).quads[SE] = iChild.quads[NW];
+				} else if (!iChild.quads[NW].isEmpty()) {
+					newChild.quads[NW] = new LeafNode(newChild.quads[NW].concernBounds(), (LeafNode) iChild.quads[NW]);
+				}
+	
+				if (iChild.quads[SW] instanceof InnerNode) {
+					newChild.quads[SW] = new InnerNode(newChild.quads[SW].concernBounds());
+					((InnerNode) newChild.quads[SW]).quads[NE] = iChild.quads[SW];
+				} else if (!iChild.quads[SW].isEmpty()) {
+					newChild.quads[SW] = new LeafNode(newChild.quads[SW].concernBounds(), (LeafNode) iChild.quads[SW]);
+				}
+	
+				if (iChild.quads[SE] instanceof InnerNode) {
+					newChild.quads[SE] = new InnerNode(newChild.quads[SE].concernBounds());
+					((InnerNode) newChild.quads[SE]).quads[NW] = iChild.quads[SE];
+				} else if (!iChild.quads[SE].isEmpty()) {
+					newChild.quads[SE] = new LeafNode(newChild.quads[SE].concernBounds(), (LeafNode) iChild.quads[SE]);
+				}
+				return newChild;
+			} else {
+				int outCode = currentBounds.outcode(toward.getX(), toward.getY());
+				if ((outCode & Rectangle2D.OUT_LEFT) == Rectangle2D.OUT_LEFT) {
+					
+				} else if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT) {
+					
+				} else if ((outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
+				} else if ((outCode & Rectangle2D.OUT_BOTTOM) == Rectangle2D.OUT_BOTTOM) {
+				} else {throw new RuntimeException("Growing up encountered unexpected out-code:" + outCode);}
 			}
-
-			if (iChild.quads[NW] instanceof InnerNode) {
-				newChild.quads[NW] = new InnerNode(newChild.quads[NW].concernBounds());
-				((InnerNode) newChild.quads[NW]).quads[SE] = iChild.quads[NW];
-			} else if (!iChild.quads[NW].isEmpty()) {
-				newChild.quads[NW] = new LeafNode(newChild.quads[NW].concernBounds(), (LeafNode) iChild.quads[NW]);
-			}
-
-			if (iChild.quads[SW] instanceof InnerNode) {
-				newChild.quads[SW] = new InnerNode(newChild.quads[SW].concernBounds());
-				((InnerNode) newChild.quads[SW]).quads[NE] = iChild.quads[SW];
-			} else if (!iChild.quads[SW].isEmpty()) {
-				newChild.quads[SW] = new LeafNode(newChild.quads[SW].concernBounds(), (LeafNode) iChild.quads[SW]);
-			}
-
-			if (iChild.quads[SE] instanceof InnerNode) {
-				newChild.quads[SE] = new InnerNode(newChild.quads[SE].concernBounds());
-				((InnerNode) newChild.quads[SE]).quads[NW] = iChild.quads[SE];
-			} else if (!iChild.quads[SE].isEmpty()) {
-				newChild.quads[SE] = new LeafNode(newChild.quads[SE].concernBounds(), (LeafNode) iChild.quads[SE]);
-			}
-			return newChild;
 		}
 
 
