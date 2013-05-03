@@ -18,12 +18,20 @@ public interface GlyphSet {
 		private static int IDCOUNTER=0;
 		public final Shape shape;
 		public final Color color;
+		public final Object value;
 		public final Integer id = IDCOUNTER++;
-		public Glyph(Shape shape, Color color) {this.shape=shape; this.color=color;}
+		
+		public Glyph(Shape shape, Color color) {this(shape, color, null);}
+		public Glyph(Shape shape, Color color, Object value) {
+			this.shape=shape; 
+			this.color=color; 
+			this.value = value;
+		}
+		
 		public boolean equals(Object other) {
 			return (other instanceof Glyph) && id.equals(((Glyph) other).id);
 		}
-		public int hashCode() {return id.hashCode();}
+		public int hashCode() {return id;}
 		
 	}
 }
