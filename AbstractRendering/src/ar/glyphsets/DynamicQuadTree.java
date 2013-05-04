@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -139,7 +138,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 					this.child = newChild;
 				} else {
 					DynamicQuadTree c = child;
-					while (!c.concernBounds.contains(b)) {c = growUp(c, b);}
+					while (!c.concernBounds.contains(b)) {c = growUp((DynamicQuadTree.InnerNode) c, b);}
 					this.child = c;
 				}
 			}
@@ -147,67 +146,87 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			child = DynamicQuadTree.addTo(child, glyph);
 		}
 		
-		private static final InnerNode growUp(DynamicQuadTree current, Rectangle2D toward) {
+		/**Grow the tree so it covers more area than it does currently.
+		 * The strategies are based on heuristics and have not been evaluated
+		 * for optimality (only sufficiency).
+		 * 
+		 * Strategies:
+		 *   (1) If the new thing touches the current bounds, the the current tree
+		 *   is the "center" of new tree.  Each quad of the current tree becomes 
+		 *   a sub-quad of each of the new tree's quad.  If a current quad 
+		 *   is a leaf, that leaf is expanded to become a new leaf in the new tree.
+		 *   
+		 *   (2) Otherwise,  the current tree becomes a quad in the new tree.
+		 *   Right and above are prioritized higher than left and below.
+		 * @return
+		 */
+		private static final InnerNode growUp(DynamicQuadTree.InnerNode current, Rectangle2D toward) {
 			Rectangle2D currentBounds = current.concernBounds();
-			
-			if (toward.intersects(currentBounds)) {
-				//If the root node is not a leaf, then make new sibblings/parent for the current root until it fits.
-				//Growth is from the center-out, so the new siblings each get one quadrant from the current root
-				//and have three quadrants that start out vacant.
-				DynamicQuadTree.InnerNode iChild = (DynamicQuadTree.InnerNode) current;
+
+			//TODO: Expand to "touches or is close to"...for some meaning of close...probably proportion of tree size 
+			if (toward.intersects(currentBounds)) { 
+				//If the new glyph touches the current bounds, then grow with the current data in the center. 
 				Rectangle2D newBounds = new Rectangle2D.Double(
 						currentBounds.getX()-currentBounds.getWidth()/2.0d,
 						currentBounds.getY()-currentBounds.getHeight()/2.0d,
 						currentBounds.getWidth()*2,
 						currentBounds.getHeight()*2);
-	
-				
-				
 				
 				//The following checks prevent empty nodes from proliferating as you split up.  
 				//Leaf nodes in the old tree are rebounded for the new tree.  
 				//Non-leaf nodes are replaced with a quad of nodes
 				InnerNode newChild = new InnerNode(newBounds);
-				if (iChild.quads[NE] instanceof InnerNode) {
+				if (current.quads[NE] instanceof InnerNode) {
 					newChild.quads[NE] =new InnerNode(newChild.quads[NE].concernBounds());
-					((InnerNode) newChild.quads[NE]).quads[SW] = iChild.quads[NE];
-				} else if (!iChild.quads[NE].isEmpty()) {
-					newChild.quads[NE] = new LeafNode(newChild.quads[NE].concernBounds(), (LeafNode) iChild.quads[NE]);
+					((InnerNode) newChild.quads[NE]).quads[SW] = current.quads[NE];
+				} else if (!current.quads[NE].isEmpty()) {
+					newChild.quads[NE] = new LeafNode(newChild.quads[NE].concernBounds(), (LeafNode) current.quads[NE]);
 				}
 	
-				if (iChild.quads[NW] instanceof InnerNode) {
+				if (current.quads[NW] instanceof InnerNode) {
 					newChild.quads[NW] = new InnerNode(newChild.quads[NW].concernBounds());
-					((InnerNode) newChild.quads[NW]).quads[SE] = iChild.quads[NW];
-				} else if (!iChild.quads[NW].isEmpty()) {
-					newChild.quads[NW] = new LeafNode(newChild.quads[NW].concernBounds(), (LeafNode) iChild.quads[NW]);
+					((InnerNode) newChild.quads[NW]).quads[SE] = current.quads[NW];
+				} else if (!current.quads[NW].isEmpty()) {
+					newChild.quads[NW] = new LeafNode(newChild.quads[NW].concernBounds(), (LeafNode) current.quads[NW]);
 				}
 	
-				if (iChild.quads[SW] instanceof InnerNode) {
+				if (current.quads[SW] instanceof InnerNode) {
 					newChild.quads[SW] = new InnerNode(newChild.quads[SW].concernBounds());
-					((InnerNode) newChild.quads[SW]).quads[NE] = iChild.quads[SW];
-				} else if (!iChild.quads[SW].isEmpty()) {
-					newChild.quads[SW] = new LeafNode(newChild.quads[SW].concernBounds(), (LeafNode) iChild.quads[SW]);
+					((InnerNode) newChild.quads[SW]).quads[NE] = current.quads[SW];
+				} else if (!current.quads[SW].isEmpty()) {
+					newChild.quads[SW] = new LeafNode(newChild.quads[SW].concernBounds(), (LeafNode) current.quads[SW]);
 				}
 	
-				if (iChild.quads[SE] instanceof InnerNode) {
+				if (current.quads[SE] instanceof InnerNode) {
 					newChild.quads[SE] = new InnerNode(newChild.quads[SE].concernBounds());
-					((InnerNode) newChild.quads[SE]).quads[NW] = iChild.quads[SE];
-				} else if (!iChild.quads[SE].isEmpty()) {
-					newChild.quads[SE] = new LeafNode(newChild.quads[SE].concernBounds(), (LeafNode) iChild.quads[SE]);
+					((InnerNode) newChild.quads[SE]).quads[NW] = current.quads[SE];
+				} else if (!current.quads[SE].isEmpty()) {
+					newChild.quads[SE] = new LeafNode(newChild.quads[SE].concernBounds(), (LeafNode) current.quads[SE]);
 				}
 				return newChild;
 			} else {
 				int outCode = currentBounds.outcode(toward.getX(), toward.getY());
-				if ((outCode & Rectangle2D.OUT_LEFT) == Rectangle2D.OUT_LEFT) {
-					
-				} else if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT) {
-					
-				} else if ((outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
-				} else if ((outCode & Rectangle2D.OUT_BOTTOM) == Rectangle2D.OUT_BOTTOM) {
+				double x,y;
+				int direction;
+				
+				if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT
+						|| (outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
+					x = currentBounds.getX();
+					y = currentBounds.getY();
+					direction = SW;
+				} else 	if ((outCode & Rectangle2D.OUT_LEFT) == Rectangle2D.OUT_LEFT
+						|| (outCode & Rectangle2D.OUT_BOTTOM) == Rectangle2D.OUT_BOTTOM) {
+					x = currentBounds.getX()-currentBounds.getWidth();
+					y = currentBounds.getY()+currentBounds.getHeight();
+					direction = NE;
 				} else {throw new RuntimeException("Growing up encountered unexpected out-code:" + outCode);}
+
+				Rectangle2D newBounds =new Rectangle2D.Double(x,y,currentBounds.getWidth()*2,currentBounds.getHeight()*2);
+				InnerNode newChild = new InnerNode(newBounds);
+				newChild.quads[direction] = current;
+				return newChild;
 			}
 		}
-
 
 		public boolean isEmpty() {return child.isEmpty();}
 		public Rectangle2D concernBounds() {return child.concernBounds();}
