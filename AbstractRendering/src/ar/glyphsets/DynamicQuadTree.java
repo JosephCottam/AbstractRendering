@@ -103,12 +103,14 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	public String toString() {return toString(0);}
 
 
-	protected static DynamicQuadTree addTo(DynamicQuadTree target, Glyph item) {
-		target.add(item);
-		if (target.doSplit()) {return new InnerNode((LeafNode) target);}
-		else {return target;}
+	protected static DynamicQuadTree addTo(DynamicQuadTree target, final Glyph item) {
+		if (target.doSplit()) {target = new InnerNode((LeafNode) target);}
+ 		target.add(item);
+		return target;
 	}
 
+	@SuppressWarnings("unused")
+	//Utility method, helpful in debugging tree splits
 	private static String boundsReport(DynamicQuadTree t) {
 		if (t instanceof InnerNode) {
 			InnerNode i = (InnerNode) t;
@@ -126,7 +128,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		return "Not a know type: " + t.getClass().getName();
 	}
 
-	/**The root node does not actually hold an items, it is to faciliate the "up" direction splits.
+	/**The root node does not actually hold an items, it is to facilitate the "up" direction splits.
 	 * A node of this type is always the initial node of the tree.  Most operations are passed
 	 * through it to its only child.**/
 	private static final class RootHolder extends DynamicQuadTree {
@@ -172,12 +174,14 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		 *   
 		 *   (2) Otherwise,  the current tree becomes a quad in the new tree.
 		 *   Right and above are prioritized higher than left and below.
+		 *   
+		 *   TODO: Investigate better heuristics...
 		 * @return
 		 */
 		private static final InnerNode growUp(DynamicQuadTree.InnerNode current, Rectangle2D toward) {
 			Rectangle2D currentBounds = current.concernBounds();
 
-			//TODO: Expand to "touches or is close to"...for some meaning of close...probably proportion of tree size 
+			//TODO: Expand to "touches or is close to"...for some meaning of close...probably proportion of tree's width/height 
 			if (toward.intersects(currentBounds)) { 
 				//If the new glyph touches the current bounds, then grow with the current data in the center. 
 				Rectangle2D newBounds = new Rectangle2D.Double(
@@ -223,6 +227,8 @@ public abstract class DynamicQuadTree implements GlyphSet {
 				double x,y;
 				int replace;
 				
+				//TODO: Would more directions help?
+				//TODO: Would analysis based on tree weights help?
 				if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT
 						|| (outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
 					x = currentBounds.getX();

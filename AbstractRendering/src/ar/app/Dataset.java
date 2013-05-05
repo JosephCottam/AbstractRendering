@@ -72,7 +72,7 @@ public abstract class Dataset {
 		public CheckersMatrix() {super("Checkers (Matrix)");}
 		protected GlyphSet load() {
 			System.out.print("Loading " + super.name + "...");
-			return CSVtoGlyphSet.loadMatrix("./data/checkerboard.txt", 1, 1, 0,1,3,-1, new CSVtoGlyphSet.ToInt(), false);
+			return CSVtoGlyphSet.loadMatrix("./data/checkerboard.csv", 1, 1, 0,1,3,-1, new CSVtoGlyphSet.ToInt(), false);
 		}
 	}
 
