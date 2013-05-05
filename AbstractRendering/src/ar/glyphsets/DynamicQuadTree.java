@@ -105,14 +105,26 @@ public abstract class DynamicQuadTree implements GlyphSet {
 
 	protected static DynamicQuadTree addTo(DynamicQuadTree target, Glyph item) {
 		target.add(item);
-		
-		if (target.doSplit()) {
-			return new InnerNode((LeafNode) target);
-		} else {
-			return target;
-		}
+		if (target.doSplit()) {return new InnerNode((LeafNode) target);}
+		else {return target;}
 	}
 
+	private static String boundsReport(DynamicQuadTree t) {
+		if (t instanceof InnerNode) {
+			InnerNode i = (InnerNode) t;
+			return String.format("IB: %s\n\tNE: %s\n\tNW: %s\n\tSE: %s\n\tSW: %s\n", 
+					i.concernBounds,
+					i.quads[NE].concernBounds, i.quads[NW].concernBounds, i.quads[SE].concernBounds, i.quads[SW].concernBounds);
+		} else if (t instanceof RootHolder) {
+			return String.format("RB: %s\n", t.concernBounds);
+		} else if (t instanceof LeafNode) {
+			LeafNode l = (LeafNode) t;
+			return String.format("LB: %s\n\tNE: %s\n\tNW: %s\n\tSE: %s\n\tSW: %s\n", 
+					l.concernBounds, 
+					l.quads[NE].concernBounds, l.quads[NW].concernBounds, l.quads[SE].concernBounds, l.quads[SW].concernBounds);
+		}
+		return "Not a know type: " + t.getClass().getName();
+	}
 
 	/**The root node does not actually hold an items, it is to faciliate the "up" direction splits.
 	 * A node of this type is always the initial node of the tree.  Most operations are passed
@@ -138,7 +150,9 @@ public abstract class DynamicQuadTree implements GlyphSet {
 					this.child = newChild;
 				} else {
 					DynamicQuadTree c = child;
-					while (!c.concernBounds.contains(b)) {c = growUp((DynamicQuadTree.InnerNode) c, b);}
+					while (!c.concernBounds.contains(b)) {
+						c = growUp((DynamicQuadTree.InnerNode) c, b);
+					}
 					this.child = c;
 				}
 			}
@@ -207,23 +221,25 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			} else {
 				int outCode = currentBounds.outcode(toward.getX(), toward.getY());
 				double x,y;
-				int direction;
+				int replace;
 				
 				if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT
 						|| (outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
 					x = currentBounds.getX();
-					y = currentBounds.getY();
-					direction = SW;
+					y = currentBounds.getY()-currentBounds.getHeight();
+					replace = SW;
+					
 				} else 	if ((outCode & Rectangle2D.OUT_LEFT) == Rectangle2D.OUT_LEFT
 						|| (outCode & Rectangle2D.OUT_BOTTOM) == Rectangle2D.OUT_BOTTOM) {
 					x = currentBounds.getX()-currentBounds.getWidth();
-					y = currentBounds.getY()+currentBounds.getHeight();
-					direction = NE;
+					y = currentBounds.getY();
+					replace = NE;
+					
 				} else {throw new RuntimeException("Growing up encountered unexpected out-code:" + outCode);}
 
-				Rectangle2D newBounds =new Rectangle2D.Double(x,y,currentBounds.getWidth()*2,currentBounds.getHeight()*2);
+				Rectangle2D newBounds =new Rectangle2D.Double(x,y,currentBounds.getWidth()*2.0d,currentBounds.getHeight()*2.0d);
 				InnerNode newChild = new InnerNode(newBounds);
-				newChild.quads[direction] = current;
+				newChild.quads[replace] = current;
 				return newChild;
 			}
 		}
@@ -271,7 +287,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			}
 
 			if (!added) {
-				throw new Error(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
+				throw new RuntimeException(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
 			}
 		}
 

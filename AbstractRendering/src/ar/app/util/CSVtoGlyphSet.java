@@ -105,7 +105,8 @@ public class CSVtoGlyphSet {
 			} else {color = Color.RED;}
 
 			Glyph g = new ar.GlyphSet.Glyph(rect, color);
-			glyphs.add(g);
+			try {glyphs.add(g);}
+			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
 		}
 
