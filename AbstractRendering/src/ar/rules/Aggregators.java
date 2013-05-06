@@ -14,12 +14,13 @@ import java.util.List;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
-import ar.Reduction;
+import ar.Aggregator;
 import ar.Util;
 
-public class Reductions {
+/**Aggregators produce aggregates (which go into aggregate sets).**/
+public class Aggregators {
 
-	public static final class Gradient implements Reduction<Color> {
+	public static final class Gradient implements Aggregator<Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {
@@ -28,13 +29,13 @@ public class Reductions {
 	
 	}
 
-	public static final class IDColor implements Reduction<Color> {
+	public static final class IDColor implements Aggregator<Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {return c;}
 	}
 
-	public static final class Count implements Reduction<Integer> {
+	public static final class Count implements Aggregator<Integer> {
 		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
@@ -43,7 +44,7 @@ public class Reductions {
 		}
 	}
 
-	public static final class First implements Reduction<Color> {
+	public static final class First implements Aggregator<Color> {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
@@ -53,7 +54,7 @@ public class Reductions {
 		}		
 	}
 
-	public static final class Last implements Reduction<Color> {
+	public static final class Last implements Aggregator<Color> {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
@@ -79,10 +80,16 @@ public class Reductions {
 		public int size() {return keys.size();}
 		public int fullSize() {return fullSize;}
 		public String toString() {return "RLE: " + Arrays.deepToString(counts.toArray());}
+		public int val(Object category) {
+			for (int i=0; i<keys.size();i++) {
+				if (keys.get(i).equals(category)) {return counts.get(i);}
+			}
+			return 0;
+		}
 	}	
 
 	
-	public static final class RLEColor implements Reduction<RLE> {
+	public static final class RLEColor implements Aggregator<RLE> {
 		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
 			public int compare(Glyph o1, Glyph o2) {
 				return Integer.compare(o1.color.getRGB(), o2.color.getRGB());
@@ -153,7 +160,7 @@ public class Reductions {
 		}		
 	}
 	
-	public static final class DeltaNeighbors implements Reduction<Integer> {
+	public static final class DeltaNeighbors implements Aggregator<Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
 		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {

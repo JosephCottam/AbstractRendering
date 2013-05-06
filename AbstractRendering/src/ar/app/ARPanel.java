@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 
 import ar.*;
 import ar.app.util.ZoomPanHandler;
+import ar.renderers.ParallelSpatial;
 
 public class ARPanel<A,B> extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -18,7 +19,7 @@ public class ARPanel<A,B> extends JPanel {
 	private final Dataset dataset;
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
-	private Renderer renderer = new ParallelRenderer(40000);
+	private Renderer renderer = new ParallelSpatial(40000);
 	//private Renderer renderer = new SerialRenderer();
 
 	private BufferedImage image;

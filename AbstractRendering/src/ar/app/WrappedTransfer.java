@@ -3,7 +3,7 @@ package ar.app;
 import java.awt.Color;
 
 import ar.Transfer;
-import ar.rules.Reductions;
+import ar.rules.Aggregators;
 import ar.rules.Transfers;
 
 public interface WrappedTransfer<A> {
@@ -41,21 +41,21 @@ public interface WrappedTransfer<A> {
 	}
 
 	
-	public class Percent90 implements WrappedTransfer<Reductions.RLE> {
-		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.9, Color.white, Color.blue, Color.red);}
-		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+	public class Percent90 implements WrappedTransfer<Aggregators.RLE> {
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.9, Color.white, Color.blue, Color.red);}
+		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "90% Percent (RLE)";}
 	}
 
-	public class Percent95 implements WrappedTransfer<Reductions.RLE> {
-		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.95, Color.white, Color.blue, Color.red);}
-		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+	public class Percent95 implements WrappedTransfer<Aggregators.RLE> {
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.95, Color.white, Color.blue, Color.red);}
+		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "95% Percent (RLE)";}
 	}
 
-	public class Percent25 implements WrappedTransfer<Reductions.RLE> {
-		public Transfer<Reductions.RLE> op() {return new Transfers.FirstPercent(.25, Color.white, Color.blue, Color.red);}
-		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+	public class Percent25 implements WrappedTransfer<Aggregators.RLE> {
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.25, Color.white, Color.blue, Color.red);}
+		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "25% Percent (RLE)";}
 	}
 	
@@ -65,15 +65,15 @@ public interface WrappedTransfer<A> {
 		public String toString() {return "Echo (Color)";}
 	}
 	
-	public class HighAlphaLog implements WrappedTransfer<Reductions.RLE> {
-		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
-		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+	public class HighAlphaLog implements WrappedTransfer<Aggregators.RLE> {
+		public Transfer<Aggregators.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
+		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "Log HD Alpha (RLE)";}
 	}
 	
-	public class HighAlphaLin implements WrappedTransfer<Reductions.RLE> {
-		public Transfer<Reductions.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
-		public Class<Reductions.RLE> type() {return Reductions.RLE.class;}
+	public class HighAlphaLin implements WrappedTransfer<Aggregators.RLE> {
+		public Transfer<Aggregators.RLE> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
+		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "Linear HD Alpha (RLE)";}
 	}
 }

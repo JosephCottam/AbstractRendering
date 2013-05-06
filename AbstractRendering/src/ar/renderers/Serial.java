@@ -1,11 +1,17 @@
-package ar;
+package ar.renderers;
 
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-public final class SerialRenderer implements Renderer {	
+import ar.Aggregates;
+import ar.Aggregator;
+import ar.GlyphSet;
+import ar.Renderer;
+import ar.Transfer;
+
+public final class Serial implements Renderer {	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
-			final Reduction<A> r, final int width, final int height) {		
+			final Aggregator<A> r, final int width, final int height) {		
 		Aggregates<A> aggregates = new Aggregates<A>(width, height); 
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {

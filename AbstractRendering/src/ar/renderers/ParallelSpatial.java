@@ -1,18 +1,28 @@
-package ar;
+package ar.renderers;
 
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
-public final class ParallelRenderer implements Renderer {
+import ar.Aggregates;
+import ar.Aggregator;
+import ar.GlyphSet;
+import ar.Renderer;
+import ar.Transfer;
+
+/**Task stealing renderer, designed to be used with a spatially-decomposed glyph set.
+ * Divides aggregates space into regions and works on each region in isolation
+ * (i.e., bin-driven iteration).
+ * **/
+public final class ParallelSpatial implements Renderer {
 	private final int taskSize;
 	private final ForkJoinPool pool = new ForkJoinPool();
 	
-	public ParallelRenderer(int taskSize) {this.taskSize = taskSize;}
+	public ParallelSpatial(int taskSize) {this.taskSize = taskSize;}
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
-			final Reduction<A> r, final int width, final int height) {
+			final Aggregator<A> r, final int width, final int height) {
 		Aggregates<A> aggregates = new Aggregates<A>(width, height); 
 		ReduceTask<A> t = new ReduceTask<A>(glyphs, inverseView, r, aggregates, 0,0, width, height, taskSize, 0);
 		pool.invoke(t);
@@ -39,12 +49,12 @@ public final class ParallelRenderer implements Renderer {
 		private final int lowx, lowy, highx, highy;
 		private final int width,height;
 		private final Aggregates<A> aggs;
-		private final Reduction<A> op;
+		private final Aggregator<A> op;
 		private final GlyphSet glyphs;
 		private final int depth;
 		private final AffineTransform inverseView;
 		
-		public ReduceTask(GlyphSet glyphs, AffineTransform inverseView, Reduction<A> op,  
+		public ReduceTask(GlyphSet glyphs, AffineTransform inverseView, Aggregator<A> op,  
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy, int taskSize, int depth) {
 			this.lowx = lowx;
 			this.lowy = lowy;

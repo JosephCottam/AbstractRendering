@@ -5,10 +5,10 @@ import java.awt.geom.Rectangle2D;
 
 import ar.Aggregates;
 import ar.GlyphSet;
-import ar.ParallelRenderer;
-import ar.Reduction;
+import ar.Aggregator;
 import ar.Renderer;
-import ar.rules.Reductions;
+import ar.renderers.ParallelSpatial;
+import ar.rules.Aggregators;
 
 public class CharityService {
 	public static int TASK_SIZE = 40000;
@@ -52,8 +52,8 @@ public class CharityService {
 		catch (Exception e) {throw new RuntimeException(e);}
 		
 		//Generate aggregates (just the counts for now)
-		Reduction<Integer> r = new Reductions.Count();
-		Renderer renderer = new ParallelRenderer(TASK_SIZE);
+		Aggregator<Integer> r = new Aggregators.Count();
+		Renderer renderer = new ParallelSpatial(TASK_SIZE);
 		Aggregates<Integer> a = renderer.reduce(glyphset, inverseView, r, width, height);
 		return ar.app.util.AggregatesToJSON.export(a);
 	}
