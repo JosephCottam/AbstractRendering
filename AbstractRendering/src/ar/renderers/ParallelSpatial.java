@@ -23,7 +23,7 @@ public final class ParallelSpatial implements Renderer {
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
 			final Aggregator<A> r, final int width, final int height) {
-		Aggregates<A> aggregates = new Aggregates<A>(width, height); 
+		Aggregates<A> aggregates = new Aggregates<A>(width, height, r.defaultValue()); 
 		ReduceTask<A> t = new ReduceTask<A>(glyphs, inverseView, r, aggregates, 0,0, width, height, taskSize, 0);
 		pool.invoke(t);
 		return aggregates;
@@ -42,7 +42,7 @@ public final class ParallelSpatial implements Renderer {
 	}
 
 
-	private static class ReduceTask<A> extends RecursiveAction {
+	private static final class ReduceTask<A> extends RecursiveAction {
 		private static final long serialVersionUID = -6471136218098505342L;
 
 		private final int taskSize;

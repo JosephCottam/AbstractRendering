@@ -98,7 +98,7 @@ public final class Util {
 	
 	
 	public static <T extends Number> Aggregates<Double> score(Aggregates<T> source, Stats extrema) {
-		final Aggregates<Double> results = new Aggregates<Double>(source.width(), source.height());
+		final Aggregates<Double> results = new Aggregates<Double>(source.width(), source.height(), 0d);
 		final double mean = extrema.mean;
 		final double stdev = extrema.stdev;
 		for (int x=0;x<results.width();x++) {

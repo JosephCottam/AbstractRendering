@@ -84,15 +84,15 @@ public abstract class Dataset {
 		}
 	}
 	
-
-	public static final class CharityNet extends Dataset {
-		public CharityNet() {super("Charity Net");}
-		protected GlyphSet load() {
-			System.out.println("Loading " + super.name + "...");
-			return CharityNetLoader.load("./data/dateStateXY.csv");
-			//return CharityNetLoader.loadDirect("./data/date_state.csv");
-		}
-	}
+//
+//	public static final class CharityNet extends Dataset {
+//		public CharityNet() {super("Charity Net");}
+//		protected GlyphSet load() {
+//			System.out.println("Loading " + super.name + "...");
+//			return CharityNetLoader.load("./data/dateStateXY.csv");
+//			//return CharityNetLoader.loadDirect("./data/date_state.csv");
+//		}
+//	}
 
 
 //	public static final class MPIPhases extends Dataset {

@@ -26,13 +26,14 @@ public class Aggregators {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {
 			return new Color(x/width, y/height,.5f ,1.0f);
 		}
-	
+		public Color defaultValue() {return Util.CLEAR;}	
 	}
 
 	public static final class IDColor implements Aggregator<Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {return c;}
+		public Color defaultValue() {return Util.CLEAR;}
 	}
 
 	public static final class Count implements Aggregator<Integer> {
@@ -42,6 +43,7 @@ public class Aggregators {
 			Collection<Glyph> items = glyphs.containing(p);
 			return items.size();
 		}
+		public Integer defaultValue() {return 0;}
 	}
 
 	public static final class First implements Aggregator<Color> {
@@ -51,7 +53,8 @@ public class Aggregators {
 			Collection<Glyph> hits = glyphs.containing(p);
 			if (hits.size()>0) {return hits.iterator().next().color;}
 			else {return Util.CLEAR;}
-		}		
+		}
+		public Color defaultValue() {return Util.CLEAR;}
 	}
 
 	public static final class Last implements Aggregator<Color> {
@@ -62,7 +65,8 @@ public class Aggregators {
 			Color color = Util.CLEAR;
 			for (Glyph g:hits) {color = g.color;}
 			return color;
-		}		
+		}
+		public Color defaultValue() {return Util.CLEAR;}
 	}
 
 
@@ -88,28 +92,28 @@ public class Aggregators {
 		}
 	}	
 
-	
+
 	public static final class RLEColor implements Aggregator<RLE> {
 		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
 			public int compare(Glyph o1, Glyph o2) {
 				return Integer.compare(o1.color.getRGB(), o2.color.getRGB());
 			}
 		};
-		
+
 		private final boolean sort;
-    private final boolean topLeft;
-    public RLEColor(boolean sort) {this(sort, false);}
+		private final boolean topLeft;
+		public RLEColor(boolean sort) {this(sort, false);}
 		public RLEColor(boolean sort, boolean topLeft) {
-      this.sort = sort;
-      this.topLeft = topLeft;
-    }
-		
+			this.sort = sort;
+			this.topLeft = topLeft;
+		}
+
 		private List<Glyph> sortColors(Collection<Glyph> glyphs) {
 			ArrayList<Glyph> l = new ArrayList<Glyph>(glyphs);
 			Collections.sort(l, glyphColorSorter);
 			return l;
 		}
-				
+
 		private RLE encode(List<Glyph> glyphs) {
 			RLE rle = new RLE();
 			Color key = null;
@@ -131,35 +135,36 @@ public class Aggregators {
 			if (count >0) {rle.add(key, count);}
 			return rle;
 		}
-		
+
 		public RLE at(int x, int y, GlyphSet glyphs, AffineTransform v) {
 			Point2D p = new Point2D.Double(x,y);
 			v.transform(p, p);
 			Collection<Glyph> hits = glyphs.containing(p);
-      
-      if (topLeft) {
-        Collection<Glyph> superHits = new ArrayList<Glyph>(hits.size());
-        for (Glyph g: hits) {
-          Rectangle2D bounds = g.shape.getBounds2D();
-          Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
-          r = v.createTransformedShape(r).getBounds2D();
 
-          if (r.contains(bounds.getX(), bounds.getY())) {
-            superHits.add(g);
-          }
-        }
-        hits = superHits;
-        if (hits.size() >0) {System.out.println("SIZE:" + hits.size());}
-      }
+			if (topLeft) {
+				Collection<Glyph> superHits = new ArrayList<Glyph>(hits.size());
+				for (Glyph g: hits) {
+					Rectangle2D bounds = g.shape.getBounds2D();
+					Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
+					r = v.createTransformedShape(r).getBounds2D();
+
+					if (r.contains(bounds.getX(), bounds.getY())) {
+						superHits.add(g);
+					}
+				}
+				hits = superHits;
+				if (hits.size() >0) {System.out.println("SIZE:" + hits.size());}
+			}
 
 
 			List<Glyph> ordered;
 			if (sort) {ordered = sortColors(hits);}
 			else {ordered = new ArrayList<Glyph>(hits);}
 			return encode(ordered);
-		}		
+		}
+		public RLE defaultValue() {return new RLE();}
 	}
-	
+
 	public static final class DeltaNeighbors implements Aggregator<Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
@@ -172,8 +177,8 @@ public class Aggregators {
 			int count=0;
 			HashSet<Color> colors = new HashSet<Color>();
 			for (Glyph g:gs) {colors.add(g.color);}
-			
-			
+
+
 			for (int xs=x-reach; xs<x+reach; xs++) {
 				if (xs<0) {continue;}
 				for (int ys=y-reach; ys<y+reach; ys++) {
@@ -186,6 +191,7 @@ public class Aggregators {
 			}
 			return count;
 		}
+		public Integer defaultValue() {return 0;}
 	}
 
 }

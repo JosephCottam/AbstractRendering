@@ -8,10 +8,11 @@ import ar.GlyphSet;
 import ar.Util;
 
 public class GlyphList implements GlyphSet {
-	Collection<Glyph> glyphs = new ArrayList<Glyph>();
+	List<Glyph> glyphs = new ArrayList<Glyph>();
 	Rectangle2D bounds;
 	
 	public Iterator<Glyph> iterator() {return glyphs.iterator();}
+	public Glyph get(int i) {return glyphs.get(i);}
 	public boolean isEmpty() {return glyphs.isEmpty();}
 	public void add(Glyph g) {glyphs.add(g);}
 	public int size() {return glyphs.size();}
