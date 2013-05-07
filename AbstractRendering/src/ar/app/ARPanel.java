@@ -15,7 +15,7 @@ public class ARPanel<A,B> extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private final WrappedReduction<A> reduction;
 	private final WrappedTransfer<B> transfer;
-	private final Dataset dataset;
+	private final GlyphSet dataset;
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 	private Renderer renderer = new ParallelRenderer(40000);
@@ -24,7 +24,7 @@ public class ARPanel<A,B> extends JPanel {
 	private BufferedImage image;
 	private Aggregates<A> aggregates;
 	
-	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, Dataset D) {
+	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet D) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -39,7 +39,7 @@ public class ARPanel<A,B> extends JPanel {
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 
-		if (dataset == null || dataset.glyphs() == null || dataset.glyphs().isEmpty() 
+		if (dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
 				|| !transfer.type().equals(reduction.type())) {
 			
@@ -53,7 +53,7 @@ public class ARPanel<A,B> extends JPanel {
 
 		if (aggregates == null || differentSizes(image, this)) { 
 			long start = System.currentTimeMillis();
-			aggregates = renderer.reduce(dataset.glyphs(), inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
+			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());
 			long end = System.currentTimeMillis();
 			System.out.println((end-start) + " ms (full)");			
@@ -71,8 +71,8 @@ public class ARPanel<A,B> extends JPanel {
 		return image == null || image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();
 	}
 	
-	public Dataset dataset() {return dataset;}
-	public ARPanel<A,B> withDataset(Dataset data) {return new ARPanel<A,B>(reduction, transfer, data);}
+	public GlyphSet dataset() {return dataset;}
+	public ARPanel<A,B> withDataset(GlyphSet data) {return new ARPanel<A,B>(reduction, transfer, data);}
 	public <C> ARPanel<A,C> withTransfer(WrappedTransfer<C> t) {
 		ARPanel<A,C> p = new ARPanel<A,C>(reduction, t, dataset);
 		p.viewTransformRef = this.viewTransformRef;

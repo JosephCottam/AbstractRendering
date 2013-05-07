@@ -2,6 +2,7 @@ package ar.app.util;
 
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -17,7 +18,7 @@ public class CharityNetLoader {
 	}
 	
 	public static GlyphSet load(String filename) {
-		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
+		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
 		
 		String[] header = loader.next();
 		double maxDate = Integer.parseInt(header[0]);
@@ -58,7 +59,7 @@ public class CharityNetLoader {
 
 		DynamicQuadTree.LOADING = 1000;
 		GlyphSet glyphs = DynamicQuadTree.make();
-		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(filename, 1);
+		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		
 		long maxDate = Long.MIN_VALUE;
@@ -89,7 +90,7 @@ public class CharityNetLoader {
 			minDate = Math.min(minDate, date);
 		}
 		
-		loader = new CSVtoGlyphSet.Reader(filename, 1);
+		loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
 		final double maxState = STATES.size();
 		count = 0;
 

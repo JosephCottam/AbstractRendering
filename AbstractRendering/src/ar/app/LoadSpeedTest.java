@@ -1,25 +1,29 @@
 package ar.app;
 
-import java.lang.reflect.Constructor;
+import java.io.File;
+import java.io.FilenameFilter;
+
+import ar.app.util.CSVtoGlyphSet;
+import ar.glyphsets.*;
 
 public class LoadSpeedTest {
 	public static void main(String[] args) throws Exception {
 		int iterations = args.length >0 ? Integer.parseInt(args[0]) : 10;
-
-		Class<?>[] classes = Dataset.class.getClasses();
+		File root = new File("./data/");
+		File[] files = root.listFiles(new FilenameFilter(){
+			public boolean accept(File dir, String name) {return name.toUpperCase().endsWith(".csv");}
+		});
 		
-		for (Class<?> cls: classes) {
-			Constructor<?> c = cls.getConstructor(); 
-			String name = cls.getSimpleName();
-			long total = 0;
+		for (File source: files) {
+			long total=0;
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				c.newInstance();
+				CSVtoGlyphSet.autoLoad(source, .1, DynamicQuadTree.make());
 				long end = System.currentTimeMillis();
-				System.out.printf("%s, %d, %d\n", name, end-start, i);
+				System.out.printf("%s, %d, %d\n", source.getName(), end-start, i);
 				total += (end-start);
 			}
-			System.out.printf("\t\t%s (avg), %s\n",name, total/((double) iterations));
+			System.out.printf("\t\t%s (avg), %s\n",source.getName(), total/((double) iterations));
 		}		
 	}
 }

@@ -2,7 +2,9 @@ package ar.app;
 
 import javax.swing.*;
 
-import ar.app.util.AggregatesToJSON;
+import ar.GlyphSet;
+import ar.app.components.*;
+import ar.app.util.CSVtoGlyphSet;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,9 +20,8 @@ public class ARApp {
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
 	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
 	
-	private final JComboBox<Dataset> datasets = new JComboBox<Dataset>();
-	private final JButton export = new JButton("Export Aggregates");
-
+	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
+	private final FileOptions fileOptions;
 	
 	public ARApp() {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -35,15 +36,16 @@ public class ARApp {
 		outer.add(controls, BorderLayout.WEST);
 		frame.add(outer, BorderLayout.SOUTH);
 		
+		fileOptions = new FileOptions(this);
+		
 		controls.add(reductions);
 		controls.add(transfers);
-		controls.add(datasets);
-		controls.add(export);
+		controls.add(glyphsetOptions);
+		controls.add(fileOptions);
 		final ARApp app = this;
 		
 		loadInstances(reductions, WrappedReduction.class);
 		loadInstances(transfers, WrappedTransfer.class);
-		loadInstances(datasets, Dataset.class);
 
 		
 		//TODO: Select some sensible items so it render right away
@@ -51,9 +53,17 @@ public class ARApp {
 //		reductions.setSelectedItem(new WrappedReduction.OverplotFirst());
 //		transfers.setSelectedItem(new WrappedTransfer.EchoColor());
 
-		datasets.addActionListener(new ActionListener() {
+		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Dataset glyphs = (Dataset) datasets.getSelectedItem();
+				GlyphSet glyphs = loadData();
+				app.changeImage(image.withDataset(glyphs));
+				app.zoomFit();
+			}
+		});
+		
+		glyphsetOptions.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				GlyphSet glyphs = loadData();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}});
@@ -71,21 +81,10 @@ public class ARApp {
 			}});
 	
 		
-		export.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
-				 fd.setSelectedFile(new File("aggregates.json"));
-				 int returnVal = fd.showDialog(frame, "Export");
-				 if (returnVal == JFileChooser.APPROVE_OPTION) {
-					 AggregatesToJSON.export(image.getAggregates(),fd.getSelectedFile());
-				 }
-			}
-			
-		});
 		
 		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
 							((WrappedTransfer) transfers.getSelectedItem()), 
-							(Dataset) datasets.getSelectedItem());
+							loadData());
 		
 		frame.add(image, BorderLayout.CENTER);
 
@@ -121,21 +120,32 @@ public class ARApp {
 	}
 	
 	public void zoomFit() {
-		try {Thread.sleep(100);} //Delay a beat to let layout (if any) occur, then do the zoom fit. 
-		catch (InterruptedException e1) {}
-
-		Rectangle2D content = image.dataset().glyphs().bounds();
-
-		double w = image.getWidth()/content.getWidth();
-		double h = image.getHeight()/content.getHeight();
-		double scale = Math.min(w, h);
-		scale = scale/image.getScale();
-		Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
-				
-		image.zoomAbs(center, scale);
-		image.panToAbs(center);
+		try {
+			Thread.sleep(100); //Delay a beat to let layout (if any) occur, then do the zoom fit. 
+			Rectangle2D content = image.dataset().bounds();
+	
+			double w = image.getWidth()/content.getWidth();
+			double h = image.getHeight()/content.getHeight();
+			double scale = Math.min(w, h);
+			scale = scale/image.getScale();
+			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
+					
+			image.zoomAbs(center, scale);
+			image.panToAbs(center);
+		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
+	public GlyphSet loadData() {
+		File dataFile = fileOptions.inputFile();
+		if (dataFile  == null) {return null;}
+		System.out.print("Loading " + dataFile.getName() + "...");
+		double glyphSize = glyphsetOptions.glyphSize();
+		GlyphSet glyphSet = glyphsetOptions.makeGlyphset();
+		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
+	}
+	
+	public ARPanel<?,?> getImage() {return image;}
+	
 	/**
 	 * @param args
 	 */

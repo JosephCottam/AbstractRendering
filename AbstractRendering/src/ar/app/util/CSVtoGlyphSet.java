@@ -3,6 +3,7 @@ package ar.app.util;
 import java.awt.Color;
 import java.awt.geom.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -17,11 +18,11 @@ public class CSVtoGlyphSet {
 		private BufferedReader reader;
 		private final Pattern splitter = Pattern.compile("\\s*,\\s*");
 
-		public Reader(String filename, int skip) {
+		public Reader(File file, int skip) {
 			try {
-				reader = new BufferedReader(new FileReader(filename));
+				reader = new BufferedReader(new FileReader(file));
 				while (skip-- > 0) {reader.readLine();}
-			} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + filename, e);}
+			} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + file.getName(), e);}
 		}
 
 		protected String[] next() {
@@ -41,6 +42,53 @@ public class CSVtoGlyphSet {
 		}
 		protected boolean hasNext() {return reader != null;}
 	}
+	
+	private static boolean isNumber(String s) {
+		try {Double.parseDouble(s); return true;}
+		catch (Exception e) {return false;}
+	}
+	
+	private static int fieldMatch(final String key, final String[] names, final int defaultValue) {
+		int bestMatch = -1;
+		boolean exact = false;
+		for (int i=names.length-1; i>-0; i--) {
+			String name = names[i].toUpperCase();
+			if (name.equals(key)) {bestMatch = i; exact = true;}
+			else if (!exact && name.contains(key)) {bestMatch = i;}
+		}
+		if (bestMatch == -1) {return defaultValue;}
+		else {return bestMatch;}
+	}
+
+	public static GlyphSet autoLoad(File source, double glyphSize, GlyphSet glyphs) {
+		try {
+			Reader r = new Reader(source, 0);
+			String[] line = r.next();
+			int skip;
+			boolean flipY=true;
+			int xField, yField, colorField;
+			if (isNumber(line[0])) {
+				xField =0;
+				yField =1;
+				colorField = line.length >= 3 ? 2 : -1;
+				skip =0;
+			} else {
+				xField = fieldMatch("X", line, 0);
+				yField = fieldMatch("Y", line, 1);
+				colorField = fieldMatch("C", line, -1);
+				skip =1;
+			}
+			
+			if (glyphs instanceof DirectMatrix) {
+				return null;
+			} else {
+				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField);
+			}
+
+		} 
+		catch (RuntimeException e) {throw e;}
+		catch (Exception e) {throw new RuntimeException(e);}
+	}
 
 	public static interface Converter<T> {public T convert(String[] items, int idx, T defaultValue);}
 	public static class ToInt implements Converter<Integer> {
@@ -52,12 +100,12 @@ public class CSVtoGlyphSet {
 	
 	//Loads a matrix from a file.  Assumes the first line tells the matrix dimensions
 	@SuppressWarnings("unchecked")
-	public static <T> DirectMatrix<T> loadMatrix(String filename, int skip, double size, 
+	public static <T> DirectMatrix<T> loadMatrix(File file, int skip, double size, 
 			int rowField, int colField, int valueField, 
 			T defaultValue, Converter<T> converter,
 			boolean nullIsValue) {
 		
-		Reader loader = new Reader(filename, 0);
+		Reader loader = new Reader(file, 0);
 		String[] header = loader.next();
 		int rows = Integer.parseInt(header[1]);
 		int cols = Integer.parseInt(header[2]);
@@ -80,19 +128,15 @@ public class CSVtoGlyphSet {
 		return new DirectMatrix<T>((T[][]) matrix,size,size, nullIsValue);
 	}
 
-	public static GlyphSet load(String filename, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		GlyphSet glyphs = DynamicQuadTree.make();
-		//GlyphSet glyphs = MultiQuadTree.make(10, 0,0,12);
-		//GlyphSet glyphs = SingleHomedQuadTree.make(100, 0,0,10);
-		//GlyphSet glyphs = new GlyphList();
-		//
-		Reader loader = new Reader(filename, skip);
+	public static GlyphSet load(final GlyphSet glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
+		Reader loader = new Reader(file, skip);
 		final int yflip = flipy?-1:1;
 		int count =0;
 
 		while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
+			if (skip >0) {skip--; continue;}
 
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]) * yflip;
@@ -108,7 +152,7 @@ public class CSVtoGlyphSet {
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
-			//if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
+			if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
 		}
 
 		//The check below causes an issue if memory is tight...the check has a non-trivial overhead on some glyphset types
