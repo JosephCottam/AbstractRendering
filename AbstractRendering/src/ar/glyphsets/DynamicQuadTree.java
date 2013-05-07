@@ -30,9 +30,10 @@ import ar.Util;
  * **/
 
 public abstract class DynamicQuadTree implements GlyphSet {
-	public static double MIN_DIM = .0001d;
+	public static double MIN_DIM = .001d;
 	public static double CROSS_LOAD_FACTOR = .25;
 	public static int LOADING = 10;
+	public static double FEATHER = MIN_DIM/4.0d;
 	
 	public static int NW = 0;
 	public static int NE = 1;
@@ -43,12 +44,12 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	private static final class Subs {
 		public final Rectangle2D[] quads = new Rectangle2D[4];
 		public Subs (final Rectangle2D current) {
-			double w = current.getWidth()/2;
-			double h = current.getHeight()/2;
-			quads[NW] = new Rectangle2D.Double(current.getX(), current.getY(),w,h);
-			quads[NE] = new Rectangle2D.Double(current.getCenterX(), current.getY(), w,h);
-			quads[SW] = new Rectangle2D.Double(current.getX(), current.getCenterY(), w,h);
-			quads[SE] = new Rectangle2D.Double(current.getCenterX(), current.getCenterY(), w,h);
+			double w = (current.getWidth()/2)+(2*FEATHER);
+			double h = (current.getHeight()/2)+(2*FEATHER);;
+			quads[NW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getY()-FEATHER,w,h);
+			quads[NE] = new Rectangle2D.Double(current.getCenterX()-FEATHER, current.getY()-FEATHER, w,h);
+			quads[SW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getCenterY()-FEATHER, w,h);
+			quads[SE] = new Rectangle2D.Double(current.getCenterX()-FEATHER, current.getCenterY()-FEATHER, w,h);
 		}
 	}
 	
