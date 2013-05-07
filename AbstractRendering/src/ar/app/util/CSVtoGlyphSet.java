@@ -96,7 +96,7 @@ public class CSVtoGlyphSet {
 
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]) * yflip;
-			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size);
+			Rectangle2D rect = new Rectangle2D	.Double(x,y,size,size);
 			Color color;
 			if (colorField >=0) {
 				try {
@@ -108,12 +108,12 @@ public class CSVtoGlyphSet {
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
+			//if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
 		}
 
+		//The check below causes an issue if memory is tight...the check has a non-trivial overhead on some glyphset types
 		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
-		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
-
-		//System.out.println(glyphs);
+		System.out.printf("Read %d entries\n", count);
 
 		return glyphs;
 	}
