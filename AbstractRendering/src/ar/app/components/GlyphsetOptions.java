@@ -9,7 +9,7 @@ import ar.glyphsets.*;
 public class GlyphsetOptions extends CompoundPanel  {
 	private static final long serialVersionUID = 1L;
 	private final JComboBox<String> glyphsType = new JComboBox<String>();
-	private final JComboBox<String> size = new JComboBox<String>();
+	private final JComboBox<Double> size = new JComboBox<Double>();
 	
 	public GlyphsetOptions( ){
 
@@ -18,14 +18,14 @@ public class GlyphsetOptions extends CompoundPanel  {
 		glyphsType.addItem("Matrix");
 		this.add(new LabeledItem("Glyphset:", glyphsType));
 		
-		size.addItem(".001");
-		size.addItem(".005");
-		size.addItem(".01");
-		size.addItem(".05");
-		size.addItem(".1");
-		size.addItem(".5");
-		size.addItem("1");
-		size.setSelectedItem(".01");
+		size.addItem(.001);
+		size.addItem(.005);
+		size.addItem(.01);
+		size.addItem(.05);
+		size.addItem(.1);
+		size.addItem(.5);
+		size.addItem(1d);
+		size.setSelectedItem(.01);
 		this.add(new LabeledItem("Size: ", size));
 		
 		ActionListener l = new CompoundPanel.DelegateAction(this);
@@ -33,7 +33,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		size.addActionListener(l);
 	}
 	
-	public double glyphSize() {return Double.parseDouble(size.getSelectedItem().toString());}
+	public double glyphSize() {return (Double) size.getSelectedItem();}
 	
 	public GlyphSet makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
