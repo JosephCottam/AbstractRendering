@@ -30,7 +30,7 @@ public class ARApp {
 		
 
 		JPanel controls = new JPanel();
-		controls.setLayout(new GridLayout(2,2));
+		controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
 		JPanel outer = new JPanel();
 		outer.setLayout(new BorderLayout());
 		outer.add(controls, BorderLayout.WEST);
@@ -38,8 +38,8 @@ public class ARApp {
 		
 		fileOptions = new FileOptions(this);
 		
-		controls.add(reductions);
-		controls.add(transfers);
+		controls.add(new LabeledItem("Aggregator:", reductions));
+		controls.add(new LabeledItem("Transfer:", transfers));
 		controls.add(glyphsetOptions);
 		controls.add(fileOptions);
 		final ARApp app = this;
