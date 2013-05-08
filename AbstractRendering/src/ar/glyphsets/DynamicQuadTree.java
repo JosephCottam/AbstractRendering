@@ -30,9 +30,10 @@ import ar.Util;
  * **/
 
 public abstract class DynamicQuadTree implements GlyphSet {
-	public static double MIN_DIM = .0001d;
+	public static double MIN_DIM = .001d;
 	public static double CROSS_LOAD_FACTOR = .25;
 	public static int LOADING = 10;
+	public static double FEATHER = MIN_DIM/4.0d;
 	
 	public static int NW = 0;
 	public static int NE = 1;
@@ -43,12 +44,12 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	private static final class Subs {
 		public final Rectangle2D[] quads = new Rectangle2D[4];
 		public Subs (final Rectangle2D current) {
-			double w = current.getWidth()/2;
-			double h = current.getHeight()/2;
-			quads[NW] = new Rectangle2D.Double(current.getX(), current.getY(),w,h);
-			quads[NE] = new Rectangle2D.Double(current.getCenterX(), current.getY(), w,h);
-			quads[SW] = new Rectangle2D.Double(current.getX(), current.getCenterY(), w,h);
-			quads[SE] = new Rectangle2D.Double(current.getCenterX(), current.getCenterY(), w,h);
+			double w = (current.getWidth()/2)+(2*FEATHER);
+			double h = (current.getHeight()/2)+(2*FEATHER);;
+			quads[NW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getY()-FEATHER,w,h);
+			quads[NE] = new Rectangle2D.Double(current.getCenterX()-FEATHER, current.getY()-FEATHER, w,h);
+			quads[SW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getCenterY()-FEATHER, w,h);
+			quads[SE] = new Rectangle2D.Double(current.getCenterX()-FEATHER, current.getCenterY()-FEATHER, w,h);
 		}
 	}
 	
@@ -180,9 +181,11 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		 */
 		private static final InnerNode growUp(DynamicQuadTree.InnerNode current, Rectangle2D toward) {
 			Rectangle2D currentBounds = current.concernBounds();
-
+			int outCode = currentBounds.outcode(toward.getX(), toward.getY());
+			
 			//TODO: Expand to "touches or is close to"...for some meaning of close...probably proportion of tree's width/height 
-			if (toward.intersects(currentBounds)) { 
+			if (toward.intersects(currentBounds)
+					|| outCode ==0) { 
 				//If the new glyph touches the current bounds, then grow with the current data in the center. 
 				Rectangle2D newBounds = new Rectangle2D.Double(
 						currentBounds.getX()-currentBounds.getWidth()/2.0d,
@@ -223,7 +226,6 @@ public abstract class DynamicQuadTree implements GlyphSet {
 				}
 				return newChild;
 			} else {
-				int outCode = currentBounds.outcode(toward.getX(), toward.getY());
 				double x,y;
 				int replace;
 				
@@ -292,7 +294,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 				}
 			}
 
-			if (!added) {
+			if (!added && concernBounds.outcode(glyphBounds.getX(), glyphBounds.getY()) !=0) {
 				throw new RuntimeException(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
 			}
 		}
@@ -368,8 +370,8 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			else {for (int i=0; i<hits.length;i++) {if (hits[i]) {quads[i].add(glyph);}}}
 			size++;
 
-			if (totalHits ==0) {
-				throw new Error(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
+			if (totalHits ==0 && concernBounds.outcode(glyphBounds.getX(), glyphBounds.getY()) !=0) {
+				throw new RuntimeException(String.format("Did not add glyph bounded %s to node with concern %s", glyphBounds, concernBounds));
 			}
 		}
 

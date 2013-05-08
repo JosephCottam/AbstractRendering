@@ -9,14 +9,16 @@ import ar.Aggregator;
 import ar.Renderer;
 import ar.renderers.ParallelSpatial;
 import ar.rules.Aggregators;
+import ar.app.util.CharityNetLoader;
 
 public class CharityService {
 	public static int TASK_SIZE = 40000;
 	private static final GlyphSet glyphset;
 	static {
-		ar.app.Dataset set =new ar.app.Dataset.CharityNet();
-		glyphset = set.glyphs();
+		glyphset = CharityNetLoader.load("./data/dateStateXY.csv");
 	}
+
+	
 	public String JSONaggregates(int width, int height, int lod) {
 		//LOD does 0 -- Days; 1 -- Weeks; 2 -- Months
 
