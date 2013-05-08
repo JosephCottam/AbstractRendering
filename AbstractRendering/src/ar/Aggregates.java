@@ -1,5 +1,6 @@
 package ar;
 
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -10,6 +11,7 @@ public class Aggregates<A> implements Iterable<A> {
 	private final A defaultVal;
 	
 	public Aggregates(final int width, final int height, A defaultVal) {this(0,0,width,height, defaultVal);}
+	public Aggregates(final Rectangle bounds, A defaultVal) {this(bounds.x, bounds.y, bounds.width, bounds.height, defaultVal);}
 	
 	@SuppressWarnings("unchecked")
 	public Aggregates(final int x, final int y, final int width, final int height, A defaultVal) {
@@ -35,16 +37,16 @@ public class Aggregates<A> implements Iterable<A> {
 	}
 	
 	public A defaultValue() {return defaultVal;}
+
+	/**What are the bounds that can actually be stored in this aggregates object?*/
+	public Rectangle bounds() {return new Rectangle(offsetX, offsetY, width, height);}
 	public int width() {return width;}
 	public int height() {return height;}
-	public int x() {return offsetX;}
-	public int y() {return offsetY;}
+	public int offsetX() {return offsetX;}
+	public int offsetY() {return offsetY;}
 	
 	private final int idx(int x,int y) {
 		int idx = (height*(x-offsetX))+(y-offsetY);
-		if (idx>=width*height) {
-			throw new IllegalArgumentException(String.format("Cannot refer to item at (%1$d,%2$d) from aggregates.  Maximum is (%3$d,%4$d).", x, y, width-1, height-1));
-		}
 		return idx;
 	}
 

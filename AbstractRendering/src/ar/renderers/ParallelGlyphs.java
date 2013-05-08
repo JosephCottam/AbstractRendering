@@ -1,12 +1,9 @@
 package ar.renderers;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.Collections;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 
 import ar.AggregateReducer;
@@ -27,9 +24,9 @@ import ar.glyphsets.GlyphSingleton;
 public class ParallelGlyphs implements Renderer {
 	private final int taskSize;
 	private final ForkJoinPool pool = new ForkJoinPool();
-	private final AggregateReducer reducer;
+	private final AggregateReducer<?,?,?> reducer;
 
-	public ParallelGlyphs(int taskSize, AggregateReducer red) {
+	public ParallelGlyphs(int taskSize, AggregateReducer<?,?,?> red) {
 		this.taskSize = taskSize;
 		this.reducer = red;
 	}
@@ -42,8 +39,10 @@ public class ParallelGlyphs implements Renderer {
 		try {view = inverseView.createInverse();}
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		
-		ReduceTask<A> t = new ReduceTask<A>((GlyphList) glyphs, view, 
-				r, reducer, 
+		ReduceTask<A> t = new ReduceTask<A>(
+				(GlyphList) glyphs, 
+				view, inverseView, 
+				r, (AggregateReducer<A, A, A>) reducer, 
 				width, height, taskSize,
 				0, glyphs.size());
 		return pool.invoke(t);
@@ -65,45 +64,47 @@ public class ParallelGlyphs implements Renderer {
 
 	private static final class ReduceTask<A> extends RecursiveTask<Aggregates<A>> {
 		private static final long serialVersionUID = 705015978061576950L;
-		private static final AffineTransform ID = new AffineTransform();
 
 		private final int taskSize;
 		private final int low;
 		private final int high;
-		private final GlyphList glyphs;		//TODO: Can some hackery be done with iterators instead so GlyphSet can be used?  At what cost??
-		private final AffineTransform view;
+		private final GlyphList glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
 		private final AggregateReducer<A,A,A> reducer;
 		private final Aggregator<A> op;
 		
-		public ReduceTask(GlyphList glyphs, AffineTransform view, 
+		public ReduceTask(GlyphList glyphs, 
+				AffineTransform view, AffineTransform inverseView,
 				Aggregator<A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
 				int low, int high) {
+			this.glyphs = glyphs;
+			this.view = view;
+			this.inverseView = inverseView;
+			this.op = op;
+			this.reducer = reducer;
+			this.width = width;
+			this.height = height;
 			this.taskSize = taskSize;
 			this.low = low;
 			this.high = high;
-			this.glyphs = glyphs;
-			this.view = view;
-			this.width = width;
-			this.height = height;
-			this.op = op;
-			this.reducer = reducer;
 		}
 
 		@Override
 		protected Aggregates<A> compute() {
-			if (high-low > taskSize) {
-				ReduceTask<A> top = new ReduceTask<A>(glyphs, view, op, reducer, width,height, taskSize, low, high/2);
-				ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, op, reducer, width,height, taskSize, high/2, low);
+			if ((high-low) > taskSize) {
+				int mid = low+((high-low)/2);
+				ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, low, mid);
+				ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, mid, high);
 				invokeAll(top, bottom);
 				return AggregateReducer.Util.reduce(top.getRawResult(), bottom.getRawResult(), reducer);
 			} else {
 				Aggregates<A> aggs = new Aggregates<A>(1, 1, op.defaultValue());
 				for (int i=low; i<high; i++) {
 					//Discretize the glyph into the aggregates array
-					//HACK: assumes the glyph really is a rectangle...
+					
 					Glyph g = glyphs.get(i);
 					Rectangle2D r = view.createTransformedShape(g.shape).getBounds2D();
 					int lowx = (int) Math.floor(r.getMinX());
@@ -111,10 +112,10 @@ public class ParallelGlyphs implements Renderer {
 					int highx = (int) Math.ceil(r.getMaxX());
 					int highy = (int) Math.ceil(r.getMaxY());
 					GlyphSingleton s = new GlyphSingleton(g);
-					Aggregates<A> subAggs = new Aggregates<A>(lowx,lowy, highx, highy, op.defaultValue());
+					Aggregates<A> subAggs = new Aggregates<A>(lowx,lowy, lowx+highx, lowy+highy, op.defaultValue());
 					for (int x=lowx; x<highx && x<width; x++){
 						for (int y=lowy; y<highy && y<height; y++) {
-							A v = op.at(x, y, s, ID);
+							A v = op.at(x, y, s, inverseView);
 							subAggs.set(x, y, v);
 						}
 					}

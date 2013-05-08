@@ -15,12 +15,12 @@ public class RendererOptions extends CompoundPanel {
 	private JComboBox<AggregateReducer<?,?,?>> reducers = new JComboBox<AggregateReducer<?,?,?>>();
 	
 	public RendererOptions() {
+		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		renderers.addItem("Parallel (Spatial)");
 		renderers.addItem("Serial");
 		renderers.addItem("Parallel (Glyphs)");
 		renderers.addActionListener(new DelegateAction(this));
 		renderers.setSelectedItem("Parallel (Pixel)");
-		this.add(new LabeledItem("Render:" , renderers));
 		
 		taskSize.addItem(1);
 		taskSize.addItem(10);
@@ -29,9 +29,18 @@ public class RendererOptions extends CompoundPanel {
 		taskSize.addItem(10000);
 		taskSize.setSelectedItem(100);
 		taskSize.addActionListener(new DelegateAction(this));		
-		this.add(new LabeledItem("Task Size:", taskSize));
-		
+
 		ARApp.loadInstances(reducers, AggregateReducers.class);
+		reducers.addActionListener(new DelegateAction(this));
+
+		
+		JPanel upper = new JPanel(); 
+		upper.add(new LabeledItem("Render:" , renderers));
+		upper.add(new LabeledItem("Task Size:", taskSize));
+		this.add(upper);
+		
+		this.add(new LabeledItem("Agg Reducer:", reducers));
+		
 	}
 	
 	public Renderer renderer() {
