@@ -30,8 +30,8 @@ public final class ParallelSpatial implements Renderer {
 	}
 	
 	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t) {
-		final int width = aggregates.width();
-		final int height = aggregates.height();
+		final int width = aggregates.highX();
+		final int height = aggregates.highY();
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
@@ -58,8 +58,8 @@ public final class ParallelSpatial implements Renderer {
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy, int taskSize, int depth) {
 			this.lowx = lowx;
 			this.lowy = lowy;
-			this.highx = highx > aggs.width() ? aggs.width()-1 : highx;  //Roundoff...
-			this.highy = highy > aggs.height() ? aggs.height()-1 : highy;//Roundoff...
+			this.highx = highx > aggs.highX() ? aggs.highX()-1 : highx;  //Roundoff...
+			this.highy = highy > aggs.highY() ? aggs.highY()-1 : highy;//Roundoff...
 			this.aggs = aggs;
 			this.op=op;
 			this.glyphs = glyphs;
@@ -69,8 +69,8 @@ public final class ParallelSpatial implements Renderer {
 			this.height = highy-lowy;
 			this.depth = depth;
 			
-			if (highx> aggs.width()) {throw new RuntimeException(String.format("%d > width of %d",  highx, aggs.width()));}
-			if (highx> aggs.width()) {throw new RuntimeException(String.format("%d > height of %d",  highy, aggs.height()));}
+			if (highx> aggs.highX()) {throw new RuntimeException(String.format("%d > width of %d",  highx, aggs.highX()));}
+			if (highy> aggs.highY()) {throw new RuntimeException(String.format("%d > height of %d",  highy, aggs.highY()));}
 			//System.out.printf(Util.indent(depth) + "Task from (%d,%d) to (%d x %d); concernSize %d\n", lowx,lowy, highx,highy, width*height);
 		}
 

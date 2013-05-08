@@ -14,22 +14,24 @@ public interface AggregateReducer<IN1,IN2,OUT> {
     		
     		Aggregates<T> [] sources;
 			Aggregates<T> target;
-			Rectangle bounds = right.bounds().union(left.bounds());
+			Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
+			Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+			Rectangle bounds = rb.union(lb);
 
-			if (left.bounds().contains(bounds)) {
+			if (lb.contains(bounds)) {
 				sources = new Aggregates[]{right};
 				target = left;
-			} else if (right.bounds().contains(bounds)) {
+			} else if (rb.contains(bounds)) {
 				sources = new Aggregates[]{left};
 				target = right;
 			} else {
 				sources = new Aggregates[]{left, right};
-				target = new Aggregates<T>(bounds, left.defaultValue());
+				target = new Aggregates<T>(bounds.x, bounds.y, bounds.width, bounds.height, left.defaultValue());
 			}
 			
 			for (Aggregates<T> source: sources) {
-				for (int x=source.offsetX(); x<source.width(); x++) {
-					for (int y=source.offsetY(); y<source.height(); y++) {
+				for (int x=source.lowX(); x<source.highX(); x++) {
+					for (int y=source.lowY(); y<source.highY(); y++) {
 						target.set(x,y, red.combine(target.at(x,y), source.at(x,y)));
 					}
 				}

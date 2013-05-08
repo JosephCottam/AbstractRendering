@@ -23,8 +23,8 @@ public final class Serial implements Renderer {
 	}
 	
 	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t) {
-		final int width = aggregates.width();
-		final int height = aggregates.height();
+		final int width = aggregates.highX();
+		final int height = aggregates.highY();
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {

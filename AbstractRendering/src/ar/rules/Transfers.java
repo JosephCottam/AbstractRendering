@@ -132,10 +132,10 @@ public class Transfers {
 			if (aggregates!=cacheKey) {
 				System.out.println("----------------------");
 				double max =0;
-				colors = new Aggregates<Color>(aggregates.width(), aggregates.height(), Color.WHITE);
+				colors = new Aggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
 				for (Aggregators.RLE rle:aggregates) {max = Math.max(max,rle.fullSize());}
-				for (int xi=0; xi<aggregates.width(); xi++) {
-					for (int yi =0; yi<aggregates.height(); yi++) {
+				for (int xi=0; xi<aggregates.highX(); xi++) {
+					for (int yi =0; yi<aggregates.highY(); yi++) {
 						Aggregators.RLE rle = aggregates.at(xi, yi);
 						Color c;
 						if (rle.fullSize() == 0) {c = background;}

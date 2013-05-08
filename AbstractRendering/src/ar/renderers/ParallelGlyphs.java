@@ -51,8 +51,8 @@ public class ParallelGlyphs implements Renderer {
 	
 	
 	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t) {
-		final int width = aggregates.width();
-		final int height = aggregates.height();
+		final int width = aggregates.highX()- aggregates.lowX();
+		final int height = aggregates.highY()-aggregates.lowY();
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
@@ -112,9 +112,9 @@ public class ParallelGlyphs implements Renderer {
 					int highx = (int) Math.ceil(r.getMaxX());
 					int highy = (int) Math.ceil(r.getMaxY());
 					GlyphSingleton s = new GlyphSingleton(g);
-					Aggregates<A> subAggs = new Aggregates<A>(lowx,lowy, lowx+highx, lowy+highy, op.defaultValue());
-					for (int x=lowx; x<highx && x<width; x++){
-						for (int y=lowy; y<highy && y<height; y++) {
+					Aggregates<A> subAggs = new Aggregates<A>(lowx,lowy, highx, highy, op.defaultValue());
+					for (int x=Math.max(0,lowx); x<highx && x<width; x++){
+						for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
 							A v = op.at(x, y, s, inverseView);
 							subAggs.set(x, y, v);
 						}

@@ -98,11 +98,11 @@ public final class Util {
 	
 	
 	public static <T extends Number> Aggregates<Double> score(Aggregates<T> source, Stats extrema) {
-		final Aggregates<Double> results = new Aggregates<Double>(source.width(), source.height(), 0d);
+		final Aggregates<Double> results = new Aggregates<Double>(source.highX(), source.highY(), 0d);
 		final double mean = extrema.mean;
 		final double stdev = extrema.stdev;
-		for (int x=0;x<results.width();x++) {
-			for (int y=0; y<results.height(); y++) {
+		for (int x=0;x<results.lowX();x++) {
+			for (int y=0; y<results.highX(); y++) {
 				final double v = source.at(x, y).doubleValue();
 				final double z = Math.abs((v-mean)/stdev);
 				results.set(x, y, z);

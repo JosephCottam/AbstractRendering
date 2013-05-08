@@ -1,26 +1,26 @@
 package ar;
 
-import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Iterator;
 
 public class Aggregates<A> implements Iterable<A> {
 	private final A[] values;
-	private final int offsetX, offsetY;
-	private final int height,width;
+	private final int lowX, lowY;
+	private final int highX,highY;
 	private final A defaultVal;
 	
-	public Aggregates(final int width, final int height, A defaultVal) {this(0,0,width,height, defaultVal);}
-	public Aggregates(final Rectangle bounds, A defaultVal) {this(bounds.x, bounds.y, bounds.width, bounds.height, defaultVal);}
+	public Aggregates(final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
 	
 	@SuppressWarnings("unchecked")
-	public Aggregates(final int x, final int y, final int width, final int height, A defaultVal) {
-		this.width = width;
-		this.height = height;
-		this.offsetX = x;
-		this.offsetY = y;
+	public Aggregates(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
+		this.lowX = lowX;
+		this.lowY = lowY;
+		this.highX = highX;
+		this.highY = highY;
 		this.defaultVal=defaultVal;
-		values = (A[]) new Object[(width-offsetX)*(height-offsetY)];
+		int size = (highX-lowX)*(highY-lowY);
+		size = Math.max(0, size);
+		values = (A[]) new Object[size];
 		Arrays.fill(values, defaultVal);
 	}
 	
@@ -39,14 +39,13 @@ public class Aggregates<A> implements Iterable<A> {
 	public A defaultValue() {return defaultVal;}
 
 	/**What are the bounds that can actually be stored in this aggregates object?*/
-	public Rectangle bounds() {return new Rectangle(offsetX, offsetY, width, height);}
-	public int width() {return width;}
-	public int height() {return height;}
-	public int offsetX() {return offsetX;}
-	public int offsetY() {return offsetY;}
+	public int lowX() {return lowX;}
+	public int lowY() {return lowY;}
+	public int highX() {return highX;}
+	public int highY() {return highY;}
 	
 	private final int idx(int x,int y) {
-		int idx = (height*(x-offsetX))+(y-offsetY);
+		int idx = (highY-lowY)*(x-lowX)+(y-lowY);
 		return idx;
 	}
 
