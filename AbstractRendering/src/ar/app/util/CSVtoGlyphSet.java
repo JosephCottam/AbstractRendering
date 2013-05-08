@@ -66,21 +66,26 @@ public class CSVtoGlyphSet {
 			String[] line = r.next();
 			int skip;
 			boolean flipY=true;
-			int xField, yField, colorField;
+			int xField, yField, colorField, valueField;
 			if (isNumber(line[0])) {
 				xField =0;
 				yField =1;
 				colorField = line.length >= 3 ? 2 : -1;
+				valueField = line.length >= 4 ? 3 : -1;
 				skip =0;
 			} else {
 				xField = fieldMatch("X", line, 0);
 				yField = fieldMatch("Y", line, 1);
 				colorField = fieldMatch("C", line, -1);
+				valueField = fieldMatch("V", line, -1);
 				skip =1;
 			}
 			
 			if (glyphs instanceof DirectMatrix) {
-				return null;
+				return loadMatrix(
+						source, skip, glyphSize, 
+						xField, yField, valueField,
+						0, new ToInt(), false);
 			} else {
 				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField);
 			}
@@ -119,7 +124,7 @@ public class CSVtoGlyphSet {
 			
 			int row = Integer.parseInt(line[rowField]);
 			int col = Integer.parseInt(line[colField]);
-			T value = converter.convert(line, valueField, defaultValue);
+			T value = valueField >=0 ? converter.convert(line, valueField, defaultValue) : defaultValue;
 			matrix[row][col] = value;
 			count++;
 		}
@@ -152,7 +157,7 @@ public class CSVtoGlyphSet {
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
-			if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
+			//if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
 		}
 
 		//The check below causes an issue if memory is tight...the check has a non-trivial overhead on some glyphset types

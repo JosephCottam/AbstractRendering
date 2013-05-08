@@ -1,15 +1,9 @@
 package ar.app.components;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 import ar.GlyphSet;
-import ar.app.util.CSVtoGlyphSet;
 import ar.glyphsets.*;
 
 public class GlyphsetOptions extends CompoundPanel  {
@@ -24,13 +18,15 @@ public class GlyphsetOptions extends CompoundPanel  {
 		glyphsType.addItem("Matrix");
 		this.add(new LabeledItem("Glyphset:", glyphsType));
 		
-		size.addItem("1");
-		size.addItem(".1");
-		size.addItem(".01");
 		size.addItem(".001");
+		size.addItem(".005");
+		size.addItem(".01");
+		size.addItem(".05");
+		size.addItem(".1");
+		size.addItem(".5");
+		size.addItem("1");
+		size.setSelectedItem(".01");
 		this.add(new LabeledItem("Size: ", size));
-
-		
 		
 		ActionListener l = new CompoundPanel.DelegateAction(this);
 		glyphsType.addActionListener(l);
@@ -45,7 +41,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		} else if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList();			
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
-			return new DirectMatrix(null, 1, 1, true);
+			return new DirectMatrix<>(null, 1, 1, true);
 		} else {
 			throw new RuntimeException("Unknown glyphset type selected.");
 		}
