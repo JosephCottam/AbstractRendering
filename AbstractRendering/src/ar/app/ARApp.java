@@ -2,17 +2,18 @@ package ar.app;
 
 import javax.swing.*;
 
-import ar.GlyphSet;
-import ar.app.components.*;
-import ar.app.util.CSVtoGlyphSet;
-
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+
+import ar.Renderer;
+import ar.GlyphSet;
+import ar.app.components.*;
+import ar.app.util.CSVtoGlyphSet;
 
 public class ARApp {
 	private ARPanel<?,?> image;
@@ -21,6 +22,7 @@ public class ARApp {
 	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
+	private final RendererOptions rendererOptions = new RendererOptions();
 	private final FileOptions fileOptions;
 	
 	public ARApp() {
@@ -41,17 +43,12 @@ public class ARApp {
 		controls.add(new LabeledItem("Aggregator:", reductions));
 		controls.add(new LabeledItem("Transfer:", transfers));
 		controls.add(glyphsetOptions);
+		controls.add(rendererOptions);
 		controls.add(fileOptions);
 		final ARApp app = this;
 		
 		loadInstances(reductions, WrappedReduction.class);
 		loadInstances(transfers, WrappedTransfer.class);
-
-		
-		//TODO: Select some sensible items so it render right away
-//		datasets.setSelectedItem(new Dataset.SyntheticScatterplot());
-//		reductions.setSelectedItem(new WrappedReduction.OverplotFirst());
-//		transfers.setSelectedItem(new WrappedTransfer.EchoColor());
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -67,6 +64,14 @@ public class ARApp {
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}});
+		
+		rendererOptions.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Renderer renderer = rendererOptions.renderer();
+				app.changeImage(image.withRenderer(renderer));
+				app.zoomFit();
+			}
+		});
 		
 		reductions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -84,7 +89,8 @@ public class ARApp {
 		
 		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
 							((WrappedTransfer) transfers.getSelectedItem()), 
-							loadData());
+							loadData(),
+							rendererOptions.renderer());
 		
 		frame.add(image, BorderLayout.CENTER);
 
@@ -94,7 +100,7 @@ public class ARApp {
 		zoomFit();
 	}
 	
-	private <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
+	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {

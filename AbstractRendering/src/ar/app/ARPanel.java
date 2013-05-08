@@ -9,8 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import ar.*;
-import ar.rules.*;
-import ar.renderers.*;
+import ar.Renderer;
 import ar.app.util.ZoomPanHandler;
 
 public class ARPanel<A,B> extends JPanel {
@@ -18,20 +17,20 @@ public class ARPanel<A,B> extends JPanel {
 	private final WrappedReduction<A> reduction;
 	private final WrappedTransfer<B> transfer;
 	private final GlyphSet dataset;
+	private Renderer renderer;
+	
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
-	private Renderer renderer = new ParallelGlyphs(40, new AggregateReducers.MergeCOC());
-	//private Renderer renderer = new ParallelSpatial(40000);
-	//private Renderer renderer = new SerialRenderer();
 
 	private BufferedImage image;
 	private Aggregates<A> aggregates;
 	
-	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet D) {
+	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet D, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
 		this.dataset = D;
+		this.renderer = renderer;
 		
 		ZoomPanHandler h = new ZoomPanHandler();
 		super.addMouseListener(h);
@@ -42,7 +41,8 @@ public class ARPanel<A,B> extends JPanel {
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 
-		if (dataset == null ||  dataset.isEmpty() 
+		if (renderer == null 
+				|| dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
 				|| !transfer.type().equals(reduction.type())) {
 			
@@ -75,9 +75,9 @@ public class ARPanel<A,B> extends JPanel {
 	}
 	
 	public GlyphSet dataset() {return dataset;}
-	public ARPanel<A,B> withDataset(GlyphSet data) {return new ARPanel<A,B>(reduction, transfer, data);}
+	public ARPanel<A,B> withDataset(GlyphSet data) {return new ARPanel<A,B>(reduction, transfer, data, renderer);}
 	public <C> ARPanel<A,C> withTransfer(WrappedTransfer<C> t) {
-		ARPanel<A,C> p = new ARPanel<A,C>(reduction, t, dataset);
+		ARPanel<A,C> p = new ARPanel<A,C>(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		p.aggregates = this.aggregates;
@@ -85,9 +85,14 @@ public class ARPanel<A,B> extends JPanel {
 		return p;
 	}
 	public <C> ARPanel<C,B> withReduction(WrappedReduction<C> r) {
-		ARPanel<C,B> p = new ARPanel<C,B>(r, transfer, dataset);
+		ARPanel<C,B> p = new ARPanel<C,B>(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
+		return p;
+	}
+	
+	public ARPanel<A,B> withRenderer(Renderer r) {
+		ARPanel<A,B> p = new ARPanel<A,B>(reduction, transfer, dataset, r);
 		return p;
 	}
 	
