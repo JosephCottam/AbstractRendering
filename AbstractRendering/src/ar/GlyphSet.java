@@ -14,6 +14,11 @@ public interface GlyphSet {
 	public Rectangle2D bounds();
 	public void add(Glyph g);
 	
+	
+	public static interface RandomAccess extends GlyphSet {public Glyph get(int i);}
+	
+	
+	
 	public static final class Glyph {
 		private static int IDCOUNTER=0;
 		public final Shape shape;

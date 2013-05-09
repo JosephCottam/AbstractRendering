@@ -86,6 +86,10 @@ public class CSVtoGlyphSet {
 						source, skip, glyphSize, 
 						xField, yField, valueField,
 						0, new ToInt(), false);
+			} else if (glyphs instanceof MemMapList) {
+				MemMapList list = new MemMapList(source, glyphSize);
+				System.out.printf("Setup list of %d entries.\n", list.size());
+				return list;
 			} else {
 				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField);
 			}

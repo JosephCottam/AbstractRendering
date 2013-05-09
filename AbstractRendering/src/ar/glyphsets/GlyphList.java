@@ -7,7 +7,7 @@ import java.util.*;
 import ar.GlyphSet;
 import ar.Util;
 
-public class GlyphList implements GlyphSet {
+public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
 	List<Glyph> glyphs = new ArrayList<Glyph>();
 	Rectangle2D bounds;
 	

@@ -20,7 +20,6 @@ import ar.Util;
 import ar.GlyphSet.Glyph;
 import ar.Renderer;
 import ar.Transfer;
-import ar.glyphsets.GlyphList;
 
 
 /**Task-stealing renderer designed for use with a linear stored glyph-set.
@@ -46,7 +45,7 @@ public class ParallelGlyphs implements Renderer {
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		
 		ReduceTask<A> t = new ReduceTask<A>(
-				(GlyphList) glyphs, 
+				(GlyphSet.RandomAccess) glyphs, 
 				view, inverseView, 
 				op, (AggregateReducer<A, A, A>) reducer, 
 				width, height, taskSize,
@@ -72,14 +71,14 @@ public class ParallelGlyphs implements Renderer {
 		private final int taskSize;
 		private final int low;
 		private final int high;
-		private final GlyphList glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final GlyphSet.RandomAccess glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
 		private final AggregateReducer<A,A,A> reducer;
 		private final Aggregator<A> op;
 		
-		public ReduceTask(GlyphList glyphs, 
+		public ReduceTask(GlyphSet.RandomAccess glyphs, 
 				AffineTransform view, AffineTransform inverseView,
 				Aggregator<A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
@@ -119,9 +118,9 @@ public class ParallelGlyphs implements Renderer {
 	
 	
 	public static final class GlyphSubset implements GlyphSet, Iterable<Glyph> {
-		private final GlyphList glyphs;
+		private final GlyphSet.RandomAccess glyphs;
 		private final int low,high;
-		public GlyphSubset (GlyphList glyphs, int low, int high) {
+		public GlyphSubset (GlyphSet.RandomAccess glyphs, int low, int high) {
 			this.glyphs = glyphs;
 			this.low = low; 
 			this.high=high;
@@ -132,6 +131,7 @@ public class ParallelGlyphs implements Renderer {
 		public Collection<Glyph> containing(Point2D p) {
 			ArrayList<Glyph> contained = new ArrayList<Glyph>();
 			for (Glyph g: this) {if (g.shape.contains(p)) {contained.add(g);}}
+			if (contained.size() >0) {System.out.println(contained.size());}
 			return contained;
 		}
 
@@ -142,11 +142,11 @@ public class ParallelGlyphs implements Renderer {
 	}
 
 	public static class GlyphSubsetIterator implements Iterator<Glyph> {
-		private final GlyphList glyphs;
+		private final GlyphSet.RandomAccess glyphs;
 		private final int high;
 		private int at;
 
-		public GlyphSubsetIterator(GlyphList glyphs, int low, int high){
+		public GlyphSubsetIterator(GlyphSet.RandomAccess glyphs, int low, int high){
 			this.glyphs = glyphs;
 			this.high=high;
 			at = low;

@@ -16,6 +16,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		glyphsType.addItem("Quad Tree");
 		glyphsType.addItem("List");
 		glyphsType.addItem("Matrix");
+		glyphsType.addItem("MemMap List");
 		this.add(new LabeledItem("Glyphset:", glyphsType));
 		
 		size.addItem(.001);
@@ -40,6 +41,8 @@ public class GlyphsetOptions extends CompoundPanel  {
 			return DynamicQuadTree.make();
 		} else if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList();			
+		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
+			return new MemMapList(null, (Double) size.getSelectedItem());
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
 			return new DirectMatrix<>(null, 1, 1, true);
 		} else {

@@ -9,5 +9,4 @@ public interface Renderer {
 			final Aggregator<A> op, final int width, final int height);
 	
 	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background);
-
 }
