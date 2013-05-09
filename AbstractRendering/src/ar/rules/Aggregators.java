@@ -26,14 +26,14 @@ public class Aggregators {
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {
 			return new Color(x/width, y/height,.5f ,1.0f);
 		}
-		public Color defaultValue() {return Util.CLEAR;}	
+		public Color identity() {return Util.CLEAR;}	
 	}
 
 	public static final class IDColor implements Aggregator<Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
 		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {return c;}
-		public Color defaultValue() {return Util.CLEAR;}
+		public Color identity() {return Util.CLEAR;}
 	}
 
 	public static final class Count implements Aggregator<Integer> {
@@ -43,7 +43,7 @@ public class Aggregators {
 			Collection<Glyph> items = glyphs.containing(p);
 			return items.size();
 		}
-		public Integer defaultValue() {return 0;}
+		public Integer identity() {return 0;}
 	}
 
 	public static final class First implements Aggregator<Color> {
@@ -54,7 +54,7 @@ public class Aggregators {
 			if (hits.size()>0) {return hits.iterator().next().color;}
 			else {return Util.CLEAR;}
 		}
-		public Color defaultValue() {return Util.CLEAR;}
+		public Color identity() {return Util.CLEAR;}
 	}
 
 	public static final class Last implements Aggregator<Color> {
@@ -66,7 +66,7 @@ public class Aggregators {
 			for (Glyph g:hits) {color = g.color;}
 			return color;
 		}
-		public Color defaultValue() {return Util.CLEAR;}
+		public Color identity() {return Util.CLEAR;}
 	}
 
 
@@ -162,7 +162,7 @@ public class Aggregators {
 			else {ordered = new ArrayList<Glyph>(hits);}
 			return encode(ordered);
 		}
-		public RLE defaultValue() {return new RLE();}
+		public RLE identity() {return new RLE();}
 	}
 
 	public static final class DeltaNeighbors implements Aggregator<Integer> {
@@ -191,7 +191,7 @@ public class Aggregators {
 			}
 			return count;
 		}
-		public Integer defaultValue() {return 0;}
+		public Integer identity() {return 0;}
 	}
 
 }

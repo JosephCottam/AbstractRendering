@@ -45,7 +45,7 @@ public class Aggregates<A> implements Iterable<A> {
 	public int highY() {return highY;}
 	
 	private final int idx(int x,int y) {
-		int idx = (highY-lowY)*(x-lowX)+(y-lowY);
+		int idx = ((highY-lowY)*(x-lowX))+(y-lowY);
 		return idx;
 	}
 

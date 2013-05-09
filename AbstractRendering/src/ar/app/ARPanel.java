@@ -57,12 +57,12 @@ public class ARPanel<A,B> extends JPanel {
 		if (aggregates == null || differentSizes(image, this)) { 
 			long start = System.currentTimeMillis();
 			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), this.getWidth(), this.getHeight(), Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.println((end-start) + " ms (full)");			
 		} else {
 			long start = System.currentTimeMillis();
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op());			
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), this.getWidth(), this.getHeight(), Util.CLEAR);			
 			long end = System.currentTimeMillis();
 			System.out.println((end-start) + " ms (transfer)");			
 		}

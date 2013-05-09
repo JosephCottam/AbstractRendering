@@ -1,5 +1,6 @@
 package ar.renderers;
 
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ForkJoinPool;
@@ -10,6 +11,7 @@ import ar.Aggregator;
 import ar.GlyphSet;
 import ar.Renderer;
 import ar.Transfer;
+import ar.Util;
 
 /**Task stealing renderer, designed to be used with a spatially-decomposed glyph set.
  * Divides aggregates space into regions and works on each region in isolation
@@ -23,16 +25,14 @@ public final class ParallelSpatial implements Renderer {
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
 			final Aggregator<A> r, final int width, final int height) {
-		Aggregates<A> aggregates = new Aggregates<A>(width, height, r.defaultValue()); 
+		Aggregates<A> aggregates = new Aggregates<A>(width, height, r.identity()); 
 		ReduceTask<A> t = new ReduceTask<A>(glyphs, inverseView, r, aggregates, 0,0, width, height, taskSize, 0);
 		pool.invoke(t);
 		return aggregates;
 	}
 	
-	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t) {
-		final int width = aggregates.highX();
-		final int height = aggregates.highY();
-		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
+		BufferedImage i = Util.initImage(width, height, background);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
 				i.setRGB(x, y, t.at(x, y, aggregates).getRGB());

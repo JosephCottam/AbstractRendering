@@ -1,8 +1,14 @@
 package ar.renderers;
 
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
@@ -10,11 +16,11 @@ import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.GlyphSet;
+import ar.Util;
 import ar.GlyphSet.Glyph;
 import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.GlyphList;
-import ar.glyphsets.GlyphSingleton;
 
 
 /**Task-stealing renderer designed for use with a linear stored glyph-set.
@@ -33,7 +39,7 @@ public class ParallelGlyphs implements Renderer {
 
 	@Override
 	public <A> Aggregates<A> reduce(GlyphSet glyphs,
-			AffineTransform inverseView, Aggregator<A> r, int width, int height) {
+			AffineTransform inverseView, Aggregator<A> op, int width, int height) {
 		
 		AffineTransform view;
 		try {view = inverseView.createInverse();}
@@ -42,7 +48,7 @@ public class ParallelGlyphs implements Renderer {
 		ReduceTask<A> t = new ReduceTask<A>(
 				(GlyphList) glyphs, 
 				view, inverseView, 
-				r, (AggregateReducer<A, A, A>) reducer, 
+				op, (AggregateReducer<A, A, A>) reducer, 
 				width, height, taskSize,
 				0, glyphs.size());
 		return pool.invoke(t);
@@ -50,12 +56,10 @@ public class ParallelGlyphs implements Renderer {
 	
 	
 	
-	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t) {
-		final int width = aggregates.highX()- aggregates.lowX();
-		final int height = aggregates.highY()-aggregates.lowY();
-		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
+	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
+		BufferedImage i = Util.initImage(width, height, background);
+		for (int x=Math.max(aggregates.lowX(), 0); x<Math.min(aggregates.highX(), width); x++) {
+			for (int y=Math.max(aggregates.lowY(), 0); y<Math.min(aggregates.highY(), height); y++) {
 				i.setRGB(x, y, t.at(x, y, aggregates).getRGB());
 			}
 		}
@@ -101,30 +105,56 @@ public class ParallelGlyphs implements Renderer {
 				invokeAll(top, bottom);
 				return AggregateReducer.Util.reduce(top.getRawResult(), bottom.getRawResult(), reducer);
 			} else {
-				Aggregates<A> aggs = new Aggregates<A>(1, 1, op.defaultValue());
-				for (int i=low; i<high; i++) {
-					//Discretize the glyph into the aggregates array
-					
-					Glyph g = glyphs.get(i);
-					Rectangle2D r = view.createTransformedShape(g.shape).getBounds2D();
-					int lowx = (int) Math.floor(r.getMinX());
-					int lowy = (int) Math.floor(r.getMinY());
-					int highx = (int) Math.ceil(r.getMaxX());
-					int highy = (int) Math.ceil(r.getMaxY());
-					GlyphSingleton s = new GlyphSingleton(g);
-					Aggregates<A> subAggs = new Aggregates<A>(lowx,lowy, highx, highy, op.defaultValue());
-					for (int x=Math.max(0,lowx); x<highx && x<width; x++){
-						for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
-							A v = op.at(x, y, s, inverseView);
-							subAggs.set(x, y, v);
-						}
-					}
-					
-					aggs = AggregateReducer.Util.reduce(aggs, subAggs, reducer);
-				}
-				return aggs;
+				GlyphSubset subset = new GlyphSubset(glyphs, low, high);
+				Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
+//				Aggregates<A> aggregates = new Aggregates<A>(0,0,width,height, op.identity());
+				Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
+															 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
+															 op.identity());
+				Serial.reduceInto(aggregates, subset, inverseView, op);
+				return aggregates;
 			}
 		}
+	}
+	
+	
+	public static final class GlyphSubset implements GlyphSet, Iterable<Glyph> {
+		private final GlyphList glyphs;
+		private final int low,high;
+		public GlyphSubset (GlyphList glyphs, int low, int high) {
+			this.glyphs = glyphs;
+			this.low = low; 
+			this.high=high;
+		}
+		
+		public GlyphSubsetIterator iterator() {return new GlyphSubsetIterator(glyphs, low,high);}
+
+		public Collection<Glyph> containing(Point2D p) {
+			ArrayList<Glyph> contained = new ArrayList<Glyph>();
+			for (Glyph g: this) {if (g.shape.contains(p)) {contained.add(g);}}
+			return contained;
+		}
+
+		public boolean isEmpty() {return low >= high;}
+		public int size() {return high-low;}
+		public Rectangle2D bounds() {return Util.bounds(this);}
+		public void add(Glyph g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
+	}
+
+	public static class GlyphSubsetIterator implements Iterator<Glyph> {
+		private final GlyphList glyphs;
+		private final int high;
+		private int at;
+
+		public GlyphSubsetIterator(GlyphList glyphs, int low, int high){
+			this.glyphs = glyphs;
+			this.high=high;
+			at = low;
+		}
+		
+		public boolean hasNext() {return at<high;}
+		public Glyph next() {return glyphs.get(at++);}
+		public void remove() {throw new UnsupportedOperationException();}
 		
 	}
 	

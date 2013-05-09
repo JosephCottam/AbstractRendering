@@ -26,7 +26,7 @@ public interface AggregateReducer<IN1,IN2,OUT> {
 				target = right;
 			} else {
 				sources = new Aggregates[]{left, right};
-				target = new Aggregates<T>(bounds.x, bounds.y, bounds.width, bounds.height, left.defaultValue());
+				target = new Aggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, left.defaultValue());
 			}
 			
 			for (Aggregates<T> source: sources) {

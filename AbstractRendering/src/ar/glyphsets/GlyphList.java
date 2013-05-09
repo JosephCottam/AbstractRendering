@@ -28,6 +28,8 @@ public class GlyphList implements GlyphSet {
 		if (bounds == null) {bounds = Util.bounds(glyphs);}
 		return bounds;		
 	}
+	
+
 
 
 }

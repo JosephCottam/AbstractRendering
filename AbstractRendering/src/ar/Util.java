@@ -1,7 +1,9 @@
 package ar;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 import ar.GlyphSet.Glyph;
@@ -11,6 +13,14 @@ public final class Util {
 
 	private Util() {}
 
+	public static BufferedImage initImage(int width, int height, Color background) {
+		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics g = i.getGraphics();
+		g.setColor(background);
+		g.fillRect(0, 0, width, height);
+		g.dispose();
+		return i;
+	}
 
 	public static String indent(int x) {
 		char[] chars = new char[x*2];
