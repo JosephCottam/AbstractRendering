@@ -1,23 +1,29 @@
 package ar;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.Shape;
 import java.util.Collection;
 
 public interface GlyphSet {
 	
-	public Collection<Glyph> containing(Point2D p);
+	/**Return all glyphs that intersect the passed rectangle.**/
+	public Collection<Glyph> intersects(Rectangle2D r);
+	
+	/**Is this glyphset empty?*/
 	public boolean isEmpty();
+	
+	/**How many items in this glyphset?*/
 	public int size();
+	
+	/**What are the overall bounds of the items in this glyphset?**/
 	public Rectangle2D bounds();
+	
+	/**Add a new item to this glyphset**/
 	public void add(Glyph g);
 	
 	
 	public static interface RandomAccess extends GlyphSet {public Glyph get(int i);}
-	
-	
 	
 	public static final class Glyph {
 		private static int IDCOUNTER=0;

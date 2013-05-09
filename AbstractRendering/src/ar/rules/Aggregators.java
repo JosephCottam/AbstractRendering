@@ -1,9 +1,9 @@
 package ar.rules;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,8 +23,8 @@ public class Aggregators {
 	public static final class Gradient implements Aggregator<Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
-		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {
-			return new Color(x/width, y/height,.5f ,1.0f);
+		public Color at(Rectangle r, GlyphSet glyphs, AffineTransform inverseView) {
+			return new Color(r.x/width, r.y/height,.5f ,1.0f);
 		}
 		public Color identity() {return Util.CLEAR;}	
 	}
@@ -32,25 +32,23 @@ public class Aggregators {
 	public static final class IDColor implements Aggregator<Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
-		public Color at(int x, int y, GlyphSet glyphs, AffineTransform inverseView) {return c;}
+		public Color at(Rectangle r, GlyphSet glyphs, AffineTransform inverseView) {return c;}
 		public Color identity() {return Util.CLEAR;}
 	}
 
 	public static final class Count implements Aggregator<Integer> {
-		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			Point2D p = new Point2D.Double(x,y);
-			v.transform(p, p);
-			Collection<Glyph> items = glyphs.containing(p);
+		public Integer at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
+			Collection<Glyph> items = glyphs.intersects(b);
 			return items.size();
 		}
 		public Integer identity() {return 0;}
 	}
 
 	public static final class First implements Aggregator<Color> {
-		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			Point2D p = new Point2D.Double(x,y);
-			v.transform(p, p);
-			Collection<Glyph> hits = glyphs.containing(p);
+		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
+			Collection<Glyph> hits = glyphs.intersects(b);
 			if (hits.size()>0) {return hits.iterator().next().color;}
 			else {return Util.CLEAR;}
 		}
@@ -58,10 +56,9 @@ public class Aggregators {
 	}
 
 	public static final class Last implements Aggregator<Color> {
-		public Color at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			Point2D p = new Point2D.Double(x,y);
-			v.transform(p, p);
-			Collection<Glyph> hits = glyphs.containing(p);
+		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
+			Collection<Glyph> hits = glyphs.intersects(b);
 			Color color = Util.CLEAR;
 			for (Glyph g:hits) {color = g.color;}
 			return color;
@@ -136,16 +133,15 @@ public class Aggregators {
 			return rle;
 		}
 
-		public RLE at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			Point2D p = new Point2D.Double(x,y);
-			v.transform(p, p);
-			Collection<Glyph> hits = glyphs.containing(p);
+		public RLE at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
+			Collection<Glyph> hits = glyphs.intersects(b);
 
 			if (topLeft) {
 				Collection<Glyph> superHits = new ArrayList<Glyph>(hits.size());
 				for (Glyph g: hits) {
 					Rectangle2D bounds = g.shape.getBounds2D();
-					Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
+					Rectangle2D r = new Rectangle2D.Double(pixel.x,pixel.y,1,1);
 					r = v.createTransformedShape(r).getBounds2D();
 
 					if (r.contains(bounds.getX(), bounds.getY())) {
@@ -168,24 +164,25 @@ public class Aggregators {
 	public static final class DeltaNeighbors implements Aggregator<Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
-		public Integer at(int x, int y, GlyphSet glyphs, AffineTransform v) {
-			Point2D p = new Point2D.Double(x,y);
-			v.transform(p, p);
-			Collection<Glyph> gs = glyphs.containing(p);
+		public Integer at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
+			Collection<Glyph> gs = glyphs.intersects(b);
 			if (gs.size()==0) {return 0;}
 
 			int count=0;
 			HashSet<Color> colors = new HashSet<Color>();
 			for (Glyph g:gs) {colors.add(g.color);}
-
+		
+			int x = pixel.x;
+			int y = pixel.y;
 
 			for (int xs=x-reach; xs<x+reach; xs++) {
 				if (xs<0) {continue;}
 				for (int ys=y-reach; ys<y+reach; ys++) {
 					if (ys<0) {continue;}
-					p.setLocation(xs, ys);
-					v.transform(p, p);
-					gs = glyphs.containing(p);
+					Rectangle r2 = new Rectangle(x,y, pixel.width, pixel.height);
+					b = v.createTransformedShape(r2).getBounds2D();
+					gs = glyphs.intersects(b);
 					for (Glyph g:gs) {if (!colors.contains(g.color)) {count++;}}
 				}
 			}

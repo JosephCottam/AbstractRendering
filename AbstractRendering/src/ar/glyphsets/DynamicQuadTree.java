@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,14 +87,15 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	protected abstract void items(Collection<Glyph> collector);
 
 
-	/**What items in this sub-tree contain the passed point?**/
-	public Collection<Glyph> containing(Point2D p) {
-		Collection<Glyph> collector2 = new ArrayList<Glyph>();
-		containing(p, collector2);
-		return collector2;
+	/**What items in this sub-tree contain the passed point?**/	
+	public Collection<Glyph> intersects(Rectangle2D pixel) {
+		Collection<Glyph> collector = new HashSet<Glyph>();
+		intersects(pixel, collector);
+		return collector;
 	}
+
 	/**Efficiency method for collecting items touching a point**/
-	protected abstract void containing(Point2D p, Collection<Glyph> collector);
+	protected abstract void intersects(Rectangle2D pixel, Collection<Glyph> collector);
 
 	protected boolean doSplit() {return false;}
 	
@@ -256,7 +256,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		public Rectangle2D concernBounds() {return child.concernBounds();}
 		public Rectangle2D bounds() {return child.bounds();}
 		public void items(Collection<Glyph> collector) {child.items(collector);}
-		public void containing(Point2D p, Collection<Glyph> collector) {child.containing(p, collector);}
+		public void intersects(Rectangle2D pixel, Collection<Glyph> collector) {child.intersects(pixel, collector);}
 		public String toString(int indent) {return child.toString(indent);}
 	}
 
@@ -299,9 +299,9 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			}
 		}
 
-		public void containing(Point2D p, Collection<Glyph> collector) {
+		public void intersects(Rectangle2D pixel, Collection<Glyph> collector) {
 			for (DynamicQuadTree q: quads) {
-				if (q.concernBounds.contains(p)) {q.containing(p, collector); break;}
+				if (q.concernBounds.intersects(pixel)) {q.intersects(pixel, collector);}
 			}
 		}
 
@@ -390,15 +390,13 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			return false;
 		}
 		
-		//NEAR Copy
-		public void containing(Point2D p, Collection<Glyph> collector) {
+		public void intersects(Rectangle2D pixel, Collection<Glyph> collector) {
 			for (DynamicQuadTree q: quads) {
-				if (q.concernBounds.contains(p)) {q.containing(p, collector); break;}
+				if (q.concernBounds.intersects(pixel)) {q.intersects(pixel, collector); break;}
 			}
-			for (Glyph g:spanningItems) {if (g.shape.contains(p)) {collector.add(g);}}
+			for (Glyph g:spanningItems) {if (g.shape.intersects(pixel)) {collector.add(g);}}
 		}
 		
-		//NEAR Copy
 		public boolean isEmpty() {
 			for (DynamicQuadTree q: quads) {if (!q.isEmpty()) {return false;}}
 			return spanningItems.size() == 0;
@@ -446,8 +444,8 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		public String toString(int level) {return Util.indent(level) + "LeafQuad: " + items.size() + " items\n";}
 		public Rectangle2D bounds() {return Util.bounds(items);}
 		protected void items(Collection<Glyph> collector) {collector.addAll(items);}
-		protected void containing(Point2D p, Collection<Glyph> collector) {
-			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);}}
+		protected void intersects(Rectangle2D pixel, Collection<Glyph> collector) {
+			for (Glyph g: items) {if (g.shape.intersects(pixel)) {collector.add(g);}}
 		}
 	}
 	

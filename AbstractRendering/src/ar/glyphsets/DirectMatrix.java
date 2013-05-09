@@ -1,7 +1,6 @@
 package ar.glyphsets;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,10 +42,10 @@ public class DirectMatrix<T> implements GlyphSet {
 		this.nullIsValue = nullIsValue;
 	}
 
-
-	public Collection<Glyph> containing(Point2D p) {
-		long row = Math.round(Math.floor(p.getX()/xScale));
-		long col = Math.round(Math.floor(p.getY()/yScale));
+	//TODO: Only returns top-left of pixel, not full bounds....
+	public Collection<Glyph> intersects(Rectangle2D pixel) {
+		long row = Math.round(Math.floor(pixel.getX()/xScale));
+		long col = Math.round(Math.floor(pixel.getY()/yScale));
 
 		if (inBounds(row,col)) {
 			T v = matrix[(int) row][(int) col];

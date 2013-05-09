@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +8,6 @@ import java.util.List;
 
 import ar.GlyphSet;
 import ar.Util;
-
 
 /**Quad tree where items appear in each node that they touch.  
  * No items are held in intermediate nodes**/
@@ -43,12 +41,12 @@ public abstract class MultiQuadTree implements GlyphSet {
 	}
 	protected abstract void items(Collection<Glyph> collector);
 	
-	public Collection<Glyph> containing(Point2D p) {
+	public Collection<Glyph> intersects(Rectangle2D pixel) {
 		Collection<Glyph> collector = new HashSet<Glyph>();
-		containing(p, collector);
+		intersects(pixel, collector);
 		return collector;
 	}
-	protected abstract void containing(Point2D p, Collection<Glyph> collector);
+	protected abstract void intersects(Rectangle2D pixel, Collection<Glyph> collector);
 	
 	public abstract String toString(int indent);
 
@@ -112,9 +110,8 @@ public abstract class MultiQuadTree implements GlyphSet {
 			return count;
 		}
 
-		protected void containing(Point2D p, Collection<Glyph> collector) {
-			
-			for (Glyph g: items) {if (g.shape.contains(p)) {collector.add(g);} g.shape.contains(3d,4d);}
+		protected void intersects(Rectangle2D pixel, Collection<Glyph> collector) {
+				for (Glyph g: items) {if (g.shape.intersects(pixel)) {collector.add(g);}}
 		}
 		
 		
@@ -178,11 +175,11 @@ public abstract class MultiQuadTree implements GlyphSet {
 		}
 		
 		
-		public void containing(Point2D p, Collection<Glyph> collector) {
-			if (NW.concernBounds.contains(p)) {NW.containing(p,collector);}
-			else if (NE.concernBounds.contains(p)) {NE.containing(p,collector);}
-			else if (SW.concernBounds.contains(p)) {SW.containing(p,collector);}
-			else if (SE.concernBounds.contains(p)) {SE.containing(p,collector);}
+		public void intersects(Rectangle2D pixel, Collection<Glyph> collector) {
+			if (NW.concernBounds.intersects(pixel)) {NW.intersects(pixel,collector);}
+			else if (NE.concernBounds.intersects(pixel)) {NE.intersects(pixel,collector);}
+			else if (SW.concernBounds.intersects(pixel)) {SW.intersects(pixel,collector);}
+			else if (SE.concernBounds.intersects(pixel)) {SE.intersects(pixel,collector);}
 		}
 
 		@Override

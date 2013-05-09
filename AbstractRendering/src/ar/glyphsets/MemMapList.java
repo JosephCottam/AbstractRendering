@@ -1,7 +1,6 @@
 package ar.glyphsets;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,9 +45,9 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	}
 		
 	@Override
-	public Collection<Glyph> containing(Point2D p) {
+	public Collection<Glyph> intersects(Rectangle2D r) {
 		ArrayList<Glyph> contained = new ArrayList<Glyph>();
-		for (Glyph g: this) {if (g.shape.contains(p)) {contained.add(g);}}
+		for (Glyph g: this) {if (g.shape.intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 	

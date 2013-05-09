@@ -1,6 +1,7 @@
 package ar.renderers;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
@@ -15,15 +16,17 @@ public final class Serial implements Renderer {
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
 			final Aggregator<A> op, final int width, final int height) {		
 		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity());
-		reduceInto(aggregates, glyphs, inverseView, op);
+		renderInto(aggregates, glyphs, inverseView, op);
 		return aggregates;
 	}
 	
-	public static <A> void reduceInto(final Aggregates<A> aggregates, final GlyphSet glyphs, 
+	public static <A> void renderInto(final Aggregates<A> aggregates, final GlyphSet glyphs, 
 			final AffineTransform inverseView, final Aggregator<A> op) {
+		Rectangle pixel = new Rectangle(0,0,1,1);
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-				A value = op.at(x,y,glyphs,inverseView);
+				pixel.setLocation(x,y);
+				A value = op.at(pixel,glyphs,inverseView);
 				aggregates.set(x,y,value);
 			}
 		}

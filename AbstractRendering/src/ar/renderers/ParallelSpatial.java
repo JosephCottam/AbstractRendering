@@ -1,6 +1,7 @@
 package ar.renderers;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ForkJoinPool;
@@ -87,9 +88,11 @@ public final class ParallelSpatial implements Renderer {
 				ReduceTask<A> NE = new ReduceTask<A>(glyphs, inverseView, op, aggs, centerx, centery, highx,   highy,   taskSize, depth+1);
 				invokeAll(SW,NW,SE,NE);
 			} else {
+				Rectangle pixel = new Rectangle(0,0,1,1);
 				for (int x=lowx; x<highx; x++) {
 					for (int y=lowy; y<highy; y++) {
-						A value = op.at(x,y,glyphs,inverseView);
+						pixel.setLocation(x, y);
+						A value = op.at(pixel,glyphs,inverseView);
 						aggs.set(x,y,value);
 					}
 				}

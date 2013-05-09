@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
@@ -17,12 +16,11 @@ public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
 	public void add(Glyph g) {glyphs.add(g);}
 	public int size() {return glyphs.size();}
 
-	public Collection<Glyph> containing(Point2D p) {
+	public Collection<Glyph> intersects(Rectangle2D r) {
 		ArrayList<Glyph> contained = new ArrayList<Glyph>();
-		for (Glyph g: glyphs) {if (g.shape.contains(p)) {contained.add(g);}}
+		for (Glyph g: glyphs) {if (g.shape.intersects(r)) {contained.add(g);}}
 		return contained;
 	}
-
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {bounds = Util.bounds(glyphs);}
