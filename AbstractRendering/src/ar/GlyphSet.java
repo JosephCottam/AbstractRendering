@@ -23,6 +23,7 @@ public interface GlyphSet {
 	public void add(Glyph g);
 	
 	
+	public static interface IterableGlyphs extends GlyphSet, Iterable<Glyph> {}
 	public static interface RandomAccess extends GlyphSet {public Glyph get(int i);}
 	
 	public static final class Glyph {
