@@ -89,7 +89,8 @@ public class ARPanel<A,B> extends JPanel {
 		}
 
 		if (action != null && (renderThread == null || !renderThread.isAlive())) {
-			renderThread = new Thread(action);
+			renderThread = new Thread(action, "Render Thread");
+			renderThread.setDaemon(true);
 			renderThread.start();
 		}
 	

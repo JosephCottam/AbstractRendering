@@ -74,7 +74,6 @@ public class ParallelGlyphs implements Renderer {
 
 	private static final class ReduceTask<A> extends RecursiveTask<Aggregates<A>> {
 		private static final long serialVersionUID = 705015978061576950L;
-		private static final RenderUtils.Progress NOP = new RenderUtils.Progress.NOP(); 
 
 		private final int taskSize;
 		private final int low;
@@ -109,6 +108,7 @@ public class ParallelGlyphs implements Renderer {
 
 		@Override
 		protected Aggregates<A> compute() {
+			//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 			if ((high-low) > taskSize) {
 				int mid = low+((high-low)/2);
 				ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
@@ -122,7 +122,26 @@ public class ParallelGlyphs implements Renderer {
 				Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
 															 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
 															 op.identity());
-				SerialSpatial.renderInto(aggregates, subset, NOP, inverseView, op);
+				
+				for (Glyph g: subset) {
+					//Discretize the glyph into the aggregates array
+					Rectangle2D r = view.createTransformedShape(g.shape).getBounds2D();
+					int lowx = (int) Math.floor(r.getMinX());
+					int lowy = (int) Math.floor(r.getMinY());
+					int highx = (int) Math.ceil(r.getMaxX());
+					int highy = (int) Math.ceil(r.getMaxY());
+
+					Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
+					A v = op.at(pixel, new GlyphSingleton(g), inverseView);
+					
+					
+					for (int x=Math.max(0,lowx); x<highx && x<width; x++){
+						for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
+							aggregates.set(x, y, reducer.combine(aggregates.at(x,y), v));
+						}
+					}
+				}
+				
 				recorder.update(high-low);
 				return aggregates;
 			}

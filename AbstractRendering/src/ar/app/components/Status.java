@@ -23,7 +23,8 @@ public class Status extends JPanel {
 	public void startMonitoring(Renderer renderer) {
 		stopMonitoring();
 		progress.setString("Starting...");
-		Thread t = new Thread(new Monitor(this, ++current, renderer));
+		Thread t = new Thread(new Monitor(this, ++current, renderer), "Status updater");
+		t.setDaemon(true);
 		t.start();
 	}
 	
