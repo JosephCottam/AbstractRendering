@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import ar.AggregateReducer;
 import ar.Aggregates;
@@ -28,18 +27,16 @@ import ar.Transfer;
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
  */
-public class ParallelGlyphs implements Renderer {
-	public static boolean RECORD_PROGRESS = false;
-	
+public class ParallelGlyphs implements Renderer {	
 	private final int taskSize;
 	private final ForkJoinPool pool = new ForkJoinPool();
 	private final AggregateReducer<?,?,?> reducer;
-	private final ProgressRecorder recorder;
+	private final RenderUtils.Progress recorder;
 
 	public ParallelGlyphs(int taskSize, AggregateReducer<?,?,?> red) {
 		this.taskSize = taskSize;
 		this.reducer = red;
-		recorder = RECORD_PROGRESS ? new ProgressRecorder.Counter() : new ProgressRecorder.NOP();
+		recorder = RenderUtils.recorder();
 	}
 
 	@Override
@@ -49,6 +46,7 @@ public class ParallelGlyphs implements Renderer {
 		AffineTransform view;
 		try {view = inverseView.createInverse();}
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
+		recorder.setExpected(width*height);
 		
 		ReduceTask<A> t = new ReduceTask<A>(
 				(GlyphSet.RandomAccess) glyphs, 
@@ -71,9 +69,12 @@ public class ParallelGlyphs implements Renderer {
 		}
 		return i;
 	}
+	
+	public double progress() {return recorder.percent();}
 
 	private static final class ReduceTask<A> extends RecursiveTask<Aggregates<A>> {
 		private static final long serialVersionUID = 705015978061576950L;
+		private static final RenderUtils.Progress NOP = new RenderUtils.Progress.NOP(); 
 
 		private final int taskSize;
 		private final int low;
@@ -84,14 +85,14 @@ public class ParallelGlyphs implements Renderer {
 		private final int height;
 		private final AggregateReducer<A,A,A> reducer;
 		private final Aggregator<A> op;
-		private final ProgressRecorder recorder;
+		private final RenderUtils.Progress recorder;
 
 		
 		public ReduceTask(GlyphSet.RandomAccess glyphs, 
 				AffineTransform view, AffineTransform inverseView,
 				Aggregator<A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
-				ProgressRecorder recorder,
+				RenderUtils.Progress recorder,
 				int low, int high) {
 			this.glyphs = glyphs;
 			this.view = view;
@@ -121,7 +122,7 @@ public class ParallelGlyphs implements Renderer {
 				Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
 															 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
 															 op.identity());
-				Serial.renderInto(aggregates, subset, inverseView, op);
+				SerialSpatial.renderInto(aggregates, subset, NOP, inverseView, op);
 				recorder.update(high-low);
 				return aggregates;
 			}
@@ -169,6 +170,10 @@ public class ParallelGlyphs implements Renderer {
 
 		public Collection<Glyph> intersects(Rectangle2D r) {
 			ArrayList<Glyph> contained = new ArrayList<Glyph>();
+			for (int i=0; i<cache.length; i++) {
+				Glyph g = get(i);
+				if (g.shape.intersects(r)) {contained.add(g);}
+			}
 			for (Glyph g: this) {if (g.shape.intersects(r)) {contained.add(g);}}
 			return contained;
 		}
@@ -201,21 +206,5 @@ public class ParallelGlyphs implements Renderer {
 		public void remove() {throw new UnsupportedOperationException();}
 		
 	}
-	
-	public interface ProgressRecorder {
-		public int count();
-		public void update(int delta);
-		
-		public static final class NOP implements ProgressRecorder {
-			public int count() {return -1;}
-			public void update(int delta) {}
-		}
-		
-		public static final class Counter implements ProgressRecorder {
-			private final AtomicInteger counter = new AtomicInteger();
-			public int count() {return counter.get();}
-			public void update(int delta) {counter.addAndGet(delta);}
-		}
-	}
-	
+
 }

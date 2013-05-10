@@ -15,6 +15,9 @@ public class AggregateReducers {
 
 	public static class MergeCOC implements AggregateReducer<RLE,RLE,RLE> {
 		public RLE combine(RLE left, RLE right) {
+			if (left == null || left.size()==0) {return right;}
+			if (right == null || left.size()==0) {return left;}
+			
 			HashSet<Object> categories = new HashSet<Object>();
 			categories.addAll(left.keys);
 			categories.addAll(right.keys);
