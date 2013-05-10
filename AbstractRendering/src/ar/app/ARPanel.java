@@ -9,7 +9,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import ar.*;
-import ar.Renderer;
 import ar.app.util.ZoomPanHandler;
 
 public class ARPanel<A,B> extends JPanel {
@@ -22,8 +21,9 @@ public class ARPanel<A,B> extends JPanel {
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 
-	private BufferedImage image;
-	private Aggregates<A> aggregates;
+	private volatile BufferedImage image;
+	private volatile Aggregates<A> aggregates;
+	private Thread renderThread;
 	
 	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet D, Renderer renderer) {
 		super();
@@ -37,53 +37,24 @@ public class ARPanel<A,B> extends JPanel {
 		super.addMouseMotionListener(h);
 	}
 	
-	@Override
-	public void paintComponent(Graphics g) {
-		Graphics2D g2 = (Graphics2D) g;
-
-		if (renderer == null 
-				|| dataset == null ||  dataset.isEmpty() 
-				|| transfer == null || reduction == null
-				|| !transfer.type().equals(reduction.type())) {
-			
-			g.setColor(Color.GRAY);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-			return;
-		}
-
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, this.getWidth(), this.getHeight());
-
-		if (aggregates == null || differentSizes(image, this)) { 
-			long start = System.currentTimeMillis();
-			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), this.getWidth(), this.getHeight());
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), this.getWidth(), this.getHeight(), Util.CLEAR);
-			long end = System.currentTimeMillis();
-			System.out.println((end-start) + " ms (full)");			
-		} else {
-			long start = System.currentTimeMillis();
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), this.getWidth(), this.getHeight(), Util.CLEAR);			
-			long end = System.currentTimeMillis();
-			System.out.println((end-start) + " ms (transfer)");			
-		}
-		
-		g2.drawRenderedImage(image,g2.getTransform());
-	}
-
-	private static final boolean differentSizes(BufferedImage image, JPanel p) {
-		return image == null || image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();
+	@SuppressWarnings("deprecation")
+	protected void finalize() {
+		renderThread.stop();
 	}
 	
-	public GlyphSet dataset() {return dataset;}
-	public ARPanel<A,B> withDataset(GlyphSet data) {return new ARPanel<A,B>(reduction, transfer, data, renderer);}
+
+	public ARPanel<A,B> withDataset(GlyphSet data) {
+		return new ARPanel<A,B>(reduction, transfer, data, renderer);
+	}
+	
 	public <C> ARPanel<A,C> withTransfer(WrappedTransfer<C> t) {
 		ARPanel<A,C> p = new ARPanel<A,C>(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		p.aggregates = this.aggregates;
-		p.image = image;
 		return p;
 	}
+	
 	public <C> ARPanel<C,B> withReduction(WrappedReduction<C> r) {
 		ARPanel<C,B> p = new ARPanel<C,B>(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
@@ -96,14 +67,69 @@ public class ARPanel<A,B> extends JPanel {
 		return p;
 	}
 	
-	public String toString() {
-		return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);
+	private final boolean differentSizes(BufferedImage image, JPanel p) {
+		if (image == null) {return false;}
+		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
 	}
 	
+	public void validate() {image = null;}
+
+	@Override
+	public void paintComponent(Graphics g) {
+		Runnable action = null;
+		if (renderer == null 
+				|| dataset == null ||  dataset.isEmpty() 
+				|| transfer == null || reduction == null
+				|| !transfer.type().equals(reduction.type())) {
+			action = null;
+		} else if (aggregates == null || differentSizes(image, ARPanel.this)) {
+			action = new FullRender();
+		} else if (image == null) {
+			action = new TransferRender();
+		}
+
+		if (action != null && (renderThread == null || !renderThread.isAlive())) {
+			renderThread = new Thread(action);
+			renderThread.start();
+		}
+	
+		if (image != null) {
+			Graphics2D g2 = (Graphics2D) g;
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+			g2.drawRenderedImage(image,g2.getTransform());
+		} else {
+			g.setColor(Color.GRAY);
+			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		}
+
+	}
+	
+	public final class FullRender implements Runnable {
+		public void run() {
+			long start = System.currentTimeMillis();
+			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
+			long end = System.currentTimeMillis();
+			System.out.println((end-start) + " ms (full)");
+			ARPanel.this.repaint();
+		}
+	}
+	
+	public final class TransferRender implements Runnable {
+		public void run() {
+			long start = System.currentTimeMillis();
+			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
+			long end = System.currentTimeMillis();
+			System.out.println((end-start) + " ms (transfer)");
+			ARPanel.this.repaint();
+		}
+	}
+	
+	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
+	public Renderer getRenderer() {return renderer;}
+	public GlyphSet dataset() {return dataset;}
 	public Aggregates<?> getAggregates() {return aggregates;}
-	
-	
-	
 	
 	
 	
@@ -251,4 +277,5 @@ public class ARPanel<A,B> extends JPanel {
 	 * values.
 	 */
 	public AffineTransform inverseViewTransform() {return new AffineTransform(inverseViewTransformRef);}
+
 }

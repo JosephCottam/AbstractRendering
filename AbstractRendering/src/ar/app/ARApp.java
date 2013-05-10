@@ -24,8 +24,11 @@ public class ARApp {
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
 	private final FileOptions fileOptions;
+	private final Status status = new Status();
 	
 	public ARApp() {
+		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
+		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering Demo App");
 		frame.setLayout(new BorderLayout());
@@ -45,6 +48,7 @@ public class ARApp {
 		controls.add(glyphsetOptions);
 		controls.add(rendererOptions);
 		controls.add(fileOptions);
+		controls.add(status);
 		final ARApp app = this;
 		
 		loadInstances(reductions, WrappedReduction.class);
@@ -119,6 +123,7 @@ public class ARApp {
 	
 	public <A,B> void changeImage(ARPanel<A,B> newImage) {
 		JPanel old = this.image;		
+		this.status.startMonitoring(newImage.getRenderer());
 		frame.remove(old);
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;

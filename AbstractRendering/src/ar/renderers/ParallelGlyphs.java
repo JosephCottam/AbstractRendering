@@ -46,7 +46,7 @@ public class ParallelGlyphs implements Renderer {
 		AffineTransform view;
 		try {view = inverseView.createInverse();}
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
-		recorder.setExpected(width*height);
+		recorder.reset(glyphs.size());
 		
 		ReduceTask<A> t = new ReduceTask<A>(
 				(GlyphSet.RandomAccess) glyphs, 
@@ -171,7 +171,7 @@ public class ParallelGlyphs implements Renderer {
 		public Collection<Glyph> intersects(Rectangle2D r) {
 			ArrayList<Glyph> contained = new ArrayList<Glyph>();
 			for (int i=0; i<cache.length; i++) {
-				Glyph g = get(i);
+				Glyph g = get(i+low);
 				if (g.shape.intersects(r)) {contained.add(g);}
 			}
 			for (Glyph g: this) {if (g.shape.intersects(r)) {contained.add(g);}}
