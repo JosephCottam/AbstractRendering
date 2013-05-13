@@ -13,25 +13,9 @@ public class DirectMatrix<T> implements GlyphSet {
 	private final Painter<T> colorBy;
 	private final boolean nullIsValue;
 
-	public static interface Painter<T> {
-		public java.awt.Color from(T item);
-	}
-	
-	private static final class IfNull<T> implements Painter<T> {
-		private final Color color;
-		private final Color nullColor;
-		public IfNull(Color c, Color nullColor) {
-			this.nullColor = nullColor;
-			this.color = c;
-		}
-		public Color from(T item) {
-			if (item != null) {return color;}
-			else {return nullColor;}
-		}
-	}
 	
 	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue) {
-		this(matrix, xScale, yScale, nullIsValue, new IfNull<T>(Color.blue, Color.white));
+		this(matrix, xScale, yScale, nullIsValue, new Painter.AB<T>(null, Color.white, Color.blue));
 	}
 	
 	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, Painter<T> colorBy) {
