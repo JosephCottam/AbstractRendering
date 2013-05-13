@@ -25,11 +25,11 @@ public class ARPanel<A,B> extends JPanel {
 	private volatile Aggregates<A> aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet D, Renderer renderer) {
+	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
-		this.dataset = D;
+		this.dataset = glyphs;
 		this.renderer = renderer;
 		
 		ZoomPanHandler h = new ZoomPanHandler();
@@ -67,13 +67,15 @@ public class ARPanel<A,B> extends JPanel {
 		return p;
 	}
 	
+	public Aggregates<A> aggregates() {return aggregates;}
+	public WrappedReduction reduction() {return reduction;}
+	public void aggregates(Aggregates aggregates) {this.aggregates = aggregates;}
+	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
 		if (image == null) {return false;}
 		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
 	}
 	
-	public void validate() {image = null;}
-
 	@Override
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
@@ -262,16 +264,14 @@ public class ARPanel<A,B> extends JPanel {
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
 	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		aggregates=null;
+		transferViewTransform(vt);
+	}
+	
+	public void transferViewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
 		this.repaint(this.getBounds());
-//		System.out.println("###################");
-//		System.out.println("Bounds:" + dataset.glyphs().bounds());
-//		System.out.println("Viewport:" + this.getWidth() + " x " + this.getHeight());
-//		System.out.println("Scale:" + viewTransformRef.getScaleX());
-//		System.out.println("Translate: " + viewTransformRef.getTranslateX() + " x " + viewTransformRef.getTranslateY());
-//		System.out.println("###################");
 	}
 	
 	/**Use this transform to convert screen values to the absolute/canvas

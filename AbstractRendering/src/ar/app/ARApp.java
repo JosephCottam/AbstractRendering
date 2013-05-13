@@ -30,7 +30,7 @@ public class ARApp {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setTitle("Abstract Rendering Demo App");
+		frame.setTitle("Abstract Rendering Explore App");
 		frame.setLayout(new BorderLayout());
 		
 
@@ -115,7 +115,7 @@ public class ARApp {
 					| IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
 				
-				throw new RuntimeException("Error intializing GUI.", e);
+				//throw new RuntimeException("Error intializing GUI.", e);
 			}
 		}
 		
