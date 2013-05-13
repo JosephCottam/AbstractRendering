@@ -89,12 +89,4 @@ public class ARDemoApp {
 	}
 
 	public ARPanel<?,?> getImage() {return image;}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		new ARDemoApp();
-	}
-
 }

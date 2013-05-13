@@ -161,7 +161,12 @@ public class ARApp {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		new ARApp();
+		if (args.length >0 && args[0].toUpperCase().equals("-DEMO")) {
+			new ARDemoApp();
+		} else {
+			System.out.println("Execute with -demo for simplified inteface.");
+			new ARApp();
+		}
 	}
 
 }
