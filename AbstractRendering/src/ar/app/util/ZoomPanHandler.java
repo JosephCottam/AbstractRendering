@@ -7,7 +7,7 @@ import java.awt.geom.*;
 
 import javax.swing.JPanel;
 
-import ar.app.ARPanel;
+import ar.app.components.ARPanel;
 
 public class ZoomPanHandler implements MouseListener, MouseMotionListener{
     public static final double MIN_SCALE = Double.MIN_VALUE; //Minimum single-step change

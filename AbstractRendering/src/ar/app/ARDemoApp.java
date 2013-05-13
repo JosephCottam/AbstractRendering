@@ -28,7 +28,9 @@ public class ARDemoApp {
 		final ARDemoApp app = this;
 		presets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				boolean rezoom = presets.doZoomWith(app.image);
 				app.changeImage(presets.update(app.image));
+				if (rezoom) {zoomFit();}
 			}
 		});
 		
@@ -39,6 +41,7 @@ public class ARDemoApp {
 		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
+		zoomFit();
 		zoomFit();
 	}
 	
@@ -67,7 +70,6 @@ public class ARDemoApp {
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;
 		frame.revalidate();
-		zoomFit();
 	}
 	
 	public void zoomFit() {

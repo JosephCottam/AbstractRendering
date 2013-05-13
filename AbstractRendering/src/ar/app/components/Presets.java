@@ -9,7 +9,6 @@ import javax.swing.JComboBox;
 import ar.GlyphSet;
 import ar.Renderer;
 import ar.app.ARApp;
-import ar.app.ARPanel;
 import ar.app.WrappedReduction;
 import ar.app.WrappedTransfer;
 import ar.glyphsets.DynamicQuadTree;
@@ -25,6 +24,14 @@ public class Presets extends CompoundPanel {
 		presets.addActionListener(new CompoundPanel.DelegateAction(this));
 		
 		ARApp.loadInstances(presets, Presets.class);
+	}
+	
+	public boolean doZoomWith(ARPanel<?,?> oldPanel) {
+		Preset p = (Preset) presets.getSelectedItem();
+
+		return oldPanel == null
+				|| oldPanel.dataset() != p.glyphset()
+				|| !oldPanel.reduction().equals(p.reduction());
 	}
 	
 	public ARPanel update(ARPanel<?,?> oldPanel) {
@@ -93,15 +100,15 @@ public class Presets extends CompoundPanel {
 	
 	private static final GlyphSet CIRCLE_SCATTER; 
 	private static final GlyphSet BOOST_MEMORY; 
-	private static final GlyphSet DATE_STATE;
+//	private static final GlyphSet DATE_STATE;
 	private static final GlyphSet WIKI_MEMORY;
 	
 	static {
 		System.out.print("Loading Scatterplot...");
 		CIRCLE_SCATTER = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/circlepoints.csv"), .1, DynamicQuadTree.make());
 		
-		System.out.print("Charity Net...");
-		DATE_STATE = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/dateStateXY.csv"), .01, DynamicQuadTree.make());		
+//		System.out.print("Charity Net...");
+//		DATE_STATE = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/dateStateXY.csv"), .01, DynamicQuadTree.make());		
 
 		System.out.print("Loading BGL Memory...");
 		BOOST_MEMORY = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/MemVisScaled.csv"), .001, DynamicQuadTree.make());
