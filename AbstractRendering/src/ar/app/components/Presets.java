@@ -101,19 +101,37 @@ public class Presets extends CompoundPanel {
 	private static final GlyphSet CIRCLE_SCATTER; 
 	private static final GlyphSet BOOST_MEMORY; 
 //	private static final GlyphSet DATE_STATE;
-	private static final GlyphSet WIKI_MEMORY;
+
 	
 	static {
-		System.out.print("Loading Scatterplot...");
-		CIRCLE_SCATTER = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		GlyphSet g=null;
 		
-//		System.out.print("Charity Net...");
-//		DATE_STATE = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/dateStateXY.csv"), .01, DynamicQuadTree.make());		
+		try {
+			System.out.print("Loading Scatterplot...");
+			g = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		} catch (Exception e) {
+			System.out.println("Faield to load data.");
+		}
+		CIRCLE_SCATTER = g;
 
-		System.out.print("Loading BGL Memory...");
-		BOOST_MEMORY = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/MemVisScaled.csv"), .001, DynamicQuadTree.make());
+//		try {
+//			g= null;
+//			System.out.print("Charity Net...");
+//			g = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/dateStateXY.csv"), .01, DynamicQuadTree.make());		
+//		} catch (Exception e) {
+//			System.out.println("Faield to load data.");
+//		}
+//		DATE_STATE = g;
+	
+		try {
+			g = null;
+			System.out.print("Loading BGL Memory...");
+			g = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/MemVisScaled.csv"), .001, DynamicQuadTree.make());
+		} catch (Exception e) {
+			System.out.println("Faield to load data.");
+		}
+		BOOST_MEMORY = g;
 		
-		System.out.print("Loading Wikipedia edits...");
-		WIKI_MEMORY = ar.app.util.CSVtoGlyphSet.autoLoad(new File("./data/wiki.1K.bin"), .05, new MemMapList(null, .01));
+		
 	}
 }
