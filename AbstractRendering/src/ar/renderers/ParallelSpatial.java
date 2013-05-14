@@ -12,7 +12,7 @@ import ar.Aggregator;
 import ar.GlyphSet;
 import ar.Renderer;
 import ar.Transfer;
-import ar.Util;
+import ar.util.Util;
 
 /**Task stealing renderer, designed to be used with a spatially-decomposed glyph set.
  * Divides aggregates space into regions and works on each region in isolation

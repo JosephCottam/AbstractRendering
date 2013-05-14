@@ -12,6 +12,7 @@ import ar.*;
 import ar.app.WrappedReduction;
 import ar.app.WrappedTransfer;
 import ar.app.util.ZoomPanHandler;
+import ar.util.Util;
 
 public class ARPanel<A,B> extends JPanel {
 	private static final long serialVersionUID = 1L;

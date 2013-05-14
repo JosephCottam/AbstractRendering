@@ -14,8 +14,8 @@ import java.util.List;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
+import ar.util.Util;
 import ar.Aggregator;
-import ar.Util;
 
 /**Aggregators produce aggregates (which go into aggregate sets).**/
 public class Aggregators {

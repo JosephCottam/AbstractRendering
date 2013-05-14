@@ -11,6 +11,7 @@ import java.util.List;
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
 import ar.glyphsets.DynamicQuadTree;
+import ar.util.CSVReader;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {
@@ -18,7 +19,7 @@ public class CharityNetLoader {
 	}
 	
 	public static GlyphSet load(String filename) {
-		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
+		CSVReader loader = new CSVReader(new File(filename), 1);
 		
 		String[] header = loader.next();
 		double maxDate = Integer.parseInt(header[0]);
@@ -59,7 +60,7 @@ public class CharityNetLoader {
 
 		DynamicQuadTree.LOADING = 1000;
 		GlyphSet glyphs = DynamicQuadTree.make();
-		CSVtoGlyphSet.Reader loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
+		CSVReader loader = new CSVReader(new File(filename), 1);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		
 		long maxDate = Long.MIN_VALUE;
@@ -90,7 +91,7 @@ public class CharityNetLoader {
 			minDate = Math.min(minDate, date);
 		}
 		
-		loader = new CSVtoGlyphSet.Reader(new File(filename), 1);
+		loader = new CSVReader(new File(filename), 1);
 		final double maxState = STATES.size();
 		count = 0;
 

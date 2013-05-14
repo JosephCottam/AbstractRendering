@@ -17,8 +17,8 @@ import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.GlyphSet;
-import ar.Util;
 import ar.GlyphSet.Glyph;
+import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
 

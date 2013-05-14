@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import ar.GlyphSet;
-import ar.Util;
+import ar.util.Util;
 
 /**Quad tree where items appear in each node that they touch.  
  * No items are held in intermediate nodes**/

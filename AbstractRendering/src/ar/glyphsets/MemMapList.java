@@ -11,13 +11,13 @@ import java.nio.*;
 import java.nio.channels.FileChannel;
 
 import ar.GlyphSet;
-import ar.Util;
 import ar.GlyphSet.Glyph;
+import ar.util.Util;
 
 
 public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
 	public enum TYPE {
-		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), FLOAT(4);
+		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
@@ -58,29 +58,21 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		this.painter = painter;
 		
 		if (source != null && types == null) {
-			int length = 0;
-			while(true) {
-				char c = (char) buffer.get().get();
-				if (c == 0x1E) {break;} //30 (hex 1E) is the "record separator" character...seemed appropriate! 
-				length++;
-			} 
-			recordEntries = length;
-			
+			recordEntries = buffer.get().getInt();
 			
 			types = new TYPE[recordEntries];
-			buffer.get().position(0);
 			for (int i =0; i<recordEntries; i++) {
-				char t = (char) buffer.get().get();
+				char t = buffer.get().getChar();
 				if (t=='i') {types[i] = TYPE.INT;}  //letter 'i' is hex 69
 				else if (t=='l') {types[i] = TYPE.LONG;}
 				else if (t=='s') {types[i] = TYPE.SHORT;}
 				else if (t=='d') {types[i] = TYPE.DOUBLE;} //letter 'd' is hex 64
 				else if (t=='f') {types[i] = TYPE.FLOAT;}
 				else if (t=='b') {types[i] = TYPE.BYTE;}
- 				else {throw new RuntimeException("Unknown type indicator at position " + i);}
+ 				else {throw new RuntimeException(String.format("Unknown type indicator '%s' at position %s", t,i));}
 			}
 			this.types = types;
-			headerOffset = (1+types.length);  //One byte per character, plus one for the termination character
+			headerOffset = (TYPE.INT.bytes+(types.length*TYPE.CHAR.bytes));  //Int for the header length, one char per entry  
 
 			int acc=0;
 			for (TYPE t:this.types) {acc += t.bytes;}
@@ -109,7 +101,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		buffer.position(recordOffset);
 		double x = value(buffer, 0);
 		double y = value(buffer, 1);
-		double v = value(buffer, 2);
+		double v = types.length > 2 ? value(buffer, 2) : 0;
 		
 		Color c = painter.from(v);
 		Glyph g = new Glyph(new Rectangle2D.Double(x,y,glyphSize,glyphSize), c, v);
@@ -148,6 +140,5 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		public boolean hasNext() {return at < glyphs.size();}
 		public Glyph next() {return glyphs.get(at++);}
 		public void remove() {throw new UnsupportedOperationException();}		
-	}
-
+	}	
 }

@@ -10,39 +10,11 @@ import java.util.regex.Pattern;
 
 import ar.GlyphSet;
 import ar.glyphsets.*;
+import ar.util.CSVReader;
 
 import static ar.GlyphSet.Glyph;
 
 public class CSVtoGlyphSet {
-	public static class Reader {
-		private BufferedReader reader;
-		private final Pattern splitter = Pattern.compile("\\s*,\\s*");
-
-		public Reader(File file, int skip) {
-			try {
-				reader = new BufferedReader(new FileReader(file));
-				while (skip-- > 0) {reader.readLine();}
-			} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + file.getName(), e);}
-		}
-
-		protected String[] next() {
-			String line = null;
-			try {line = reader.readLine();}
-			catch (Exception e) {return done();}
-			if (line == null) {return done();}
-			else {return splitter.split(line);}
-		}
-
-		//Always returns null...
-		protected String[] done() {
-			try {reader.close();}
-			catch (IOException e) {throw new RuntimeException(e);}
-			finally {reader = null;}
-			return null;
-		}
-		protected boolean hasNext() {return reader != null;}
-	}
-	
 	private static boolean isNumber(String s) {
 		try {Double.parseDouble(s); return true;}
 		catch (Exception e) {return false;}
@@ -62,7 +34,7 @@ public class CSVtoGlyphSet {
 
 	public static GlyphSet autoLoad(File source, double glyphSize, GlyphSet glyphs) {
 		try {
-			Reader r = new Reader(source, 0);
+			CSVReader r = new CSVReader(source, 0);
 			String[] line = r.next();
 			int skip;
 			boolean flipY=true;
@@ -114,7 +86,7 @@ public class CSVtoGlyphSet {
 			T defaultValue, Converter<T> converter,
 			boolean nullIsValue) {
 		
-		Reader loader = new Reader(file, 0);
+		CSVReader loader = new CSVReader(file, 0);
 		String[] header = loader.next();
 		int rows = Integer.parseInt(header[1]);
 		int cols = Integer.parseInt(header[2]);
@@ -139,7 +111,7 @@ public class CSVtoGlyphSet {
 
 
 	public static GlyphSet load(final GlyphSet glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		Reader loader = new Reader(file, skip);
+		CSVReader loader = new CSVReader(file, skip);
 		final int yflip = flipy?-1:1;
 		int count =0;
 

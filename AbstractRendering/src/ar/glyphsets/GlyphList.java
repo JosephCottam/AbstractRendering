@@ -4,7 +4,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.*;
 
 import ar.GlyphSet;
-import ar.Util;
+import ar.util.Util;
 
 public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
 	List<Glyph> glyphs = new ArrayList<Glyph>();

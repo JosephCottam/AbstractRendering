@@ -10,7 +10,7 @@ import ar.Aggregator;
 import ar.GlyphSet;
 import ar.Renderer;
 import ar.Transfer;
-import ar.Util;
+import ar.util.Util;
 
 public final class SerialSpatial implements Renderer {
 	private final RenderUtils.Progress recorder;
