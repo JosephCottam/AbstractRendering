@@ -104,22 +104,35 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public WrappedReduction<?> reduction() {return new WrappedReduction.RLEColors();}
-		public Renderer renderer() {return new ParallelGlyphs(100, new AggregateReducers.MergeCOC());}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public GlyphSet glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
 		public String toString() {return "BGL Memory (Memory Mapped): HDAlpha Cache hits";}		
 	}
 	
+	public static class CharityNet implements Preset {
+		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
+		public GlyphSet glyphset() {return CHARITY_NET_MM;}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
+		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha";}		
+	}
+	
 	private static final GlyphSet CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
 	private static final GlyphSet BOOST_MEMORY = load("BGL Memory", "./data/MemVisScaled.csv", .001);
 	private static final GlyphSet BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED)); 
+	private static final GlyphSet CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .1, false, new Painter.Constant<>(Color.BLUE));
+//	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
-//	private static final GlyphSet DATE_STATE_MM = load("Charity Net", "./data/dateStateXY.hbin", .01, new Painter.Constant<>(Color.BLUE));
 
 	public static final GlyphSet load(String label, String file, double size) {
 		System.out.printf("Loading %s...", label);
 		try {
-			return ar.app.util.CSVtoGlyphSet.autoLoad(new File(file), size, DynamicQuadTree.make());
+			final long start = System.currentTimeMillis();
+			GlyphSet g = ar.app.util.CSVtoGlyphSet.autoLoad(new File(file), size, DynamicQuadTree.make());
+			final long end = System.currentTimeMillis();
+			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
+			return g;
 		} catch (Exception e) {
 			System.out.println("Faield to load data.");
 			return null;
@@ -129,8 +142,10 @@ public class Presets extends CompoundPanel {
 	public static final GlyphSet memMap(String label, String file, double size, boolean flipY, Painter p) {
 		System.out.printf("Memory mapping %s...", label);
 		try {
+			long start = System.currentTimeMillis();
 			GlyphSet g = new MemMapList(new File(file), size, flipY, p, null);
-			System.out.printf("prepared %s entries.\n", g.size());
+			long end = System.currentTimeMillis();
+			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
 			return g;
 		} catch (Exception e) {
 			System.out.println("Faield to load data.");
