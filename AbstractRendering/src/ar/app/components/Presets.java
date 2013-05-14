@@ -108,7 +108,15 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public GlyphSet glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
-		public String toString() {return "BGL Memory (Memory Mapped): HDAlpha Cache hits";}		
+		public String toString() {return "BGL Memory (Memory Mapped): Cache hits";}		
+	}
+	
+	public static class BoostMMAlphaActivity implements Preset {
+		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
+		public GlyphSet glyphset() {return BOOST_MEMORY_MM;}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
+		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits";}		
 	}
 	
 	public static class CharityNet implements Preset {
