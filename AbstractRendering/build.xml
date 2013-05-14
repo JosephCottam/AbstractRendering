@@ -1,6 +1,11 @@
 <project name="AbstractRendering" default="Jar" basedir=".">
 
-  <target name="Jar" depends="Compile,Package" />
+  <target name="Jar" depends="Clean,Compile,Package" />
+
+  <target name="Clean">
+    <delete dir="bin"/>
+    <delete file="AR.jar"/>
+  </target>
 
   <target name="Compile">
     <mkdir dir="bin"/>
