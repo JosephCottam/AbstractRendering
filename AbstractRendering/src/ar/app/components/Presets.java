@@ -23,10 +23,9 @@ public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
 	
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
-	private final Status status = new Status();
+	
 	public Presets() {
 		this.add(new LabeledItem("Presets:", presets));
-		this.add(new LabeledItem("Render Progress:", status));
 		presets.addActionListener(new CompoundPanel.DelegateAction(this));
 		
 		ARApp.loadInstances(presets, Presets.class);
@@ -52,8 +51,7 @@ public class Presets extends CompoundPanel {
 				try {newPanel.setViewTransform(new AffineTransform());}
 				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
 			}
-		}
-		status.startMonitoring(newPanel.getRenderer());		
+		}	
 		return newPanel;
 	}
 	
