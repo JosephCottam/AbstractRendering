@@ -15,7 +15,7 @@ import ar.GlyphSet;
 import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
 
-public class ARApp {
+public class ARApp implements PanelHolder {
 	private ARPanel<?,?> image;
 	private final JFrame frame = new JFrame();
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
@@ -155,8 +155,6 @@ public class ARApp {
 		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	
-	public ARPanel<?,?> getImage() {return image;}
-	
 	/**
 	 * @param args
 	 */
@@ -169,4 +167,6 @@ public class ARApp {
 		}
 	}
 
+	@Override
+	public ARPanel<?, ?> getPanel() {return image;}
 }

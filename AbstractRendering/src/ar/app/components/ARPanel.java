@@ -136,7 +136,6 @@ public class ARPanel<A,B> extends JPanel {
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
 	public Renderer getRenderer() {return renderer;}
 	public GlyphSet dataset() {return dataset;}
-	public Aggregates<?> getAggregates() {return aggregates;}
 	
 	
 	

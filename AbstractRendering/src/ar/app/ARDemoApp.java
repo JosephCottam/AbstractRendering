@@ -3,7 +3,8 @@ package ar.app;
 import javax.swing.*;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
@@ -12,21 +13,43 @@ import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
 
-public class ARDemoApp {
+public class ARDemoApp implements PanelHolder {
 	private ARPanel<?,?> image;
 	private final JFrame frame = new JFrame();
 	private final Presets presets = new Presets();
 	private final Status status = new Status();
+	private final ExportAggregates export;
 	
 	public ARDemoApp() {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
+		export = new ExportAggregates(this);
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());
-		JPanel controls = new JPanel(new GridLayout(2,1));
-		controls.add(presets);
-		controls.add(status);
+		
+		JPanel controls = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill =  GridBagConstraints.HORIZONTAL;
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.weightx = 1;
+		controls.add(presets, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		c.weightx = 0.5;
+		c.gridwidth = 1;
+		controls.add(status,c);
+
+		c.gridx = 1;
+		c.gridy = 1;		
+		c.weightx = 0.5;
+		c.gridwidth = 1;
+		controls.add(export,c);
+
 		frame.add(controls, BorderLayout.SOUTH);
 		
 		
@@ -93,5 +116,5 @@ public class ARDemoApp {
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
-	public ARPanel<?,?> getImage() {return image;}
+	public ARPanel<?, ?> getPanel() {return image;}
 }
