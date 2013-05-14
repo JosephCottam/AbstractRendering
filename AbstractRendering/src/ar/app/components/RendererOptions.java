@@ -26,7 +26,9 @@ public class RendererOptions extends CompoundPanel {
 		taskSize.addItem(10);
 		taskSize.addItem(100);
 		taskSize.addItem(1000);
-		taskSize.addItem(10000);
+		taskSize.addItem(100000);
+		taskSize.addItem(1000000);
+		taskSize.addItem(1000000000);
 		taskSize.setSelectedItem(100);
 		taskSize.addActionListener(new DelegateAction(this));		
 
