@@ -11,7 +11,7 @@ public class MemMapEncoder {
 	public static final int CHAR_BYTES = 2;
 
 
-	public static byte[] makeHeader(char[] types) {
+	private static byte[] makeHeader(char[] types) {
 		assert types != null;
 		assert types.length != 0;
 		for (char c: types) {
@@ -46,7 +46,7 @@ public class MemMapEncoder {
 
 	/**Get a byte array of a single data value
 	 * **/
-	public static byte[] asBinary(String value, char type) {
+	private static byte[] asBinary(String value, char type) {
 		switch (type) {
 		case 'i' : return intBytes(Integer.parseInt(value));
 		case 'd' : return doubleBytes(Double.parseDouble(value));
@@ -57,7 +57,7 @@ public class MemMapEncoder {
 		}			
 	}
 
-	public static byte[] asBinary(String[] entry, char[] types) {
+	private static byte[] asBinary(String[] entry, char[] types) {
 		byte[][] entries= new byte[entry.length][];
 		int total=0;
 		for (int i=0;i<entry.length;i++) {
@@ -100,7 +100,7 @@ public class MemMapEncoder {
 	}
 
 	
-	public static String entry(String[] args, String key, String defVal) {
+	private static String entry(String[] args, String key, String defVal) {
 		int i=0;
 		key = key.toUpperCase();
 		for (i=0; i< args.length; i++) {if (args[i].toUpperCase().equals(key)) {break;}}

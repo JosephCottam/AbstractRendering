@@ -18,6 +18,7 @@ import ar.glyphsets.Painter;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
+import ar.util.MemMapEncoder;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -120,8 +121,8 @@ public class Presets extends CompoundPanel {
 	
 	private static final GlyphSet CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
 	private static final GlyphSet BOOST_MEMORY = load("BGL Memory", "./data/MemVisScaled.csv", .001);
-	private static final GlyphSet BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED)); 
-	private static final GlyphSet CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .1, false, new Painter.Constant<>(Color.BLUE));
+	private static final GlyphSet BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
+	private static final GlyphSet CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .1, false, new Painter.Constant<>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
 
@@ -139,17 +140,27 @@ public class Presets extends CompoundPanel {
 		}
 	}
 	
-	public static final GlyphSet memMap(String label, String file, double size, boolean flipY, Painter p) {
+	public static final GlyphSet memMap(String label, String file, double size, boolean flipY, Painter p, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
+		File f = new File(file);
 		try {
 			long start = System.currentTimeMillis();
-			GlyphSet g = new MemMapList(new File(file), size, flipY, p, null);
+			GlyphSet g = new MemMapList(f, size, flipY, p, null);
 			long end = System.currentTimeMillis();
 			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
 			return g;
 		} catch (Exception e) {
-			System.out.println("Faield to load data.");
-			return null;
+			try {
+				if (types != null) {
+					System.out.println("Error loading.  Attempting re-encode...");
+					File source = new File(file.replace(".hbin", ".csv"));
+					MemMapEncoder.write(source, skip, f, types.toCharArray());
+					return memMap(label, file, size, flipY, p, skip, null);	  //change types to null so it only tries to encode once
+				} else {throw e;}
+			} catch (Exception ex) {
+				System.out.println("Faield to load data.");
+				return null;
+			}
 		}
 	}
 	
