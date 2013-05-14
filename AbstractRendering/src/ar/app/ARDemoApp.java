@@ -3,6 +3,7 @@ package ar.app;
 import javax.swing.*;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
@@ -23,7 +24,11 @@ public class ARDemoApp {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());
-		frame.add(presets, BorderLayout.SOUTH);
+		JPanel controls = new JPanel(new GridLayout(2,1));
+		controls.add(presets);
+		controls.add(status);
+		frame.add(controls, BorderLayout.SOUTH);
+		
 		
 		final ARDemoApp app = this;
 		presets.addActionListener(new ActionListener() {

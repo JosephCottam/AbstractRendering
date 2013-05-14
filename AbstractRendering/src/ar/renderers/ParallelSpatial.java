@@ -19,8 +19,9 @@ import ar.util.Util;
  * (i.e., bin-driven iteration).
  * **/
 public final class ParallelSpatial implements Renderer {
+	private static final ForkJoinPool pool = new ForkJoinPool();
+
 	private final int taskSize;
-	private final ForkJoinPool pool = new ForkJoinPool();
 	private final RenderUtils.Progress recorder;
 
 	

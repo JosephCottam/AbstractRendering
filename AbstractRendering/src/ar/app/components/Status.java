@@ -1,21 +1,19 @@
 package ar.app.components;
 
-import java.awt.GridLayout;
-
+import java.awt.BorderLayout;
 import javax.swing.*;
 
 import ar.Renderer;
 
 public class Status extends JPanel {
 	private static final long serialVersionUID = -3243629269704290121L;
-	private Monitor monitor;
-	private JProgressBar progress = new JProgressBar();
-	private Renderer watching;
+	private final JProgressBar progress = new JProgressBar();
 	private final Thread t = new Thread(new Monitor(), "Status updater");
+	private Renderer watching;
 
 	public Status() {
-		setLayout(new GridLayout(2,1));
-		this.add(new LabeledItem("Rendering:", progress));
+		
+		this.add(new LabeledItem("Rendering:", progress), BorderLayout.CENTER);
 		progress.setMaximum(100);
 		progress.setMinimum(0);
 		progress.setStringPainted(true);
@@ -29,10 +27,6 @@ public class Status extends JPanel {
 		this.watching = renderer;
 	}
 	
-	public void stopMonitoring() {
-		if (monitor != null) {monitor.signalStop();}
-	}
-	
 	public void setStatus(double status, String message) {
 		status = Math.max(status, 0);
 		progress.setValue((int) (status*100));
@@ -40,11 +34,9 @@ public class Status extends JPanel {
 	}
 	
 	private class Monitor implements Runnable {
-		private boolean stop=false;
-		
 		public void run() {
-			while (!stop) {
-				try {Thread.sleep(100);}
+			while (true) {
+				try {Thread.sleep(50);}
 				catch (InterruptedException e) {
 					SwingUtilities.invokeLater(new UpdateTask(-1, "Interrupted monitoring"));
 					return;
@@ -56,8 +48,6 @@ public class Status extends JPanel {
 				SwingUtilities.invokeLater(new UpdateTask(progress, null));
 			}
 		}
-		
-		public void signalStop() {stop=true;}
 	}
 	
 	private class UpdateTask implements Runnable {

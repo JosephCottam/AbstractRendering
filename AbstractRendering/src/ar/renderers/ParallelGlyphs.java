@@ -28,8 +28,9 @@ import ar.Transfer;
  * (i.e., glyph-driven iteration).
  */
 public class ParallelGlyphs implements Renderer {	
+	private static final ForkJoinPool pool = new ForkJoinPool();
+
 	private final int taskSize;
-	private final ForkJoinPool pool = new ForkJoinPool();
 	private final AggregateReducer<?,?,?> reducer;
 	private final RenderUtils.Progress recorder;
 
