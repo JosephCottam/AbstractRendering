@@ -16,9 +16,8 @@ import ar.GlyphSet.Glyph;
 
 
 public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
-	private static final int ENTRY_SIZE = 16;  //4-int-fields per entry, 4 bytes per int
 	public enum TYPE {
-		INT(4), DOUBLE(8);
+		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), FLOAT(4);
 		final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
@@ -58,31 +57,41 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		this.source = source;
 		this.painter = painter;
 		
-		if (types == null) {
+		if (source != null && types == null) {
 			int length = 0;
-			while(true) {if (buffer.get().getInt() == 30) {break;} length++;} //30 is the "record separator" character...seemed appropriate!
+			while(true) {
+				char c = (char) buffer.get().get();
+				if (c == 0x1E) {break;} //30 (hex 1E) is the "record separator" character...seemed appropriate! 
+				length++;
+			} 
 			recordEntries = length;
 			
 			
 			types = new TYPE[recordEntries];
-			
+			buffer.get().position(0);
 			for (int i =0; i<recordEntries; i++) {
-				int t = buffer.get().getInt();
-				if (t==105) {types[i] = TYPE.INT;}  //letter 'i'
-				else if (t==100) {types[i] = TYPE.DOUBLE;} //letter 'd'
-				else {throw new RuntimeException("Unknown type indicator at position " + i);}
+				char t = (char) buffer.get().get();
+				if (t=='i') {types[i] = TYPE.INT;}  //letter 'i' is hex 69
+				else if (t=='l') {types[i] = TYPE.LONG;}
+				else if (t=='s') {types[i] = TYPE.SHORT;}
+				else if (t=='d') {types[i] = TYPE.DOUBLE;} //letter 'd' is hex 64
+				else if (t=='f') {types[i] = TYPE.FLOAT;}
+				else if (t=='b') {types[i] = TYPE.BYTE;}
+ 				else {throw new RuntimeException("Unknown type indicator at position " + i);}
 			}
 			this.types = types;
-			headerOffset = (1+types.length)*4;  //4 bytes per int, plus one for the length entry
+			headerOffset = (1+types.length);  //One byte per character, plus one for the termination character
+
+			int acc=0;
+			for (TYPE t:this.types) {acc += t.bytes;}
+			this.recordSize = acc;
 		} else {
 			recordEntries = 0;
 			headerOffset = 0;
-			this.types = types;
+			this.types = null;
+			this.recordSize = -1;
 		}
 		
-		int acc=0;
-		for (TYPE t:types) {acc += t.bytes;}
-		this.recordSize = acc;
 	}
 		
 	@Override
@@ -108,16 +117,24 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	}
 	
 	private double value(ByteBuffer buffer, int offset) {
-		if (types[offset]==TYPE.INT) {return buffer.getInt();}
-		if (types[offset]==TYPE.DOUBLE) {return buffer.getDouble();}
+		TYPE t = types[offset];
+		switch(t) {
+			case INT: return buffer.getInt();
+			case SHORT: return buffer.getShort();
+			case LONG: return buffer.getLong();
+			case DOUBLE: return buffer.getDouble();
+			case FLOAT: return buffer.getFloat();
+			case BYTE: return buffer.get();
+		}
+		
 		throw new RuntimeException("Unknown type specified at offset " + offset);
 	}
 
 	public Painter<Double> painter() {return painter;}
 	public TYPE[] types() {return types;}
 
-	public boolean isEmpty() {return buffer == null || buffer.get().limit() <= 0;}
-	public int size() {return buffer == null ? 0 : buffer.get().limit()/ENTRY_SIZE;}
+	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
+	public int size() {return buffer.get() == null ? 0 : (buffer.get().limit()-headerOffset)/recordSize;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}
