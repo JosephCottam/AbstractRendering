@@ -19,16 +19,17 @@ import ar.util.Util;
  * (i.e., bin-driven iteration).
  * **/
 public final class ParallelSpatial implements Renderer {
-	private static final ForkJoinPool pool = new ForkJoinPool();
+	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder;
 
-	
 	public ParallelSpatial(int taskSize) {
 		this.taskSize = taskSize;
 		recorder = RenderUtils.recorder();
 	}
+	protected void finalize() {pool.shutdownNow();}
+	
 	
 	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
 			final Aggregator<A> op, final int width, final int height) {

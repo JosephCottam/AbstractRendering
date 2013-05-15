@@ -118,7 +118,7 @@ public class ARPanel<A,B> extends JPanel {
 			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
 			long end = System.currentTimeMillis();
-			System.out.println((end-start) + " ms (full)");
+			System.out.printf("%,d ms (full)\n", (end-start));
 			ARPanel.this.repaint();
 		}
 	}
@@ -128,7 +128,7 @@ public class ARPanel<A,B> extends JPanel {
 			long start = System.currentTimeMillis();
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
 			long end = System.currentTimeMillis();
-			System.out.println((end-start) + " ms (transfer)");
+			System.out.printf("%,d ms (transfer)\n", (end-start));
 			ARPanel.this.repaint();
 		}
 	}

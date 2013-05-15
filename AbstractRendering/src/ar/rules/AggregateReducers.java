@@ -22,14 +22,12 @@ public class AggregateReducers {
 			categories.addAll(left.keys);
 			categories.addAll(right.keys);
 			
-			RLE total = new RLE();
-			
 			for (Object category: categories) {
 				int v1 = left.val(category);
 				int v2 = right.val(category);
-				total.add(category, v1+v2);
+				left.add(category, v1+v2);
 			}
-			return total;
+			return left;
 		}
 		public String toString() {return "CoC (RLE x RLE -> RLE)";}
 	}

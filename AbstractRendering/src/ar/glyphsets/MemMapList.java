@@ -49,10 +49,6 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final int headerOffset;
 	private final boolean flipY;
 
-//	public MemMapList(File source, double glyphSize) {
-//		this(source, glyphSize, new Painter.Constant<Double>(Color.red), false, null);
-//	}
-	
 	public MemMapList(File source, double glyphSize, boolean flipY, Painter<Double> painter, TYPE[] types) {
 		this.glyphSize = glyphSize;
 		this.source = source;
@@ -121,6 +117,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 			case DOUBLE: return buffer.getDouble();
 			case FLOAT: return buffer.getFloat();
 			case BYTE: return buffer.get();
+			case CHAR: return buffer.getChar();
 		}
 		
 		throw new RuntimeException("Unknown type specified at offset " + offset);

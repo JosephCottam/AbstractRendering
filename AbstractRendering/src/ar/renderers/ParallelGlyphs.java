@@ -28,7 +28,7 @@ import ar.Transfer;
  * (i.e., glyph-driven iteration).
  */
 public class ParallelGlyphs implements Renderer {	
-	private static final ForkJoinPool pool = new ForkJoinPool();
+	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
 	private final AggregateReducer<?,?,?> reducer;
@@ -39,6 +39,8 @@ public class ParallelGlyphs implements Renderer {
 		this.reducer = red;
 		recorder = RenderUtils.recorder();
 	}
+	
+	protected void finalize() {pool.shutdownNow();}
 
 	@Override
 	public <A> Aggregates<A> reduce(GlyphSet glyphs,

@@ -130,7 +130,6 @@ public class Transfers {
 		
 		public Color at(int x, int y, Aggregates<Aggregators.RLE> aggregates) {
 			if (aggregates!=cacheKey) {
-				System.out.println("----------------------");
 				double max =0;
 				colors = new Aggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
 				for (Aggregators.RLE rle:aggregates) {max = Math.max(max,rle.fullSize());}

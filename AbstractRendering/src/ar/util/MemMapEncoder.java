@@ -57,23 +57,6 @@ public class MemMapEncoder {
 		}			
 	}
 
-	private static byte[] asBinary(String[] entry, char[] types) {
-		byte[][] entries= new byte[entry.length][];
-		int total=0;
-		for (int i=0;i<entry.length;i++) {
-			entries[i] = asBinary(entry[i], types[i]);
-			total += entries[i].length;
-		}
-
-		int offset=0;
-		byte[] full = new byte[total];
-		for (byte[] bentry: entries) { 
-			System.arraycopy(bentry, 0, full, offset, bentry.length);
-			offset += bentry.length;
-		}
-		return full;
-	}
-
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		CSVReader source = new CSVReader(sourceFile, skip); 
 		FileOutputStream file = new FileOutputStream(target);
@@ -86,15 +69,15 @@ public class MemMapEncoder {
 			while(source.hasNext()) {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
-				for (int i=0;i<entry.length;i++) {
+				for (int i=0;i<types.length;i++) {
 					byte[] value = asBinary(entry[i], types[i]);
 					file.write(value);						
 				}
 				entriesRead++;
-				if (entriesRead % 100000 ==0) {System.out.printf("Processed %s entries.\n", entriesRead);}
+				if (entriesRead % 100000 ==0) {System.out.printf("Processed %,d entries.\n", entriesRead);}
 			}
 			
-			System.out.printf("Processed %s entries.\n", entriesRead);
+			System.out.printf("Processed %,d entries.\n", entriesRead);
 			
 		} finally {file.close();}
 	}
