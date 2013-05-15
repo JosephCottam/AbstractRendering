@@ -69,15 +69,15 @@ public class MemMapEncoder {
 			while(source.hasNext()) {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
-				for (int i=0;i<entry.length;i++) {
+				for (int i=0;i<types.length;i++) {
 					byte[] value = asBinary(entry[i], types[i]);
 					file.write(value);						
 				}
 				entriesRead++;
-				if (entriesRead % 100000 ==0) {System.out.printf("Processed %s entries.\n", entriesRead);}
+				if (entriesRead % 100000 ==0) {System.out.printf("Processed %,d entries.\n", entriesRead);}
 			}
 			
-			System.out.printf("Processed %s entries.\n", entriesRead);
+			System.out.printf("Processed %,d entries.\n", entriesRead);
 			
 		} finally {file.close();}
 	}
