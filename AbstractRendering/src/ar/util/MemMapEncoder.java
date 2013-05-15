@@ -57,23 +57,6 @@ public class MemMapEncoder {
 		}			
 	}
 
-	private static byte[] asBinary(String[] entry, char[] types) {
-		byte[][] entries= new byte[entry.length][];
-		int total=0;
-		for (int i=0;i<entry.length;i++) {
-			entries[i] = asBinary(entry[i], types[i]);
-			total += entries[i].length;
-		}
-
-		int offset=0;
-		byte[] full = new byte[total];
-		for (byte[] bentry: entries) { 
-			System.arraycopy(bentry, 0, full, offset, bentry.length);
-			offset += bentry.length;
-		}
-		return full;
-	}
-
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		CSVReader source = new CSVReader(sourceFile, skip); 
 		FileOutputStream file = new FileOutputStream(target);
