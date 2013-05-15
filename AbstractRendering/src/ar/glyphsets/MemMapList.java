@@ -23,7 +23,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 				public BigFileByteBuffer initialValue() {
-					try {return new BigFileByteBuffer(source);}
+					try {return new BigFileByteBuffer(source, recordSize);}
 					catch (Exception e) {throw new RuntimeException(e);}
 				}
 		
