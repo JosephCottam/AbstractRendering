@@ -11,10 +11,13 @@ public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
 	Rectangle2D bounds;
 	
 	public Iterator<Glyph> iterator() {return glyphs.iterator();}
-	public Glyph get(int i) {return glyphs.get(i);}
 	public boolean isEmpty() {return glyphs.isEmpty();}
 	public void add(Glyph g) {glyphs.add(g);}
-	public int size() {return glyphs.size();}
+	public long size() {return glyphs.size();}
+	public Glyph get(long i) {
+		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}
+		return glyphs.get((int) i);
+	}
 
 	public Collection<Glyph> intersects(Rectangle2D r) {
 		ArrayList<Glyph> contained = new ArrayList<Glyph>();

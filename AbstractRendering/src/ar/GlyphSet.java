@@ -14,7 +14,7 @@ public interface GlyphSet {
 	public boolean isEmpty();
 	
 	/**How many items in this glyphset?*/
-	public int size();
+	public long size();
 	
 	/**What are the overall bounds of the items in this glyphset?**/
 	public Rectangle2D bounds();
@@ -24,7 +24,7 @@ public interface GlyphSet {
 	
 	
 	public static interface IterableGlyphs extends GlyphSet, Iterable<Glyph> {}
-	public static interface RandomAccess extends GlyphSet {public Glyph get(int i);}
+	public static interface RandomAccess extends GlyphSet {public Glyph get(long i);}
 	
 	public static final class Glyph {
 		private static int IDCOUNTER=0;

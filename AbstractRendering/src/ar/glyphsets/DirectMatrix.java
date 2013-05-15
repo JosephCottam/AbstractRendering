@@ -50,7 +50,7 @@ public class DirectMatrix<T> implements GlyphSet {
 
 	public boolean isEmpty() {return matrix.length == 0 || matrix[0].length == 0;}
 
-	public int size() {
+	public long size() {
 		if (isEmpty()) {return 0;}
 		else {return matrix.length * matrix[0].length;}
 	}
