@@ -25,6 +25,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final ThreadLocal<ByteBuffer> buffer = 
 			new ThreadLocal<ByteBuffer>() {
 				public ByteBuffer initialValue() {
+					if (source == null) {return null;}
 					try {
 						FileInputStream inputStream = new FileInputStream(source);
 						FileChannel channel =  inputStream.getChannel();
