@@ -20,13 +20,15 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
 	
+	public static int BUFFER_BYTES = 300000;
+	
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 				public BigFileByteBuffer initialValue() {
-					try {return new BigFileByteBuffer(source, recordSize);}
+					if (source == null) {return null;}
+					try {return new BigFileByteBuffer(source, recordSize, BUFFER_BYTES);}
 					catch (Exception e) {throw new RuntimeException(e);}
 				}
-		
 	};
 	
 	private final double glyphSize;
@@ -38,11 +40,8 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final int recordSize;
 	private final int headerOffset;
 	private final boolean flipY;
+	private final long entryCount;
 
-//	public MemMapList(File source, double glyphSize) {
-//		this(source, glyphSize, new Painter.Constant<Double>(Color.red), false, null);
-//	}
-	
 	public MemMapList(File source, double glyphSize, boolean flipY, Painter<Double> painter, TYPE[] types) {
 		this.glyphSize = glyphSize;
 		this.source = source;
@@ -75,6 +74,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 			this.types = null;
 			this.recordSize = -1;
 		}
+		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
 		
 	}
 		
@@ -94,7 +94,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		double x = value(buffer, 0);
 		double y = value(buffer, 1);
 		double v = types.length > 2 ? value(buffer, 2) : 0;
-		
+		// System.out.printf("Read in %d: (%s,%s)\n", i,x,y);
 		y = flipY ? -y :y;
 		
 		Color c = painter.from(v);
@@ -121,7 +121,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
-	public long size() {return buffer.get() == null ? 0 : (buffer.get().limit()-headerOffset)/recordSize;}
+	public long size() {return entryCount;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}

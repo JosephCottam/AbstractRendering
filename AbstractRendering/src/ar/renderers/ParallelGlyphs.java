@@ -3,6 +3,7 @@ package ar.renderers;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ import ar.Transfer;
  * (i.e., glyph-driven iteration).
  */
 public class ParallelGlyphs implements Renderer {	
-	private static final ForkJoinPool pool = new ForkJoinPool();
+	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
 	private final AggregateReducer<?,?,?> reducer;
@@ -39,6 +40,8 @@ public class ParallelGlyphs implements Renderer {
 		this.reducer = red;
 		recorder = RenderUtils.recorder();
 	}
+	
+	protected void finalize() {pool.shutdownNow();}
 
 	@Override
 	public <A> Aggregates<A> reduce(GlyphSet glyphs,
@@ -107,45 +110,59 @@ public class ParallelGlyphs implements Renderer {
 			this.high = high;
 		}
 
-		@Override
 		protected Aggregates<A> compute() {
-			//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
-			if ((high-low) > taskSize) {
-				long mid = low+((high-low)/2);
-				ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
-				ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
-				invokeAll(top, bottom);
-				Aggregates<A> aggs = AggregateReducer.Util.reduce(top.getRawResult(), bottom.getRawResult(), reducer);
-				return aggs;
-			} else {
-				GlyphSet.IterableGlyphs subset = new GlyphSubset(glyphs, low, high);
-				Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
-				Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
-															 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
-															 op.identity());
+			if ((high-low) > taskSize) {return split();}
+			else {return local();}
+		}
+		
+		private final Aggregates<A> split() {
+			long mid = low+((high-low)/2);
+			ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
+			ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
+			invokeAll(top, bottom);
+			Aggregates<A> aggs = Util.reduceAggregates(top.getRawResult(), bottom.getRawResult(), reducer);
+			return aggs;
+		}
+		
+		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
+		private final Aggregates<A> local() {
+			GlyphSet.IterableGlyphs subset = new GlyphSubset(glyphs, low, high);
+			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
+			Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
+														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
+														 op.identity());
+			
+			
+			Point2D lowP = new Point2D.Double();
+			Point2D highP = new Point2D.Double();
+			
+			for (Glyph g: subset) {
+				//Discretize the glyph into the aggregates array
+				Rectangle2D b = g.shape.getBounds2D();
+				lowP.setLocation(b.getMinX(), b.getMinY());
+				highP.setLocation(b.getMaxX(), b.getMaxY());
 				
-				for (Glyph g: subset) {
-					//Discretize the glyph into the aggregates array
-					Rectangle2D r = view.createTransformedShape(g.shape).getBounds2D();
-					int lowx = (int) Math.floor(r.getMinX());
-					int lowy = (int) Math.floor(r.getMinY());
-					int highx = (int) Math.ceil(r.getMaxX());
-					int highy = (int) Math.ceil(r.getMaxY());
+				view.transform(lowP, lowP);
+				view.transform(highP, highP);
+				
+				int lowx = (int) Math.floor(lowP.getX());
+				int lowy = (int) Math.floor(lowP.getY());
+				int highx = (int) Math.ceil(highP.getX());
+				int highy = (int) Math.ceil(highP.getY());
 
-					Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
-					A v = op.at(pixel, new GlyphSingleton(g), inverseView);
-					
-					
-					for (int x=Math.max(0,lowx); x<highx && x<width; x++){
-						for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
-							aggregates.set(x, y, reducer.combine(aggregates.at(x,y), v));
-						}
+				Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
+				A v = op.at(pixel, new GlyphSingleton(g), inverseView);
+				
+				
+				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
+					for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
+						aggregates.set(x, y, reducer.combine(aggregates.at(x,y), v));
 					}
 				}
-				
-				recorder.update(high-low);
-				return aggregates;
 			}
+			
+			recorder.update(high-low);
+			return aggregates;
 		}
 	}
 	

@@ -31,6 +31,7 @@ public class AggregateReducers {
 			}
 			return total;
 		}
+		
 		public String toString() {return "CoC (RLE x RLE -> RLE)";}
 	}
 
