@@ -48,6 +48,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final int recordSize;
 	private final int headerOffset;
 	private final boolean flipY;
+	private final int entryCount;
 
 	public MemMapList(File source, double glyphSize, boolean flipY, Painter<Double> painter, TYPE[] types) {
 		this.glyphSize = glyphSize;
@@ -81,6 +82,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 			this.types = null;
 			this.recordSize = -1;
 		}
+		entryCount = buffer.get() == null ? 0 : (buffer.get().limit()-headerOffset)/recordSize;
 		
 	}
 		
@@ -127,7 +129,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
-	public int size() {return buffer.get() == null ? 0 : (buffer.get().limit()-headerOffset)/recordSize;}
+	public int size() {return entryCount;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}

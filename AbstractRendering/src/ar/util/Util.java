@@ -2,10 +2,12 @@ package ar.util;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
+import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.GlyphSet.Glyph;
 
@@ -28,7 +30,7 @@ public final class Util {
 		Arrays.fill(chars,' ');
 		return new String(chars);
 	}
-	
+
 	public static Rectangle2D bounds(Iterable<Glyph> glyphs) {
 		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
 		for (Glyph g: glyphs) {
@@ -51,19 +53,19 @@ public final class Util {
 		double y = more.getY();
 		double w = more.getWidth();
 		double h = more.getHeight();
-		
+
 		x = Double.isNaN(x) ? 0 : x;
 		y = Double.isNaN(y) ? 0 : y;
 		w = Double.isNaN(w) ? 0 : w;
 		h = Double.isNaN(h) ? 0 : h;
-	
+
 		if (target.isEmpty()) {
 			target.setFrame(x,y,w,h);
 		} else if (!more.isEmpty()) {
 			target.add(new Rectangle2D.Double(x,y,w,h));
 		}
 	}
-	
+
 	public static Color interpolate(Color low, Color high, double min, double max, double v) {
 		if (v>max) {v=max;}
 		if (v<min) {v=min;}
@@ -78,15 +80,15 @@ public final class Util {
 	public static double weightedAverage(double v1, double v2, double weight) {
 		return (v1 -v2) * weight + v2;
 	}
-	
-	
+
+
 	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers)**/
 	public static Stats stats(Aggregates<? extends Number> aggregates, boolean ignoreZeros) {
 		//Single-pass std. dev: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods 
 		double count=0;
 		double min = Double.POSITIVE_INFINITY, max=Double.NEGATIVE_INFINITY;
 		double sum=0;
-		
+
 		for (Number n: aggregates) {
 			double v = n.doubleValue();
 			if (ignoreZeros && v == 0) {continue;}
@@ -95,7 +97,7 @@ public final class Util {
 			sum += v;
 			count++;
 		}
-		
+
 		final double mean = sum/count;
 		double acc =0;
 
@@ -106,7 +108,7 @@ public final class Util {
 		double stdev = Math.sqrt(acc/count);
 		return new Stats(min,max,mean,stdev);
 	}
-	
+
 	public static <T extends Number> Aggregates<Double> score(Aggregates<T> source, Stats extrema) {
 		final Aggregates<Double> results = new Aggregates<Double>(source.highX(), source.highY(), 0d);
 		final double mean = extrema.mean;
@@ -120,7 +122,7 @@ public final class Util {
 		}
 		return results;
 	}
-	
+
 	public static final class Stats {
 		public final double min;
 		public final double max;
@@ -133,6 +135,36 @@ public final class Util {
 			this.stdev = stdev;
 		}
 		public String toString() {return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
+
+		Aggregates<T> [] sources;
+		Aggregates<T> target;
+		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
+		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+		Rectangle bounds = rb.union(lb);
+
+		if (lb.contains(bounds)) {
+			sources = new Aggregates[]{right};
+			target = left;
+		} else if (rb.contains(bounds)) {
+			sources = new Aggregates[]{left};
+			target = right;
+		} else {
+			sources = new Aggregates[]{left, right};
+			target = new Aggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, left.defaultValue());
+		}
+
+		for (Aggregates<T> source: sources) {
+			for (int x=source.lowX(); x<source.highX(); x++) {
+				for (int y=source.lowY(); y<source.highY(); y++) {
+					target.set(x,y, red.combine(target.at(x,y), source.at(x,y)));
+				}
+			}
+		}
+		return target;
 	}
 
 }
