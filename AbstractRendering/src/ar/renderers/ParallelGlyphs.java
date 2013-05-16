@@ -3,6 +3,7 @@ package ar.renderers;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -131,13 +132,23 @@ public class ParallelGlyphs implements Renderer {
 														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
 														 op.identity());
 			
+			
+			Point2D lowP = new Point2D.Double();
+			Point2D highP = new Point2D.Double();
+			
 			for (Glyph g: subset) {
 				//Discretize the glyph into the aggregates array
-				Rectangle2D r = view.createTransformedShape(g.shape).getBounds2D();
-				int lowx = (int) Math.floor(r.getMinX());
-				int lowy = (int) Math.floor(r.getMinY());
-				int highx = (int) Math.ceil(r.getMaxX());
-				int highy = (int) Math.ceil(r.getMaxY());
+				Rectangle2D b = g.shape.getBounds2D();
+				lowP.setLocation(b.getMinX(), b.getMinY());
+				highP.setLocation(b.getMaxX(), b.getMaxY());
+				
+				view.transform(lowP, lowP);
+				view.transform(highP, highP);
+				
+				int lowx = (int) Math.floor(lowP.getX());
+				int lowy = (int) Math.floor(lowP.getY());
+				int highx = (int) Math.ceil(highP.getX());
+				int highy = (int) Math.ceil(highP.getY());
 
 				Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
 				A v = op.at(pixel, new GlyphSingleton(g), inverseView);
