@@ -132,8 +132,8 @@ public class ARApp implements PanelHolder {
 	
 	public void zoomFit() {
 		try {
-			Thread.sleep(100); //Delay a beat to let layout (if any) occur, then do the zoom fit. 
 			Rectangle2D content = image.dataset().bounds();
+			if (content == null) {return;}
 	
 			double w = image.getWidth()/content.getWidth();
 			double h = image.getHeight()/content.getHeight();
