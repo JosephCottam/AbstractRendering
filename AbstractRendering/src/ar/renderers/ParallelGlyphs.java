@@ -59,7 +59,10 @@ public class ParallelGlyphs implements Renderer {
 				width, height, taskSize,
 				recorder,
 				0, glyphs.size());
-		return pool.invoke(t);
+		
+		Aggregates<A> a= pool.invoke(t);
+		
+		return a;
 	}
 	
 	
@@ -80,8 +83,8 @@ public class ParallelGlyphs implements Renderer {
 		private static final long serialVersionUID = 705015978061576950L;
 
 		private final int taskSize;
-		private final int low;
-		private final int high;
+		private final long low;
+		private final long high;
 		private final GlyphSet.RandomAccess glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
@@ -96,7 +99,7 @@ public class ParallelGlyphs implements Renderer {
 				Aggregator<A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
 				RenderUtils.Progress recorder,
-				int low, int high) {
+				long low, long high) {
 			this.glyphs = glyphs;
 			this.view = view;
 			this.inverseView = inverseView;
@@ -116,7 +119,7 @@ public class ParallelGlyphs implements Renderer {
 		}
 		
 		private final Aggregates<A> split() {
-			int mid = low+((high-low)/2);
+			long mid = low+((high-low)/2);
 			ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
 			ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
@@ -182,7 +185,7 @@ public class ParallelGlyphs implements Renderer {
 		public Glyph get(int i) {return glyphs.get(i);}
 		public boolean isEmpty() {return glyphs.isEmpty();}
 		public void add(Glyph g) {throw new UnsupportedOperationException();}
-		public int size() {return glyphs.size();}
+		public long size() {return glyphs.size();}
 		public Rectangle2D bounds() {return bounds;}
 
 		public Collection<Glyph> intersects(Rectangle2D r) {
@@ -193,14 +196,15 @@ public class ParallelGlyphs implements Renderer {
 	
 	public static final class GlyphSubset implements GlyphSet.IterableGlyphs, GlyphSet.RandomAccess {
 		private final GlyphSet.RandomAccess glyphs;
-		private final int low,high;
+		private final long low,high;
 		private final Glyph[] cache;
 		
-		public GlyphSubset (GlyphSet.RandomAccess glyphs, int low, int high) {
+		public GlyphSubset (GlyphSet.RandomAccess glyphs, long low, long high) {
 			this.glyphs = glyphs;
 			this.low = low; 
 			this.high=high;
-			this.cache = new Glyph[high-low];
+			if (high-low > Integer.MAX_VALUE) {throw new IllegalArgumentException("Must subset smaller number of items (this class uses int-based caching)");}
+			this.cache = new Glyph[(int) (high-low)];
 		}
 		
 		public GlyphSubsetIterator iterator() {return new GlyphSubsetIterator(this,low,high);}
@@ -216,23 +220,27 @@ public class ParallelGlyphs implements Renderer {
 		}
 
 		public boolean isEmpty() {return low >= high;}
-		public int size() {return high-low;}
+		public long size() {return high-low;}
 		public Rectangle2D bounds() {return Util.bounds(this);}
 		public void add(Glyph g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
 
 		@Override
-		public Glyph get(int i) {
-			if (cache[i-low] == null) {cache[i-low] = glyphs.get(i);}
-			return cache[i-low];
+		public Glyph get(long l) {
+			long at = l-low;
+			if (at > cache.length) {throw new IllegalArgumentException();}
+			int i= (int) at;
+			
+			if (cache[i] == null) {cache[i] = glyphs.get(l);}
+			return cache[i];
 		}
 	}
 
 	public static class GlyphSubsetIterator implements Iterator<Glyph> {
 		private final GlyphSet.RandomAccess glyphs;
-		private final int high;
-		private int at;
+		private final long high;
+		private long at;
 
-		public GlyphSubsetIterator(GlyphSet.RandomAccess glyphs, int low, int high){
+		public GlyphSubsetIterator(GlyphSet.RandomAccess glyphs, long low, long high){
 			this.glyphs = glyphs;
 			this.high=high;
 			at = low;

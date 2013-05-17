@@ -51,8 +51,8 @@ public class ARApp implements PanelHolder {
 		controls.add(status);
 		final ARApp app = this;
 		
-		loadInstances(reductions, WrappedReduction.class);
-		loadInstances(transfers, WrappedTransfer.class);
+		loadInstances(reductions, WrappedReduction.class, "Count (int)");
+		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -104,7 +104,7 @@ public class ARApp implements PanelHolder {
 		zoomFit();
 	}
 	
-	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
+	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defItem) {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
@@ -119,6 +119,10 @@ public class ARApp implements PanelHolder {
 			}
 		}
 		
+		for (int i=0; i<target.getItemCount(); i++) {
+			B item = target.getItemAt(i);
+			if (item.toString().equals(defItem)) {target.setSelectedIndex(i); break;}
+		}		
 	}
 	
 	public <A,B> void changeImage(ARPanel<A,B> newImage) {

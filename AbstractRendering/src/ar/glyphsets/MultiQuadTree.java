@@ -33,7 +33,7 @@ public abstract class MultiQuadTree implements GlyphSet {
 	public abstract boolean maybeAdd(Glyph glyph);
 
 	
-	public int size() {return items().size();}
+	public long size() {return items().size();}
 	public Collection<Glyph> items() {
 		Collection<Glyph> collector = new HashSet<Glyph>();
 		items(collector);

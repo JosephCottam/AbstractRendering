@@ -19,11 +19,12 @@ public class FileOptions extends CompoundPanel {
 
 	private File inputFile=null;
 	
-	private static final FileFilter CSV = new FileFilter() {
+	private static final FileFilter CSV_HBIN = new FileFilter() {
 		public boolean accept(File pathname) {
-			return pathname.isFile() && pathname.getName().toUpperCase().endsWith(".CSV");
+			return pathname.isFile() && pathname.getName().toUpperCase().endsWith(".CSV")
+					|| pathname.isFile() && pathname.getName().toUpperCase().endsWith(".HBIN");
 		}
-		public String getDescription() {return "Comma separated values (*.csv)";} 
+		public String getDescription() {return "CSV or Binary w/Header (*.csv | *.hbin)";} 
 	};
 	
 	
@@ -34,7 +35,7 @@ public class FileOptions extends CompoundPanel {
 		this.add(chooseFile);
 		this.add(export);
 		
-		fc.setFileFilter(CSV);
+		fc.setFileFilter(CSV_HBIN);
 		
 		final CompoundPanel panel = this;
 		chooseFile.addActionListener(new ActionListener(){
