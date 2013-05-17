@@ -20,7 +20,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
 	
-	public static int BUFFER_BYTES = 300;
+	public static int BUFFER_BYTES = Integer.MAX_VALUE;
 	
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
