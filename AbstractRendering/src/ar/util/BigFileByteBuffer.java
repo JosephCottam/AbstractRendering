@@ -22,7 +22,7 @@ public class BigFileByteBuffer {
 		
 		fileSize = channel.size();
 		filePos = 0;
-		buffer = channel.map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, (fileSize-filePos)));
+		buffer = channel.map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, fileSize));
 		
 		this.margin=margin;
 		this.bufferSize = bufferSize;
@@ -44,21 +44,15 @@ public class BigFileByteBuffer {
 	public double getDouble() {return ensure(8).getDouble();}
 	
 	public long limit() {return fileSize;}
-	public void position(long at) {ensure(at, margin);}
+	public void position(long at) {ensure(at, margin).position((int) (at-filePos));}
 	
 	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
 	private ByteBuffer ensure(long position, int bytes) {
-		if((buffer.limit()-buffer.position())<bytes) {
-			//Shift the mapping so it contains the requested number of bytes (if possible)
-			filePos = buffer.position()+filePos;	
-			try {buffer = inputStream.getChannel().map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, (fileSize-filePos)));}
-			catch (IOException e) {throw new RuntimeException("Error shifting buffer position.", e);}
-		} else if (filePos > position) {
+		if ((position < filePos) || (position+bytes) > (buffer.limit()+filePos)) {
 			filePos = position; 
 			try {buffer = inputStream.getChannel().map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, (fileSize-filePos)));}
-			catch (IOException e) {throw new RuntimeException("Error shifting buffer position backwards.", e);}
-		} 
-
+			catch (IOException e) {throw new RuntimeException(String.format("Error shifting buffer position to %d for reading %d bytes.", position, bytes), e);}			
+		}
 		return buffer;
 	}
 }
