@@ -20,7 +20,7 @@ public class RendererOptions extends CompoundPanel {
 		renderers.addItem("Serial");
 		renderers.addItem("Parallel (Glyphs)");
 		renderers.addActionListener(new DelegateAction(this));
-		renderers.setSelectedItem("Parallel (Pixel)");
+		renderers.setSelectedItem("Parallel (Glyphs)");
 		
 		taskSize.addItem(1);
 		taskSize.addItem(10);
@@ -29,10 +29,10 @@ public class RendererOptions extends CompoundPanel {
 		taskSize.addItem(100000);
 		taskSize.addItem(1000000);
 		taskSize.addItem(1000000000);
-		taskSize.setSelectedItem(100);
+		taskSize.setSelectedItem(100000);
 		taskSize.addActionListener(new DelegateAction(this));		
 
-		ARApp.loadInstances(reducers, AggregateReducers.class);
+		ARApp.loadInstances(reducers, AggregateReducers.class, "Parallel (Glyphs)");
 		reducers.addActionListener(new DelegateAction(this));
 
 		

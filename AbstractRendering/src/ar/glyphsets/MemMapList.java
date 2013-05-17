@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
@@ -20,7 +22,8 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
 	
-	public static int BUFFER_BYTES = 300000;
+	public Set<Long> accessed = new TreeSet();
+	public static int BUFFER_BYTES = 300;
 	
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
@@ -87,6 +90,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	
 	@Override
 	public Glyph get(long i) {
+		accessed.add(i);
 		long recordOffset = (i*recordSize)+headerOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
 		
@@ -136,4 +140,15 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		public Glyph next() {return glyphs.get(at++);}
 		public void remove() {throw new UnsupportedOperationException();}		
 	}	
+	
+	public void clear() {buffer.get().clear();}
+	public void report() {
+		long i = 0;
+		for (Long l : accessed) {
+			while (l != i) {System.out.printf("Item %s not accessed\n", i); i++;}
+			i++;
+		}
+		if (accessed.size() < size()) {System.out.printf("Items above %s not accessed\n", i);}
+		buffer.get().report();
+	}
 }

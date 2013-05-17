@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**Sliding buffer across a large file to get around the int-limit of mem-maps**/
 public class BigFileByteBuffer {
@@ -14,6 +17,8 @@ public class BigFileByteBuffer {
 	private final int bufferSize;
 	private ByteBuffer buffer;
 	private long filePos=0;
+
+	public static Set<Long> accessed = new java.util.concurrent.ConcurrentSkipListSet<Long>();
 	
 	
 	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
@@ -48,11 +53,25 @@ public class BigFileByteBuffer {
 	
 	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
 	private ByteBuffer ensure(long position, int bytes) {
+		accessed.add(position);
 		if ((position < filePos) || (position+bytes) > (buffer.limit()+filePos)) {
 			filePos = position; 
 			try {buffer = inputStream.getChannel().map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, (fileSize-filePos)));}
 			catch (IOException e) {throw new RuntimeException(String.format("Error shifting buffer position to %d for reading %d bytes.", position, bytes), e);}			
 		}
 		return buffer;
+	}
+	
+	
+	public void clear() {accessed.clear();}
+	public void report() {
+		long i = 0;
+		for (Long l : accessed) {
+			while (l != i) {System.out.printf("Position %s not accessed\n", i); i+=2;}
+			i+=2;
+		}
+		if (accessed.size() < fileSize) {
+			System.out.printf("Positions above %s not accessed\n", i);
+		}
 	}
 }

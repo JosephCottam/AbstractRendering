@@ -29,7 +29,7 @@ public class Presets extends CompoundPanel {
 		this.add(new LabeledItem("Presets:", presets));
 		presets.addActionListener(new CompoundPanel.DelegateAction(this));
 		
-		ARApp.loadInstances(presets, Presets.class);
+		ARApp.loadInstances(presets, Presets.class, "");
 	}
 	
 	public boolean doZoomWith(ARPanel<?,?> oldPanel) {
