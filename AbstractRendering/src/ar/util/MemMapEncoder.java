@@ -1,6 +1,7 @@
 package ar.util;
 
 import java.nio.*;
+import java.util.ArrayList;
 import java.io.*;
 
 public class MemMapEncoder {
@@ -9,17 +10,29 @@ public class MemMapEncoder {
 	public static final int LONG_BYTES = 8;
 	public static final int SHORT_BYTES = 2;
 	public static final int CHAR_BYTES = 2;
+	
+	
 
-
+	/**Which are the types of the fields kept (e.g. are not 'x')**/
+	private static char[] keepTypes(char[] types) {
+		ArrayList<Character> keeping = new ArrayList<Character>();
+		for (char c: types) {
+			if (c != 's' && c != 'i' && c != 'c' && c != 'd' && c != 'f' && c != 'l' && c != 'x') {
+				throw new IllegalArgumentException("Invalid type marker; only i,s,l,d,f,c,x allowed, found  '" + c + "'");
+			} else if(c!='x') {keeping.add(c);}
+		}
+		char[] keep = new char[keeping.size()];
+		for (int i=0; i< keep.length;i ++) {keep[i]=keeping.get(i);}
+		return keep;
+	}
+	
 	private static byte[] makeHeader(char[] types) {
 		assert types != null;
 		assert types.length != 0;
-		for (char c: types) {
-			if (c != 's' && c != 'i' && c != 'c' && c != 'd' && c != 'f' && c != 'l') {throw new IllegalArgumentException("Invalid type marker; only i,s,l,d,f,c allowed, found  '" + c + "'");}
-		}
 
-		byte[] size = intBytes(types.length);
-		byte[] encoding = charBytes(types);	
+		char[] keepTypes = keepTypes(types);
+		byte[] size = intBytes(keepTypes.length);
+		byte[] encoding = charBytes(keepTypes);	
 		byte[] rslt = new byte[encoding.length+size.length] ;
 
 		System.arraycopy(size, 0, rslt, 0, size.length);
@@ -57,6 +70,7 @@ public class MemMapEncoder {
 		}			
 	}
 
+
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		CSVReader source = new CSVReader(sourceFile, skip); 
 		FileOutputStream file = new FileOutputStream(target);
@@ -70,6 +84,7 @@ public class MemMapEncoder {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
 				for (int i=0;i<types.length;i++) {
+					if (types[i]=='x') {continue;}
 					byte[] value = asBinary(entry[i], types[i]);
 					file.write(value);						
 				}
