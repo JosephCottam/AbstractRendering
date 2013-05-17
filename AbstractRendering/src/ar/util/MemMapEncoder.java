@@ -1,6 +1,8 @@
 package ar.util;
 
 import java.nio.*;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.io.*;
 
 public class MemMapEncoder {
@@ -9,17 +11,29 @@ public class MemMapEncoder {
 	public static final int LONG_BYTES = 8;
 	public static final int SHORT_BYTES = 2;
 	public static final int CHAR_BYTES = 2;
+	
+	
 
-
+	/**Which are the types of the fields kept (e.g. are not 'x')**/
+	private static char[] keepTypes(char[] types) {
+		ArrayList<Character> keeping = new ArrayList<Character>();
+		for (char c: types) {
+			if (c != 's' && c != 'i' && c != 'c' && c != 'd' && c != 'f' && c != 'l' && c != 'x') {
+				throw new IllegalArgumentException("Invalid type marker; only i,s,l,d,f,c,x allowed, found  '" + c + "'");
+			} else if(c!='x') {keeping.add(c);}
+		}
+		char[] keep = new char[keeping.size()];
+		for (int i=0; i< keep.length;i ++) {keep[i]=keeping.get(i);}
+		return keep;
+	}
+	
 	private static byte[] makeHeader(char[] types) {
 		assert types != null;
 		assert types.length != 0;
-		for (char c: types) {
-			if (c != 's' && c != 'i' && c != 'c' && c != 'd' && c != 'f' && c != 'l') {throw new IllegalArgumentException("Invalid type marker; only i,s,l,d,f,c allowed, found  '" + c + "'");}
-		}
 
-		byte[] size = intBytes(types.length);
-		byte[] encoding = charBytes(types);	
+		char[] keepTypes = keepTypes(types);
+		byte[] size = intBytes(keepTypes.length);
+		byte[] encoding = charBytes(keepTypes);	
 		byte[] rslt = new byte[encoding.length+size.length] ;
 
 		System.arraycopy(size, 0, rslt, 0, size.length);
@@ -57,6 +71,7 @@ public class MemMapEncoder {
 		}			
 	}
 
+
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		CSVReader source = new CSVReader(sourceFile, skip); 
 		FileOutputStream file = new FileOutputStream(target);
@@ -70,6 +85,7 @@ public class MemMapEncoder {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
 				for (int i=0;i<types.length;i++) {
+					if (types[i]=='x') {continue;}
 					byte[] value = asBinary(entry[i], types[i]);
 					file.write(value);						
 				}
@@ -82,6 +98,24 @@ public class MemMapEncoder {
 		} finally {file.close();}
 	}
 
+
+	@SuppressWarnings("resource")
+	private static void copy(File source, File target) throws Exception {
+		if (!target.exists()) {target.createNewFile();}
+		
+		FileChannel in = null, out=null;
+		try {
+			in = new FileInputStream(source).getChannel();
+			out = new FileOutputStream(target).getChannel();
+
+			long count = 0;
+	        long size = in.size();              
+	        while((count += out.transferFrom(in, count, size-count))<size);
+		} finally {
+			if (in != null) {in.close();}
+			if (out != null) {out.close();}
+		}
+	}
 	
 	private static String entry(String[] args, String key, String defVal) {
 		int i=0;
@@ -96,10 +130,19 @@ public class MemMapEncoder {
 		
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
+		File temp = File.createTempFile("hbinEncoder", "hbin");
+		temp.deleteOnExit();
 		int skip = Integer.parseInt(entry(args, "-skip", null));
 		char[] types = entry(args, "-types", "").toCharArray();
 		
-		write(in, skip, out, types);
+		write(in, skip, temp, types);
+		
+		try {
+			out.delete();
+			boolean moved = temp.renameTo(out);
+			if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
+		} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
+		if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
 	}
 }
 
