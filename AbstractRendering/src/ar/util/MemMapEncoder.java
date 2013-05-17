@@ -96,10 +96,17 @@ public class MemMapEncoder {
 		
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
+		File temp = File.createTempFile("hbinEncoder", "hbin");
+		temp.deleteOnExit();
 		int skip = Integer.parseInt(entry(args, "-skip", null));
 		char[] types = entry(args, "-types", "").toCharArray();
 		
-		write(in, skip, out, types);
+		write(in, skip, temp, types);
+		
+		try {
+			out.delete();
+			temp.renameTo(out);
+		} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
 	}
 }
 
