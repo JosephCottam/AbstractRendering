@@ -3,15 +3,13 @@ package ar.glyphsets;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.nio.*;
-import java.nio.channels.FileChannel;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
+import ar.util.BigFileByteBuffer;
 import ar.util.Util;
 
 
@@ -22,22 +20,15 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
 	
-	private final ThreadLocal<ByteBuffer> buffer = 
-			new ThreadLocal<ByteBuffer>() {
-				public ByteBuffer initialValue() {
+	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	
+	private final ThreadLocal<BigFileByteBuffer> buffer = 
+			new ThreadLocal<BigFileByteBuffer>() {
+				public BigFileByteBuffer initialValue() {
 					if (source == null) {return null;}
-					try {
-						FileInputStream inputStream = new FileInputStream(source);
-						FileChannel channel =  inputStream.getChannel();
-						
-						ByteBuffer b = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());	//TODO: must multiplex buffers if channel.size()>max-int 
-						inputStream.close();
-						channel.close();
-
-						return b;
-					} catch (Exception e) {throw new RuntimeException(e);}
+					try {return new BigFileByteBuffer(source, recordSize, BUFFER_BYTES);}
+					catch (Exception e) {throw new RuntimeException(e);}
 				}
-		
 	};
 	
 	private final double glyphSize;
@@ -49,7 +40,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final int recordSize;
 	private final int headerOffset;
 	private final boolean flipY;
-	private final int entryCount;
+	private final long entryCount;
 
 	public MemMapList(File source, double glyphSize, boolean flipY, Painter<Double> painter, TYPE[] types) {
 		this.glyphSize = glyphSize;
@@ -83,7 +74,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 			this.types = null;
 			this.recordSize = -1;
 		}
-		entryCount = buffer.get() == null ? 0 : (buffer.get().limit()-headerOffset)/recordSize;
+		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
 		
 	}
 		
@@ -95,15 +86,15 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	}
 	
 	@Override
-	public Glyph get(int i) {
-		int recordOffset = (i*recordSize)+headerOffset;
-		ByteBuffer buffer = this.buffer.get();
+	public Glyph get(long i) {
+		long recordOffset = (i*recordSize)+headerOffset;
+		BigFileByteBuffer buffer = this.buffer.get();
 		
 		buffer.position(recordOffset);
 		double x = value(buffer, 0);
 		double y = value(buffer, 1);
 		double v = types.length > 2 ? value(buffer, 2) : 0;
-		
+		// System.out.printf("Read in %d: (%s,%s)\n", i,x,y);
 		y = flipY ? -y :y;
 		
 		Color c = painter.from(v);
@@ -111,7 +102,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		return g;
 	}
 	
-	private double value(ByteBuffer buffer, int offset) {
+	private double value(BigFileByteBuffer buffer, int offset) {
 		TYPE t = types[offset];
 		switch(t) {
 			case INT: return buffer.getInt();
@@ -130,7 +121,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
-	public int size() {return entryCount;}
+	public long size() {return entryCount;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}

@@ -20,6 +20,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		glyphsType.addItem("List");
 		glyphsType.addItem("Matrix");
 		glyphsType.addItem("MemMap List");
+		glyphsType.setSelectedItem("MemMap List");
 		this.add(new LabeledItem("Glyph Storage:", glyphsType));
 		
 		size.addItem(.001);

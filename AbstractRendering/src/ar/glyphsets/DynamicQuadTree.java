@@ -74,7 +74,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 	public abstract void add(Glyph glyph);
 
 	/**How many things are held in this sub-tree?**/
-	public int size() {return items().size();}
+	public long size() {return items().size();}
 
 	/**What are the items of the sub-tree?**/
 	public Collection<Glyph> items() {
@@ -376,7 +376,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 		}
 
 		
-		public int size() {return size;}
+		public long size() {return size;}
 		public String toString(int indent) {
 			return String.format("%sLeafNode: %d items (%s spanning items)\n", Util.indent(indent), size(), spanningItems.size());
 		}	
