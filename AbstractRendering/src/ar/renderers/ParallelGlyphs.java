@@ -19,7 +19,6 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
-import ar.glyphsets.*;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -61,9 +60,7 @@ public class ParallelGlyphs implements Renderer {
 				recorder,
 				0, glyphs.size());
 		
-		((MemMapList) glyphs).clear();
 		Aggregates<A> a= pool.invoke(t);
-		((MemMapList) glyphs).report();
 		
 		return a;
 	}
@@ -233,7 +230,7 @@ public class ParallelGlyphs implements Renderer {
 			if (at > cache.length) {throw new IllegalArgumentException();}
 			int i= (int) at;
 			
-			if (cache[i] == null) {cache[i] = glyphs.get(i);}
+			if (cache[i] == null) {cache[i] = glyphs.get(l);}
 			return cache[i];
 		}
 	}

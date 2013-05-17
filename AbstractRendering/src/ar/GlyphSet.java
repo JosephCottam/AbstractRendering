@@ -24,7 +24,7 @@ public interface GlyphSet {
 	
 	
 	public static interface IterableGlyphs extends GlyphSet, Iterable<Glyph> {}
-	public static interface RandomAccess extends GlyphSet {public Glyph get(long i);}
+	public static interface RandomAccess extends GlyphSet {public Glyph get(long l);}
 	
 	public static final class Glyph {
 		private static int IDCOUNTER=0;
