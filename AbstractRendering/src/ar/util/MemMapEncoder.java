@@ -128,21 +128,30 @@ public class MemMapEncoder {
 		System.out.println("Usage: MemMapEncoder -in <file> -out <file> -skip <int> -types <string>");
 		System.out.println("Type string is a string made up of s/i/l/d/f/c for short/int/long/double/float/char.");
 		
+		File temp;
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
-		File temp = File.createTempFile("hbinEncoder", "hbin");
-		temp.deleteOnExit();
+		boolean direct = !entry(args, "-direct", "FALSE").toUpperCase().equals("FALSE");
+		if (direct) {temp =out;}
+		else {
+			temp = File.createTempFile("hbinEncoder", "hbin");
+			temp.deleteOnExit();
+		}
+		
+		
 		int skip = Integer.parseInt(entry(args, "-skip", null));
 		char[] types = entry(args, "-types", "").toCharArray();
 		
 		write(in, skip, temp, types);
 		
-		try {
-			out.delete();
-			boolean moved = temp.renameTo(out);
-			if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
-		} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
-		if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
+		if (!direct) {
+			try {
+				out.delete();
+				boolean moved = temp.renameTo(out);
+				if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
+			} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
+			if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
+		}
 	}
 }
 
