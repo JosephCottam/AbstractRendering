@@ -40,7 +40,7 @@ public class Presets extends CompoundPanel {
 				|| !oldPanel.reduction().equals(p.reduction());
 	}
 	
-	public ARPanel update(ARPanel<?,?> oldPanel) {
+	public ARPanel<?,?> update(ARPanel<?,?> oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
 		ARPanel<?,?> newPanel = new ARPanel(p.reduction(), p.transfer(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
@@ -129,8 +129,8 @@ public class Presets extends CompoundPanel {
 	
 	private static final GlyphSet CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
 	private static final GlyphSet BOOST_MEMORY = load("BGL Memory", "./data/MemVisScaled.csv", .001);
-	private static final GlyphSet BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
-	private static final GlyphSet CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .1, false, new Painter.Constant<>(Color.BLUE), 1, "ii");
+	private static final GlyphSet BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
+	private static final GlyphSet CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .5, .1, false, new Painter.Constant<>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
 
@@ -148,12 +148,12 @@ public class Presets extends CompoundPanel {
 		}
 	}
 	
-	public static final GlyphSet memMap(String label, String file, double size, boolean flipY, Painter p, int skip, String types) {
+	public static final GlyphSet memMap(String label, String file, double width, double height, boolean flipY, Painter p, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);
 		try {
 			long start = System.currentTimeMillis();
-			GlyphSet g = new MemMapList(f, size, flipY, p, null);
+			GlyphSet g = new MemMapList(f, width, height, flipY, p, null);
 			long end = System.currentTimeMillis();
 			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
 			return g;
@@ -163,7 +163,7 @@ public class Presets extends CompoundPanel {
 					System.out.println("Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return memMap(label, file, size, flipY, p, skip, null);	  //change types to null so it only tries to encode once
+					return memMap(label, file, width, height, flipY, p, skip, null);	  //change types to null so it only tries to encode once
 				} else {throw e;}
 			} catch (Exception ex) {
 				System.out.println("Faield to load data.");

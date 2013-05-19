@@ -46,7 +46,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		} else if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
-			return new MemMapList(null, (Double) size.getSelectedItem(), false, new Painter.Constant<Double>(Color.red), null);
+			return new MemMapList(null, (Double) size.getSelectedItem(), new Painter.Constant<Double>(Color.red), null);
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
 			return new DirectMatrix<>(null, 1, 1, true);
 		} else {

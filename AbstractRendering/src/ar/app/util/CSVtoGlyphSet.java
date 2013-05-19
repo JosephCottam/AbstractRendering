@@ -2,11 +2,7 @@ package ar.app.util;
 
 import java.awt.Color;
 import java.awt.geom.*;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.regex.Pattern;
 
 import ar.GlyphSet;
 import ar.glyphsets.*;
@@ -59,7 +55,7 @@ public class CSVtoGlyphSet {
 						xField, yField, valueField,
 						0, new ToInt(), false);
 			} else if (glyphs instanceof MemMapList) {
-				MemMapList list = new MemMapList(source, glyphSize, false, ((MemMapList) glyphs).painter(), ((MemMapList) glyphs).types());
+				MemMapList list = new MemMapList(source, glyphSize, ((MemMapList) glyphs).painter(), ((MemMapList) glyphs).types());
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {

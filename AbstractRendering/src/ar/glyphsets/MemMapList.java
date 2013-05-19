@@ -31,7 +31,8 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 				}
 	};
 	
-	private final double glyphSize;
+	private final double glyphWidth;
+	private final double glyphHeight;
 	private final File source;
 	private final TYPE[] types;
 	private final Painter<Double> painter;
@@ -42,8 +43,12 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final boolean flipY;
 	private final long entryCount;
 
-	public MemMapList(File source, double glyphSize, boolean flipY, Painter<Double> painter, TYPE[] types) {
-		this.glyphSize = glyphSize;
+	public MemMapList(File source, double glyphSize, Painter<Double> painter, TYPE[] types) {
+		this(source, glyphSize, glyphSize, false, painter, types);
+	}
+	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, Painter<Double> painter, TYPE[] types) {
+		this.glyphWidth = glyphWidth;
+		this.glyphHeight = glyphHeight;
 		this.source = source;
 		this.painter = painter;
 		this.flipY = flipY;
@@ -98,7 +103,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 		y = flipY ? -y :y;
 		
 		Color c = painter.from(v);
-		Glyph g = new Glyph(new Rectangle2D.Double(x,y,glyphSize,glyphSize), c, v);
+		Glyph g = new Glyph(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c, v);
 		return g;
 	}
 	
