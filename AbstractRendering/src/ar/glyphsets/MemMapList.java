@@ -10,7 +10,6 @@ import java.util.Iterator;
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
 import ar.util.BigFileByteBuffer;
-import ar.util.Util;
 
 
 public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
@@ -42,9 +41,10 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	private final int headerOffset;
 	private final boolean flipY;
 	private final long entryCount;
+	private Rectangle2D bounds;
 
-	public MemMapList(File source, double glyphSize, Painter<Double> painter, TYPE[] types) {
-		this(source, glyphSize, glyphSize, false, painter, types);
+	public MemMapList(File source, double glyphSize, Painter<Double> painter) {
+		this(source, glyphSize, glyphSize, false, painter, null);
 	}
 	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, Painter<Double> painter, TYPE[] types) {
 		this.glyphWidth = glyphWidth;
@@ -127,10 +127,28 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
 	public long size() {return entryCount;}
-	public Rectangle2D bounds() {return Util.bounds(this);}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}
+	
+	public Rectangle2D bounds() {
+		if (bounds == null) {
+			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
+			BigFileByteBuffer buffer = this.buffer.get();
 
+			for (int i=0; i<size();i++) {
+				long recordOffset = (i*recordSize)+headerOffset;
+				buffer.position(recordOffset);
+				double x = value(buffer, 0);
+				double y = value(buffer, 1);
+				minX = Math.min(x, minX);
+				minY = Math.min(y, minY);
+				maxX = Math.max(x, maxX);
+				maxY = Math.max(y, maxY);
+			}
+			bounds = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+		}
+		return bounds;
+	}
 	
 	private static final class It implements Iterator<Glyph> {
 		private final GlyphSet.RandomAccess glyphs;

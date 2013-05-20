@@ -121,7 +121,7 @@ public class MemMapEncoder {
 		int i=0;
 		key = key.toUpperCase();
 		for (i=0; i< args.length; i++) {if (args[i].toUpperCase().equals(key)) {break;}}
-		if (i>=0 && args[i].toUpperCase().equals(key)) {return args[i+1];}
+		if (i<args.length && i>=0 && args[i].toUpperCase().equals(key)) {return args[i+1];}
 		return defVal;
 	}
 	public static void main(String[] args) throws Exception {
