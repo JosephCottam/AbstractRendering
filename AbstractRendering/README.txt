@@ -1,9 +1,6 @@
-To build:
-ant Jar
-
-To execute:
-java -jar AR.jar
-
+To build: ant jar
+To build documentation: ant doc  
+To execute demo application: java -jar AR.jar
 
 To Use:
 Select a reduction function from the top-left drop-down.

@@ -1,13 +1,13 @@
-<project name="AbstractRendering" default="Jar" basedir=".">
+<project name="AbstractRendering" default="jar" basedir=".">
 
-  <target name="Jar" depends="Clean,Compile,Package" />
+  <target name="jar" depends="clean,compile,package" />
 
-  <target name="Clean">
+  <target name="clean">
     <delete dir="bin"/>
     <delete file="AR.jar"/>
   </target>
 
-  <target name="Compile">
+  <target name="compile">
     <mkdir dir="bin"/>
     <javac destdir="bin" includeantruntime="false" source="1.7">
       <src>
@@ -16,7 +16,7 @@
     </javac>
   </target>
 
-  <target name="Package">
+  <target name="package">
     <jar jarfile="AR.jar" includes="*.class" basedir=".">
       <fileset dir="bin"/>
       <manifest>
@@ -25,5 +25,10 @@
       </manifest>
     </jar>
   </target>
+	
+  <target name="doc">
+     <javadoc sourcepath="src" destdir="doc"/>
+  </target>
+	
 
 </project>
