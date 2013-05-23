@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ForkJoinPool;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
@@ -13,6 +14,8 @@ import ar.util.BigFileByteBuffer;
 
 
 public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
+	private static final ForkJoinPool pool = new ForkJoinPool();
+	
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		final int bytes;
@@ -135,7 +138,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
 			BigFileByteBuffer buffer = this.buffer.get();
 
-			for (int i=0; i<size();i++) {
+			for (long i=0; i<size();i++) {
 				long recordOffset = (i*recordSize)+headerOffset;
 				buffer.position(recordOffset);
 				double x = value(buffer, 0);

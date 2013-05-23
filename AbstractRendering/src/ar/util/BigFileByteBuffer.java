@@ -44,7 +44,10 @@ public class BigFileByteBuffer {
 	public double getDouble() {return ensure(8).getDouble();}
 	
 	public long limit() {return fileSize;}
-	public void position(long at) {ensure(at, margin).position((int) (at-filePos));}
+	public void position(long at) {
+		try {ensure(at, margin).position((int) (at-filePos));}
+		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}
+	}
 	
 	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
 	private ByteBuffer ensure(long position, int bytes) {

@@ -14,6 +14,7 @@ public  interface Painter<T> {
 	
 	public static final class Constant<T> implements Painter<T> {
 		private final Color c;
+		public Constant() {this.c = Color.red;}
 		public Constant(Color c) {this.c = c;}
 		public Color from(T item) {return c;}
 	}
