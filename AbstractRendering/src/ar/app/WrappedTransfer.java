@@ -42,19 +42,19 @@ public interface WrappedTransfer<A> {
 
 	
 	public class Percent90 implements WrappedTransfer<Aggregators.RLE> {
-		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.9, Color.white, Color.blue, Color.red);}
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.9, Color.red, Color.white, Color.blue, Color.red);}
 		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "90% Percent (RLE)";}
 	}
 
 	public class Percent95 implements WrappedTransfer<Aggregators.RLE> {
-		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.95, Color.white, Color.blue, Color.red);}
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.95, Color.red, Color.white, Color.blue, Color.red);}
 		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "95% Percent (RLE)";}
 	}
 
 	public class Percent25 implements WrappedTransfer<Aggregators.RLE> {
-		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.25, Color.white, Color.blue, Color.red);}
+		public Transfer<Aggregators.RLE> op() {return new Transfers.FirstPercent(.25, Color.red, Color.white, Color.blue, Color.red);}
 		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "25% Percent (RLE)";}
 	}

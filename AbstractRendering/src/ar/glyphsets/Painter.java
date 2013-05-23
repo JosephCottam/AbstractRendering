@@ -3,6 +3,11 @@ package ar.glyphsets;
 import java.awt.Color;
 import java.util.Map;
 
+
+/**Painters provide a just-in-time transformation from data elements to color elements.
+ * They are used by glyphsets that are based on implicit geometry geometry  
+ * (instead of storing actual glyph items). 
+ * **/
 public  interface Painter<T> {
 	public java.awt.Color from(T item);
 		

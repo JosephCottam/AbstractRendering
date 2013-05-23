@@ -115,7 +115,7 @@ public class ARPanel<A,B> extends JPanel {
 	public final class FullRender implements Runnable {
 		public void run() {
 			long start = System.currentTimeMillis();
-			aggregates = renderer.reduce(dataset, inverseViewTransform(), reduction.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
+			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
 			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (full)\n", (end-start));

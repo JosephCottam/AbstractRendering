@@ -18,8 +18,8 @@ public final class SerialSpatial implements Renderer {
 	public SerialSpatial() {recorder = RenderUtils.recorder();}
 
 	
-	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final AffineTransform inverseView, 
-			final Aggregator<A> op, final int width, final int height) {
+	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final Aggregator<A> op,   
+			final AffineTransform inverseView, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity());
 		renderInto(aggregates, glyphs, recorder, inverseView, op);

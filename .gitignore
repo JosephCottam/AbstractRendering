@@ -1,2 +1,6 @@
+.DS_Store
+.metadata/
 ./bin
 *.jar
+AbstractRendering/data/*
+AbstractRendering/doc/*

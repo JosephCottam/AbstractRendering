@@ -6,12 +6,17 @@ import ar.Aggregates;
 import ar.Transfer;
 import ar.util.Util;
 
+
+/**Implementation of common transfer functions.**/
 public class Transfers {
 
+	/**Return the color stored in the aggregate set;
+	 * essentially a pass-through for aggregators that produce colors.**/
 	public static final class IDColor implements Transfer<Color> {
 		public Color at(int x, int y, Aggregates<Color> aggregates) {return aggregates.at(x, y);}
 	}
 
+	
 	public static final class ZScore implements Transfer<Integer> {
 		final Color low, high;
 		final boolean zeros;
@@ -73,28 +78,47 @@ public class Transfers {
 		}
 	}
 	
-	/**Percent of total contributed by the first item**/
+	/**Switch between two colors depending on the percent contribution of
+	 * a specified category.
+	 * 
+	 * TODO: Convert from RLE to CoC based
+	 * 
+	 * **/
 	public static final class FirstPercent implements Transfer<Aggregators.RLE> {
 		private final double ratio;
 		private final Color background, match, noMatch;
-		public FirstPercent(double ratio, Color background, Color match, Color noMatch) {
+		private final Object firstKey;
+		
+		public FirstPercent(double ratio, Object firstKey,  Color background, Color match, Color noMatch) {
 			this.ratio = ratio;
 			this.background = background;
 			this.match = match;
 			this.noMatch = noMatch;
+			this.firstKey = firstKey;
 		}
+		
 		public Color at(int x, int y, Aggregates<Aggregators.RLE> aggregates) {
 			Aggregators.RLE rle = aggregates.at(x,y);
 			double size = rle.fullSize();
 			
 			if (size == 0) {return background;}
-			else if (rle.key(0).equals(Color.RED)) {return noMatch;}	//HACK: The use of "RED" here derives from the BGL vis and is not general purpose 
+			else if (!rle.key(0).equals(firstKey)) {return noMatch;} 
 			else if (rle.count(0)/size >= ratio) {return match;}
 			else {return noMatch;}
 		}
 		
 	}
 	
+	
+	/**Performs high-definition alpha composition on a run-length encoding.
+	 * High-definition alpha composition computes color compositions in double space
+	 * with knowledge of the full range of compositions that will be required.
+	 * (See "Visual Analysis of Inter-Process Communication for Large-Scale Parallel Computing"
+	 *  by Chris Muelder, Francois Gygi, and Kwan-Liu Ma).
+	 *  
+	 * @author jcottam
+	 *
+	 */
 	public static final class HighAlpha implements Transfer<Aggregators.RLE> {
 		private final Color background;
 		private boolean log;
@@ -157,6 +181,7 @@ public class Transfers {
 		}
 	}
 	
+	/**Pull the first item from a run-lenght encoding.**/
 	public static final class FirstItem implements Transfer<Aggregators.RLE> {
 		private final Color background;
 		public FirstItem(Color background) {

@@ -20,6 +20,9 @@ import ar.Aggregator;
 /**Aggregators produce aggregates (which go into aggregate sets).**/
 public class Aggregators {
 
+	/**Compute a gradient across the 2D space.  
+	 * This class was used largely for debugging; it ignores its inputs. 
+	 */
 	public static final class Gradient implements Aggregator<Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
@@ -29,6 +32,9 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}	
 	}
 
+	/**Create a solid fill.  
+	 * This class was used largely for debugging; it ignores its inputs. 
+	 */
 	public static final class IDColor implements Aggregator<Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
@@ -36,6 +42,8 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 	}
 
+	
+	/**How many items are in the given pixel**/
 	public static final class Count implements Aggregator<Integer> {
 		public Integer at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
@@ -45,6 +53,7 @@ public class Aggregators {
 		public Integer identity() {return 0;}
 	}
 
+	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color> {
 		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
@@ -55,6 +64,7 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 	}
 
+	/**What is the last item in the given pixel (an over-plotting strategy)**/
 	public static final class Last implements Aggregator<Color> {
 		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
@@ -67,6 +77,12 @@ public class Aggregators {
 	}
 
 
+	/**Encapsulation of run-length encoding information.
+	 * A run-length encoding describes the counts of the items found
+	 * in the order they were found.  The same category may appear 
+	 * multiple times if items of the category are interspersed with
+	 * items from other categories.
+	 */
 	public static final class RLE {
 		public final List<Object> keys = new ArrayList<Object>();
 		public final List<Integer> counts = new ArrayList<Integer>();
@@ -90,6 +106,7 @@ public class Aggregators {
 	}	
 
 
+	/**Run-length encode based on colors.  Optionally sort the items by color before encoding.**/ 
 	public static final class RLEColor implements Aggregator<RLE> {
 		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
 			public int compare(Glyph o1, Glyph o2) {
@@ -161,6 +178,16 @@ public class Aggregators {
 		public RLE identity() {return new RLE();}
 	}
 
+	
+	/**Compare the items found in a given pixel to the items found 
+	 * in the rectangle n-steps to the left/right/top/bottom (current pixel is the center).
+	 * Report how many times a neighboring pixel had an item that belonged to a category
+	 * when the current pixel does not have an item belonging to that category.
+	 * Item category is determined by color in this case.
+	 *  
+	 * @author jcottam
+	 *
+	 */
 	public static final class DeltaNeighbors implements Aggregator<Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}

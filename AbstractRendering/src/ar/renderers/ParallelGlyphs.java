@@ -24,7 +24,7 @@ import ar.Renderer;
 import ar.Transfer;
 
 
-/**Task-stealing renderer designed for use with a linear stored glyph-set.
+/**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
  */
@@ -44,8 +44,8 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <A> Aggregates<A> reduce(GlyphSet glyphs,
-			AffineTransform inverseView, Aggregator<A> op, int width, int height) {
+	public <A> Aggregates<A> reduce(GlyphSet glyphs, Aggregator<A> op, 
+			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;
 		try {view = inverseView.createInverse();}
@@ -129,7 +129,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			GlyphSet.IterableGlyphs subset = new GlyphSubset(glyphs, low, high);
+			GlyphSet.RandomAccess subset = new GlyphSubset(glyphs, low, high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
 														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
@@ -170,7 +170,7 @@ public class ParallelGlyphs implements Renderer {
 	}
 	
 	
-	public static final class GlyphSingleton implements GlyphSet.IterableGlyphs {
+	public static final class GlyphSingleton implements GlyphSet.RandomAccess  {
 		private final List<Glyph> glyphs;
 		private final Glyph glyph;
 		private final Rectangle2D bounds;
@@ -182,7 +182,7 @@ public class ParallelGlyphs implements Renderer {
 		}
 		
 		public Iterator<Glyph> iterator() {return glyphs.iterator();}
-		public Glyph get(int i) {return glyphs.get(i);}
+		public Glyph get(long i) {return glyphs.get(0);}
 		public boolean isEmpty() {return glyphs.isEmpty();}
 		public void add(Glyph g) {throw new UnsupportedOperationException();}
 		public long size() {return glyphs.size();}
@@ -194,7 +194,7 @@ public class ParallelGlyphs implements Renderer {
 		}
 	}
 	
-	public static final class GlyphSubset implements GlyphSet.IterableGlyphs, GlyphSet.RandomAccess {
+	public static final class GlyphSubset implements GlyphSet.RandomAccess {
 		private final GlyphSet.RandomAccess glyphs;
 		private final long low,high;
 		private final Glyph[] cache;

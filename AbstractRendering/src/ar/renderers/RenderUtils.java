@@ -3,13 +3,19 @@ package ar.renderers;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RenderUtils {
+	/**Common location for controlling render progress reporting.
+	 * Renderers are NOT required to respect this setting, but will
+	 * if they use the "recorder" method also in this class. 
+	 */
 	public static boolean RECORD_PROGRESS = false;
 	
+	/**Instantiate a progress recorder according to the RECORD_PROGRESS setting.**/
 	public static Progress recorder() {
 		return RECORD_PROGRESS ? new RenderUtils.Progress.Counter() : new RenderUtils.Progress.NOP();
 	}
 
 	
+	/**Utility class for recording percent progress through a known task size.**/
 	public static interface Progress {
 		public long count();
 		public void update(long delta);
@@ -17,6 +23,7 @@ public class RenderUtils {
 		public void reset(long expected);
 		
 		
+		/**Dummy progress recorder.  Always returns -1 for status inquiries.**/
 		public static final class NOP implements Progress {
 			public long count() {return -1;}
 			public void update(long delta) {}
@@ -24,6 +31,7 @@ public class RenderUtils {
 			public double percent() {return -1;}
 		}
 		
+		/**Thread-safe progress reporter for.**/
 		public static final class Counter implements Progress {
 			private final AtomicLong counter = new AtomicLong();
 			private long expected=1;

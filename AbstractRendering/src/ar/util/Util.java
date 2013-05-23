@@ -48,6 +48,10 @@ public final class Util {
 		return bounds;
 	}
 
+	
+	/**Adds two rectangles together, returning a bounds box over the whole.
+	 * Unlike Rectangle2D.union, this method treats NaN as if it were zero.
+	 */
 	public static void add(Rectangle2D target, Rectangle2D more) {
 		double x = more.getX();
 		double y = more.getY();
