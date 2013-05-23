@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ForkJoinPool;
 
 import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
@@ -13,6 +14,8 @@ import ar.util.BigFileByteBuffer;
 
 
 public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
+	private static final ForkJoinPool pool = new ForkJoinPool();
+	
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		final int bytes;
