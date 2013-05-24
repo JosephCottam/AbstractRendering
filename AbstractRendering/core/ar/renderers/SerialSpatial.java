@@ -12,6 +12,9 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.util.Util;
 
+/**Simple renderer that implements the basic abstract rendering algorithm.
+ * This class is largely for reference.  In most caes, a parallel renderer is better.
+ * **/
 public final class SerialSpatial implements Renderer {
 	private final RenderUtils.Progress recorder;
 	
@@ -22,13 +25,6 @@ public final class SerialSpatial implements Renderer {
 			final AffineTransform inverseView, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity());
-		renderInto(aggregates, glyphs, recorder, inverseView, op);
-		return aggregates;
-	}
-	
-	public static <A> void renderInto(final Aggregates<A> aggregates, final GlyphSet glyphs, 
-			RenderUtils.Progress recorder,
-			final AffineTransform inverseView, final Aggregator<A> op) {
 		Rectangle pixel = new Rectangle(0,0,1,1);
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
@@ -38,6 +34,7 @@ public final class SerialSpatial implements Renderer {
 				recorder.update(1);
 			}
 		}
+		return aggregates;
 	}
 	
 	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {

@@ -6,7 +6,28 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-/**Sliding buffer across a large file to get around the int-limit of mem-maps**/
+/**Sliding buffer across a large file to get around the int-limit of mem-maps.
+ * 
+ * nio memory mapped files are backed by byte arrays.  Since java limits the 
+ * size of an array to int indices, the largest file that can be completely mapped
+ * is also limited.  This class subverts that limit by mapping smaller buffer and
+ * moving the buffer when getting close to the end of the buffer (unless it's already 
+ * touches the end of the file).
+ * 
+ * To ensure complete values can be read in one operation, a "margin" can be registered.
+ * When calling "position", it attempts to ensure that there are margin-number-of-bytes
+ * left in mapped region.  It is suggested that margin be set to at the length of a
+ * record in the file (if the file is structured as records).
+ * 
+ * This class is designed for linear scans of the mapped file.  It supports moving backwards,
+ * but is less efficient if many backwards moves are requested in a row.
+ * This class only supports reading operations (though the principles should work for 
+ * writing as well, there has been no need).  
+ * 
+ * Where this class shares method names with java.nio.ByteBuffer, the operations 
+ * performed are comparable EXCEPT items are indexed by long's instead of ints
+ *   
+ * **/
 public class BigFileByteBuffer {
 	private final FileInputStream inputStream;
 	private final long fileSize;
@@ -16,6 +37,12 @@ public class BigFileByteBuffer {
 	private ByteBuffer buffer;
 	private long filePos=0;
 	
+	/**
+	 * @param source File to read
+	 * @param margin Proximity to the end of the buffer that will trigger a window slide
+	 * @param bufferSize Size of memory map buffer to create
+	 * @throws IOException Thrown when file stream creation or memory mapping fails.
+	 */
 	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
 		inputStream = new FileInputStream(source);
 		FileChannel channel =  inputStream.getChannel();
@@ -43,7 +70,8 @@ public class BigFileByteBuffer {
 	public double getFloat() {return ensure(4).getFloat();}
 	public double getDouble() {return ensure(8).getDouble();}
 	
-	public long limit() {return fileSize;}
+	
+	public long capacity() {return fileSize;}
 	public void position(long at) {
 		try {ensure(at, margin).position((int) (at-filePos));}
 		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}

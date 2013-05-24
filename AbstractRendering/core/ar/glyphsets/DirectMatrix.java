@@ -7,6 +7,19 @@ import java.util.Collections;
 
 import ar.GlyphSet;
 
+
+
+/**Implicit geometry, spatially arranged glyphset for accessing 2D data structures.
+ * 
+ * When representing a 2D data structure as a matrix-like visualization, 
+ * the matrix indices determine the geometry.  Therefore the geometry
+ * does not need to be explicitly stored.
+ * 
+ * 
+ * @author jcottam
+ *
+ * @param <T>
+ */
 public class DirectMatrix<T> implements GlyphSet {
 	private final T[][] matrix;
 	private final double xScale, yScale;

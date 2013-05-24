@@ -6,7 +6,7 @@ import java.io.File;
 
 import ar.GlyphSet;
 import ar.glyphsets.*;
-import ar.util.CSVReader;
+import ar.util.DelimitedReader;
 
 import static ar.GlyphSet.Glyph;
 
@@ -30,7 +30,7 @@ public class CSVtoGlyphSet {
 
 	public static GlyphSet autoLoad(File source, double glyphSize, GlyphSet glyphs) {
 		try {
-			CSVReader r = new CSVReader(source, 0);
+			DelimitedReader r = new DelimitedReader(source, 0, DelimitedReader.CSV);
 			String[] line = r.next();
 			int skip;
 			boolean flipY=true;
@@ -82,7 +82,7 @@ public class CSVtoGlyphSet {
 			T defaultValue, Converter<T> converter,
 			boolean nullIsValue) {
 		
-		CSVReader loader = new CSVReader(file, 0);
+		DelimitedReader loader = new DelimitedReader(file, 0, DelimitedReader.CSV);
 		String[] header = loader.next();
 		int rows = Integer.parseInt(header[1]);
 		int cols = Integer.parseInt(header[2]);
@@ -107,7 +107,7 @@ public class CSVtoGlyphSet {
 
 
 	public static GlyphSet load(final GlyphSet glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
-		CSVReader loader = new CSVReader(file, skip);
+		DelimitedReader loader = new DelimitedReader(file, skip, DelimitedReader.CSV);
 		final int yflip = flipy?-1:1;
 		int count =0;
 

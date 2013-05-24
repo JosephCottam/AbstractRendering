@@ -1,6 +1,10 @@
 package ar;
 
-/**Combine two aggregate sets into a third composite aggregate.
+/**Combine two aggregate values into a third composite aggregate.
+ * 
+ * This class is the inner function for combining two aggregate sets together.
+ * (Combining aggregate sets where LEFT,RIGHT and OUT are all the same is implemented
+ * in {@link ar.util.Util} "reduceAggregates".)
  * 
  * @author jcottam
  *
@@ -13,7 +17,7 @@ public interface AggregateReducer<LEFT,RIGHT,OUT> {
 	/**Combine two aggregate values.
 	 * This is a combination point-wise of the aggregate values, not of the aggregate sets.
 	 * 
-	 * (NOTE: If you come up with a useful case for combining aggregate sets, please let me know.)
+	 * (NOTE: If you come up with a useful case for combining aggregate sets instead of just aggregate values, please let me know.)
 	 * 
 	 * @param left Left-hand aggregate value
 	 * @param right Right-hand aggregate value

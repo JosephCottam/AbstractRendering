@@ -5,17 +5,22 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.GlyphSet.Glyph;
 
+/**Collection of various utilities that don't have other homes.**/
 public final class Util {
+	/**Color representing clear (fully transparent).**/
 	public static final Color CLEAR = new Color(0,0,0,0);
 
 	private Util() {}
 
+	/**Create an RGB buffered image of the given size, filled with the requested color.**/
 	public static BufferedImage initImage(int width, int height, Color background) {
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = i.getGraphics();
@@ -25,12 +30,14 @@ public final class Util {
 		return i;
 	}
 
+	/**Create an indentation string of x*2 spaces.**/
 	public static String indent(int x) {
 		char[] chars = new char[x*2];
 		Arrays.fill(chars,' ');
 		return new String(chars);
 	}
 
+	/**What bounding box closely contains all of the glyphs in the passed collection.**/
 	public static Rectangle2D bounds(Iterable<Glyph> glyphs) {
 		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
 		for (Glyph g: glyphs) {
@@ -40,7 +47,9 @@ public final class Util {
 		return bounds;
 	}
 
-	public static Rectangle2D fullBounds(Rectangle2D... rs) {
+	
+	/**What bounding box closely contains all of the glyphs passed.**/
+	public static Rectangle2D bounds(Rectangle2D... rs) {
 		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
 		for (Rectangle2D r: rs) {
 			if (r != null) {add(bounds, r);}
@@ -70,6 +79,15 @@ public final class Util {
 		}
 	}
 
+	
+	/**Linear interpolation between two colors.
+	 * 
+	 * @param low Color to associate with the min value
+	 * @param high Color to associate with the max value
+	 * @param min Smallest value that will be passed
+	 * @param max Largest value that will be passed
+	 * @param v Current value 
+	 * **/
 	public static Color interpolate(Color low, Color high, double min, double max, double v) {
 		if (v>max) {v=max;}
 		if (v<min) {v=min;}
@@ -141,23 +159,36 @@ public final class Util {
 		public String toString() {return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);}
 	}
 
-	@SuppressWarnings("unchecked")
+	/**Combine two aggregate sets according to the passed reducer.
+	 * 
+	 * The resulting aggregate set will have a realized subset region sufficient to
+	 * cover the realized sbuset region of both source aggregate sets (regardless of 
+	 * the values found in those sources).  If one of the two aggregate sets provided
+	 * is already of sufficient size, it will be used as both a source and a target.
+	 * 
+	 * 
+	 * @param left Aggregate set to use for left-hand arguments
+	 * @param right Aggregate set to use for right-hand arguments
+	 * @param red Reduction operation
+	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
+	 */
 	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
 
-		Aggregates<T> [] sources;
+		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
 		Aggregates<T> target;
 		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
 		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
 		Rectangle bounds = rb.union(lb);
 
 		if (lb.contains(bounds)) {
-			sources = new Aggregates[]{right};
+			sources.add(right);
 			target = left;
 		} else if (rb.contains(bounds)) {
-			sources = new Aggregates[]{left};
+			sources.add(left);
 			target = right;
 		} else {
-			sources = new Aggregates[]{left, right};
+			sources.add(right);
+			sources.add(left);
 			target = new Aggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, left.defaultValue());
 		}
 

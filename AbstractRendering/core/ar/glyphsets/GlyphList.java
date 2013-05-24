@@ -6,6 +6,17 @@ import java.util.*;
 import ar.GlyphSet;
 import ar.util.Util;
 
+/**Explicit geometry, sequentially arranged glyphset.
+ *   
+ * The dynamic quad tree is functionally equivalent to this class 
+ * but has a larger memory footprint.  If fully-realized geometry is desired
+ * this class can accomodate larger data.  However, efficient rendering
+ * requires using the glyph-parallel renderer instead of the pixel-parallel renderer.
+ * 
+ * 
+ * @author jcottam
+ *
+ */
 public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
 	List<Glyph> glyphs = new ArrayList<Glyph>();
 	Rectangle2D bounds;

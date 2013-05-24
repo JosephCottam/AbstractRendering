@@ -5,12 +5,32 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.io.*;
 
+import static ar.glyphsets.MemMapList.TYPE;
+
+/**Utility for encoding delimited files into a binary format that
+ * can be read by the included mem-mapped list.  
+ * 
+ * To properly encode values, a field-type descriptor must be supplied.
+ * This is a string where each character indicates the type of the associated
+ * field in the source file.  The valid characters are :
+ *   s -- Short (two bytes)
+ *   i -- Int (four bytes)
+ *   l -- Long (eight bytes)
+ *   f -- Float (four bytes)
+ *   d -- Double (eight bytes)
+ *   c -- Char (two bytes)
+ * Additionally 'x' can be used to indicate that a source-file field should not
+ * be included in the output file.
+ * 
+ * The files that result from this encoder carry a header that describes
+ * the fields of the file.  The header is an integer that indicates how many
+ * fields the entries have followed by one character (two bytes) for each 
+ * entry type.  The entry type characters match those passed to the encoder 
+ * (except that 'x' is not valid in the header).
+ * 
+ * @author jcottam
+ */
 public class MemMapEncoder {
-	public static final int INT_BYTES = 4;
-	public static final int DOUBLE_BYTES = 8;
-	public static final int LONG_BYTES = 8;
-	public static final int SHORT_BYTES = 2;
-	public static final int CHAR_BYTES = 2;
 	
 	
 
@@ -41,31 +61,32 @@ public class MemMapEncoder {
 		return rslt;
 	}
 
-	private static byte[] intBytes(int i ){return ByteBuffer.allocate(INT_BYTES).putInt(i).array();}
-	private static byte[] doubleBytes(double d) {return ByteBuffer.allocate(DOUBLE_BYTES).putDouble(d).array();}
-	private static byte[] longBytes(long l) {return ByteBuffer.allocate(LONG_BYTES).putLong(l).array();}
-	private static byte[] shortBytes(short s) {return ByteBuffer.allocate(SHORT_BYTES).putShort(s).array();}
-	private static byte[] charBytes(char c) {return ByteBuffer.allocate(CHAR_BYTES).putChar(c).array();}
+	private static byte[] shortBytes(short s) {return ByteBuffer.allocate(TYPE.SHORT.bytes).putShort(s).array();}
+	private static byte[] intBytes(int i ){return ByteBuffer.allocate(TYPE.INT.bytes).putInt(i).array();}
+	private static byte[] longBytes(long l) {return ByteBuffer.allocate(TYPE.LONG.bytes).putLong(l).array();}
+	private static byte[] floatBytes(float d) {return ByteBuffer.allocate(TYPE.FLOAT.bytes).putFloat(d).array();}
+	private static byte[] doubleBytes(double d) {return ByteBuffer.allocate(TYPE.DOUBLE.bytes).putDouble(d).array();}
+	private static byte[] charBytes(char c) {return ByteBuffer.allocate(TYPE.CHAR.bytes).putChar(c).array();}
 	private static byte[] charBytes(char... cs) {
 		byte[][] parts = new byte[cs.length][];
 		for (int i=0; i<cs.length; i++) {parts[i] = charBytes(cs[i]);}
 		
-		byte[] full = new byte[parts.length*CHAR_BYTES];
+		byte[] full = new byte[parts.length*TYPE.CHAR.bytes];
 		for (int i=0; i<parts.length; i++) {
-			System.arraycopy(parts[i], 0, full, i*CHAR_BYTES, CHAR_BYTES);
+			System.arraycopy(parts[i], 0, full, i*TYPE.CHAR.bytes, TYPE.CHAR.bytes);
 		}
 		return full;
 	}
 
 
-	/**Get a byte array of a single data value
-	 * **/
+	/**Get a byte array of a single data value**/
 	private static byte[] asBinary(String value, char type) {
 		switch (type) {
-		case 'i' : return intBytes(Integer.parseInt(value));
-		case 'd' : return doubleBytes(Double.parseDouble(value));
-		case 'l' : return longBytes(Long.parseLong(value));
 		case 's' : return shortBytes(Short.parseShort(value));
+		case 'i' : return intBytes(Integer.parseInt(value));
+		case 'l' : return longBytes(Long.parseLong(value));
+		case 'f' : return floatBytes(Float.parseFloat(value));
+		case 'd' : return doubleBytes(Double.parseDouble(value));
 		case 'c' : return charBytes(value.charAt(0));
 		default: throw new IllegalArgumentException("Unknown type: " + type);
 		}			
@@ -73,7 +94,7 @@ public class MemMapEncoder {
 
 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
-		CSVReader source = new CSVReader(sourceFile, skip); 
+		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
 		FileOutputStream file = new FileOutputStream(target);
 		
 		try {
@@ -124,9 +145,10 @@ public class MemMapEncoder {
 		if (i<args.length && i>=0 && args[i].toUpperCase().equals(key)) {return args[i+1];}
 		return defVal;
 	}
+	
 	public static void main(String[] args) throws Exception {
 		System.out.println("Usage: MemMapEncoder -in <file> -out <file> -skip <int> -types <string>");
-		System.out.println("Type string is a string made up of s/i/l/d/f/c for short/int/long/double/float/char.");
+		System.out.println("Type string is a string made up of s/i/l/f/d/c for short/int/long/float/double/char.");
 		
 		File temp;
 		File in = new File(entry(args, "-in", null));

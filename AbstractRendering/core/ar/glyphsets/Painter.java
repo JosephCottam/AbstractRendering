@@ -11,7 +11,7 @@ import java.util.Map;
 public  interface Painter<T> {
 	public java.awt.Color from(T item);
 		
-	
+	/**Paint everything the same color (red, if no color is specified at construction).*/
 	public static final class Constant<T> implements Painter<T> {
 		private final Color c;
 		public Constant() {this.c = Color.red;}

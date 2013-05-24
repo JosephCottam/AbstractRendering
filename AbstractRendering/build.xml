@@ -30,6 +30,10 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value=""/>
     </antcall>
+    <antcall target="docs" />
+  </target>
+
+  <target name="docs">
     <javadoc sourcepath="${coreSrc}" destdir="doc"/>
   </target>
 

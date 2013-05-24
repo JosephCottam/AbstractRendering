@@ -10,9 +10,15 @@ import ar.GlyphSet;
 import ar.util.Util;
 
 
-/**Quad tree where items appear in each node that they touch (e.g., multi-homed).
- * Can split an existing node into sub-nodes or move "up" and make the root a sub-node with new sibblings/parent.
- * No items are held in intermediate nodes
+/**Explicit geometry, spatially arranged glyphset with dynamically growing extent.
+ * 
+ * In this quad tree, items appear in each node that they touch (e.g., multi-homed).
+ * Can split an existing node into sub-nodes or move "up" and make the root a sub-node with new siblings/parent.
+ * No items are held in intermediate nodes.
+ * 
+ * This class can be used efficiently with the pixel serial or pixel parallel renderer.
+ * TODO: Extend with RandomAccess to support glyph-parallel rendering (use the quad-tree structure to do numbering so aggregate sub-sets are compact) 
+ * 
  * 
  * There are four types of nodes:
  *   ** RootHolder is a proxy for a root node, 
@@ -148,7 +154,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 					//If the root is a leaf, then the tree has no depth, so we feel free to expand the root 
 					//to fit the data until the loading limit has been reached
 
-					Rectangle2D newBounds = Util.fullBounds(b, child.bounds());
+					Rectangle2D newBounds = Util.bounds(b, child.bounds());
 					DynamicQuadTree newChild = new LeafNode(newBounds, (LeafNode) child);
 					this.child = newChild;
 				} else {
@@ -319,7 +325,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 			for (int i=0; i<bounds.length; i++) {
 				bounds[i] = quads[i].bounds();
 			}
-			return Util.fullBounds(bounds);
+			return Util.bounds(bounds);
 		}
 		
 		public String toString(int indent) {
@@ -409,7 +415,7 @@ public abstract class DynamicQuadTree implements GlyphSet {
 				bounds[i] = quads[i].bounds();
 			}
 			bounds[quads.length] = Util.bounds(spanningItems);
-			return Util.fullBounds(bounds);
+			return Util.bounds(bounds);
 		}
 
 		//Copy

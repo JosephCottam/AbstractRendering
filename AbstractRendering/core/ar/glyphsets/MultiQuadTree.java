@@ -9,8 +9,19 @@ import java.util.List;
 import ar.GlyphSet;
 import ar.util.Util;
 
-/**Quad tree where items appear in each node that they touch.  
- * No items are held in intermediate nodes**/
+/**Explicit geometry, spatially arranged glyphset with pre-defined extent.
+ * 
+ * Quad tree where items appear in each node that they touch.  
+ * No items are held in intermediate nodes.
+ * 
+ * The overall region of concern for this quad tree must be defined
+ * when it is constructed.  This can results in a slightly better 
+ * spatial decomposition than the dynamic quad tree, but requires
+ * the bounds of the data to be known in advance. (Best results
+ * have been observed when the quad-tree's concern bounds are set with 
+ * a small buffer on all sides of the actual data boundary).
+ * 
+ * **/
 public abstract class MultiQuadTree implements GlyphSet {
 	private static final double MIN_DIM = .0001d;
 	
@@ -197,7 +208,7 @@ public abstract class MultiQuadTree implements GlyphSet {
 			SE.items(collector);
 		}
 
-		public Rectangle2D bounds() {return Util.fullBounds(NW.bounds(), NE.bounds(), SW.bounds(), SE.bounds());}
+		public Rectangle2D bounds() {return Util.bounds(NW.bounds(), NE.bounds(), SW.bounds(), SE.bounds());}
 
 		public String toString() {return toString(0);}
 		public String toString(int indent) {

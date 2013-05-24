@@ -6,19 +6,51 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.ForkJoinPool;
 
 import ar.GlyphSet;
-import ar.GlyphSet.Glyph;
 import ar.util.BigFileByteBuffer;
 
 
-public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Glyph> {
-	private static final ForkJoinPool pool = new ForkJoinPool();
-	
+/**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
+ * 
+ * <p>
+ * This glyphset uses 'implicit geometry' in that the geometry is produced just-in-time and
+ * discarded immediately.  Implicit geometry significantly reduces the required memory at the
+ * cost of speed.  When using implicit geometry, the display window size is the principal 
+ * memory consumer (because it determines both the image size and the aggregates set size). 
+ * 
+ * <p>
+ * The memory mapped file must be encoded as fixed-width records for this class.
+ * The files may include a header to self-describe or the header information may be supplied.
+ * 
+ * <p>
+ *  The header, when provided, is an integer indicating how many fields are in each record,
+ *  followed by a set of characters (one for each field).  
+ *  
+ *  <p>
+ *  The characters that describe field types are:
+ *  <ul>
+ *   <li>s -- Short (two bytes)</li>
+ *   <li>i -- Int (four bytes)</li>
+ *   <li>l -- Long (eight bytes)</li>
+ *   <li>f -- Float (four bytes)</li>
+ *   <li>d -- Double (eight bytes)</li>
+ *   <li>c -- Char (two bytes)</li>
+ *   <li>b -- Byte (one byte)</li>
+ * </ul>
+ * 
+ * <p>
+ * TODO: Add skip parameter to skip a certain number of bytes at the start of the file
+ * <p>
+ * TODO: Add support for fixed-length strings (type 'S' with additional header ints for each 'S' that appears)
+ * 
+ * @author jcottam
+ *
+ */
+public class MemMapList implements GlyphSet.RandomAccess {
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
-		final int bytes;
+		public final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
 	};
 	
@@ -128,7 +160,7 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 	public Painter<Double> painter() {return painter;}
 	public TYPE[] types() {return types;}
 
-	public boolean isEmpty() {return buffer.get() == null || buffer.get().limit() <= 0;}
+	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
 	public void add(Glyph g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph> iterator() {return new It(this);}

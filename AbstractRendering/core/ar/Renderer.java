@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
  * @author jcottam
  */
 public interface Renderer {
+	
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
 	 * This method uses an inverse view transform because iteration is usually driven from the
