@@ -163,11 +163,11 @@ public class ARApp implements PanelHolder {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if (args.length >0 && args[0].toUpperCase().equals("-DEMO")) {
-			new ARDemoApp();
-		} else {
-			System.out.println("Execute with -demo for simplified inteface.");
+		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {
 			new ARApp();
+		} else {
+			System.out.println("Execute with -ext for extended inteface.");
+			new ARDemoApp();
 		}
 	}
 

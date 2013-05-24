@@ -143,6 +143,8 @@ public class MemMapList implements GlyphSet, GlyphSet.RandomAccess, Iterable<Gly
 				buffer.position(recordOffset);
 				double x = value(buffer, 0);
 				double y = value(buffer, 1);
+				y = flipY ? -y :y;
+
 				minX = Math.min(x, minX);
 				minY = Math.min(y, minY);
 				maxX = Math.max(x, maxX);

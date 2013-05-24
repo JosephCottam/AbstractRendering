@@ -1,15 +1,32 @@
-To build: ant jar
-To build documentation: ant doc  
-To execute demo application: java -jar AR.jar
+To build: ant build
+To build just core: ant core 
 
-To Use:
-Select a reduction function from the top-left drop-down.
-Select a transfer function from the top-right drop-down.
-The transfer and reduction must have the same value in parenthesis 
-  (this indicates the type of the aggregates produced).
-Datasets can be selected from the bottom-left drop-down.
+
+Simple demo application: 
+java -jar ARDemo.jar
+
+Select a preset data configuration.
+Shifting between treatments, notice the difference in render time 
+  when shifting datasets (thus incurring aggregates creation)
+  and when changing transfer functions (reusing the aggregates).
+
+
+Triple-click on the main plot area to zoom-extents.
 
 A JSON encoding of int-aggregates can be saved with the 
-bottom-right button. If saved as "aggregates.json" in 
+"Export Aggregates" button. If saved as "aggregates.json" in 
 the TransferJS directory, this file will be used as the 
 dataset for the pixel-shader implementation.
+
+
+
+For a more full-featured application:
+java -jar ARdemo.jar -ext
+
+This application allows exploration of your own data and various treatments.
+However, there are combinations that will not work (for example, glyph-parallel 
+rendering requires a list-based glyph container type).  No effort is made to 
+guide the selection of appropriate values in the more complex application.
+Plot area navigation and aggregate exports work as in the simpler demo application.
+
+
