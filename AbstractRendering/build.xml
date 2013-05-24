@@ -1,34 +1,72 @@
-<project name="AbstractRendering" default="jar" basedir=".">
+<project name="AbstractRendering" default="build" basedir=".">
 
-  <target name="jar" depends="clean,compile,package" />
+  <property name="appSrc" value="app"/>
+  <property name="appBin" value="bin/appBin" />
+  <property name="appJar" value="ARApp.jar" />
+  <property name="coreSrc" value="core"/>
+  <property name="coreBin" value="bin/coreBin" />
+  <property name="coreJar" value="AR.jar" />
+  <property name="docs" value="${docs}" />
+
+  <target name="build" depends="clean,core,app" />
 
   <target name="clean">
-    <delete dir="bin"/>
+    <delete dir="${coreBin}"/>
+    <delete dir="${appBin}"/>
+    <delete dir="${docs}"/>
     <delete file="AR.jar"/>
+    <delete file="ARApp.jar"/>
   </target>
 
+
+  <target name="core">
+    <antcall target="compile">
+      <param name="src" value="${coreSrc}"/>
+      <param name="target" value="${coreBin}"/>
+      <param name="jars" value=""/>
+    </antcall>
+    <antcall target="package">
+      <param name="file" value="${coreJar}"/>
+      <param name="bin" value="${coreBin}"/>
+      <param name="main" value=""/>
+    </antcall>
+    <javadoc sourcepath="${coreSrc}" destdir="doc"/>
+  </target>
+
+  <target name="app" depends="core">
+    <antcall target="compile">
+      <param name="src" value="${appSrc}"/>
+      <param name="target" value="${appBin}"/>
+      <param name="jars" value="${coreJar}"/>
+    </antcall>
+    <antcall target="package">
+      <param name="file" value="${appJar}"/>
+      <param name="bin" value="${appBin}"/>
+      <param name="main" value="ar.app.ARApp"/>
+      <param name="classpath" value="${coreJar}"/>
+    </antcall>
+  </target>
+  
+
   <target name="compile">
-    <mkdir dir="bin"/>
-    <javac destdir="bin" includeantruntime="false" source="1.7">
-      <src>
-        <pathelement path="src"/>
-      </src>
+    <mkdir dir="${target}"/>
+    <javac destdir="${target}"  source="1.7" 
+           includeantruntime="false" classpath="${jars}">
+           <src> 
+             <pathelement path="${src}"/> 
+           </src>
     </javac>
   </target>
 
+
   <target name="package">
-    <jar jarfile="AR.jar" includes="*.class" basedir=".">
-      <fileset dir="bin"/>
+    <jar jarfile="${file}" includes="*.class" basedir=".">
+      <fileset dir="${bin}"/>
       <manifest>
         <attribute name="Created-By" value=""/>
-        <attribute name="Main-Class" value="ar.app.ARApp"/>
+        <attribute name="Main-Class" value="${main}"/>
+        <attribute name="Class-Path" value="${classpath}"/>
       </manifest>
     </jar>
   </target>
-	
-  <target name="doc">
-     <javadoc sourcepath="src" destdir="doc"/>
-  </target>
-	
-
 </project>
