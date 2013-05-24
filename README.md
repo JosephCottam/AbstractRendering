@@ -89,8 +89,8 @@ leads to many efficient (and some inefficient) ways of realizing the
 system described above.
 
 
-Organizational Note
----------
+#### Organizational Note
+----------
 
 This repository is divided into two main sections.  The "AbstractRendering" directory
 contains a java implementation of the described system.  A readme in that directory
