@@ -1,21 +1,21 @@
 Abstract Rendering
 ======
 
-Information visualization rests on the idea that a meaningful realtionship
+Information visualization rests on the idea that a meaningful relationship
 can be drawn between pixels and data.  This is most often mediated by
 geometric entities (such as circles, squares and text) but always involves
 pixels eventually to display.  In most systems, the pixels are tucked away
 under levels of abstraction in the rendering system.  Abstract Rendering
 takes the opposite approach: expose the pixels and gain powerful pixel-level
 control.  This pixel-level power is a complement many existing visualization
-techniques.  It is an elaboration on rendering, not an anlytic or projection step,
+techniques.  It is an elaboration on rendering, not an analytic or projection step,
 so it can be used as epilog to many existing techniques.
 
 
 In standard rendering, geometric objects are projected to an image and 
 represented on that image's discrete pixels.  The source space is an
 abstract canvas that contains logically continuous geometric primitives 
-and the target space is an image that containse discrte colors.
+and the target space is an image that contains discrete colors.
 Abstract Rendering fits between these two states.  It introduces
 a discretization of the data at the pixel-level, but not necessarily all
 the way to colors.  This enables many pixel-level concerns to be efficiently 
@@ -25,7 +25,7 @@ Pixel-Level Effects (an example)
 -----------
 
 Consider a scatterplot with many overlapping items.
-The classic techinque is to use alpha composition to ensure that some
+The classic technique is to use alpha composition to ensure that some
 of the density information is conveyed in the overplot regions.
 However, alpha composition (as it typically implemented) can silently saturate,
 then further overplotting is lost.  (Most systems saturate their alpha channels
@@ -35,13 +35,13 @@ for more common alpha levels).
 Taking a step back, the alpha composition is essentially trying to communicate
 how many items touch each pixel.  Instead of directly converting to colors
 (and composing them), why not count the items that touch each pixel and then transform those counts into
-colors directly.  Oversaturation can be completely avoided because the whole
+colors directly.  Over-saturation can be completely avoided because the whole
 data range can be known and interpolated over.  Additionally, the minimum
 value can also be set to ensure visibility of even a single element.
 
 Abstract rendering provides the tools to define the intermediate stage
 of "counting the items that touch each pixel" and for "transforming those counts into colors."
-These two statges are encapuslated as "aggregation" and "transfer" respectively.
+These two stages are encapsulated as "aggregation" and "transfer" respectively.
 
 
 The Framework
@@ -49,7 +49,7 @@ The Framework
 
 An abstract rendering program looks like a collection of four functions combined into two equations.
 These equations operate on 'glyphs.'
-Glyhps are gemetric descriptions with accpanying non-spatial data.  
+Glyphs are geometric descriptions with accompanying non-spatial data.  
 That non-spatial data may be a color or it maybe a category or a source-data value.  
 In many ways, the framework creates a bin for each pixel, aggregates the values from a
  glyph-set into that bin and then transforms the bin values into pixels.
