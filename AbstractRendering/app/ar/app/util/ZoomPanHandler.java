@@ -45,7 +45,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
     @Override
 	public void mouseDragged(MouseEvent e) {
         if (buttonEquals(e, ZOOM_BUTTON) ) {
-        	ARPanel<?,?> canvas = (ARPanel<?,?>)e.getComponent();
+        	ARPanel canvas = (ARPanel)e.getComponent();
             
             int y = e.getY();
             int dy = y-yLast;
@@ -58,7 +58,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
             
             yLast = y;
         } else if (buttonEquals(e, PAN_BUTTON)) {
-        	ARPanel<?,?> canvas = (ARPanel<?,?>)e.getComponent();
+        	ARPanel canvas = (ARPanel)e.getComponent();
             double x = e.getX(),   y = e.getY();
             double dx = x-down.getX(), dy = y-down.getY();
 
@@ -76,7 +76,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      * @param abs if true, the point p should be assumed to be in absolute
      * coordinates, otherwise it will be treated as screen (pixel) coordinates
      */
-    protected void zoom(ARPanel<?,?> canvas, Point2D p, double zoom, boolean abs) {
+    protected void zoom(ARPanel canvas, Point2D p, double zoom, boolean abs) {
         double scale = canvas.getScale();
         double result = scale * zoom;
 
@@ -107,7 +107,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 	@Override
 	public void mouseClicked(MouseEvent e) { 
 		if (e.getClickCount() == 2) {
-			ARPanel<?,?> canvas = (ARPanel<?,?>) e.getComponent();
+			ARPanel canvas = (ARPanel) e.getComponent();
 			Rectangle2D content = canvas.dataset().bounds();
 			Rectangle2D space = canvas.getBounds();
 

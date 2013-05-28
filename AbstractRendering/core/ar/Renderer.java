@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage;
  *   
  * @author jcottam
  */
-public interface Renderer {
+public interface Renderer<G,A> {
 	
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
@@ -25,7 +25,7 @@ public interface Renderer {
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
 	 */
-	public <A> Aggregates<A> reduce(final GlyphSet glyphs, final Aggregator<A> op, 
+	public Aggregates<A> reduce(final GlyphSet<G> glyphs, final Aggregator<G,A> op, 
 			final AffineTransform inverseView, final int width, final int height);
 	
 	
@@ -41,7 +41,7 @@ public interface Renderer {
 	 * @param background
 	 * @return The resulting image 
 	 */
-	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background);
+	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.

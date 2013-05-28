@@ -9,6 +9,7 @@ import java.util.Iterator;
 
 import ar.GlyphSet;
 import ar.util.BigFileByteBuffer;
+import ar.util.SimpleGlyph;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
@@ -42,12 +43,14 @@ import ar.util.BigFileByteBuffer;
  * <p>
  * TODO: Add skip parameter to skip a certain number of bytes at the start of the file
  * <p>
- * TODO: Add support for fixed-length strings (type 'S' with additional header ints for each 'S' that appears)
+ * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
+ * <p>
+ * TODO: Add support for non-color glyphs (generalize Painter...)
  * 
  * @author jcottam
  *
  */
-public class MemMapList implements GlyphSet.RandomAccess {
+public class MemMapList implements GlyphSet.RandomAccess<Color> {
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		public final int bytes;
@@ -119,14 +122,14 @@ public class MemMapList implements GlyphSet.RandomAccess {
 	}
 		
 	@Override
-	public Collection<Glyph> intersects(Rectangle2D r) {
-		ArrayList<Glyph> contained = new ArrayList<Glyph>();
-		for (Glyph g: this) {if (g.shape.intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<Color>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<Color>> contained = new ArrayList<Glyph<Color>>();
+		for (Glyph<Color> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 	
 	@Override
-	public Glyph get(long i) {
+	public Glyph<Color> get(long i) {
 		long recordOffset = (i*recordSize)+headerOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
 		
@@ -138,7 +141,7 @@ public class MemMapList implements GlyphSet.RandomAccess {
 		y = flipY ? -y :y;
 		
 		Color c = painter.from(v);
-		Glyph g = new Glyph(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c, v);
+		Glyph<Color> g = new SimpleGlyph<Color>(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c);
 		return g;
 	}
 	
@@ -162,8 +165,8 @@ public class MemMapList implements GlyphSet.RandomAccess {
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public void add(Glyph g) {throw new UnsupportedOperationException();}
-	public Iterator<Glyph> iterator() {return new It(this);}
+	public void add(Glyph<Color> g) {throw new UnsupportedOperationException();}
+	public Iterator<Glyph<Color>> iterator() {return new It(this);}
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
@@ -187,13 +190,13 @@ public class MemMapList implements GlyphSet.RandomAccess {
 		return bounds;
 	}
 	
-	private static final class It implements Iterator<Glyph> {
-		private final GlyphSet.RandomAccess glyphs;
+	private static final class It implements Iterator<Glyph<Color>> {
+		private final GlyphSet.RandomAccess<Color> glyphs;
 		private int at = 0;
-		public It(GlyphSet.RandomAccess glyphs) {this.glyphs = glyphs;}
+		public It(GlyphSet.RandomAccess<Color> glyphs) {this.glyphs = glyphs;}
 
 		public boolean hasNext() {return at < glyphs.size();}
-		public Glyph next() {return glyphs.get(at++);}
+		public Glyph<Color> next() {return glyphs.get(at++);}
 		public void remove() {throw new UnsupportedOperationException();}		
 	}	
 }

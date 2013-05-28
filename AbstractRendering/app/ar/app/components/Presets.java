@@ -32,7 +32,7 @@ public class Presets extends CompoundPanel {
 		ARApp.loadInstances(presets, Presets.class, "");
 	}
 	
-	public boolean doZoomWith(ARPanel<?,?> oldPanel) {
+	public boolean doZoomWith(ARPanel oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
 
 		return oldPanel == null
@@ -40,9 +40,9 @@ public class Presets extends CompoundPanel {
 				|| !oldPanel.reduction().equals(p.reduction());
 	}
 	
-	public ARPanel<?,?> update(ARPanel<?,?> oldPanel) {
+	public ARPanel update(ARPanel oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		ARPanel<?,?> newPanel = new ARPanel(p.reduction(), p.transfer(), p.glyphset(), p.renderer());
+		ARPanel newPanel = new ARPanel(p.reduction(), p.transfer(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.reduction().equals(oldPanel.reduction())) {
@@ -57,14 +57,14 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static interface Preset {
-		public WrappedReduction<?> reduction();
+		public WrappedReduction<?,?> reduction();
 		public Renderer renderer();
 		public GlyphSet glyphset();
 		public WrappedTransfer<?> transfer();
 	}
 	
 	public static class ScatterplotAlpha implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public GlyphSet glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.FixedAlpha();}
@@ -72,7 +72,7 @@ public class Presets extends CompoundPanel {
 	}
 
 	public static class ScatterplotHDALpha implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public GlyphSet glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
@@ -80,7 +80,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class BoostAlpha25 implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.RLEColors();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public GlyphSet glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent25();}
@@ -88,7 +88,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class BoostAlpha95 implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.RLEColors();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public GlyphSet glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent95();}
@@ -96,7 +96,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class BoostAlphaHDAlpha implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.RLEColors();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public GlyphSet glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
@@ -104,7 +104,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.RLEColors();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.RLEColors();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public GlyphSet glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
@@ -112,7 +112,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public GlyphSet glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
@@ -120,7 +120,7 @@ public class Presets extends CompoundPanel {
 	}
 	
 	public static class CharityNet implements Preset {
-		public WrappedReduction<?> reduction() {return new WrappedReduction.Count();}
+		public WrappedReduction<?,?> reduction() {return new WrappedReduction.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public GlyphSet glyphset() {return CHARITY_NET_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}

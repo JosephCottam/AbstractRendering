@@ -7,6 +7,7 @@ import java.io.File;
 import ar.GlyphSet;
 import ar.glyphsets.*;
 import ar.util.DelimitedReader;
+import ar.util.SimpleGlyph;
 
 import static ar.GlyphSet.Glyph;
 
@@ -126,7 +127,7 @@ public class CSVtoGlyphSet {
 				} catch (Exception e) {throw new RuntimeException("Error loading color: " + parts[colorField]);}
 			} else {color = Color.RED;}
 
-			Glyph g = new ar.GlyphSet.Glyph(rect, color);
+			Glyph<Color> g = new SimpleGlyph(rect, color);
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;

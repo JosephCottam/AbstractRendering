@@ -23,10 +23,10 @@ public class Aggregators {
 	/**Compute a gradient across the 2D space.  
 	 * This class was used largely for debugging; it ignores its inputs. 
 	 */
-	public static final class Gradient implements Aggregator<Color> {
+	public static final class Gradient implements Aggregator<Object, Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
-		public Color at(Rectangle r, GlyphSet glyphs, AffineTransform inverseView) {
+		public Color at(Rectangle r, GlyphSet<Object> glyphs, AffineTransform inverseView) {
 			return new Color(r.x/width, r.y/height,.5f ,1.0f);
 		}
 		public Color identity() {return Util.CLEAR;}	
@@ -35,42 +35,42 @@ public class Aggregators {
 	/**Create a solid fill.  
 	 * This class was used largely for debugging; it ignores its inputs. 
 	 */
-	public static final class IDColor implements Aggregator<Color> {
+	public static final class IDColor implements Aggregator<Object, Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
-		public Color at(Rectangle r, GlyphSet glyphs, AffineTransform inverseView) {return c;}
+		public Color at(Rectangle r, GlyphSet<Object> glyphs, AffineTransform inverseView) {return c;}
 		public Color identity() {return Util.CLEAR;}
 	}
 
 	
 	/**How many items are in the given pixel**/
-	public static final class Count implements Aggregator<Integer> {
-		public Integer at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+	public static final class Count implements Aggregator<Object, Integer> {
+		public Integer at(Rectangle pixel, GlyphSet<Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<Glyph> items = glyphs.intersects(b);
+			Collection<? extends Glyph<Object>> items = glyphs.intersects(b);
 			return items.size();
 		}
 		public Integer identity() {return 0;}
 	}
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
-	public static final class First implements Aggregator<Color> {
-		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+	public static final class First implements Aggregator<Color, Color> {
+		public Color at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<Glyph> hits = glyphs.intersects(b);
-			if (hits.size()>0) {return hits.iterator().next().color;}
+			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
+			if (hits.size()>0) {return hits.iterator().next().value();}
 			else {return Util.CLEAR;}
 		}
 		public Color identity() {return Util.CLEAR;}
 	}
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
-	public static final class Last implements Aggregator<Color> {
-		public Color at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+	public static final class Last implements Aggregator<Color, Color> {
+		public Color at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<Glyph> hits = glyphs.intersects(b);
+			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 			Color color = Util.CLEAR;
-			for (Glyph g:hits) {color = g.color;}
+			for (Glyph<Color> g:hits) {color = g.value();}
 			return color;
 		}
 		public Color identity() {return Util.CLEAR;}
@@ -107,10 +107,10 @@ public class Aggregators {
 
 
 	/**Run-length encode based on colors.  Optionally sort the items by color before encoding.**/ 
-	public static final class RLEColor implements Aggregator<RLE> {
-		private static final Comparator<Glyph> glyphColorSorter  = new Comparator<Glyph>() {
-			public int compare(Glyph o1, Glyph o2) {
-				return Integer.compare(o1.color.getRGB(), o2.color.getRGB());
+	public static final class RLEColor implements Aggregator<Color, RLE> {
+		private static final Comparator<Glyph<Color>> glyphColorSorter  = new Comparator<Glyph<Color>>() {
+			public int compare(Glyph<Color> o1, Glyph<Color> o2) {
+				return Integer.compare(o1.value().getRGB(), o2.value().getRGB());
 			}
 		};
 
@@ -122,20 +122,20 @@ public class Aggregators {
 			this.topLeft = topLeft;
 		}
 
-		private List<Glyph> sortColors(Collection<Glyph> glyphs) {
-			ArrayList<Glyph> l = new ArrayList<Glyph>(glyphs);
+		private List<? extends Glyph<Color>> sortColors(Collection<? extends Glyph<Color>> glyphs) {
+			ArrayList<Glyph<Color>> l = new ArrayList<Glyph<Color>>(glyphs);
 			Collections.sort(l, glyphColorSorter);
 			return l;
 		}
 
-		private RLE encode(List<Glyph> glyphs) {
+		private RLE encode(List<? extends Glyph<Color>> glyphs) {
 			RLE rle = new RLE();
 			Color key = null;
 			int count=0;
 
 			if (glyphs.size() ==0) {return rle;}
-			for (Glyph g: glyphs) {
-				Color val = g.color;
+			for (Glyph<Color> g: glyphs) {
+				Color val = g.value();
 				if ((key == null && val == null) || (key != null && key.equals(val))) {count++;}
 				else if (count == 0) {
 					key = val;
@@ -150,14 +150,15 @@ public class Aggregators {
 			return rle;
 		}
 
-		public RLE at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+		public RLE at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<Glyph> hits = glyphs.intersects(b);
+			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 
 			if (topLeft) {
-				Collection<Glyph> superHits = new ArrayList<Glyph>(hits.size());
-				for (Glyph g: hits) {
-					Rectangle2D bounds = g.shape.getBounds2D();
+				//FIXME: This top-left business is not working...FIX IT!
+				Collection<Glyph<Color>> superHits = new ArrayList<Glyph<Color>>(hits.size());
+				for (Glyph<Color> g: hits) {
+					Rectangle2D bounds = g.shape().getBounds2D();
 					Rectangle2D r = new Rectangle2D.Double(pixel.x,pixel.y,1,1);
 					r = v.createTransformedShape(r).getBounds2D();
 
@@ -170,9 +171,9 @@ public class Aggregators {
 			}
 
 
-			List<Glyph> ordered;
+			List<? extends Glyph<Color>> ordered;
 			if (sort) {ordered = sortColors(hits);}
-			else {ordered = new ArrayList<Glyph>(hits);}
+			else {ordered = new ArrayList<Glyph<Color>>(hits);}
 			return encode(ordered);
 		}
 		public RLE identity() {return new RLE();}
@@ -188,17 +189,17 @@ public class Aggregators {
 	 * @author jcottam
 	 *
 	 */
-	public static final class DeltaNeighbors implements Aggregator<Integer> {
+	public static final class DeltaNeighbors implements Aggregator<Object, Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
-		public Integer at(Rectangle pixel, GlyphSet glyphs, AffineTransform v) {
+		public Integer at(Rectangle pixel, GlyphSet<Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<Glyph> gs = glyphs.intersects(b);
+			Collection<? extends Glyph<Object>> gs = glyphs.intersects(b);
 			if (gs.size()==0) {return 0;}
 
 			int count=0;
-			HashSet<Color> colors = new HashSet<Color>();
-			for (Glyph g:gs) {colors.add(g.color);}
+			HashSet<Object> categories = new HashSet<Object>();
+			for (Glyph<Object> g:gs) {categories.add(g.value());}
 		
 			int x = pixel.x;
 			int y = pixel.y;
@@ -210,7 +211,7 @@ public class Aggregators {
 					Rectangle r2 = new Rectangle(x,y, pixel.width, pixel.height);
 					b = v.createTransformedShape(r2).getBounds2D();
 					gs = glyphs.intersects(b);
-					for (Glyph g:gs) {if (!colors.contains(g.color)) {count++;}}
+					for (Glyph<Object> g:gs) {if (!categories.contains(g.value())) {count++;}}
 				}
 			}
 			return count;

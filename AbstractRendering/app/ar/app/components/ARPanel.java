@@ -14,10 +14,10 @@ import ar.app.WrappedTransfer;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
-public class ARPanel<A,B> extends JPanel {
+public class ARPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private final WrappedReduction<A> reduction;
-	private final WrappedTransfer<B> transfer;
+	private final WrappedReduction reduction;
+	private final WrappedTransfer transfer;
 	private final GlyphSet dataset;
 	private Renderer renderer;
 	
@@ -25,10 +25,10 @@ public class ARPanel<A,B> extends JPanel {
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 
 	private volatile BufferedImage image;
-	private volatile Aggregates<A> aggregates;
+	private volatile Aggregates aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedReduction<A> reduction, WrappedTransfer<B> transfer, GlyphSet glyphs, Renderer renderer) {
+	public ARPanel(WrappedReduction reduction, WrappedTransfer transfer, GlyphSet glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -46,31 +46,31 @@ public class ARPanel<A,B> extends JPanel {
 	}
 	
 
-	public ARPanel<A,B> withDataset(GlyphSet data) {
-		return new ARPanel<A,B>(reduction, transfer, data, renderer);
+	public ARPanel withDataset(GlyphSet data) {
+		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
-	public <C> ARPanel<A,C> withTransfer(WrappedTransfer<C> t) {
-		ARPanel<A,C> p = new ARPanel<A,C>(reduction, t, dataset, renderer);
+	public  ARPanel withTransfer(WrappedTransfer t) {
+		ARPanel p = new ARPanel(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		p.aggregates = this.aggregates;
 		return p;
 	}
 	
-	public <C> ARPanel<C,B> withReduction(WrappedReduction<C> r) {
-		ARPanel<C,B> p = new ARPanel<C,B>(r, transfer, dataset, renderer);
+	public ARPanel withReduction(WrappedReduction r) {
+		ARPanel p = new ARPanel(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		return p;
 	}
 	
-	public ARPanel<A,B> withRenderer(Renderer r) {
-		ARPanel<A,B> p = new ARPanel<A,B>(reduction, transfer, dataset, r);
+	public ARPanel withRenderer(Renderer r) {
+		ARPanel p = new ARPanel(reduction, transfer, dataset, r);
 		return p;
 	}
 	
-	public Aggregates<A> aggregates() {return aggregates;}
+	public Aggregates aggregates() {return aggregates;}
 	public WrappedReduction reduction() {return reduction;}
 	public void aggregates(Aggregates aggregates) {this.aggregates = aggregates;}
 	
@@ -116,7 +116,7 @@ public class ARPanel<A,B> extends JPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
+			image = renderer.transfer(aggregates, (Transfer) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (full)\n", (end-start));
 			ARPanel.this.repaint();
@@ -126,7 +126,7 @@ public class ARPanel<A,B> extends JPanel {
 	public final class TransferRender implements Runnable {
 		public void run() {
 			long start = System.currentTimeMillis();
-			image = renderer.transfer(aggregates, (Transfer<A>) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
+			image = renderer.transfer(aggregates, (Transfer) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (transfer)\n", (end-start));
 			ARPanel.this.repaint();

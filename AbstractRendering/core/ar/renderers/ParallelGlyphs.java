@@ -27,15 +27,18 @@ import ar.Transfer;
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
+ * 
+ * <p>
+ * TODO: Extend beyond aggregate reducers with same LEFT/RIGHT/OUT
  */
-public class ParallelGlyphs implements Renderer {	
+public class ParallelGlyphs<G,A> implements Renderer<G,A> {	
 	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
-	private final AggregateReducer<?,?,?> reducer;
+	private final AggregateReducer<A,A,A> reducer;
 	private final RenderUtils.Progress recorder;
 
-	public ParallelGlyphs(int taskSize, AggregateReducer<?,?,?> red) {
+	public ParallelGlyphs(int taskSize, AggregateReducer<A,A,A> red) {
 		this.taskSize = taskSize;
 		this.reducer = red;
 		recorder = RenderUtils.recorder();
@@ -44,7 +47,7 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <A> Aggregates<A> reduce(GlyphSet glyphs, Aggregator<A> op, 
+	public Aggregates<A> reduce(GlyphSet<G> glyphs, Aggregator<G,A> op, 
 			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;
@@ -52,10 +55,10 @@ public class ParallelGlyphs implements Renderer {
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		recorder.reset(glyphs.size());
 		
-		ReduceTask<A> t = new ReduceTask<A>(
-				(GlyphSet.RandomAccess) glyphs, 
+		ReduceTask<G,A> t = new ReduceTask<G,A>(
+				(GlyphSet.RandomAccess<G>) glyphs, 
 				view, inverseView, 
-				op, (AggregateReducer<A, A, A>) reducer, 
+				op, reducer, 
 				width, height, taskSize,
 				recorder,
 				0, glyphs.size());
@@ -67,7 +70,7 @@ public class ParallelGlyphs implements Renderer {
 	
 	
 	
-	public <A> BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
+	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
 		BufferedImage i = Util.initImage(width, height, background);
 		for (int x=Math.max(aggregates.lowX(), 0); x<Math.min(aggregates.highX(), width); x++) {
 			for (int y=Math.max(aggregates.lowY(), 0); y<Math.min(aggregates.highY(), height); y++) {
@@ -79,24 +82,24 @@ public class ParallelGlyphs implements Renderer {
 	
 	public double progress() {return recorder.percent();}
 
-	private static final class ReduceTask<A> extends RecursiveTask<Aggregates<A>> {
+	private static final class ReduceTask<G,A> extends RecursiveTask<Aggregates<A>> {
 		private static final long serialVersionUID = 705015978061576950L;
 
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final GlyphSet.RandomAccess glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final GlyphSet.RandomAccess<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
 		private final AggregateReducer<A,A,A> reducer;
-		private final Aggregator<A> op;
+		private final Aggregator<G,A> op;
 		private final RenderUtils.Progress recorder;
 
 		
-		public ReduceTask(GlyphSet.RandomAccess glyphs, 
+		public ReduceTask(GlyphSet.RandomAccess<G> glyphs, 
 				AffineTransform view, AffineTransform inverseView,
-				Aggregator<A> op, AggregateReducer<A,A,A> reducer, 
+				Aggregator<G,A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
@@ -120,8 +123,8 @@ public class ParallelGlyphs implements Renderer {
 		
 		private final Aggregates<A> split() {
 			long mid = low+((high-low)/2);
-			ReduceTask<A> top = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
-			ReduceTask<A> bottom = new ReduceTask<A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
+			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
+			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
 			Aggregates<A> aggs = Util.reduceAggregates(top.getRawResult(), bottom.getRawResult(), reducer);
 			return aggs;
@@ -129,7 +132,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			GlyphSet.RandomAccess subset = new GlyphSubset(glyphs, low, high);
+			GlyphSet.RandomAccess<G> subset = new GlyphSubset<G>(glyphs, low, high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
 														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
@@ -139,9 +142,9 @@ public class ParallelGlyphs implements Renderer {
 			Point2D lowP = new Point2D.Double();
 			Point2D highP = new Point2D.Double();
 			
-			for (Glyph g: subset) {
+			for (Glyph<G> g: subset) {
 				//Discretize the glyph into the aggregates array
-				Rectangle2D b = g.shape.getBounds2D();
+				Rectangle2D b = g.shape().getBounds2D();
 				lowP.setLocation(b.getMinX(), b.getMinY());
 				highP.setLocation(b.getMaxX(), b.getMaxY());
 				
@@ -154,7 +157,7 @@ public class ParallelGlyphs implements Renderer {
 				int highy = (int) Math.ceil(highP.getY());
 
 				Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
-				A v = op.at(pixel, new GlyphSingleton(g), inverseView);
+				A v = op.at(pixel, new GlyphSingleton<G>(g), inverseView);
 				
 				
 				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
@@ -170,36 +173,37 @@ public class ParallelGlyphs implements Renderer {
 	}
 	
 	
-	public static final class GlyphSingleton implements GlyphSet.RandomAccess  {
-		private final List<Glyph> glyphs;
-		private final Glyph glyph;
+	public static final class GlyphSingleton<G> implements GlyphSet.RandomAccess<G> {
+		private final List<Glyph<G>> glyphs;
+		private final Glyph<G> glyph;
 		private final Rectangle2D bounds;
 		
-		public GlyphSingleton(Glyph g) {
+		public GlyphSingleton(Glyph<G> g) {
 			glyphs = Collections.singletonList(g);
 			glyph = g;
-			bounds = g.shape.getBounds2D();
+			bounds = g.shape().getBounds2D();
 		}
 		
-		public Iterator<Glyph> iterator() {return glyphs.iterator();}
-		public Glyph get(long i) {return glyphs.get(0);}
+		public Iterator<Glyph<G>> iterator() {return glyphs.iterator();}
+		public Glyph<G> get(long i) {return glyphs.get(0);}
 		public boolean isEmpty() {return glyphs.isEmpty();}
-		public void add(Glyph g) {throw new UnsupportedOperationException();}
+		public void add(Glyph<G> g) {throw new UnsupportedOperationException();}
 		public long size() {return glyphs.size();}
 		public Rectangle2D bounds() {return bounds;}
 
-		public Collection<Glyph> intersects(Rectangle2D r) {
-			if (glyph.shape.intersects(r)) {return glyphs;}
+		public Collection<Glyph<G>> intersects(Rectangle2D r) {
+			if (glyph.shape().intersects(r)) {return glyphs;}
 			else {return Collections.emptyList();}
 		}
 	}
 	
-	public static final class GlyphSubset implements GlyphSet.RandomAccess {
-		private final GlyphSet.RandomAccess glyphs;
+	public static final class GlyphSubset<G> implements GlyphSet.RandomAccess<G> {
+		private final GlyphSet.RandomAccess<G> glyphs;
 		private final long low,high;
-		private final Glyph[] cache;
+		private final Glyph<G>[] cache;
 		
-		public GlyphSubset (GlyphSet.RandomAccess glyphs, long low, long high) {
+		@SuppressWarnings("unchecked")
+		public GlyphSubset (GlyphSet.RandomAccess<G> glyphs, long low, long high) {
 			this.glyphs = glyphs;
 			this.low = low; 
 			this.high=high;
@@ -207,25 +211,25 @@ public class ParallelGlyphs implements Renderer {
 			this.cache = new Glyph[(int) (high-low)];
 		}
 		
-		public GlyphSubsetIterator iterator() {return new GlyphSubsetIterator(this,low,high);}
+		public GlyphSubsetIterator<G> iterator() {return new GlyphSubsetIterator<G>(this,low,high);}
 
-		public Collection<Glyph> intersects(Rectangle2D r) {
-			ArrayList<Glyph> contained = new ArrayList<Glyph>();
+		public Collection<Glyph<G>> intersects(Rectangle2D r) {
+			ArrayList<Glyph<G>> contained = new ArrayList<Glyph<G>>();
 			for (int i=0; i<cache.length; i++) {
-				Glyph g = get(i+low);
-				if (g.shape.intersects(r)) {contained.add(g);}
+				Glyph<G> g = get(i+low);
+				if (g.shape().intersects(r)) {contained.add(g);}
 			}
-			for (Glyph g: this) {if (g.shape.intersects(r)) {contained.add(g);}}
+			for (Glyph<G> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
 			return contained;
 		}
 
 		public boolean isEmpty() {return low >= high;}
 		public long size() {return high-low;}
 		public Rectangle2D bounds() {return Util.bounds(this);}
-		public void add(Glyph g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
+		public void add(Glyph<G> g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
 
 		@Override
-		public Glyph get(long l) {
+		public Glyph<G> get(long l) {
 			long at = l-low;
 			if (at > cache.length) {throw new IllegalArgumentException();}
 			int i= (int) at;
@@ -235,19 +239,19 @@ public class ParallelGlyphs implements Renderer {
 		}
 	}
 
-	public static class GlyphSubsetIterator implements Iterator<Glyph> {
-		private final GlyphSet.RandomAccess glyphs;
+	public static class GlyphSubsetIterator<G> implements Iterator<Glyph<G>> {
+		private final GlyphSet.RandomAccess<G> glyphs;
 		private final long high;
 		private long at;
 
-		public GlyphSubsetIterator(GlyphSet.RandomAccess glyphs, long low, long high){
+		public GlyphSubsetIterator(GlyphSet.RandomAccess<G> glyphs, long low, long high){
 			this.glyphs = glyphs;
 			this.high=high;
 			at = low;
 		}
 		
 		public boolean hasNext() {return at<high;}
-		public Glyph next() {return glyphs.get(at++);}
+		public Glyph<G> next() {return glyphs.get(at++);}
 		public void remove() {throw new UnsupportedOperationException();}
 		
 	}

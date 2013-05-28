@@ -17,22 +17,22 @@ import ar.util.Util;
  * @author jcottam
  *
  */
-public class GlyphList implements GlyphSet, GlyphSet.RandomAccess {
-	List<Glyph> glyphs = new ArrayList<Glyph>();
+public class GlyphList<T> implements GlyphSet<T>, GlyphSet.RandomAccess<T> {
+	List<Glyph<T>> glyphs = new ArrayList<Glyph<T>>();
 	Rectangle2D bounds;
 	
-	public Iterator<Glyph> iterator() {return glyphs.iterator();}
+	public Iterator<Glyph<T>> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
-	public void add(Glyph g) {glyphs.add(g);}
+	public void add(Glyph<T> g) {glyphs.add(g);}
 	public long size() {return glyphs.size();}
-	public Glyph get(long i) {
+	public Glyph<T> get(long i) {
 		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}
 		return glyphs.get((int) i);
 	}
 
-	public Collection<Glyph> intersects(Rectangle2D r) {
-		ArrayList<Glyph> contained = new ArrayList<Glyph>();
-		for (Glyph g: glyphs) {if (g.shape.intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<T>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<T>> contained = new ArrayList<Glyph<T>>();
+		for (Glyph<T> g: glyphs) {if (g.shape().intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 	

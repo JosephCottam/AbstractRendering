@@ -38,10 +38,10 @@ public final class Util {
 	}
 
 	/**What bounding box closely contains all of the glyphs in the passed collection.**/
-	public static Rectangle2D bounds(Iterable<Glyph> glyphs) {
+	public static Rectangle2D bounds(Iterable<? extends Glyph<?>> glyphs) {
 		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-		for (Glyph g: glyphs) {
-			Rectangle2D bound = g.shape.getBounds2D();
+		for (Glyph<?> g: glyphs) {
+			Rectangle2D bound = g.shape().getBounds2D();
 			if (bound != null) {add(bounds, bound);}
 		}
 		return bounds;

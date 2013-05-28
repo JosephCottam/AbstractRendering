@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import ar.GlyphSet;
+import ar.util.SimpleGlyph;
 
 
 
@@ -20,7 +21,7 @@ import ar.GlyphSet;
  *
  * @param <T>
  */
-public class DirectMatrix<T> implements GlyphSet {
+public class DirectMatrix<T> implements GlyphSet<Color> {
 	private final T[][] matrix;
 	private final double xScale, yScale;
 	private final Painter<T> colorBy;
@@ -40,7 +41,8 @@ public class DirectMatrix<T> implements GlyphSet {
 	}
 
 	//TODO: Only returns top-left of pixel, not full bounds....
-	public Collection<Glyph> intersects(Rectangle2D pixel) {
+	//TODO: Extend beyond colors for glyph value
+	public Collection<? extends Glyph<Color>> intersects(Rectangle2D pixel) {
 		long row = Math.round(Math.floor(pixel.getX()/xScale));
 		long col = Math.round(Math.floor(pixel.getY()/yScale));
 
@@ -50,7 +52,7 @@ public class DirectMatrix<T> implements GlyphSet {
 			
 			Rectangle2D s = new Rectangle2D.Double(row*xScale, col*yScale, xScale, yScale);
 			Color c = colorBy.from(v);
-			return Collections.singletonList(new Glyph(s,c,v));
+			return Collections.singletonList(new SimpleGlyph<Color>(s,c));
 		} else {
 			return Collections.emptyList();
 		}
@@ -73,5 +75,5 @@ public class DirectMatrix<T> implements GlyphSet {
 		else {return new Rectangle2D.Double(0,0,xScale*matrix[0].length, yScale*matrix.length);}
 	}
 
-	public void add(Glyph g) {throw new UnsupportedOperationException("Non-extensible glyph set.");}
+	public void add(Glyph<Color> g) {throw new UnsupportedOperationException("Non-extensible glyph set.");}
 }

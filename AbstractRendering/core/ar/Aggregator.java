@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 
 /**Aggregators convert glyphs into aggregate items for a specific view.**/
-public interface Aggregator<A> {
+public interface Aggregator<FROM, TO> {
 	
 	/**
 	 * Compute the aggregate for the given pixel in the give glyphset and view.
@@ -18,7 +18,7 @@ public interface Aggregator<A> {
 	 * @param inverseView Transformation from screen space to canvas space
 	 * @return The aggregate value
 	 */
-	public A at(Rectangle pixel, GlyphSet glyphs, AffineTransform inverseView);
+	public TO at(Rectangle pixel, GlyphSet<FROM> glyphs, AffineTransform inverseView);
 	
 	
 	/**What value is an mathematical identity value for this operation?
@@ -29,5 +29,5 @@ public interface Aggregator<A> {
 	 * be an identity (thus the name).  However, not all renderers rely on this
 	 * property (for example, pixel-serial rendering just uses it for the background).
 	 **/
-	public A identity();
+	public TO identity();
 }

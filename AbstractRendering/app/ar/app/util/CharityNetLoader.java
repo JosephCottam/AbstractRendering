@@ -12,6 +12,7 @@ import ar.GlyphSet;
 import ar.GlyphSet.Glyph;
 import ar.glyphsets.DynamicQuadTree;
 import ar.util.DelimitedReader;
+import ar.util.SimpleGlyph;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {
@@ -45,7 +46,7 @@ public class CharityNetLoader {
 			double dstate = interpolate(-span, span, 0, maxState, state);
 			
 			Rectangle2D r = new Rectangle2D.Double(ddate,dstate,.1,.1);
-			Glyph g = new ar.GlyphSet.Glyph(r, olive);
+			Glyph g = new SimpleGlyph(r, olive);
 			glyphs.add(g);
 		}
 		System.out.printf("Read %d entries (items in the dataset %d)\n", count, glyphs.size());
@@ -113,7 +114,7 @@ public class CharityNetLoader {
 			double stateY = interpolate(-span,span, 0, maxState, state);
 			double dateX = interpolate(-span, span, minDate, maxDate, date);
 			Rectangle2D r = new Rectangle2D.Double(dateX, stateY,1,1);
-			glyphs.add(new ar.GlyphSet.Glyph(r, olive));
+			glyphs.add(new SimpleGlyph(r, olive));
 		}
 		
 		return glyphs;

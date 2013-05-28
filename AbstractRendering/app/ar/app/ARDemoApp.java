@@ -14,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import ar.app.components.*;
 
 public class ARDemoApp implements PanelHolder {
-	private ARPanel<?,?> image;
+	private ARPanel image;
 	private final JFrame frame = new JFrame();
 	private final Presets presets = new Presets();
 	private final Status status = new Status();
@@ -90,7 +90,7 @@ public class ARDemoApp implements PanelHolder {
 		
 	}
 	
-	public <A,B> void changeImage(ARPanel<A,B> newImage) {
+	public <A,B> void changeImage(ARPanel newImage) {
 		JPanel old = this.image;		
 		if (old != null) {frame.remove(old);}
 
@@ -116,5 +116,5 @@ public class ARDemoApp implements PanelHolder {
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
-	public ARPanel<?, ?> getPanel() {return image;}
+	public ARPanel getPanel() {return image;}
 }

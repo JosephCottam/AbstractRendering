@@ -54,7 +54,7 @@ public class CharityService {
 		catch (Exception e) {throw new RuntimeException(e);}
 		
 		//Generate aggregates (just the counts for now)
-		Aggregator<Integer> r = new Aggregators.Count();
+		Aggregator<Object, Integer> r = new Aggregators.Count();
 		Renderer renderer = new ParallelSpatial(TASK_SIZE);
 		Aggregates<Integer> a = renderer.reduce(glyphset, r, inverseView, width, height);
 		return ar.app.util.AggregatesToJSON.export(a);

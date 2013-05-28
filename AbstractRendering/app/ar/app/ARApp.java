@@ -16,10 +16,10 @@ import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
 
 public class ARApp implements PanelHolder {
-	private ARPanel<?,?> image;
+	private ARPanel image;
 	private final JFrame frame = new JFrame();
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
-	private final JComboBox<WrappedReduction<?>> reductions = new JComboBox<WrappedReduction<?>>();
+	private final JComboBox<WrappedReduction<?,?>> reductions = new JComboBox<WrappedReduction<?,?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
@@ -79,7 +79,7 @@ public class ARApp implements PanelHolder {
 		
 		reductions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				WrappedReduction<?> r = (WrappedReduction<?>) reductions.getSelectedItem();
+				WrappedReduction<?,?> r = (WrappedReduction<?,?>) reductions.getSelectedItem();
 				app.changeImage(image.withReduction(r));
 			}});
 		
@@ -125,7 +125,7 @@ public class ARApp implements PanelHolder {
 		}		
 	}
 	
-	public <A,B> void changeImage(ARPanel<A,B> newImage) {
+	public void changeImage(ARPanel newImage) {
 		JPanel old = this.image;		
 		this.status.startMonitoring(newImage.getRenderer());
 		frame.remove(old);
@@ -172,5 +172,5 @@ public class ARApp implements PanelHolder {
 	}
 
 	@Override
-	public ARPanel<?, ?> getPanel() {return image;}
+	public ARPanel getPanel() {return image;}
 }
