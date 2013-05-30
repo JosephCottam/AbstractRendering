@@ -59,6 +59,17 @@ public class Transfers {
 		}
 	}
 
+	public static final class Present<T> implements Transfer<T> {
+		private final Color present, absent;
+		public Present(Color present, Color absent) {this.present = present; this.absent=absent;}
+		public Color at(int x, int y, Aggregates<T> aggregates) {
+			Object v = aggregates.at(x, y);
+			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
+			return absent;
+		}
+		
+	}
+	
 	public static final class Direct implements Transfer<Integer> {
 		final Color low, high;
 		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...

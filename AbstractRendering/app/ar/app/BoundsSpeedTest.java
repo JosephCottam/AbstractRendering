@@ -20,7 +20,7 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				GlyphSet glyphs = new MemMapList(source, .1d, new Painter.Constant<Double>());
+				GlyphSet<?> glyphs = new MemMapList(source, .1d, new Painter.Constant<Double>());
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();

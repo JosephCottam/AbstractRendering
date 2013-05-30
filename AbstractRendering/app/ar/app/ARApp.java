@@ -32,7 +32,6 @@ public class ARApp implements PanelHolder {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering Explore App");
 		frame.setLayout(new BorderLayout());
-		
 
 		JPanel controls = new JPanel();
 		controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
@@ -56,7 +55,7 @@ public class ARApp implements PanelHolder {
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet glyphs = loadData();
+				GlyphSet<?> glyphs = loadData();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}
@@ -64,14 +63,14 @@ public class ARApp implements PanelHolder {
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet glyphs = loadData();
+				GlyphSet<?> glyphs = loadData();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}});
 		
 		rendererOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Renderer renderer = rendererOptions.renderer();
+				Renderer<?,?> renderer = rendererOptions.renderer();
 				app.changeImage(image.withRenderer(renderer));
 				app.zoomFit();
 			}
@@ -85,19 +84,25 @@ public class ARApp implements PanelHolder {
 		
 		transfers.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				for (int i=0;i<transfers.getItemCount(); i++) {
+					transfers.getItemAt(i).deselected();
+				}
+				
 				WrappedTransfer<?> t = (WrappedTransfer<?>) transfers.getSelectedItem();
 				app.changeImage(image.withTransfer(t));
+				t.selected(ARApp.this);
 			}});
 	
 		
 		
-		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
-							((WrappedTransfer) transfers.getSelectedItem()), 
+		image = new ARPanel(((WrappedReduction<?,?>) reductions.getSelectedItem()), 
+							((WrappedTransfer<?>) transfers.getSelectedItem()), 
 							loadData(),
 							rendererOptions.renderer());
 		
 		frame.add(image, BorderLayout.CENTER);
-
+		
+		frame.setLocation(0,0);
 		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
@@ -132,6 +137,8 @@ public class ARApp implements PanelHolder {
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;
 		frame.revalidate();
+		
+		((WrappedTransfer<?>) transfers.getSelectedItem()).selected(this);
 	}
 	
 	public void zoomFit() {
@@ -150,12 +157,12 @@ public class ARApp implements PanelHolder {
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
-	public GlyphSet loadData() {
+	public GlyphSet<?> loadData() {
 		File dataFile = fileOptions.inputFile();
 		if (dataFile  == null) {return null;}
 		System.out.print("Loading " + dataFile.getName() + "...");
 		double glyphSize = glyphsetOptions.glyphSize();
-		GlyphSet glyphSet = glyphsetOptions.makeGlyphset();
+		GlyphSet<?> glyphSet = glyphsetOptions.makeGlyphset();
 		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	

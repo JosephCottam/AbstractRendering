@@ -85,7 +85,7 @@ public class ARPanel extends JPanel {
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
-				|| !transfer.type().equals(reduction.type())) {
+				|| !transfer.type().isAssignableFrom(reduction.type())) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else if (aggregates == null || differentSizes(image, ARPanel.this)) {
