@@ -43,8 +43,8 @@ public class FileOptions extends CompoundPanel {
 				int rc = fc.showOpenDialog(panel);
 				if (rc== JFileChooser.APPROVE_OPTION) {
 					inputFile = fc.getSelectedFile();
+					panel.fireActionListeners();
 				}
-				panel.fireActionListeners();
 			}});
 	}
 
