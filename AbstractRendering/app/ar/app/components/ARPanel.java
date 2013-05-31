@@ -288,8 +288,8 @@ public class ARPanel extends JPanel {
 			Rectangle2D content = dataset().bounds();
 			if (content == null) {return;}
 	
-			double w = image.getWidth()/content.getWidth();
-			double h = image.getHeight()/content.getHeight();
+			double w = getWidth()/content.getWidth();
+			double h = getHeight()/content.getHeight();
 			double scale = Math.min(w, h);
 			scale = scale/getScale();
 			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
