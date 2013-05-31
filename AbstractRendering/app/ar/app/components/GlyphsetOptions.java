@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
-import ar.util.ImplicitGlyphs;
+import ar.util.ImplicitGeometry;
 
 public class GlyphsetOptions extends CompoundPanel  {
 	private static final long serialVersionUID = 1L;
@@ -46,7 +46,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		} else if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList<Object>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
-			return new MemMapList(null, (Double) size.getSelectedItem(), new ImplicitGlyphs.Constant<Double>(Color.red));
+			return new MemMapList(null, (Double) size.getSelectedItem(), new ImplicitGeometry.Constant<Double>(Color.red));
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
 			return new DirectMatrix<>(null, 1, 1, true);
 		} else {

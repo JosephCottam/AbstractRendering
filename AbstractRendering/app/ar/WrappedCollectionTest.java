@@ -11,7 +11,7 @@ import ar.app.util.WrappedReduction;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.WrappedCollection;
 import ar.renderers.*;
-import ar.util.ImplicitGlyphs;
+import ar.util.ImplicitGeometry;
 
 public class WrappedCollectionTest {
 	public static void main(String[] args) {
@@ -19,7 +19,7 @@ public class WrappedCollectionTest {
 		ArrayList<Integer> vs = new ArrayList<Integer>();
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
-		WrappedCollection<Integer,Color> gs = new WrappedCollection<Integer,Color>(vs, new ImplicitGlyphs.RainbowCheckerboard<Integer>(11, 1));
+		WrappedCollection<Integer,Color> gs = new WrappedCollection<Integer,Color>(vs, new ImplicitGeometry.RainbowCheckerboard<Integer>(11, 1));
 		
 		ARPanel p = new ARPanel(new WrappedReduction.OverplotFirst(), 
 								new WrappedTransfer.EchoColor(), 
