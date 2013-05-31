@@ -108,21 +108,8 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 	public void mouseClicked(MouseEvent e) { 
 		if (e.getClickCount() == 2) {
 			ARPanel canvas = (ARPanel) e.getComponent();
-			Rectangle2D content = canvas.dataset().bounds();
-			Rectangle2D space = canvas.getBounds();
-
-			if (!content.isEmpty()) {
-				double w = space.getWidth()/content.getWidth();
-				double h = space.getHeight()/content.getHeight();
-				double scale = Math.min(w, h);
-				scale = scale/canvas.getScale();
-				Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
-						
-				canvas.zoomAbs(center, scale);
-				canvas.panToAbs(center);
-			}
+			canvas.zoomFit();
 		}
-		
 	}
 	
 	@Override

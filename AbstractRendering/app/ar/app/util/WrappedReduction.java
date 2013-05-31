@@ -1,4 +1,4 @@
-package ar.app;
+package ar.app.util;
 
 import java.awt.Color;
 

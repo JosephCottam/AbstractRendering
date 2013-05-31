@@ -1,7 +1,7 @@
 package ar.glyphsets;
 
-import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -13,18 +13,21 @@ import ar.util.Util;
 
 
 /**Wrap an existing list of values as glyphs.**/
-public class ListWrapper<I,V> implements Glyphset.RandomAccess<V>, Iterable<Glyph<V>> {
+public class WrappedList<I,V> implements Glyphset.RandomAccess<V>, Iterable<Glyph<V>> {
 	private List<I> values;
 	private ImplicitGlyph<I,V> transformer;
 	
-	public ListWrapper(List<I> values, ImplicitGlyph<I,V> transformer) {
+	public WrappedList(List<I> values, ImplicitGlyph<I,V> transformer) {
 		this.values = values;
 		this.transformer = transformer;
 	}
 	@Override
-	public Collection<? extends ar.Glyphset.Glyph<V>> intersects(Rectangle2D r) {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<ar.Glyphset.Glyph<V>> intersects(Rectangle2D r) {
+		ArrayList<ar.Glyphset.Glyph<V>> hits = new ArrayList<ar.Glyphset.Glyph<V>>();
+		for (Glyph<V> g: this) {
+			if (g.shape().getBounds2D().intersects(r)) {hits.add(g);}
+		}
+		return hits;
 	}
 
 	public boolean isEmpty() {return values == null || values.isEmpty();}
@@ -41,10 +44,5 @@ public class ListWrapper<I,V> implements Glyphset.RandomAccess<V>, Iterable<Glyp
 		if (l < 0) {throw new IllegalArgumentException("Negative index not allowed.");}
 		I value = values.get((int) l);
 		return new SimpleGlyph<V>(transformer.shape(value), transformer.value(value));
-	}
-	
-	public static interface ImplicitGlyph<I,V> {
-		public Shape shape (I from);
-		public V value(I from);
 	}
 }

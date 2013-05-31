@@ -14,6 +14,8 @@ import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
+import ar.app.util.WrappedReduction;
+import ar.app.util.WrappedTransfer;
 
 public class ARApp implements PanelHolder {
 	private ARPanel image;
@@ -57,23 +59,26 @@ public class ARApp implements PanelHolder {
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Glyphset glyphs = loadData();
-				app.changeImage(image.withDataset(glyphs));
-				app.zoomFit();
+				ARPanel newImage = image.withDataset(glyphs);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}
 		});
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Glyphset glyphs = loadData();
-				app.changeImage(image.withDataset(glyphs));
-				app.zoomFit();
+				ARPanel newImage = image.withDataset(glyphs);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}});
 		
 		rendererOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Renderer renderer = rendererOptions.renderer();
-				app.changeImage(image.withRenderer(renderer));
-				app.zoomFit();
+				ARPanel newImage = image.withRenderer(renderer);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}
 		});
 		
@@ -101,7 +106,7 @@ public class ARApp implements PanelHolder {
 		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
-		zoomFit();
+		image.zoomFit();
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defItem) {
@@ -132,22 +137,6 @@ public class ARApp implements PanelHolder {
 		frame.add(newImage, BorderLayout.CENTER);
 		this.image = newImage;
 		frame.revalidate();
-	}
-	
-	public void zoomFit() {
-		try {
-			Rectangle2D content = image.dataset().bounds();
-			if (content == null) {return;}
-	
-			double w = image.getWidth()/content.getWidth();
-			double h = image.getHeight()/content.getHeight();
-			double scale = Math.min(w, h);
-			scale = scale/image.getScale();
-			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
-					
-			image.zoomAbs(center, scale);
-			image.panToAbs(center);
-		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
 	public Glyphset loadData() {

@@ -72,7 +72,7 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	private final double glyphHeight;
 	private final File source;
 	private final TYPE[] types;
-	private final Painter<Double> painter;
+	private final ImplicitGlyph<Double,Color> painter;
 	
 	private final int recordEntries;
 	private final int recordSize;
@@ -81,10 +81,10 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	public MemMapList(File source, double glyphSize, Painter<Double> painter) {
+	public MemMapList(File source, double glyphSize, ImplicitGlyph<Double,Color> painter) {
 		this(source, glyphSize, glyphSize, false, painter, null);
 	}
-	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, Painter<Double> painter, TYPE[] types) {
+	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, ImplicitGlyph<Double,Color> painter, TYPE[] types) {
 		this.glyphWidth = glyphWidth;
 		this.glyphHeight = glyphHeight;
 		this.source = source;
@@ -140,7 +140,7 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 		// System.out.printf("Read in %d: (%s,%s)\n", i,x,y);
 		y = flipY ? -y :y;
 		
-		Color c = painter.from(v);
+		Color c = painter.value(v);
 		Glyph<Color> g = new SimpleGlyph<Color>(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c);
 		return g;
 	}
@@ -160,7 +160,7 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 		throw new RuntimeException("Unknown type specified at offset " + offset);
 	}
 
-	public Painter<Double> painter() {return painter;}
+	public ImplicitGlyph<Double,Color> painter() {return painter;}
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}

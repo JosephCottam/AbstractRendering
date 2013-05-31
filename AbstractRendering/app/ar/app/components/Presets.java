@@ -10,14 +10,15 @@ import javax.swing.JComboBox;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.app.ARApp;
-import ar.app.WrappedReduction;
-import ar.app.WrappedTransfer;
+import ar.app.util.WrappedReduction;
+import ar.app.util.WrappedTransfer;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
-import ar.glyphsets.Painter;
+import ar.glyphsets.ImplicitGlyph;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
+import ar.util.ImplicitGlyphs;
 import ar.util.MemMapEncoder;
 
 public class Presets extends CompoundPanel {
@@ -129,8 +130,8 @@ public class Presets extends CompoundPanel {
 	
 	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
 	private static final Glyphset BOOST_MEMORY = load("BGL Memory", "./data/MemVisScaled.csv", .001);
-	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, .001, true, new Painter.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
-	private static final Glyphset CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .5, .1, false, new Painter.Constant<>(Color.BLUE), 1, "ii");
+	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, .001, true, new ImplicitGlyphs.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
+	private static final Glyphset CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .5, .1, false, new ImplicitGlyphs.Constant<>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
 
@@ -148,7 +149,7 @@ public class Presets extends CompoundPanel {
 		}
 	}
 	
-	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, Painter p, int skip, String types) {
+	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, ImplicitGlyph p, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);
 		try {

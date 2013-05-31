@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
-import ar.glyphsets.Painter;
+import ar.util.ImplicitGlyphs;
 
 public class GlyphsetOptions extends CompoundPanel  {
 	private static final long serialVersionUID = 1L;
@@ -40,13 +40,13 @@ public class GlyphsetOptions extends CompoundPanel  {
 	
 	public double glyphSize() {return (Double) size.getSelectedItem();}
 	
-	public Glyphset makeGlyphset() {
+	public Glyphset<?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
 			return DynamicQuadTree.make();
 		} else if (glyphsType.getSelectedItem().equals("List")) {
-			return new GlyphList();			
+			return new GlyphList<Object>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
-			return new MemMapList(null, (Double) size.getSelectedItem(), new Painter.Constant<Double>(Color.red));
+			return new MemMapList(null, (Double) size.getSelectedItem(), new ImplicitGlyphs.Constant<Double>(Color.red));
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
 			return new DirectMatrix<>(null, 1, 1, true);
 		} else {

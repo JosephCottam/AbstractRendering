@@ -9,8 +9,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import ar.*;
-import ar.app.WrappedReduction;
-import ar.app.WrappedTransfer;
+import ar.app.util.WrappedReduction;
+import ar.app.util.WrappedTransfer;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
@@ -282,4 +282,20 @@ public class ARPanel extends JPanel {
 	 */
 	public AffineTransform inverseViewTransform() {return new AffineTransform(inverseViewTransformRef);}
 
+	
+	public void zoomFit() {
+		try {
+			Rectangle2D content = dataset().bounds();
+			if (content == null) {return;}
+	
+			double w = image.getWidth()/content.getWidth();
+			double h = image.getHeight()/content.getHeight();
+			double scale = Math.min(w, h);
+			scale = scale/getScale();
+			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
+					
+			zoomAbs(center, scale);
+			panToAbs(center);
+		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
+	}
 }
