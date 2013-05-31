@@ -15,11 +15,15 @@ import ar.util.Util;
 /**Wrap an existing list of values as glyphs.**/
 public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	protected Collection<I> values;
-	protected ImplicitGeometry.Glypher<I,V> transformer;
+	protected ImplicitGeometry.Shaper<I> shaper;
+	protected ImplicitGeometry.Valuer<I,V> valuer;
 	
-	public WrappedCollection(Collection<I> values, ImplicitGeometry.Glypher<I,V> transformer) {
+	public WrappedCollection(Collection<I> values, 
+							ImplicitGeometry.Shaper<I> shaper, 
+							ImplicitGeometry.Valuer<I,V> valuer) {
 		this.values = values;
-		this.transformer = transformer;
+		this.shaper = shaper;
+		this.valuer = valuer;
 	}
 	
 	public Collection<ar.Glyphset.Glyph<V>> intersects(Rectangle2D r) {
@@ -39,7 +43,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			public boolean hasNext() {return basis.hasNext();}
 			public ar.Glyphset.Glyph<V> next() {
 				I next = basis.next();
-				return next == null ? null : new SimpleGlyph<V>(transformer.shape(next), transformer.value(next));
+				return next == null ? null : new SimpleGlyph<V>(shaper.shape(next), valuer.value(next));
 			}
 			public void remove() {throw new UnsupportedOperationException();}
 		};
@@ -52,8 +56,10 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	public static class List<I,V> extends WrappedCollection<I,V> implements Glyphset.RandomAccess<V> {
 		protected final java.util.List<I> values;
 		
-		public List(java.util.List<I> values, ImplicitGeometry.Glypher<I,V> transformer) {
-			super(values, transformer);
+		public List(java.util.List<I> values,
+				ImplicitGeometry.Shaper<I> shaper, 
+				ImplicitGeometry.Valuer<I,V> valuer) {
+			super(values, shaper, valuer);
 			this.values=values;
 		}
 		
@@ -65,7 +71,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			if (l > Integer.MAX_VALUE) {throw new IllegalArgumentException("Can only index through ints in wrapped list.");}
 			if (l < 0) {throw new IllegalArgumentException("Negative index not allowed.");}
 			I value = values.get((int) l);
-			return new SimpleGlyph<V>(transformer.shape(value), transformer.value(value));
+			return new SimpleGlyph<V>(shaper.shape(value), valuer.value(value));
 		}
 	}
 }

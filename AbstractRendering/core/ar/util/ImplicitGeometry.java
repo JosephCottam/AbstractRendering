@@ -18,10 +18,6 @@ import ar.Glyphset.Glyph;
  *  by the renderers.
  */
 public abstract class ImplicitGeometry {
-
-	/**Combination shaper/valuer (for convenience).**/
-	public static interface Glypher<I,V> extends Shaper<I>, Valuer<I,V> {}
-	
 	/**Convert a value into another value (often a color, but not always).
 	 * <I> Input value type
 	 * **/
@@ -31,37 +27,53 @@ public abstract class ImplicitGeometry {
 	 * <I> Input value type
 	 * <V> Output value type
 	 * **/
-	public static interface Valuer<I,V> {public V value(I from);}	
+	public static interface Valuer<I,V> {public V value(I from);}
+	
+	/**Convenience interface for working with double-encoding on shape and value.**/
+	public static interface Glypher<I,V> extends Shaper<I>, Valuer<I,V> {}
 	
 	/**Simple function for making glyphs from a Glypher.**/
-	public static <I,V> Glyph<V> glyph(Glypher<I,V> g, I value) {
-		return new SimpleGlyph<V>(g.shape(value), g.value(value));
+	public static <I,V> Glyph<V> glyph(Shaper<I> s, Valuer<I,V> v, I value) {
+		return new SimpleGlyph<V>(s.shape(value), v.value(value));
 	}
 	
-	public static final class RainbowCheckerboard<T> implements Glypher<Integer, Color> {
-		private static final Color[] COLORS = new Color[]{Color.RED, Color.BLUE, Color.GREEN,Color.PINK,Color.ORANGE};
-		private final int columns;
+	
+	public static interface Indexed {public Object get(int f);}
+	
+	
+	public static class IndexedToRect implements Shaper<Indexed> {
 		private final double size;
+		private final boolean flipY;
+		private final int xIdx, yIdx;
 		
-		public RainbowCheckerboard(int columns, double size) {
-			this.columns = columns;
-			this.size = size;
+		public IndexedToRect(double size, boolean flipY, int xIdx, int yIdx) {
+			this.size=size; 
+			this.flipY=flipY;
+			this.xIdx = xIdx;
+			this.yIdx = yIdx;
 		}
-
-		public Shape shape(Integer from) {
-			from = from*2;
-			int row = from/columns;
-			int col = from%columns;
+		public Rectangle2D shape(Indexed from) {
+			double x=((Number) from.get(xIdx)).doubleValue();
+			double y=((Number) from.get(yIdx)).doubleValue();
 			
-			if (row%2==0) {col=col-1;}
-			
-			return new Rectangle2D.Double(col*size, row*size, size,size);
-		}
-		
-		public Color value(Integer from) {
-			return COLORS[from%COLORS.length];
-		}
+			y = flipY ? -y : y; 
+			return new Rectangle2D.Double(x, y, size,size);
+		}	
 	}
+	
+	public static class ArrayToValue<I,V> implements Valuer<Indexed,V> {
+		private final int vIdx;
+		private final Valuer<I,V> basis;
+		
+		public ArrayToValue(int vIdx, Valuer<I, V> basis) {
+			this.vIdx = vIdx;
+			this.basis = basis;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public V value(Indexed from) {return basis.value((I) from.get(vIdx));}
+	}
+	
 	
 	/**Paint everything the same color (red, if no color is specified at construction).*/
 	public static final class Constant<T> implements Valuer<T,Color> {
