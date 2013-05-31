@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 import ar.app.components.ARPanel;
 import ar.app.util.WrappedReduction;
 import ar.app.util.WrappedTransfer;
-import ar.glyphsets.WrappedList;
+import ar.glyphsets.WrappedCollection;
 import ar.renderers.*;
 import ar.util.ImplicitGlyphs;
 
@@ -19,7 +19,7 @@ public class WrappedCollectionTest {
 		ArrayList<Integer> vs = new ArrayList<Integer>();
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
-		WrappedList<Integer,Color> gs = new WrappedList<Integer,Color>(vs, new ImplicitGlyphs.RainbowCheckerboard<Integer>(11, 1));
+		WrappedCollection<Integer,Color> gs = new WrappedCollection<Integer,Color>(vs, new ImplicitGlyphs.RainbowCheckerboard<Integer>(11, 1));
 		
 		ARPanel p = new ARPanel(new WrappedReduction.OverplotFirst(), 
 								new WrappedTransfer.EchoColor(), 
