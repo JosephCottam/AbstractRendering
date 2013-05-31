@@ -8,7 +8,7 @@ import java.util.Collection;
 /**A collection of glyphs for rendering.
  * A glyph is a geometric description and accompanying data values.
  */
-public interface GlyphSet<T> {
+public interface Glyphset<T> {
 	
 	/**Return all glyphs that intersect the passed rectangle.**/
 	public Collection<? extends Glyph<T>> intersects(Rectangle2D r);
@@ -28,7 +28,7 @@ public interface GlyphSet<T> {
 	/**Glyphsets that support random access.
 	 * This interface is largely to support parallel execution.
 	 */
-	public static interface RandomAccess<T> extends GlyphSet<T> ,Iterable<Glyph<T>> {public Glyph<T> get(long l);}
+	public static interface RandomAccess<T> extends Glyphset<T> ,Iterable<Glyph<T>> {public Glyph<T> get(long l);}
 	
 	/**Simple wrapper class glyphs.**/
 	public static interface Glyph<V> {

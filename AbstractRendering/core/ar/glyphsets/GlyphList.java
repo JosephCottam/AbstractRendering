@@ -3,7 +3,7 @@ package ar.glyphsets;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.util.Util;
 
 /**Explicit geometry, sequentially arranged glyphset.
@@ -17,13 +17,13 @@ import ar.util.Util;
  * @author jcottam
  *
  */
-public class GlyphList<T> implements GlyphSet<T>, GlyphSet.RandomAccess<T> {
-	List<Glyph<T>> glyphs = new ArrayList<Glyph<T>>();
-	Rectangle2D bounds;
+public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
+	protected final List<Glyph<T>> glyphs = new ArrayList<Glyph<T>>();
+	protected Rectangle2D bounds;
 	
 	public Iterator<Glyph<T>> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
-	public void add(Glyph<T> g) {glyphs.add(g);}
+	public void add(Glyph<T> g) {glyphs.add(g); bounds=null;}
 	public long size() {return glyphs.size();}
 	public Glyph<T> get(long i) {
 		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}

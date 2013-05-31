@@ -12,8 +12,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
-import ar.GlyphSet;
-import ar.GlyphSet.Glyph;
+import ar.Glyphset;
+import ar.Glyphset.Glyph;
 import ar.util.Util;
 import ar.Aggregator;
 
@@ -26,7 +26,7 @@ public class Aggregators {
 	public static final class Gradient implements Aggregator<Object, Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
-		public Color at(Rectangle r, GlyphSet<Object> glyphs, AffineTransform inverseView) {
+		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {
 			return new Color(r.x/width, r.y/height,.5f ,1.0f);
 		}
 		public Color identity() {return Util.CLEAR;}	
@@ -38,14 +38,14 @@ public class Aggregators {
 	public static final class IDColor implements Aggregator<Object, Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
-		public Color at(Rectangle r, GlyphSet<Object> glyphs, AffineTransform inverseView) {return c;}
+		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {return c;}
 		public Color identity() {return Util.CLEAR;}
 	}
 
 	
 	/**How many items are in the given pixel**/
 	public static final class Count implements Aggregator<Object, Integer> {
-		public Integer at(Rectangle pixel, GlyphSet<Object> glyphs, AffineTransform v) {
+		public Integer at(Rectangle pixel, Glyphset<Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Object>> items = glyphs.intersects(b);
 			return items.size();
@@ -55,7 +55,7 @@ public class Aggregators {
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
-		public Color at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
+		public Color at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 			if (hits.size()>0) {return hits.iterator().next().value();}
@@ -66,7 +66,7 @@ public class Aggregators {
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
 	public static final class Last implements Aggregator<Color, Color> {
-		public Color at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
+		public Color at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 			Color color = Util.CLEAR;
@@ -150,7 +150,7 @@ public class Aggregators {
 			return rle;
 		}
 
-		public RLE at(Rectangle pixel, GlyphSet<Color> glyphs, AffineTransform v) {
+		public RLE at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 
@@ -192,7 +192,7 @@ public class Aggregators {
 	public static final class DeltaNeighbors implements Aggregator<Object, Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
-		public Integer at(Rectangle pixel, GlyphSet<Object> glyphs, AffineTransform v) {
+		public Integer at(Rectangle pixel, Glyphset<Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Object>> gs = glyphs.intersects(b);
 			if (gs.size()==0) {return 0;}

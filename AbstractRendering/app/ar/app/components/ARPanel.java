@@ -18,7 +18,7 @@ public class ARPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private final WrappedReduction reduction;
 	private final WrappedTransfer transfer;
-	private final GlyphSet dataset;
+	private final Glyphset dataset;
 	private Renderer renderer;
 	
 	private AffineTransform viewTransformRef = new AffineTransform();
@@ -28,7 +28,7 @@ public class ARPanel extends JPanel {
 	private volatile Aggregates aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedReduction reduction, WrappedTransfer transfer, GlyphSet glyphs, Renderer renderer) {
+	public ARPanel(WrappedReduction reduction, WrappedTransfer transfer, Glyphset glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -46,7 +46,7 @@ public class ARPanel extends JPanel {
 	}
 	
 
-	public ARPanel withDataset(GlyphSet data) {
+	public ARPanel withDataset(Glyphset data) {
 		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
@@ -135,7 +135,7 @@ public class ARPanel extends JPanel {
 	
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
 	public Renderer getRenderer() {return renderer;}
-	public GlyphSet dataset() {return dataset;}
+	public Glyphset dataset() {return dataset;}
 	
 	
 	

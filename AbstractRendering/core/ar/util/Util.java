@@ -11,7 +11,7 @@ import java.util.List;
 
 import ar.AggregateReducer;
 import ar.Aggregates;
-import ar.GlyphSet.Glyph;
+import ar.Glyphset.Glyph;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {

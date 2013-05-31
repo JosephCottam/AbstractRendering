@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
 import ar.util.SimpleGlyph;
 
@@ -50,7 +50,7 @@ import ar.util.SimpleGlyph;
  * @author jcottam
  *
  */
-public class MemMapList implements GlyphSet.RandomAccess<Color> {
+public class MemMapList implements Glyphset.RandomAccess<Color> {
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		public final int bytes;
@@ -166,7 +166,7 @@ public class MemMapList implements GlyphSet.RandomAccess<Color> {
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
 	public void add(Glyph<Color> g) {throw new UnsupportedOperationException();}
-	public Iterator<Glyph<Color>> iterator() {return new It(this);}
+	public Iterator<Glyph<Color>> iterator() {return new GlyphsetIterator<Color>(this);}
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
@@ -190,13 +190,4 @@ public class MemMapList implements GlyphSet.RandomAccess<Color> {
 		return bounds;
 	}
 	
-	private static final class It implements Iterator<Glyph<Color>> {
-		private final GlyphSet.RandomAccess<Color> glyphs;
-		private int at = 0;
-		public It(GlyphSet.RandomAccess<Color> glyphs) {this.glyphs = glyphs;}
-
-		public boolean hasNext() {return at < glyphs.size();}
-		public Glyph<Color> next() {return glyphs.get(at++);}
-		public void remove() {throw new UnsupportedOperationException();}		
-	}	
 }

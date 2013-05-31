@@ -11,7 +11,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.Renderer;
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
 
@@ -56,7 +56,7 @@ public class ARApp implements PanelHolder {
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet glyphs = loadData();
+				Glyphset glyphs = loadData();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}
@@ -64,7 +64,7 @@ public class ARApp implements PanelHolder {
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet glyphs = loadData();
+				Glyphset glyphs = loadData();
 				app.changeImage(image.withDataset(glyphs));
 				app.zoomFit();
 			}});
@@ -150,12 +150,12 @@ public class ARApp implements PanelHolder {
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 
-	public GlyphSet loadData() {
+	public Glyphset loadData() {
 		File dataFile = fileOptions.inputFile();
 		if (dataFile  == null) {return null;}
 		System.out.print("Loading " + dataFile.getName() + "...");
 		double glyphSize = glyphsetOptions.glyphSize();
-		GlyphSet glyphSet = glyphsetOptions.makeGlyphset();
+		Glyphset glyphSet = glyphsetOptions.makeGlyphset();
 		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	

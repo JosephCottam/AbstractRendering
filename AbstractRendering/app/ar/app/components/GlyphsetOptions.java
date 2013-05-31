@@ -5,7 +5,7 @@ import javax.swing.*;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.glyphsets.*;
 import ar.glyphsets.Painter;
 
@@ -40,7 +40,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 	
 	public double glyphSize() {return (Double) size.getSelectedItem();}
 	
-	public GlyphSet makeGlyphset() {
+	public Glyphset makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
 			return DynamicQuadTree.make();
 		} else if (glyphsType.getSelectedItem().equals("List")) {

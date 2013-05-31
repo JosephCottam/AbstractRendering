@@ -5,7 +5,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Collections;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.util.SimpleGlyph;
 
 
@@ -21,7 +21,7 @@ import ar.util.SimpleGlyph;
  *
  * @param <T>
  */
-public class DirectMatrix<T> implements GlyphSet<Color> {
+public class DirectMatrix<T> implements Glyphset<Color> {
 	private final T[][] matrix;
 	private final double xScale, yScale;
 	private final Painter<T> colorBy;

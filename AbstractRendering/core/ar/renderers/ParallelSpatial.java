@@ -9,7 +9,7 @@ import java.util.concurrent.RecursiveAction;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.util.Util;
@@ -31,7 +31,7 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public Aggregates<A> reduce(final GlyphSet<G> glyphs, final Aggregator<G,A> op, 
+	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op, 
 			final AffineTransform inverseView, final int width, final int height) {
 		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity()); 
 		ReduceTask<G,A> t = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
@@ -58,11 +58,11 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 		private final int lowx, lowy, highx, highy;
 		private final Aggregates<A> aggs;
 		private final Aggregator<G,A> op;
-		private final GlyphSet<G> glyphs;
+		private final Glyphset<G> glyphs;
 		private final AffineTransform inverseView;
 		private final RenderUtils.Progress recorder;
 		
-		public ReduceTask(GlyphSet<G> glyphs, AffineTransform inverseView, 
+		public ReduceTask(Glyphset<G> glyphs, AffineTransform inverseView, 
 				Aggregator<G,A> op, RenderUtils.Progress recorder, int taskSize,   
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy) {
 			this.glyphs = glyphs;

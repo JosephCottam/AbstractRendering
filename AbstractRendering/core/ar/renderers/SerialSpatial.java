@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.util.Util;
@@ -21,7 +21,7 @@ public final class SerialSpatial<G,A> implements Renderer<G,A> {
 	public SerialSpatial() {recorder = RenderUtils.recorder();}
 
 	
-	public Aggregates<A> reduce(final GlyphSet<G> glyphs, final Aggregator<G,A> op,   
+	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op,   
 			final AffineTransform inverseView, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity());

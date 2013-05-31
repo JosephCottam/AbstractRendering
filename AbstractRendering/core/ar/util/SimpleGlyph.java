@@ -2,7 +2,7 @@ package ar.util;
 
 import java.awt.Shape;
 
-import ar.GlyphSet.Glyph;
+import ar.Glyphset.Glyph;
 
 public class SimpleGlyph<V> implements Glyph<V>{
 	private static int IDCOUNTER=0;
