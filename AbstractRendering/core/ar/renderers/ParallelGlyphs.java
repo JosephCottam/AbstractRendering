@@ -124,6 +124,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		
 		private final Aggregates<A> split() {
 			long mid = low+((high-low)/2);
+
 			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
 			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);

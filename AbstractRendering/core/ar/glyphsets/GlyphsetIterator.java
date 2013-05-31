@@ -27,5 +27,5 @@ public class GlyphsetIterator<V> implements Iterator<Glyph<V>>{
 		if (!hasNext()) {return null;}
 		return glyphs.get(at++);
 	}
-	public void remove() {throw new UnsupportedOperationException();}		
+	public void remove() {throw new UnsupportedOperationException();}
 }
