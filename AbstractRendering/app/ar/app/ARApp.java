@@ -14,14 +14,14 @@ import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
-import ar.app.util.WrappedReduction;
+import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 
 public class ARApp implements PanelHolder {
 	private ARPanel image;
 	private final JFrame frame = new JFrame();
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
-	private final JComboBox<WrappedReduction<?,?>> reductions = new JComboBox<WrappedReduction<?,?>>();
+	private final JComboBox<WrappedAggregator<?,?>> reductions = new JComboBox<WrappedAggregator<?,?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
@@ -53,7 +53,7 @@ public class ARApp implements PanelHolder {
 		controls.add(status);
 		final ARApp app = this;
 		
-		loadInstances(reductions, WrappedReduction.class, "Count (int)");
+		loadInstances(reductions, WrappedAggregator.class, "Count (int)");
 		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
@@ -84,7 +84,7 @@ public class ARApp implements PanelHolder {
 		
 		reductions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				WrappedReduction<?,?> r = (WrappedReduction<?,?>) reductions.getSelectedItem();
+				WrappedAggregator<?,?> r = (WrappedAggregator<?,?>) reductions.getSelectedItem();
 				app.changeImage(image.withReduction(r));
 			}});
 		
@@ -96,7 +96,7 @@ public class ARApp implements PanelHolder {
 	
 		
 		
-		image = new ARPanel(((WrappedReduction) reductions.getSelectedItem()), 
+		image = new ARPanel(((WrappedAggregator) reductions.getSelectedItem()), 
 							((WrappedTransfer) transfers.getSelectedItem()), 
 							loadData(),
 							rendererOptions.renderer());

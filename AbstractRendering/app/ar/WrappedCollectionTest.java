@@ -9,7 +9,7 @@ import java.awt.geom.Rectangle2D;
 import javax.swing.JFrame;
 
 import ar.app.components.ARPanel;
-import ar.app.util.WrappedReduction;
+import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.WrappedCollection;
 import ar.renderers.*;
@@ -53,7 +53,7 @@ public class WrappedCollectionTest {
 		ImplicitGeometry.Glypher<Integer,Color> g = new RainbowCheckerboard<Integer>(11, 1);
 		WrappedCollection<Integer,Color> gs = new WrappedCollection<Integer,Color>(vs, g,g);
 		
-		ARPanel p = new ARPanel(new WrappedReduction.OverplotFirst(), 
+		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst(), 
 								new WrappedTransfer.EchoColor(), 
 								gs, 
 								new ParallelSpatial<Number, Color>(100));
