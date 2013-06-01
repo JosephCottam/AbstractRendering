@@ -11,15 +11,17 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.Renderer;
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.util.CSVtoGlyphSet;
+import ar.app.util.WrappedAggregator;
+import ar.app.util.WrappedTransfer;
 
 public class ARApp implements PanelHolder {
 	private ARPanel image;
 	private final JFrame frame = new JFrame();
 	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
-	private final JComboBox<WrappedReduction<?,?>> reductions = new JComboBox<WrappedReduction<?,?>>();
+	private final JComboBox<WrappedAggregator<?,?>> reductions = new JComboBox<WrappedAggregator<?,?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
@@ -50,35 +52,38 @@ public class ARApp implements PanelHolder {
 		controls.add(status);
 		final ARApp app = this;
 		
-		loadInstances(reductions, WrappedReduction.class, "Count (int)");
+		loadInstances(reductions, WrappedAggregator.class, "Count (int)");
 		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet<?> glyphs = loadData();
-				app.changeImage(image.withDataset(glyphs));
-				app.zoomFit();
+				Glyphset glyphs = loadData();
+				ARPanel newImage = image.withDataset(glyphs);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}
 		});
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GlyphSet<?> glyphs = loadData();
-				app.changeImage(image.withDataset(glyphs));
-				app.zoomFit();
+				Glyphset glyphs = loadData();
+				ARPanel newImage = image.withDataset(glyphs);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}});
 		
 		rendererOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Renderer<?,?> renderer = rendererOptions.renderer();
-				app.changeImage(image.withRenderer(renderer));
-				app.zoomFit();
+				Renderer renderer = rendererOptions.renderer();
+				ARPanel newImage = image.withRenderer(renderer);
+				app.changeImage(newImage);
+				newImage.zoomFit();
 			}
 		});
 		
 		reductions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				WrappedReduction<?,?> r = (WrappedReduction<?,?>) reductions.getSelectedItem();
+				WrappedAggregator<?,?> r = (WrappedAggregator<?,?>) reductions.getSelectedItem();
 				app.changeImage(image.withReduction(r));
 			}});
 		
@@ -95,8 +100,8 @@ public class ARApp implements PanelHolder {
 	
 		
 		
-		image = new ARPanel(((WrappedReduction<?,?>) reductions.getSelectedItem()), 
-							((WrappedTransfer<?>) transfers.getSelectedItem()), 
+		image = new ARPanel(((WrappedAggregator) reductions.getSelectedItem()), 
+							((WrappedTransfer) transfers.getSelectedItem()), 
 							loadData(),
 							rendererOptions.renderer());
 		
@@ -106,7 +111,7 @@ public class ARApp implements PanelHolder {
 		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
-		zoomFit();
+		image.zoomFit();
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defItem) {
@@ -140,29 +145,13 @@ public class ARApp implements PanelHolder {
 		
 		((WrappedTransfer<?>) transfers.getSelectedItem()).selected(this);
 	}
-	
-	public void zoomFit() {
-		try {
-			Rectangle2D content = image.dataset().bounds();
-			if (content == null) {return;}
-	
-			double w = image.getWidth()/content.getWidth();
-			double h = image.getHeight()/content.getHeight();
-			double scale = Math.min(w, h);
-			scale = scale/image.getScale();
-			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
-					
-			image.zoomAbs(center, scale);
-			image.panToAbs(center);
-		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
-	}
 
-	public GlyphSet<?> loadData() {
+	public Glyphset<?> loadData() {
 		File dataFile = fileOptions.inputFile();
 		if (dataFile  == null) {return null;}
 		System.out.print("Loading " + dataFile.getName() + "...");
 		double glyphSize = glyphsetOptions.glyphSize();
-		GlyphSet<?> glyphSet = glyphsetOptions.makeGlyphset();
+		Glyphset<?> glyphSet = glyphsetOptions.makeGlyphset();
 		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	

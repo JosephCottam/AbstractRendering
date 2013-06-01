@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.util.Util;
 
 
@@ -34,7 +34,7 @@ import ar.util.Util;
  * 
  * **/
 
-public abstract class DynamicQuadTree<V> implements GlyphSet<V> {
+public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	public static double MIN_DIM = .001d;
 	public static double CROSS_LOAD_FACTOR = .25;
 	public static int LOADING = 10;

@@ -5,6 +5,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.io.*;
 
+
 import static ar.glyphsets.MemMapList.TYPE;
 
 /**Utility for encoding delimited files into a binary format that
@@ -13,20 +14,27 @@ import static ar.glyphsets.MemMapList.TYPE;
  * To properly encode values, a field-type descriptor must be supplied.
  * This is a string where each character indicates the type of the associated
  * field in the source file.  The valid characters are :
- *   s -- Short (two bytes)
- *   i -- Int (four bytes)
- *   l -- Long (eight bytes)
- *   f -- Float (four bytes)
- *   d -- Double (eight bytes)
- *   c -- Char (two bytes)
+ *  <ul>
+ *   <li>s -- Short (two bytes)</li>
+ *   <li>i -- Int (four bytes)</li>
+ *   <li>l -- Long (eight bytes)</li>
+ *   <li>f -- Float (four bytes)</li>
+ *   <li>d -- Double (eight bytes)</li>
+ *   <li>c -- Char (two bytes)</li>
+ *   <li>b -- Byte (one byte)</li>
+ * </ul>
  * Additionally 'x' can be used to indicate that a source-file field should not
  * be included in the output file.
+ * <p>
  * 
  * The files that result from this encoder carry a header that describes
  * the fields of the file.  The header is an integer that indicates how many
  * fields the entries have followed by one character (two bytes) for each 
  * entry type.  The entry type characters match those passed to the encoder 
  * (except that 'x' is not valid in the header).
+ * 
+ * <p>
+ * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
  * 
  * @author jcottam
  */

@@ -9,16 +9,16 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import ar.*;
-import ar.app.WrappedReduction;
-import ar.app.WrappedTransfer;
+import ar.app.util.WrappedAggregator;
+import ar.app.util.WrappedTransfer;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
 public class ARPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private final WrappedReduction reduction;
+	private final WrappedAggregator reduction;
 	private final WrappedTransfer transfer;
-	private final GlyphSet dataset;
+	private final Glyphset dataset;
 	private Renderer renderer;
 	
 	private AffineTransform viewTransformRef = new AffineTransform();
@@ -28,7 +28,7 @@ public class ARPanel extends JPanel {
 	private volatile Aggregates aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedReduction reduction, WrappedTransfer transfer, GlyphSet glyphs, Renderer renderer) {
+	public ARPanel(WrappedAggregator reduction, WrappedTransfer transfer, Glyphset glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -46,7 +46,7 @@ public class ARPanel extends JPanel {
 	}
 	
 
-	public ARPanel withDataset(GlyphSet data) {
+	public ARPanel withDataset(Glyphset data) {
 		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
@@ -58,7 +58,7 @@ public class ARPanel extends JPanel {
 		return p;
 	}
 	
-	public ARPanel withReduction(WrappedReduction r) {
+	public ARPanel withReduction(WrappedAggregator r) {
 		ARPanel p = new ARPanel(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
@@ -71,7 +71,7 @@ public class ARPanel extends JPanel {
 	}
 	
 	public Aggregates aggregates() {return aggregates;}
-	public WrappedReduction reduction() {return reduction;}
+	public WrappedAggregator reduction() {return reduction;}
 	public void aggregates(Aggregates aggregates) {this.aggregates = aggregates;}
 	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
@@ -105,6 +105,7 @@ public class ARPanel extends JPanel {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			g2.drawRenderedImage(image,g2.getTransform());
+			//synchronized(this) {this.notifyAll();}
 		} else {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -135,7 +136,7 @@ public class ARPanel extends JPanel {
 	
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
 	public Renderer getRenderer() {return renderer;}
-	public GlyphSet dataset() {return dataset;}
+	public Glyphset dataset() {return dataset;}
 	
 	
 	
@@ -282,4 +283,20 @@ public class ARPanel extends JPanel {
 	 */
 	public AffineTransform inverseViewTransform() {return new AffineTransform(inverseViewTransformRef);}
 
+	
+	public void zoomFit() {
+		try {
+			Rectangle2D content = dataset().bounds();
+			if (content == null) {return;}
+	
+			double w = getWidth()/content.getWidth();
+			double h = getHeight()/content.getHeight();
+			double scale = Math.min(w, h);
+			scale = scale/getScale();
+			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
+					
+			zoomAbs(center, scale);
+			panToAbs(center);
+		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
+	}
 }

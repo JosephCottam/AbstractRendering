@@ -25,7 +25,10 @@ import java.nio.channels.FileChannel;
  * writing as well, there has been no need).  
  * 
  * Where this class shares method names with java.nio.ByteBuffer, the operations 
- * performed are comparable EXCEPT items are indexed by long's instead of ints
+ * performed are comparable EXCEPT items are indexed by long's instead of ints.
+ * 
+ * 
+ * THIS CLASS IS NOT THREAD SAFE. It uses a stateful cursor and no synchronization...
  *   
  * **/
 public class BigFileByteBuffer {
@@ -69,6 +72,12 @@ public class BigFileByteBuffer {
 	public char getChar() {return ensure(2).getChar();}
 	public double getFloat() {return ensure(4).getFloat();}
 	public double getDouble() {return ensure(8).getDouble();}
+	
+	public void get(byte[] target, long offset, int length) {
+		ensure(offset, length);
+		this.position(offset);
+		buffer.get(target);
+	}
 	
 	
 	public long capacity() {return fileSize;}

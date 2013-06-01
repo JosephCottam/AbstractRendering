@@ -18,7 +18,7 @@ public interface Aggregator<FROM, TO> {
 	 * @param inverseView Transformation from screen space to canvas space
 	 * @return The aggregate value
 	 */
-	public TO at(Rectangle pixel, GlyphSet<FROM> glyphs, AffineTransform inverseView);
+	public TO at(Rectangle pixel, Glyphset<FROM> glyphs, AffineTransform inverseView);
 	
 	
 	/**What value is an mathematical identity value for this operation?

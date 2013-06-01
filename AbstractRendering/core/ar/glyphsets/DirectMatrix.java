@@ -5,7 +5,8 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Collections;
 
-import ar.GlyphSet;
+import ar.Glyphset;
+import ar.util.ImplicitGeometry;
 import ar.util.SimpleGlyph;
 
 
@@ -21,18 +22,18 @@ import ar.util.SimpleGlyph;
  *
  * @param <T>
  */
-public class DirectMatrix<T> implements GlyphSet<Color> {
+public class DirectMatrix<T> implements Glyphset<Color> {
 	private final T[][] matrix;
 	private final double xScale, yScale;
-	private final Painter<T> colorBy;
+	private final ImplicitGeometry.Valuer<T,Color> colorBy;
 	private final boolean nullIsValue;
 
 	
 	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue) {
-		this(matrix, xScale, yScale, nullIsValue, new Painter.AB<T>(null, Color.white, Color.blue));
+		this(matrix, xScale, yScale, nullIsValue, new ImplicitGeometry.AB<T>(null, Color.white, Color.blue));
 	}
 	
-	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, Painter<T> colorBy) {
+	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, ImplicitGeometry.Valuer<T,Color> colorBy) {
 		this.matrix = matrix;
 		this.xScale = xScale;
 		this.yScale = yScale;
@@ -51,7 +52,7 @@ public class DirectMatrix<T> implements GlyphSet<Color> {
 			if (v == null && !nullIsValue) {return Collections.emptyList();}
 			
 			Rectangle2D s = new Rectangle2D.Double(row*xScale, col*yScale, xScale, yScale);
-			Color c = colorBy.from(v);
+			Color c = colorBy.value(v);
 			return Collections.singletonList(new SimpleGlyph<Color>(s,c));
 		} else {
 			return Collections.emptyList();

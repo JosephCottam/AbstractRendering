@@ -25,7 +25,7 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
-import ar.app.WrappedTransfer;
+import ar.app.util.WrappedTransfer;
 import ar.rules.Transfers;
 
 public class ScatterControl extends JPanel {

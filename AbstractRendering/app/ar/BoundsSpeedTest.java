@@ -1,10 +1,11 @@
-package ar.app;
+package ar;
 
 import java.io.File;
 import java.io.FilenameFilter;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.glyphsets.*;
+import ar.util.ImplicitGeometry;
 
 public class BoundsSpeedTest {
 	public static void main(String[] args) throws Exception {
@@ -20,7 +21,7 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				GlyphSet<?> glyphs = new MemMapList(source, .1d, new Painter.Constant<Double>());
+				Glyphset<?> glyphs = new MemMapList(source, .1d, new ImplicitGeometry.Constant<Double>());
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();

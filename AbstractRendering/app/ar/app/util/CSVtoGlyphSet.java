@@ -4,12 +4,12 @@ import java.awt.Color;
 import java.awt.geom.*;
 import java.io.File;
 
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.glyphsets.*;
 import ar.util.DelimitedReader;
 import ar.util.SimpleGlyph;
 
-import static ar.GlyphSet.Glyph;
+import static ar.Glyphset.Glyph;
 
 public class CSVtoGlyphSet {
 	private static boolean isNumber(String s) {
@@ -29,7 +29,7 @@ public class CSVtoGlyphSet {
 		else {return bestMatch;}
 	}
 
-	public static GlyphSet autoLoad(File source, double glyphSize, GlyphSet glyphs) {
+	public static Glyphset autoLoad(File source, double glyphSize, Glyphset glyphs) {
 		try {
 			DelimitedReader r = new DelimitedReader(source, 0, DelimitedReader.CSV);
 			String[] line = r.next();
@@ -107,7 +107,7 @@ public class CSVtoGlyphSet {
 	}
 
 
-	public static GlyphSet load(final GlyphSet glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
+	public static Glyphset load(final Glyphset glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
 		DelimitedReader loader = new DelimitedReader(file, skip, DelimitedReader.CSV);
 		final int yflip = flipy?-1:1;
 		int count =0;

@@ -8,8 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
-import ar.GlyphSet;
-import ar.GlyphSet.Glyph;
+import ar.Glyphset;
+import ar.Glyphset.Glyph;
 import ar.glyphsets.DynamicQuadTree;
 import ar.util.DelimitedReader;
 import ar.util.SimpleGlyph;
@@ -19,7 +19,7 @@ public class CharityNetLoader {
 		return spanMin + ((v/max)*(spanMax-spanMin));
 	}
 	
-	public static GlyphSet load(String filename) {
+	public static Glyphset load(String filename) {
 		DelimitedReader loader = new DelimitedReader(new File(filename), 1, DelimitedReader.CSV);
 		
 		String[] header = loader.next();
@@ -28,7 +28,7 @@ public class CharityNetLoader {
 		final int span=9;
 		
 		DynamicQuadTree.LOADING = 1000;
-		GlyphSet glyphs = DynamicQuadTree.make();
+		Glyphset glyphs = DynamicQuadTree.make();
 		Color olive=new Color(107,142,35);
 		
 		int count = 0;
@@ -56,11 +56,11 @@ public class CharityNetLoader {
 	
 	private static final List<String> STATES = Arrays.asList(new String[]{"AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"});
 
-	public static GlyphSet loadDirect(String filename) {
+	public static Glyphset loadDirect(String filename) {
 		double span = 9;
 
 		DynamicQuadTree.LOADING = 1000;
-		GlyphSet glyphs = DynamicQuadTree.make();
+		Glyphset glyphs = DynamicQuadTree.make();
 		DelimitedReader loader = new DelimitedReader(new File(filename), 1, DelimitedReader.CSV);
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 		

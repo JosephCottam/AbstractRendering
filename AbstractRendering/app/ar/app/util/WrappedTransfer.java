@@ -1,4 +1,4 @@
-package ar.app;
+package ar.app.util;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -6,6 +6,7 @@ import java.awt.Color;
 import javax.swing.JFrame;
 
 import ar.Transfer;
+import ar.app.ARApp;
 import ar.app.components.ScatterControl;
 import ar.rules.Aggregators;
 import ar.rules.Transfers;

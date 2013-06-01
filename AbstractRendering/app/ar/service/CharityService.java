@@ -4,7 +4,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 
 import ar.Aggregates;
-import ar.GlyphSet;
+import ar.Glyphset;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.renderers.ParallelSpatial;
@@ -13,7 +13,7 @@ import ar.app.util.CharityNetLoader;
 
 public class CharityService {
 	public static int TASK_SIZE = 40000;
-	private static final GlyphSet glyphset;
+	private static final Glyphset glyphset;
 	static {
 		glyphset = CharityNetLoader.load("./data/dateStateXY.csv");
 	}

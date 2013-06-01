@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
@@ -10,6 +9,9 @@ import java.util.Iterator;
 import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
 import ar.util.ImplicitGeometry;
+import ar.util.Util;
+import ar.util.ImplicitGeometry.Indexed;
+import ar.util.IndexedEncoding;
 import ar.util.SimpleGlyph;
 
 
@@ -51,7 +53,7 @@ import ar.util.SimpleGlyph;
  * @author jcottam
  *
  */
-public class MemMapList implements Glyphset.RandomAccess<Color> {
+public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		public final int bytes;
@@ -69,28 +71,25 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 				}
 	};
 	
-	private final double glyphWidth;
-	private final double glyphHeight;
 	private final File source;
 	private final TYPE[] types;
-	private final ImplicitGeometry.Valuer<Double,Color> painter;
+	private final ImplicitGeometry.Valuer<Indexed,V> painter;
+	private final ImplicitGeometry.Shaper<Indexed> shaper;
 	
 	private final int recordEntries;
 	private final int recordSize;
 	private final int headerOffset;
-	private final boolean flipY;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	public MemMapList(File source, double glyphSize, ImplicitGeometry.Valuer<Double,Color> painter) {
-		this(source, glyphSize, glyphSize, false, painter, null);
+	public GenMemMapList(File source, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
+		this(source, null, shaper, painter);
 	}
-	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, ImplicitGeometry.Valuer<Double,Color> painter, TYPE[] types) {
-		this.glyphWidth = glyphWidth;
-		this.glyphHeight = glyphHeight;
+	
+	public GenMemMapList(File source, TYPE[] types, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
 		this.source = source;
 		this.painter = painter;
-		this.flipY = flipY;
+		this.shaper = shaper;
 		
 		if (source != null && types == null) {
 			recordEntries = buffer.get().getInt();
@@ -123,70 +122,32 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	}
 		
 	@Override
-	public Collection<Glyph<Color>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<Color>> contained = new ArrayList<Glyph<Color>>();
-		for (Glyph<Color> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<V>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<V>> contained = new ArrayList<Glyph<V>>();
+		for (Glyph<V> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 	
 	@Override
-	public Glyph<Color> get(long i) {
+	public Glyph<V> get(long i) {
 		long recordOffset = (i*recordSize)+headerOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
-		
-		buffer.position(recordOffset);
-		double x = value(buffer, 0);
-		double y = value(buffer, 1);
-		double v = types.length > 2 ? value(buffer, 2) : 0;
-		// System.out.printf("Read in %d: (%s,%s)\n", i,x,y);
-		y = flipY ? -y :y;
-		
-		Color c = painter.value(v);
-		Glyph<Color> g = new SimpleGlyph<Color>(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c);
+		IndexedEncoding entry = new IndexedEncoding(types, recordOffset,recordSize,buffer);
+		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry), painter.value(entry));
 		return g;
 	}
-	
-	private double value(BigFileByteBuffer buffer, int offset) {
-		TYPE t = types[offset];
-		switch(t) {
-			case INT: return buffer.getInt();
-			case SHORT: return buffer.getShort();
-			case LONG: return buffer.getLong();
-			case DOUBLE: return buffer.getDouble();
-			case FLOAT: return buffer.getFloat();
-			case BYTE: return buffer.get();
-			case CHAR: return buffer.getChar();
-		}
-		
-		throw new RuntimeException("Unknown type specified at offset " + offset);
-	}
 
-	public ImplicitGeometry.Valuer<Double,Color> painter() {return painter;}
+	public ImplicitGeometry.Valuer<Indexed,V> painter() {return painter;}
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public void add(Glyph<Color> g) {throw new UnsupportedOperationException();}
-	public Iterator<Glyph<Color>> iterator() {return new GlyphsetIterator<Color>(this);}
+	public void add(Glyph<V> g) {throw new UnsupportedOperationException();}
+	public Iterator<Glyph<V>> iterator() {return new GlyphsetIterator<V>(this);}
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
-			BigFileByteBuffer buffer = this.buffer.get();
-
-			for (long i=0; i<size();i++) {
-				long recordOffset = (i*recordSize)+headerOffset;
-				buffer.position(recordOffset);
-				double x = value(buffer, 0);
-				double y = value(buffer, 1);
-				y = flipY ? -y :y;
-
-				minX = Math.min(x, minX);
-				minY = Math.min(y, minY);
-				maxX = Math.max(x, maxX);
-				maxY = Math.max(y, maxY);
-			}
-			bounds = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+			bounds = Util.bounds(this);
 		}
 		return bounds;
 	}

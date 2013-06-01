@@ -17,8 +17,9 @@ import java.util.concurrent.RecursiveTask;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.GlyphSet;
-import ar.GlyphSet.Glyph;
+import ar.Glyphset;
+import ar.Glyphset.Glyph;
+import ar.glyphsets.GlyphsetIterator;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -47,7 +48,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public Aggregates<A> reduce(GlyphSet<G> glyphs, Aggregator<G,A> op, 
+	public Aggregates<A> reduce(Glyphset<G> glyphs, Aggregator<G,A> op, 
 			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;
@@ -56,7 +57,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		recorder.reset(glyphs.size());
 		
 		ReduceTask<G,A> t = new ReduceTask<G,A>(
-				(GlyphSet.RandomAccess<G>) glyphs, 
+				(Glyphset.RandomAccess<G>) glyphs, 
 				view, inverseView, 
 				op, reducer, 
 				width, height, taskSize,
@@ -88,7 +89,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final GlyphSet.RandomAccess<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final Glyphset.RandomAccess<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
@@ -97,7 +98,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		private final RenderUtils.Progress recorder;
 
 		
-		public ReduceTask(GlyphSet.RandomAccess<G> glyphs, 
+		public ReduceTask(Glyphset.RandomAccess<G> glyphs, 
 				AffineTransform view, AffineTransform inverseView,
 				Aggregator<G,A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
@@ -123,6 +124,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		
 		private final Aggregates<A> split() {
 			long mid = low+((high-low)/2);
+
 			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
 			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
@@ -132,7 +134,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			GlyphSet.RandomAccess<G> subset = new GlyphSubset<G>(glyphs, low, high);
+			Glyphset.RandomAccess<G> subset = new GlyphSubset<G>(glyphs, low, high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
 														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
@@ -173,7 +175,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	}
 	
 	
-	public static final class GlyphSingleton<G> implements GlyphSet.RandomAccess<G> {
+	public static final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 		private final List<Glyph<G>> glyphs;
 		private final Glyph<G> glyph;
 		private final Rectangle2D bounds;
@@ -197,13 +199,13 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		}
 	}
 	
-	public static final class GlyphSubset<G> implements GlyphSet.RandomAccess<G> {
-		private final GlyphSet.RandomAccess<G> glyphs;
+	public static final class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
+		private final Glyphset.RandomAccess<G> glyphs;
 		private final long low,high;
 		private final Glyph<G>[] cache;
 		
 		@SuppressWarnings("unchecked")
-		public GlyphSubset (GlyphSet.RandomAccess<G> glyphs, long low, long high) {
+		public GlyphSubset (Glyphset.RandomAccess<G> glyphs, long low, long high) {
 			this.glyphs = glyphs;
 			this.low = low; 
 			this.high=high;
@@ -211,7 +213,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 			this.cache = new Glyph[(int) (high-low)];
 		}
 		
-		public GlyphSubsetIterator<G> iterator() {return new GlyphSubsetIterator<G>(this,low,high);}
+		public GlyphsetIterator<G> iterator() {return new GlyphsetIterator<G>(this,low,high);}
 
 		public Collection<Glyph<G>> intersects(Rectangle2D r) {
 			ArrayList<Glyph<G>> contained = new ArrayList<Glyph<G>>();
@@ -238,22 +240,4 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 			return cache[i];
 		}
 	}
-
-	public static class GlyphSubsetIterator<G> implements Iterator<Glyph<G>> {
-		private final GlyphSet.RandomAccess<G> glyphs;
-		private final long high;
-		private long at;
-
-		public GlyphSubsetIterator(GlyphSet.RandomAccess<G> glyphs, long low, long high){
-			this.glyphs = glyphs;
-			this.high=high;
-			at = low;
-		}
-		
-		public boolean hasNext() {return at<high;}
-		public Glyph<G> next() {return glyphs.get(at++);}
-		public void remove() {throw new UnsupportedOperationException();}
-		
-	}
-
 }
