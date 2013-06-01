@@ -75,6 +75,7 @@ public class BigFileByteBuffer {
 	
 	public void get(byte[] target, long offset, int length) {
 		ensure(offset, length);
+		this.position(offset);
 		buffer.get(target);
 	}
 	
