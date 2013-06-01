@@ -38,7 +38,7 @@ public class ScatterControl extends JPanel {
 	public ScatterControl() {
 		this.setLayout(new BorderLayout());
 		this.plot = new Plot(this);
-		distance.setValue(2);
+		distance.setValue(1);
 		
 		distance.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
