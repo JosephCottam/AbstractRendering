@@ -7,8 +7,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
@@ -58,7 +56,7 @@ public class ARDemoApp implements PanelHolder {
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = presets.doZoomWith(app.image);
 				app.changeImage(presets.update(app.image));
-				if (rezoom) {zoomFit();}
+				if (rezoom) {image.zoomFit();}
 			}
 		});
 		
@@ -67,10 +65,12 @@ public class ARDemoApp implements PanelHolder {
 		frame.add(image, BorderLayout.CENTER);
 
 		frame.setSize(500, 500);
-		frame.invalidate();
+		frame.validate();
 		frame.setVisible(true);
-		zoomFit();
-		zoomFit();
+		Thread.yield();
+
+		app.changeImage(presets.update(app.image));
+		image.zoomFit();
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
@@ -100,21 +100,5 @@ public class ARDemoApp implements PanelHolder {
 		frame.revalidate();
 	}
 	
-	public void zoomFit() {
-		try {
-			Thread.sleep(100); //Delay a beat to let layout (if any) occur, then do the zoom fit. 
-			Rectangle2D content = image.dataset().bounds();
-	
-			double w = image.getWidth()/content.getWidth();
-			double h = image.getHeight()/content.getHeight();
-			double scale = Math.min(w, h);
-			scale = scale/image.getScale();
-			Point2D center = new Point2D.Double(content.getCenterX(), content.getCenterY());  
-					
-			image.zoomAbs(center, scale);
-			image.panToAbs(center);
-		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
-	}
-
 	public ARPanel getPanel() {return image;}
 }

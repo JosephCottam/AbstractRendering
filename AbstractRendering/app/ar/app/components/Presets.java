@@ -52,7 +52,9 @@ public class Presets extends CompoundPanel {
 				try {newPanel.setViewTransform(new AffineTransform());}
 				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
 			}
-		}	
+		} else {
+			newPanel.zoomFit();
+		}
 		return newPanel;
 	}
 	
