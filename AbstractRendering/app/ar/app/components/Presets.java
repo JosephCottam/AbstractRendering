@@ -131,7 +131,7 @@ public class Presets extends CompoundPanel {
 	
 	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
 	private static final Glyphset BOOST_MEMORY = load("BGL Memory", "./data/MemVisScaled.csv", .001);
-	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, .001, true, new ImplicitGeometry.AB<Double>(0d, Color.BLUE, Color.RED), 1, "ddi"); 
+	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "./data/MemVisScaledB.hbin", .001, .001, true, new ImplicitGeometry.IndexedToValue<>(2, new ImplicitGeometry.AB<Integer>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
 	private static final Glyphset CHARITY_NET_MM = memMap("Charity Net", "./data/dateStateXY.hbin", .5, .1, false, new ImplicitGeometry.Constant<>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);

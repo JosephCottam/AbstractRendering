@@ -62,17 +62,19 @@ public abstract class ImplicitGeometry {
 		}	
 	}
 	
-	public static class ArrayToValue<I,V> implements Valuer<Indexed,V> {
+	public static class IndexedToValue<I,V> implements Valuer<Indexed,V> {
 		private final int vIdx;
 		private final Valuer<I,V> basis;
 		
-		public ArrayToValue(int vIdx, Valuer<I, V> basis) {
+		public IndexedToValue(int vIdx, Valuer<I, V> basis) {
 			this.vIdx = vIdx;
 			this.basis = basis;
 		}
 		
 		@SuppressWarnings("unchecked")
-		public V value(Indexed from) {return basis.value((I) from.get(vIdx));}
+		public V value(Indexed from) {
+			return basis.value((I) from.get(vIdx));
+		}
 	}
 	
 	

@@ -47,6 +47,13 @@ public class ARDemoApp implements PanelHolder {
 		c.weightx = 0.5;
 		c.gridwidth = 1;
 		controls.add(export,c);
+		
+		JLabel instructions = new JLabel("Double-click to zoom extends and/or force refresh.", JLabel.CENTER);
+		c.gridx=0;
+		c.gridy=2;
+		c.weightx=2;
+		c.weightx=1;
+		controls.add(instructions,c);
 
 		frame.add(controls, BorderLayout.SOUTH);
 		
