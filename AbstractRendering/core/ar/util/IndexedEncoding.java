@@ -2,7 +2,7 @@ package ar.util;
 
 import java.nio.ByteBuffer;
 
-import ar.glyphsets.GenMemMapList.TYPE;
+import ar.glyphsets.MemMapList.TYPE;
 import ar.util.ImplicitGeometry.Indexed;
 
 public class IndexedEncoding implements Indexed {

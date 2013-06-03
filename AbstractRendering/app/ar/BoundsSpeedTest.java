@@ -14,7 +14,7 @@ public class BoundsSpeedTest {
 		File root = new File("./data/");
 		File[] files = root.listFiles(new FilenameFilter(){
 			public boolean accept(File dir, String name) {
-				return name.toUpperCase().endsWith(".HBIN");
+				return name.toUpperCase().endsWith("FULL.HBIN");
 			}
 		});
 		
@@ -22,7 +22,7 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				Glyphset<?> glyphs = new MemMapList(source, .1, new ImplicitGeometry.Constant<Double>());
+				Glyphset<?> glyphs = new PointMemMapList(source, .1, new ImplicitGeometry.Constant<Double>());
 //					Glyphset<?> glyphs = new GenMemMapList(source, 
 //							new ImplicitGeometry.IndexedToRect(.1, false, 0, 1), 
 //							new ImplicitGeometry.Constant<Double>());
@@ -31,6 +31,7 @@ public class BoundsSpeedTest {
 				long end = System.currentTimeMillis();
 				System.out.printf("%s: %d (iter %d)\n", source.getName(), (end-start), i);
 				total += (end-start);
+				Thread.yield();
 			}
 			System.out.printf("\t\t%s (avg; %d iters), %s\n",source.getName(), iterations, total/((double) iterations));
 			} catch (Exception e) {System.out.println("Error testing " + source.getName()); e.printStackTrace();}

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.io.*;
 
 
-import static ar.glyphsets.MemMapList.TYPE;
+import static ar.glyphsets.PointMemMapList.TYPE;
 
 /**Utility for encoding delimited files into a binary format that
  * can be read by the included mem-mapped list.  

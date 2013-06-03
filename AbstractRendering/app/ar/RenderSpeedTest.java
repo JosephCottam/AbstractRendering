@@ -34,17 +34,17 @@ public class RenderSpeedTest {
 		f.setSize(500,500);
 		f.setVisible(true);
 		
-		WrappedAggregator aggregator = new WrappedAggregator.Count();
-		WrappedTransfer transfer = new WrappedTransfer.RedWhiteInterpolate();
-		AggregateReducer reduction = new AggregateReducers.Count();
+		WrappedAggregator<?,?> aggregator = new WrappedAggregator.Count();
+		WrappedTransfer<?> transfer = new WrappedTransfer.RedWhiteInterpolate();
+		AggregateReducer<?,?,?> reduction = new AggregateReducers.Count();
 		
-		Renderer render = new ParallelGlyphs(1000, reduction);
+		Renderer<?,?> render = new ParallelGlyphs(1000, reduction);
 
 		for (File source: files) {
 			long total=0;
 			try {
-				//Glyphset glyphs = new MemMapList(source, .005, new ImplicitGeometry.Constant(Color.red));
-				Glyphset glyphs = new GenMemMapList(source, new ImplicitGeometry.IndexedToRect(.005, false, 0, 1), new ImplicitGeometry.Constant(Color.red));
+				//Glyphset<?> glyphs = new MemMapList(source, .005, new ImplicitGeometry.Constant(Color.red));
+				Glyphset<?> glyphs = new MemMapList(source, new ImplicitGeometry.IndexedToRect(.005, .005, false, 0, 1), new ImplicitGeometry.Constant(Color.red));
 				glyphs.bounds();
 				for (int i=0; i<iterations; i++) {
 					ARPanel panel = new ARPanel(aggregator, transfer, glyphs, render);

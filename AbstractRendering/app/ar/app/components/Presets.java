@@ -150,12 +150,14 @@ public class Presets extends CompoundPanel {
 		}
 	}
 	
-	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, ImplicitGeometry.Valuer p, int skip, String types) {
+	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, ImplicitGeometry.Valuer valuer, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);
+		ImplicitGeometry.Shaper shaper = new ImplicitGeometry.IndexedToRect(width, height, flipY, 0, 1);
+
 		try {
 			long start = System.currentTimeMillis();
-			Glyphset g = new MemMapList(f, width, height, flipY, p, null);
+			Glyphset g = new MemMapList(f, shaper, valuer);
 			long end = System.currentTimeMillis();
 			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
 			return g;
@@ -165,7 +167,7 @@ public class Presets extends CompoundPanel {
 					System.out.println("Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return memMap(label, file, width, height, flipY, p, skip, null);	  //change types to null so it only tries to encode once
+					return new MemMapList(f, shaper, valuer);	  //change types to null so it only tries to encode once
 				} else {throw e;}
 			} catch (Exception ex) {
 				System.out.println("Faield to load data.");

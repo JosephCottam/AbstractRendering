@@ -1,6 +1,5 @@
 package ar.glyphsets;
 
-import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
@@ -12,49 +11,50 @@ import java.util.concurrent.RecursiveTask;
 import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
 import ar.util.ImplicitGeometry;
-import ar.util.SimpleGlyph;
 import ar.util.Util;
-
+import ar.util.ImplicitGeometry.Indexed;
+import ar.util.IndexedEncoding;
+import ar.util.SimpleGlyph;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
- * 
- * <p>
- * This glyphset uses 'implicit geometry' in that the geometry is produced just-in-time and
- * discarded immediately.  Implicit geometry significantly reduces the required memory at the
- * cost of speed.  When using implicit geometry, the display window size is the principal 
- * memory consumer (because it determines both the image size and the aggregates set size). 
- * 
- * <p>
- * The memory mapped file must be encoded as fixed-width records for this class.
- * The files may include a header to self-describe or the header information may be supplied.
- * 
- * <p>
- *  The header, when provided, is an integer indicating how many fields are in each record,
- *  followed by a set of characters (one for each field).  
- *  
- *  <p>
- *  The characters that describe field types are:
- *  <ul>
- *   <li>s -- Short (two bytes)</li>
- *   <li>i -- Int (four bytes)</li>
- *   <li>l -- Long (eight bytes)</li>
- *   <li>f -- Float (four bytes)</li>
- *   <li>d -- Double (eight bytes)</li>
- *   <li>c -- Char (two bytes)</li>
- *   <li>b -- Byte (one byte)</li>
- * </ul>
- * 
- * <p>
- * TODO: Add skip parameter to skip a certain number of bytes at the start of the file
- * <p>
- * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
- * <p>
- * TODO: Add support for non-color glyphs (generalize Painter...)
- * 
- * @author jcottam
- *
- */
-public class MemMapList implements Glyphset.RandomAccess<Color> {
+* 
+* <p>
+* This glyphset uses 'implicit geometry' in that the geometry is produced just-in-time and
+* discarded immediately.  Implicit geometry significantly reduces the required memory at the
+* cost of speed.  When using implicit geometry, the display window size is the principal 
+* memory consumer (because it determines both the image size and the aggregates set size). 
+* 
+* <p>
+* The memory mapped file must be encoded as fixed-width records for this class.
+* The files may include a header to self-describe or the header information may be supplied.
+* 
+* <p>
+*  The header, when provided, is an integer indicating how many fields are in each record,
+*  followed by a set of characters (one for each field).  
+*  
+*  <p>
+*  The characters that describe field types are:
+*  <ul>
+*   <li>s -- Short (two bytes)</li>
+*   <li>i -- Int (four bytes)</li>
+*   <li>l -- Long (eight bytes)</li>
+*   <li>f -- Float (four bytes)</li>
+*   <li>d -- Double (eight bytes)</li>
+*   <li>c -- Char (two bytes)</li>
+*   <li>b -- Byte (one byte)</li>
+* </ul>
+* 
+* <p>
+* TODO: Add skip parameter to skip a certain number of bytes at the start of the file
+* <p>
+* TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
+* <p>
+* TODO: Add support for non-color glyphs (generalize Painter...)
+* 
+* @author jcottam
+*
+*/
+public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
 		public final int bytes;
@@ -62,8 +62,8 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	};
 	
 	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	
 	private final ForkJoinPool pool = new ForkJoinPool();
-
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 				public BigFileByteBuffer initialValue() {
@@ -73,30 +73,25 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 				}
 	};
 	
-	private final double glyphWidth;
-	private final double glyphHeight;
 	private final File source;
 	private final TYPE[] types;
-	private final ImplicitGeometry.Valuer<Double,Color> painter;
+	private final ImplicitGeometry.Valuer<Indexed,V> painter;
+	private final ImplicitGeometry.Shaper<Indexed> shaper;
 	
 	private final int recordEntries;
 	private final int recordSize;
 	private final int headerOffset;
-	private final boolean flipY;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	
-	
-	public MemMapList(File source, double glyphSize, ImplicitGeometry.Valuer<Double,Color> painter) {
-		this(source, glyphSize, glyphSize, false, painter, null);
+	public MemMapList(File source, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
+		this(source, null, shaper, painter);
 	}
-	public MemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, ImplicitGeometry.Valuer<Double,Color> painter, TYPE[] types) {
-		this.glyphWidth = glyphWidth;
-		this.glyphHeight = glyphHeight;
+	
+	public MemMapList(File source, TYPE[] types, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
 		this.source = source;
 		this.painter = painter;
-		this.flipY = flipY;
+		this.shaper = shaper;
 		
 		if (source != null && types == null) {
 			recordEntries = buffer.get().getInt();
@@ -127,69 +122,50 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
 		
 	}
+	
+	protected void finalize() {pool.shutdownNow();}
 		
 	@Override
-	public Collection<Glyph<Color>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<Color>> contained = new ArrayList<Glyph<Color>>();
-		for (Glyph<Color> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<V>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<V>> contained = new ArrayList<Glyph<V>>();
+		for (Glyph<V> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 	
 	@Override
-	public Glyph<Color> get(long i) {
-		long recordOffset = (i*recordSize)+headerOffset;
-		BigFileByteBuffer buffer = this.buffer.get();
-		
-		buffer.position(recordOffset);
-		double x = value(buffer, 0);
-		double y = value(buffer, 1);
-		double v = types.length > 2 ? value(buffer, 2) : 0;
-		// System.out.printf("Read in %d: (%s,%s)\n", i,x,y);
-		y = flipY ? -y :y;
-		
-		Color c = painter.value(v);
-		Glyph<Color> g = new SimpleGlyph<Color>(new Rectangle2D.Double(x,y,glyphWidth,glyphHeight), c);
+	public Glyph<V> get(long i) {
+		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry(i)), painter.value(entry(i)));
 		return g;
 	}
 	
-	private double value(BigFileByteBuffer buffer, int offset) {
-		TYPE t = types[offset];
-		switch(t) {
-			case INT: return buffer.getInt();
-			case SHORT: return buffer.getShort();
-			case LONG: return buffer.getLong();
-			case DOUBLE: return buffer.getDouble();
-			case FLOAT: return buffer.getFloat();
-			case BYTE: return buffer.get();
-			case CHAR: return buffer.getChar();
-		}
-		
-		throw new RuntimeException("Unknown type specified at offset " + offset);
+	protected IndexedEncoding entry(long i) {
+		long recordOffset = (i*recordSize)+headerOffset;
+		BigFileByteBuffer buffer = this.buffer.get();
+		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
 
-	public ImplicitGeometry.Valuer<Double,Color> painter() {return painter;}
+	public ImplicitGeometry.Valuer<Indexed,V> valuer() {return painter;}
+	public ImplicitGeometry.Shaper<Indexed> shaper() {return shaper;}
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public void add(Glyph<Color> g) {throw new UnsupportedOperationException();}
-	public Iterator<Glyph<Color>> iterator() {return new GlyphsetIterator<Color>(this);}
+	public void add(Glyph<V> g) {throw new UnsupportedOperationException();}
+	public Iterator<Glyph<V>> iterator() {return new GlyphsetIterator<V>(this);}
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			bounds = pool.invoke(new BoundsTask(this, 0, size()));
+			bounds = pool.invoke(new BoundsTask(0, this.size()));
 		}
 		return bounds;
 	}
 	
-	private static final class BoundsTask extends RecursiveTask<Rectangle2D> {
+	private final class BoundsTask extends RecursiveTask<Rectangle2D> {
 		public static final long serialVersionUID = 1L;
 		private static final int TASK_SIZE = 100000;
-		private final Glyphset.RandomAccess<?> glyphs;
 		private final long low, high;
 		
-		public BoundsTask(Glyphset.RandomAccess<?> glyphs, long low, long high) {
-			this.glyphs = glyphs;
+		public BoundsTask(long low, long high) {
 			this.low = low;
 			this.high = high;
 		}
@@ -202,17 +178,25 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 		
 		private Rectangle2D split() {
 			long mid = low+((high-low)/2);
-			BoundsTask top = new BoundsTask(glyphs, low, mid);
-			BoundsTask bottom = new BoundsTask(glyphs, mid, high);
+			BoundsTask top = new BoundsTask(low, mid);
+			BoundsTask bottom = new BoundsTask(mid, high);
 			invokeAll(top, bottom);
 			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
 			return bounds;
 		}
 		
 		private Rectangle2D local() {
-			GlyphsetIterator<?> it = new GlyphsetIterator(glyphs, low, high);
-			return Util.bounds(it);
+			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+
+			for (long i=low; i<high; i++) {
+				IndexedEncoding enc = entry(i);
+				Rectangle2D bound = shaper.shape(enc).getBounds2D();
+				if (bound != null) {Util.add(bounds, bound);}
+
+			}
+			return bounds;
 		}
+		
 	}
 	
 }

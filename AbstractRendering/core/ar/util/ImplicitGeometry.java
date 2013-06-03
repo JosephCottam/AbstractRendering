@@ -42,12 +42,13 @@ public abstract class ImplicitGeometry {
 	
 	
 	public static class IndexedToRect implements Shaper<Indexed> {
-		private final double size;
+		private final double width,height;
 		private final boolean flipY;
 		private final int xIdx, yIdx;
 		
-		public IndexedToRect(double size, boolean flipY, int xIdx, int yIdx) {
-			this.size=size; 
+		public IndexedToRect(double width, double height, boolean flipY, int xIdx, int yIdx) {
+			this.width=width;
+			this.height=height;
 			this.flipY=flipY;
 			this.xIdx = xIdx;
 			this.yIdx = yIdx;
@@ -57,7 +58,7 @@ public abstract class ImplicitGeometry {
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
 			y = flipY ? -y : y; 
-			return new Rectangle2D.Double(x, y, size,size);
+			return new Rectangle2D.Double(x, y, width, height);
 		}	
 	}
 	
