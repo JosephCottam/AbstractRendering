@@ -10,6 +10,7 @@ import ar.util.ImplicitGeometry;
 public class BoundsSpeedTest {
 	public static void main(String[] args) throws Exception {
 		int iterations = args.length >0 ? Integer.parseInt(args[0]) : 10;
+		
 		File root = new File("./data/");
 		File[] files = root.listFiles(new FilenameFilter(){
 			public boolean accept(File dir, String name) {
@@ -21,14 +22,19 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				Glyphset<?> glyphs = new MemMapList(source, .1d, new ImplicitGeometry.Constant<Double>());
+				Glyphset<?> glyphs = new MemMapList(source, .1, new ImplicitGeometry.Constant<Double>());
+//					Glyphset<?> glyphs = new GenMemMapList(source, 
+//							new ImplicitGeometry.IndexedToRect(.1, false, 0, 1), 
+//							new ImplicitGeometry.Constant<Double>());
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();
+				System.out.printf("%s: %d (iter %d)\n", source.getName(), (end-start), i);
 				total += (end-start);
 			}
-			System.out.printf("\t\t%s (avg), %s\n",source.getName(), total/((double) iterations));
+			System.out.printf("\t\t%s (avg; %d iters), %s\n",source.getName(), iterations, total/((double) iterations));
 			} catch (Exception e) {System.out.println("Error testing " + source.getName()); e.printStackTrace();}
 		}		
+	
 	}
 }

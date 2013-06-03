@@ -7,6 +7,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import ar.AggregateReducer;
@@ -38,9 +39,14 @@ public final class Util {
 	}
 
 	/**What bounding box closely contains all of the glyphs in the passed collection.**/
-	public static Rectangle2D bounds(Iterable<? extends Glyph<?>> glyphs) {
+	public static Rectangle2D bounds(Iterable<? extends Glyph<?>> glyphs) {return bounds(glyphs.iterator());}
+	
+	/**What bounding box closely contains all of the glyphs covered by the iterator.**/
+	public static Rectangle2D bounds(Iterator<? extends Glyph<?>> glyphs) {
 		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-		for (Glyph<?> g: glyphs) {
+		while (glyphs.hasNext()) {
+			Glyph<?> g = glyphs.next();
+			if (g == null) {continue;}
 			Rectangle2D bound = g.shape().getBounds2D();
 			if (bound != null) {add(bounds, bound);}
 		}

@@ -6,11 +6,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
 import ar.util.ImplicitGeometry;
 import ar.util.SimpleGlyph;
+import ar.util.Util;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
@@ -59,7 +62,8 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	};
 	
 	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
-	
+	private final ForkJoinPool pool = new ForkJoinPool();
+
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 				public BigFileByteBuffer initialValue() {
@@ -82,6 +86,8 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
+	
+	
 	public MemMapList(File source, double glyphSize, ImplicitGeometry.Valuer<Double,Color> painter) {
 		this(source, glyphSize, glyphSize, false, painter, null);
 	}
@@ -171,24 +177,58 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
-			BigFileByteBuffer buffer = this.buffer.get();
-
-			for (long i=0; i<size();i++) {
-				long recordOffset = (i*recordSize)+headerOffset;
-				buffer.position(recordOffset);
-				double x = value(buffer, 0);
-				double y = value(buffer, 1);
-				y = flipY ? -y :y;
-
-				minX = Math.min(x, minX);
-				minY = Math.min(y, minY);
-				maxX = Math.max(x, maxX);
-				maxY = Math.max(y, maxY);
-			}
-			bounds = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+//			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
+//			BigFileByteBuffer buffer = this.buffer.get();
+//
+//			for (long i=0; i<size();i++) {
+//				long recordOffset = (i*recordSize)+headerOffset;
+//				buffer.position(recordOffset);
+//				double x = value(buffer, 0);
+//				double y = value(buffer, 1);
+//				y = flipY ? -y :y;
+//
+//				minX = Math.min(x, minX);
+//				minY = Math.min(y, minY);
+//				maxX = Math.max(x, maxX);
+//				maxY = Math.max(y, maxY);
+//			}
+//			bounds = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
+			bounds = pool.invoke(new BoundsTask(this, 0, size()));
 		}
 		return bounds;
+	}
+	
+	private static final class BoundsTask extends RecursiveTask<Rectangle2D> {
+		public static final long serialVersionUID = 1L;
+		private static final int TASK_SIZE = 100000;
+		private final Glyphset.RandomAccess<?> glyphs;
+		private final long low, high;
+		
+		public BoundsTask(Glyphset.RandomAccess<?> glyphs, long low, long high) {
+			this.glyphs = glyphs;
+			this.low = low;
+			this.high = high;
+		}
+		
+		@Override
+		protected Rectangle2D compute() {
+			if (high-low > TASK_SIZE) {return split();}
+			else {return local();}
+		}
+		
+		private Rectangle2D split() {
+			long mid = low+((high-low)/2);
+			BoundsTask top = new BoundsTask(glyphs, low, mid);
+			BoundsTask bottom = new BoundsTask(glyphs, mid, high);
+			invokeAll(top, bottom);
+			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
+			return bounds;
+		}
+		
+		private Rectangle2D local() {
+			GlyphsetIterator<?> it = new GlyphsetIterator(glyphs, low, high);
+			return Util.bounds(it);
+		}
 	}
 	
 }

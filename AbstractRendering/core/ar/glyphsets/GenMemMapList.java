@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
@@ -16,39 +18,9 @@ import ar.util.SimpleGlyph;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
- * 
  * <p>
- * This glyphset uses 'implicit geometry' in that the geometry is produced just-in-time and
- * discarded immediately.  Implicit geometry significantly reduces the required memory at the
- * cost of speed.  When using implicit geometry, the display window size is the principal 
- * memory consumer (because it determines both the image size and the aggregates set size). 
- * 
- * <p>
- * The memory mapped file must be encoded as fixed-width records for this class.
- * The files may include a header to self-describe or the header information may be supplied.
- * 
- * <p>
- *  The header, when provided, is an integer indicating how many fields are in each record,
- *  followed by a set of characters (one for each field).  
- *  
- *  <p>
- *  The characters that describe field types are:
- *  <ul>
- *   <li>s -- Short (two bytes)</li>
- *   <li>i -- Int (four bytes)</li>
- *   <li>l -- Long (eight bytes)</li>
- *   <li>f -- Float (four bytes)</li>
- *   <li>d -- Double (eight bytes)</li>
- *   <li>c -- Char (two bytes)</li>
- *   <li>b -- Byte (one byte)</li>
- * </ul>
- * 
- * <p>
- * TODO: Add skip parameter to skip a certain number of bytes at the start of the file
- * <p>
- * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
- * <p>
- * TODO: Add support for non-color glyphs (generalize Painter...)
+ * Generalization of the MemMapList to use more implicit geometry.  This is an experimental
+ * class still, but probably serviceable.  See MemMapList for input format details, etc.
  * 
  * @author jcottam
  *
@@ -62,6 +34,7 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	
 	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
 	
+	private final ForkJoinPool pool = new ForkJoinPool();
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 				public BigFileByteBuffer initialValue() {
@@ -120,6 +93,8 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
 		
 	}
+	
+	protected void finalize() {pool.shutdownNow();}
 		
 	@Override
 	public Collection<Glyph<V>> intersects(Rectangle2D r) {
@@ -147,9 +122,44 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			bounds = Util.bounds(this);
+			bounds = pool.invoke(new BoundsTask(this, 0, this.size()));
+			//bounds = Util.bounds(this);
 		}
 		return bounds;
+	}
+	
+	private final class BoundsTask extends RecursiveTask<Rectangle2D> {
+		public static final long serialVersionUID = 1L;
+		private static final int TASK_SIZE = 100000;
+		private final Glyphset.RandomAccess<?> glyphs;
+		private final long low, high;
+		
+		public BoundsTask(Glyphset.RandomAccess<?> glyphs, long low, long high) {
+			this.glyphs = glyphs;
+			this.low = low;
+			this.high = high;
+		}
+		
+		@Override
+		protected Rectangle2D compute() {
+			if (high-low > TASK_SIZE) {return split();}
+			else {return local();}
+		}
+		
+		private Rectangle2D split() {
+			long mid = low+((high-low)/2);
+			BoundsTask top = new BoundsTask(glyphs, low, mid);
+			BoundsTask bottom = new BoundsTask(glyphs, mid, high);
+			invokeAll(top, bottom);
+			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
+			return bounds;
+		}
+		
+		private Rectangle2D local() {
+			GlyphsetIterator<?> it = new GlyphsetIterator(glyphs, low, high);
+			return Util.bounds(it);
+		}
+		
 	}
 	
 }
