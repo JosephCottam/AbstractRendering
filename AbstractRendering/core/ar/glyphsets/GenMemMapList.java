@@ -105,11 +105,14 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	
 	@Override
 	public Glyph<V> get(long i) {
+		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry(i)), painter.value(entry(i)));
+		return g;
+	}
+	
+	protected IndexedEncoding entry(long i) {
 		long recordOffset = (i*recordSize)+headerOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
-		IndexedEncoding entry = new IndexedEncoding(types, recordOffset,recordSize,buffer);
-		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry), painter.value(entry));
-		return g;
+		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
 
 	public ImplicitGeometry.Valuer<Indexed,V> painter() {return painter;}
@@ -122,8 +125,7 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			bounds = pool.invoke(new BoundsTask(this, 0, this.size()));
-			//bounds = Util.bounds(this);
+			bounds = pool.invoke(new BoundsTask(0, this.size()));
 		}
 		return bounds;
 	}
@@ -131,11 +133,9 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final class BoundsTask extends RecursiveTask<Rectangle2D> {
 		public static final long serialVersionUID = 1L;
 		private static final int TASK_SIZE = 100000;
-		private final Glyphset.RandomAccess<?> glyphs;
 		private final long low, high;
 		
-		public BoundsTask(Glyphset.RandomAccess<?> glyphs, long low, long high) {
-			this.glyphs = glyphs;
+		public BoundsTask(long low, long high) {
 			this.low = low;
 			this.high = high;
 		}
@@ -148,16 +148,23 @@ public class GenMemMapList<V> implements Glyphset.RandomAccess<V> {
 		
 		private Rectangle2D split() {
 			long mid = low+((high-low)/2);
-			BoundsTask top = new BoundsTask(glyphs, low, mid);
-			BoundsTask bottom = new BoundsTask(glyphs, mid, high);
+			BoundsTask top = new BoundsTask(low, mid);
+			BoundsTask bottom = new BoundsTask(mid, high);
 			invokeAll(top, bottom);
 			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
 			return bounds;
 		}
 		
 		private Rectangle2D local() {
-			GlyphsetIterator<?> it = new GlyphsetIterator(glyphs, low, high);
-			return Util.bounds(it);
+			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+
+			for (long i=low; i<high; i++) {
+				IndexedEncoding enc = entry(i);
+				Rectangle2D bound = shaper.shape(enc).getBounds2D();
+				if (bound != null) {Util.add(bounds, bound);}
+
+			}
+			return bounds;
 		}
 		
 	}

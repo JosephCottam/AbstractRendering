@@ -177,22 +177,6 @@ public class MemMapList implements Glyphset.RandomAccess<Color> {
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-//			double minX=Double.MAX_VALUE, minY=Double.MAX_VALUE, maxX=Double.MIN_VALUE, maxY=Double.MIN_VALUE;
-//			BigFileByteBuffer buffer = this.buffer.get();
-//
-//			for (long i=0; i<size();i++) {
-//				long recordOffset = (i*recordSize)+headerOffset;
-//				buffer.position(recordOffset);
-//				double x = value(buffer, 0);
-//				double y = value(buffer, 1);
-//				y = flipY ? -y :y;
-//
-//				minX = Math.min(x, minX);
-//				minY = Math.min(y, minY);
-//				maxX = Math.max(x, maxX);
-//				maxY = Math.max(y, maxY);
-//			}
-//			bounds = new Rectangle2D.Double(minX, minY, maxX-minX, maxY-minY);
 			bounds = pool.invoke(new BoundsTask(this, 0, size()));
 		}
 		return bounds;
