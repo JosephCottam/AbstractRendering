@@ -1,6 +1,6 @@
 .DS_Store
 .metadata/
-./bin
+bin
 *.jar
 AbstractRendering/data/*
 AbstractRendering/doc/*

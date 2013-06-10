@@ -1,18 +1,18 @@
 <project name="AbstractRendering" default="build" basedir=".">
 
+  <property name="bin" value="bin"/>
   <property name="appSrc" value="app"/>
-  <property name="appBin" value="bin/appBin" />
+  <property name="appBin" value="${bin}/appBin" />
   <property name="appJar" value="ARApp.jar" />
   <property name="coreSrc" value="core"/>
-  <property name="coreBin" value="bin/coreBin" />
+  <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
-  <property name="docs" value="${docs}" />
+  <property name="docs" value="doc" />
 
   <target name="build" depends="clean,core,app" />
 
   <target name="clean">
-    <delete dir="${coreBin}"/>
-    <delete dir="${appBin}"/>
+    <delete dir="${bin}"/>
     <delete dir="${docs}"/>
     <delete file="AR.jar"/>
     <delete file="ARApp.jar"/>
@@ -34,7 +34,7 @@
   </target>
 
   <target name="docs">
-    <javadoc sourcepath="${coreSrc}" destdir="doc"/>
+    <javadoc sourcepath="${coreSrc}" destdir="${docs}"/>
   </target>
 
   <target name="app" depends="core">
