@@ -20,6 +20,8 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.glyphsets.GlyphsetIterator;
+import ar.util.ConstantAggregates;
+import ar.util.FlatAggregates;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -136,8 +138,15 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		private final Aggregates<A> local() {
 			Glyphset.RandomAccess<G> subset = new GlyphSubset<G>(glyphs, low, high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
-			Aggregates<A> aggregates = new Aggregates<A>(bounds.x, bounds.y,
-														 bounds.x+bounds.width+1, bounds.y+bounds.height+1, 
+			bounds = bounds.intersection(new Rectangle(0,0,width,height));
+			
+			if (bounds.isEmpty()) {
+				return new ConstantAggregates<>(bounds.x, bounds.y, 
+												bounds.x+bounds.width, bounds.y+bounds.height, 
+												op.identity());
+			}				
+			Aggregates<A> aggregates = new FlatAggregates<>(bounds.x, bounds.y,
+														 bounds.x+bounds.width, bounds.y+bounds.height, 
 														 op.identity());
 			
 			

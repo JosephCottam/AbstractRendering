@@ -12,6 +12,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.util.FlatAggregates;
 import ar.util.Util;
 
 /**Task stealing renderer that operates on a per-pixel basis, designed to be used with a spatially-decomposed glyph set.
@@ -33,7 +34,7 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 	
 	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op, 
 			final AffineTransform inverseView, final int width, final int height) {
-		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity()); 
+		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity()); 
 		ReduceTask<G,A> t = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;

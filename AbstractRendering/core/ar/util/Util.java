@@ -139,7 +139,7 @@ public final class Util {
 	}
 
 	public static <T extends Number> Aggregates<Double> score(Aggregates<T> source, Stats extrema) {
-		final Aggregates<Double> results = new Aggregates<Double>(source.highX(), source.highY(), 0d);
+		final Aggregates<Double> results = new FlatAggregates<Double>(source.highX(), source.highY(), 0d);
 		final double mean = extrema.mean;
 		final double stdev = extrema.stdev;
 		for (int x=0;x<results.lowX();x++) {
@@ -180,7 +180,6 @@ public final class Util {
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
 	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
-
 		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
 		Aggregates<T> target;
 		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
@@ -196,12 +195,12 @@ public final class Util {
 		} else {
 			sources.add(right);
 			sources.add(left);
-			target = new Aggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, left.defaultValue());
+			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
 
 		for (Aggregates<T> source: sources) {
-			for (int x=source.lowX(); x<source.highX(); x++) {
-				for (int y=source.lowY(); y<source.highY(); y++) {
+			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
+				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
 					target.set(x,y, red.combine(target.at(x,y), source.at(x,y)));
 				}
 			}

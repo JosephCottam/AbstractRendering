@@ -10,6 +10,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.util.FlatAggregates;
 import ar.util.Util;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.
@@ -24,7 +25,7 @@ public final class SerialSpatial<G,A> implements Renderer<G,A> {
 	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op,   
 			final AffineTransform inverseView, final int width, final int height) {
 		recorder.reset(width*height);
-		Aggregates<A> aggregates = new Aggregates<A>(width, height, op.identity());
+		Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
 		Rectangle pixel = new Rectangle(0,0,1,1);
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {

@@ -24,4 +24,6 @@ public interface AggregateReducer<LEFT,RIGHT,OUT> {
 	 * @return Combination of left and right aggregate values as a new aggregate value
 	 */
 	public OUT combine(LEFT left, RIGHT right);
+	
+	public OUT identity();
 }

@@ -2,6 +2,8 @@ package ar.app.components;
 
 import javax.swing.JPanel;
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -34,6 +36,13 @@ public class ARPanel extends JPanel {
 		this.transfer = transfer;
 		this.dataset = glyphs;
 		this.renderer = renderer;
+		
+		this.addComponentListener(new ComponentListener() {
+			public void componentResized(ComponentEvent e) {ARPanel.this.validate();}
+			public void componentMoved(ComponentEvent e) {}
+			public void componentShown(ComponentEvent e) {}
+			public void componentHidden(ComponentEvent e) {}
+		});
 		
 		ZoomPanHandler h = new ZoomPanHandler();
 		super.addMouseListener(h);
@@ -110,7 +119,11 @@ public class ARPanel extends JPanel {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
-
+	}
+	
+	public void validate() {
+		super.validate();
+		image = null;
 	}
 	
 	public final class FullRender implements Runnable {
