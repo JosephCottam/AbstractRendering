@@ -20,17 +20,17 @@ public class ARPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private final WrappedAggregator reduction;
 	private final WrappedTransfer transfer;
-	private final Glyphset dataset;
+	private final Glyphset<?> dataset;
 	private Renderer renderer;
 	
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 
 	private volatile BufferedImage image;
-	private volatile Aggregates aggregates;
+	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedAggregator reduction, WrappedTransfer transfer, Glyphset glyphs, Renderer renderer) {
+	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?> transfer, Glyphset<?> glyphs, Renderer<?,?> renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -55,11 +55,11 @@ public class ARPanel extends JPanel {
 	}
 	
 
-	public ARPanel withDataset(Glyphset data) {
+	public ARPanel withDataset(Glyphset<?> data) {
 		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
-	public  ARPanel withTransfer(WrappedTransfer t) {
+	public  ARPanel withTransfer(WrappedTransfer<?> t) {
 		ARPanel p = new ARPanel(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
@@ -67,21 +67,21 @@ public class ARPanel extends JPanel {
 		return p;
 	}
 	
-	public ARPanel withReduction(WrappedAggregator r) {
+	public ARPanel withReduction(WrappedAggregator<?,?> r) {
 		ARPanel p = new ARPanel(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		return p;
 	}
 	
-	public ARPanel withRenderer(Renderer r) {
+	public ARPanel withRenderer(Renderer<?,?> r) {
 		ARPanel p = new ARPanel(reduction, transfer, dataset, r);
 		return p;
 	}
 	
-	public Aggregates aggregates() {return aggregates;}
-	public WrappedAggregator reduction() {return reduction;}
-	public void aggregates(Aggregates aggregates) {this.aggregates = aggregates;}
+	public Aggregates<?> aggregates() {return aggregates;}
+	public WrappedAggregator<?,?> reduction() {return reduction;}
+	public void aggregates(Aggregates<?> aggregates) {this.aggregates = aggregates;}
 	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
 		if (image == null) {return true;}
@@ -120,11 +120,6 @@ public class ARPanel extends JPanel {
 		}
 	}
 	
-	public void validate() {
-		super.validate();
-		image = null;
-	}
-	
 	public final class FullRender implements Runnable {
 		public void run() {
 			int width = ARPanel.this.getWidth();
@@ -149,8 +144,8 @@ public class ARPanel extends JPanel {
 	}
 	
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
-	public Renderer getRenderer() {return renderer;}
-	public Glyphset dataset() {return dataset;}
+	public Renderer<?,?> getRenderer() {return renderer;}
+	public Glyphset<?> dataset() {return dataset;}
 	
 	
 	

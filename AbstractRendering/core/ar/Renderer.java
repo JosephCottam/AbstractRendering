@@ -33,12 +33,18 @@ public interface Renderer<G,A> {
 	 * 
 	 * Since aggregates are produced with-respect-to a particular viewport, converting to colors
 	 * is essentially producing an image.  Therefore, this image returns an image ready-to-display.
+	 * 
+	 * The width and height must be passed to transfer separately from the aggregates 
+	 * because (1) Aggregates support sub-regions and therefore might not be the same size as the space 
+	 * to render in and (2) a set of aggregates might extend off the rendering window if over-sampling
+	 * was done in aggregation (i.e., to support fast panning or maintain a view invariant property 
+	 * by aggregating over the entire canvas instead of just the view window).
 	 *   
-	 * @param aggregates
-	 * @param t
-	 * @param width
-	 * @param height
-	 * @param background
+	 * @param aggregates Set of aggregates to perform transfer on 
+	 * @param t Transfer function to apply
+	 * @param width Width of the image to render
+	 * @param height Height of the image to render
+	 * @param background Background color to put in the resulting image
 	 * @return The resulting image 
 	 */
 	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background);
