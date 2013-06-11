@@ -84,7 +84,7 @@ public class ARPanel extends JPanel {
 	public void aggregates(Aggregates aggregates) {this.aggregates = aggregates;}
 	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
-		if (image == null) {return false;}
+		if (image == null) {return true;}
 		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
 	}
 	
@@ -110,11 +110,10 @@ public class ARPanel extends JPanel {
 		}
 	
 		if (image != null) {
-			Graphics2D g2 = (Graphics2D) g;
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+			Graphics2D g2 = (Graphics2D) g;
 			g2.drawRenderedImage(image,g2.getTransform());
-			//synchronized(this) {this.notifyAll();}
 		} else {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -128,9 +127,11 @@ public class ARPanel extends JPanel {
 	
 	public final class FullRender implements Runnable {
 		public void run() {
+			int width = ARPanel.this.getWidth();
+			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
-			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), ARPanel.this.getWidth(), ARPanel.this.getHeight());
-			image = renderer.transfer(aggregates, (Transfer) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);
+			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), width, height);
+			image = renderer.transfer(aggregates, (Transfer) transfer.op(), width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (full)\n", (end-start));
 			ARPanel.this.repaint();
