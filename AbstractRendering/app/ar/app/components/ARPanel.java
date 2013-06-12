@@ -84,7 +84,7 @@ public class ARPanel extends JPanel {
 	public void aggregates(Aggregates<?> aggregates) {this.aggregates = aggregates;}
 	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
-		if (image == null) {return true;}
+		if (image == null) {return false;}
 		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
 	}
 	

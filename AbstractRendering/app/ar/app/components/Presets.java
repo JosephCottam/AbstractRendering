@@ -77,7 +77,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
 		public String toString() {return "Scatterplot: HiDef Alpha";}
 	}
 	
@@ -117,7 +117,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
 		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits";}		
 	}
 	
@@ -125,7 +125,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return CHARITY_NET_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteInterpolate();}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha";}		
 	}
 	

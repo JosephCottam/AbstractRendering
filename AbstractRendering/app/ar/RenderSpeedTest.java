@@ -8,7 +8,6 @@ import java.io.FilenameFilter;
 import javax.swing.JFrame;
 
 import ar.app.components.ARPanel;
-import ar.app.util.CSVtoGlyphSet;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
@@ -35,7 +34,7 @@ public class RenderSpeedTest {
 		f.setVisible(true);
 		
 		WrappedAggregator<?,?> aggregator = new WrappedAggregator.Count();
-		WrappedTransfer<?> transfer = new WrappedTransfer.RedWhiteInterpolate();
+		WrappedTransfer<?> transfer = new WrappedTransfer.RedWhiteLinear();
 		AggregateReducer<?,?,?> reduction = new AggregateReducers.Count();
 		
 		Renderer<?,?> render = new ParallelGlyphs(1000, reduction);

@@ -106,6 +106,39 @@ public final class Util {
 		return new java.awt.Color(r,g,b,a);
 	}
 
+	public static Color logInterpolate(Color low, Color high, double min, double max, double v, double basis) {
+		if (v>max) {v=max;}
+		if (v<min) {v=min;}
+		int a = (int) logWeightedAvg(low.getAlpha(), high.getAlpha(), min, max, v, basis);
+		Color c = interpolate(low,high, min,max,v);
+		return new java.awt.Color(c.getRed(), c.getGreen(), c.getBlue(),a);
+	}
+
+	
+	/**From "inMens: Realtime visual querying of Big Data" Zhicheng Liu, Biye Jiang and Jeffrey Heer (2013)**/
+	public static double expWeightedAvg(double min, double max, double weight, double exp) {
+		return min+((1-min)*Math.pow(weight, exp));
+	}
+
+	/** Based on "Visual Analysis of Inter-Process Communication for Large-Scale Parallel Computing"
+	 *   Chris Muelder, Francois Gygi, and Kwan-Liu Ma (2009)
+	 *   
+	 * @param rmin Minim range value
+	 * @param vmax Value maximum
+	 * @param v    Value
+	 * @param basis
+	 * @return
+	 */
+	public static double logWeightedAvg(double rmin, double rmax, double vmin, double vmax, double v, double basis) {
+		if (v == 0) {return rmin;}
+//		double logV= Math.log(v)/Math.log(basis);
+//		double logMX = Math.log(vmax)/Math.log(basis);
+		double logV = Math.log(v);
+		double logMX = Math.log(vmax);
+		double p = 1-(logV/logMX);
+		return weightedAverage(rmin, rmax, p);
+	}
+	
 	public static double weightedAverage(double v1, double v2, double weight) {
 		return (v1 -v2) * weight + v2;
 	}

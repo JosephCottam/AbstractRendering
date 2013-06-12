@@ -10,6 +10,7 @@ import ar.app.ARApp;
 import ar.app.components.ScatterControl;
 import ar.rules.Aggregators;
 import ar.rules.Transfers;
+import ar.util.Util;
 
 public interface WrappedTransfer<A> {
 	public void deselected();
@@ -46,18 +47,18 @@ public interface WrappedTransfer<A> {
 		}
 	}
 	
-	public class RedWhiteInterpolate implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return new Transfers.Direct(Color.white, Color.red);}
+	public class RedWhiteLinear implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public Class<Integer> type() {return Integer.class;}
-		public String toString() {return "Red/White Linear (int)";}
+		public String toString() {return "Red luminance linear (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class RedBlueInterpolate implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return new Transfers.Direct(Color.blue, Color.red);}
+	public class RedWhiteLog implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
 		public Class<Integer> type() {return Integer.class;}
-		public String toString() {return "Red/Blue Linear (int)";}
+		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}

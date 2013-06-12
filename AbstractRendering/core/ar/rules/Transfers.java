@@ -71,14 +71,18 @@ public class Transfers {
 		
 	}
 	
-	public static final class Direct implements Transfer<Integer> {
-		final Color low, high;
+	public static final class Interpolate implements Transfer<Integer> {
+		private final Color low, high, empty;
+		private final int logBasis;
 		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
 		private Util.Stats extrema;
 		
-		public Direct(Color low, Color high) {
+		public Interpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
+		public Interpolate(Color low, Color high, Color empty, int logBasis) {
 			this.low = low;
 			this.high = high;
+			this.empty = empty;
+			this.logBasis = logBasis;
 		}
 		
 		public Color at(int x, int y, Aggregates<Integer> aggregates) {
@@ -86,7 +90,15 @@ public class Transfers {
 				extrema = Util.stats(aggregates, false);
 				cacheKey = aggregates;
 			}
-			return Util.interpolate(low, high, extrema.min, extrema.max, aggregates.at(x, y));
+			
+			int v = aggregates.at(x,y);
+			if (v == 0) {return empty;}
+			
+			if (logBasis <= 1) {
+				return Util.interpolate(low, high, extrema.min, extrema.max, v);
+			} else {
+				return Util.logInterpolate(low,high, extrema.min, extrema.max, v, logBasis);
+			}
 		}
 	}
 	
@@ -152,10 +164,10 @@ public class Transfers {
 			
 			for (int i=0; i< rle.size(); i++) {
 				Color c = (Color) rle.key(i);
-				double a2 = rle.count(i)/total;
-				double r2 = (c.getRed()/255.0) * a2;
-				double g2 = (c.getGreen()/255.0) * a2;
-				double b2 = (c.getBlue()/255.0) * a2;
+				double p = rle.count(i)/total;
+				double r2 = (c.getRed()/255.0) * p;
+				double g2 = (c.getGreen()/255.0) * p;
+				double b2 = (c.getBlue()/255.0) * p;
 
 				r += r2;
 				g += g2;
@@ -178,9 +190,9 @@ public class Transfers {
 							c = fullInterpolate(rle);
 							double alpha;
 							if (log) {
-								alpha = omin + ((1-omin) * (rle.fullSize()/max)); 
-							} else {
 								alpha = omin + ((1-omin) * (Math.log(rle.fullSize())/Math.log(max)));
+							} else {
+								alpha = omin + ((1-omin) * (rle.fullSize()/max));
 							}
 							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
 						}

@@ -19,7 +19,7 @@ public class CharityNetLoader {
 		return spanMin + ((v/max)*(spanMax-spanMin));
 	}
 	
-	public static Glyphset load(String filename) {
+	public static Glyphset<?> load(String filename) {
 		DelimitedReader loader = new DelimitedReader(new File(filename), 1, DelimitedReader.CSV);
 		
 		String[] header = loader.next();
