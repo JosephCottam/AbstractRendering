@@ -6,8 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import ar.Glyphset;
-import ar.util.ImplicitGeometry;
-import ar.util.SimpleGlyph;
 
 
 

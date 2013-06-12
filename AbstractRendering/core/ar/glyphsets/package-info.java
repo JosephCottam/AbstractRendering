@@ -20,7 +20,8 @@
  * however access times were twice as long for the implicit geometry.
  * 
  * 
- * 
+ * Other glyphset support tools are also found in this package (such as glyph implementations
+ *  and the interfaces/support-classes for the implicit geometry system).
  * 
  * 
  * **/

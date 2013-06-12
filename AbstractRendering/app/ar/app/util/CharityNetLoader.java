@@ -11,8 +11,8 @@ import java.util.List;
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.SimpleGlyph;
 import ar.util.DelimitedReader;
-import ar.util.SimpleGlyph;
 
 public class CharityNetLoader {
 	private static double interpolate(double spanMin, double spanMax, double min, double max, double v) {

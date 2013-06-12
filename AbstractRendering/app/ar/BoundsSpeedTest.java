@@ -5,7 +5,6 @@ import java.io.FilenameFilter;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
-import ar.util.ImplicitGeometry;
 
 public class BoundsSpeedTest {
 	public static void main(String[] args) throws Exception {

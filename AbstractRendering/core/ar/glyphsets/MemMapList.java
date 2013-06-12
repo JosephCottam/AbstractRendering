@@ -9,12 +9,10 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
 import ar.Glyphset;
+import ar.glyphsets.ImplicitGeometry.Indexed;
 import ar.util.BigFileByteBuffer;
-import ar.util.ImplicitGeometry;
 import ar.util.Util;
-import ar.util.ImplicitGeometry.Indexed;
 import ar.util.IndexedEncoding;
-import ar.util.SimpleGlyph;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
 * 

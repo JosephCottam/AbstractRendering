@@ -1,4 +1,4 @@
-package ar.util;
+package ar.aggregates;
 
 import java.util.Iterator;
 

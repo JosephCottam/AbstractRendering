@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import ar.Aggregates;
 import ar.Transfer;
-import ar.util.FlatAggregates;
+import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
 

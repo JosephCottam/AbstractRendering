@@ -7,8 +7,6 @@ import java.util.Iterator;
 
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
-import ar.util.ImplicitGeometry;
-import ar.util.SimpleGlyph;
 import ar.util.Util;
 
 

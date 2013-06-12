@@ -13,11 +13,11 @@ import ar.app.ARApp;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.ImplicitGeometry;
 import ar.glyphsets.MemMapList;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
-import ar.util.ImplicitGeometry;
 import ar.util.MemMapEncoder;
 
 public class Presets extends CompoundPanel {

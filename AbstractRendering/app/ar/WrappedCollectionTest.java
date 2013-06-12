@@ -11,10 +11,10 @@ import javax.swing.JFrame;
 import ar.app.components.ARPanel;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
+import ar.glyphsets.ImplicitGeometry;
 import ar.glyphsets.WrappedCollection;
+import ar.glyphsets.ImplicitGeometry.Glypher;
 import ar.renderers.*;
-import ar.util.ImplicitGeometry;
-import ar.util.ImplicitGeometry.Glypher;
 
 public class WrappedCollectionTest {
 

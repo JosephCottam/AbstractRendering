@@ -7,7 +7,6 @@ import java.io.File;
 import ar.Glyphset;
 import ar.glyphsets.*;
 import ar.util.DelimitedReader;
-import ar.util.SimpleGlyph;
 
 import static ar.Glyphset.Glyph;
 

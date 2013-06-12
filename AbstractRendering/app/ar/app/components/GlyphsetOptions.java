@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
-import ar.util.ImplicitGeometry;
 
 public class GlyphsetOptions extends CompoundPanel  {
 	private static final long serialVersionUID = 1L;

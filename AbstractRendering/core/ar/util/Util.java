@@ -13,6 +13,7 @@ import java.util.List;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Glyphset.Glyph;
+import ar.aggregates.FlatAggregates;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {
@@ -109,7 +110,7 @@ public final class Util {
 	public static Color logInterpolate(Color low, Color high, double min, double max, double v, double basis) {
 		if (v>max) {v=max;}
 		if (v<min) {v=min;}
-		int a = (int) logWeightedAvg(low.getAlpha(), high.getAlpha(), min, max, v, basis);
+		int a = (int) logWeightedAvg(low.getAlpha(), high.getAlpha(), max, v, basis);
 		Color c = interpolate(low,high, min,max,v);
 		return new java.awt.Color(c.getRed(), c.getGreen(), c.getBlue(),a);
 	}
@@ -117,7 +118,7 @@ public final class Util {
 	
 	/**From "inMens: Realtime visual querying of Big Data" Zhicheng Liu, Biye Jiang and Jeffrey Heer (2013)**/
 	public static double expWeightedAvg(double min, double max, double weight, double exp) {
-		return min+((1-min)*Math.pow(weight, exp));
+		return weightedAverage(min, max, Math.pow(weight, exp));
 	}
 
 	/** Based on "Visual Analysis of Inter-Process Communication for Large-Scale Parallel Computing"
@@ -129,12 +130,10 @@ public final class Util {
 	 * @param basis
 	 * @return
 	 */
-	public static double logWeightedAvg(double rmin, double rmax, double vmin, double vmax, double v, double basis) {
+	public static double logWeightedAvg(double rmin, double rmax,  double vmax, double v, double basis) {
 		if (v == 0) {return rmin;}
-//		double logV= Math.log(v)/Math.log(basis);
-//		double logMX = Math.log(vmax)/Math.log(basis);
-		double logV = Math.log(v);
-		double logMX = Math.log(vmax);
+		double logV= Math.log(v)/Math.log(basis);
+		double logMX = Math.log(vmax)/Math.log(basis);
 		double p = 1-(logV/logMX);
 		return weightedAverage(rmin, rmax, p);
 	}

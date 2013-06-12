@@ -10,7 +10,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.util.FlatAggregates;
+import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.

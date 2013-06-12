@@ -9,8 +9,6 @@ import java.util.Iterator;
 
 import ar.Glyphset;
 import ar.util.BigFileByteBuffer;
-import ar.util.ImplicitGeometry;
-import ar.util.SimpleGlyph;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.

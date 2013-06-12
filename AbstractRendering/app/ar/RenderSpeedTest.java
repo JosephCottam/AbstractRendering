@@ -13,7 +13,6 @@ import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
 import ar.renderers.ParallelGlyphs;
 import ar.rules.AggregateReducers;
-import ar.util.ImplicitGeometry;
 
 /**Tests the amount of time to render count visualizations.
  * 
