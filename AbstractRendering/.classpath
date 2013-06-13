@@ -2,6 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="core"/>
 	<classpathentry kind="src" path="app"/>
+	<classpathentry kind="src" path="ext"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="lib/avro-1.7.4.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/AbstractRendering/lib/avro-1.7.4-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/jackson-core-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.9.12.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -18,6 +18,8 @@ import ar.Glyphset.Glyph;
  *  by the renderers.
  */
 public abstract class ImplicitGeometry {
+	private ImplicitGeometry() {}
+	
 	/**Convert a value into another value (often a color, but not always).
 	 * <I> Input value type
 	 * **/

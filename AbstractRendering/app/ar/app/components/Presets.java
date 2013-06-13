@@ -73,12 +73,20 @@ public class Presets extends CompoundPanel {
 		public String toString() {return "Scatterplot: 10% Alpha";}
 	}
 
-	public static class ScatterplotHDALpha implements Preset {
+	public static class ScatterplotHDALphaLin implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
-		public String toString() {return "Scatterplot: HiDef Alpha";}
+		public String toString() {return "Scatterplot: HiDef Alpha (Linear)";}
+	}
+	
+	public static class ScatterplotHDALpha implements Preset {
+		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
+		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public String toString() {return "Scatterplot: HiDef Alpha (log)";}
 	}
 	
 	public static class BoostAlpha25 implements Preset {
@@ -101,32 +109,32 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
-		public String toString() {return "BGL Memory: HDAlpha Cache hits";}		
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
+		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)";}		
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLin();}
-		public String toString() {return "BGL Memory (Memory Mapped): Cache hits";}		
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
+		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)";}		
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
-		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits";}		
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)";}		
 	}
 	
 	public static class CharityNet implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return CHARITY_NET_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
-		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha";}		
+		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)";}		
 	}
 	
 	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "./data/circlepoints.csv", .1);
