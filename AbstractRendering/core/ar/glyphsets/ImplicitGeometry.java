@@ -32,7 +32,22 @@ public abstract class ImplicitGeometry {
 	public static interface Valuer<I,V> {public V value(I from);}
 	
 	/**Convenience interface for working with double-encoding on shape and value.**/
-	public static interface Glypher<I,V> extends Shaper<I>, Valuer<I,V> {}
+	public static interface Glypher<I,V> extends Shaper<I>, Valuer<I,V> {
+		/**Create a fully-realized glyph.**/
+		public Glyph<V> glyph(I from);
+	}
+	
+	public static class WrappingGlypher<I,V> implements Glypher<I,V> {
+		private final Shaper<I> shaper;
+		private final Valuer<I,V> valuer;
+		public WrappingGlypher(Shaper<I> shaper, Valuer<I,V> valuer) {
+			this.shaper = shaper;
+			this.valuer = valuer;
+		}
+		public Shape shape(I from) {return shaper.shape(from);}
+		public V value(I from) {return valuer.value(from);}
+		public Glyph<V> glyph(I from) {return new SimpleGlyph<V>(shape(from), value(from));}		
+	}
 	
 	/**Simple function for making glyphs from a Glypher.**/
 	public static <I,V> Glyph<V> glyph(Shaper<I> s, Valuer<I,V> v, I value) {

@@ -3,8 +3,8 @@ package ar;
 import java.io.File;
 import java.io.FilenameFilter;
 
-import ar.app.util.CSVtoGlyphSet;
 import ar.glyphsets.*;
+import ar.util.CSVtoGlyphSet;
 
 public class LoadSpeedTest {
 	public static void main(String[] args) throws Exception {

@@ -13,9 +13,9 @@ import java.lang.reflect.InvocationTargetException;
 import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
-import ar.app.util.CSVtoGlyphSet;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
+import ar.util.CSVtoGlyphSet;
 
 public class ARApp implements PanelHolder {
 	private ARPanel image;

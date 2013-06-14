@@ -1,5 +1,6 @@
 package ar.ext;
 
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class Avro {
 	/**Unpack a generic-record into a concrete class.**/
 	public static interface Realizer<A> {
 		public A wrap(GenericRecord r);
+		
 		public static final class ID implements Realizer<GenericRecord> {
 			public GenericRecord wrap(GenericRecord r) {return r;}
 		}

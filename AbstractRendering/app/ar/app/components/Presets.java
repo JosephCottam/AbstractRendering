@@ -148,7 +148,7 @@ public class Presets extends CompoundPanel {
 		System.out.printf("Loading %s...", label);
 		try {
 			final long start = System.currentTimeMillis();
-			Glyphset g = ar.app.util.CSVtoGlyphSet.autoLoad(new File(file), size, DynamicQuadTree.make());
+			Glyphset g = ar.util.CSVtoGlyphSet.autoLoad(new File(file), size, DynamicQuadTree.make());
 			final long end = System.currentTimeMillis();
 			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
 			return g;

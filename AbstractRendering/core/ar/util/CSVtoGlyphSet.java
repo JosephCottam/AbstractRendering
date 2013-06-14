@@ -1,12 +1,12 @@
-package ar.app.util;
+package ar.util;
 
 import java.awt.Color;
 import java.awt.geom.*;
 import java.io.File;
 
 import ar.Glyphset;
+import ar.app.util.ColorNames;
 import ar.glyphsets.*;
-import ar.util.DelimitedReader;
 
 import static ar.Glyphset.Glyph;
 
