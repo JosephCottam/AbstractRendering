@@ -37,6 +37,8 @@ public abstract class ImplicitGeometry {
 		public Glyph<V> glyph(I from);
 	}
 	
+	
+	
 	public static class WrappingGlypher<I,V> implements Glypher<I,V> {
 		private final Shaper<I> shaper;
 		private final Valuer<I,V> valuer;
@@ -56,7 +58,6 @@ public abstract class ImplicitGeometry {
 	
 	
 	public static interface Indexed {public Object get(int f);}
-	
 	
 	public static class IndexedToRect implements Shaper<Indexed> {
 		private final double width,height;
@@ -79,10 +80,13 @@ public abstract class ImplicitGeometry {
 		}	
 	}
 	
+	public static class IdentityValuer<I> implements Valuer<I,I> {public I value(I v) {return v;}}
+	
 	public static class IndexedToValue<I,V> implements Valuer<Indexed,V> {
 		private final int vIdx;
 		private final Valuer<I,V> basis;
 		
+		public IndexedToValue(int vIdx) {this(vIdx, new IdentityValuer());}
 		public IndexedToValue(int vIdx, Valuer<I, V> basis) {
 			this.vIdx = vIdx;
 			this.basis = basis;

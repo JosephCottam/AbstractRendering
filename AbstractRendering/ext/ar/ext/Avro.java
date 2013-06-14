@@ -1,6 +1,5 @@
 package ar.ext;
 
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,6 +17,15 @@ import ar.glyphsets.WrappedCollection;
 
 /**Utilities for interacting with Avro**/
 public class Avro {
+	/**Wrap an GenericRecord as a ImplicitGemoetry.Indexed item for use
+	 * with other implicit geometry tools using Indexed.
+	 */
+	public static class IndexedRecord implements ImplicitGeometry.Indexed {
+		private final GenericRecord r;
+		public IndexedRecord(GenericRecord r) {this.r=r;}
+		public Object get(int f) {return r.get(f);}
+	}
+	
 	/**Internal utility for seting up an avro reader.**/
 	private static DataFileReader<GenericRecord> reader(String sourceFile) throws IOException {
 		File source = new File(sourceFile);
@@ -45,7 +53,7 @@ public class Avro {
 	 * @return
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V> Glyphset<V> fullLoad(String sourceFile, Realizer<A> glypher) throws IOException {
+	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceFile, Realizer<A> glypher) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		GlyphList<V> l = new GlyphList<>();
 		for (GenericRecord r: reader) {l.add(glypher.wrap(r));}
