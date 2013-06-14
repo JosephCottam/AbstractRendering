@@ -1,7 +1,10 @@
 .DS_Store
 .metadata/
 bin
+data
 *.jar
-AbstractRendering/data/*
+*.pyc
+*.hbin
+*.swp
 AbstractRendering/doc/*
 AbstractRendering/lib/*
