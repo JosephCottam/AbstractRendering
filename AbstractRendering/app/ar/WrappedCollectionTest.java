@@ -8,10 +8,12 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 
+import ar.Glyphset.Glyph;
 import ar.app.components.ARPanel;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.ImplicitGeometry;
+import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.ImplicitGeometry.Glypher;
 import ar.renderers.*;
@@ -41,6 +43,11 @@ public class WrappedCollectionTest {
 		
 		public Color value(Integer from) {
 			return COLORS[from%COLORS.length];
+		}
+
+		@Override
+		public Glyph<Color> glyph(Integer from) {
+			return new SimpleGlyph(this.shape(from), this.value(from));
 		}
 	}
 	

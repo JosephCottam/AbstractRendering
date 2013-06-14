@@ -70,7 +70,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.FixedAlpha();}
-		public String toString() {return "Scatterplot: 10% Alpha";}
+		public String toString() {return "Scatterplot: 10% Alpha" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 
 	public static class ScatterplotHDALphaLin implements Preset {
@@ -78,7 +78,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
-		public String toString() {return "Scatterplot: HiDef Alpha (Linear)";}
+		public String toString() {return "Scatterplot: HiDef Alpha (Linear)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 	
 	public static class ScatterplotHDALpha implements Preset {
@@ -86,7 +86,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
-		public String toString() {return "Scatterplot: HiDef Alpha (log)";}
+		public String toString() {return "Scatterplot: HiDef Alpha (log)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 	
 	public static class BoostAlpha25 implements Preset {
@@ -94,7 +94,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent25();}
-		public String toString() {return "BGL Memory: 25% Cache Hit";}		
+		public String toString() {return "BGL Memory: 25% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostAlpha95 implements Preset {
@@ -102,7 +102,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent95();}
-		public String toString() {return "BGL Memory: 95% Cache Hit";}		
+		public String toString() {return "BGL Memory: 95% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostAlphaHDAlpha implements Preset {
@@ -110,7 +110,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
-		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)";}		
+		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
@@ -118,7 +118,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
-		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)";}		
+		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
@@ -126,7 +126,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
-		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)";}		
+		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class CharityNet implements Preset {
@@ -134,7 +134,7 @@ public class Presets extends CompoundPanel {
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return CHARITY_NET_MM;}
 		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
-		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)";}		
+		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "../data/circlepoints.csv", .1);
@@ -153,7 +153,7 @@ public class Presets extends CompoundPanel {
 			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
 			return g;
 		} catch (Exception e) {
-			System.out.println("Faield to load data.");
+			System.out.println("Failed to load data.");
 			return null;
 		}
 	}
