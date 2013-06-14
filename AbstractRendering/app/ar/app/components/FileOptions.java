@@ -14,7 +14,7 @@ public class FileOptions extends CompoundPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private final ExportAggregates export;
-	private final JFileChooser fc = new JFileChooser("./data");
+	private final JFileChooser fc = new JFileChooser("../data");
 	private final JButton chooseFile = new JButton("Input File");
 
 	private File inputFile=null;
