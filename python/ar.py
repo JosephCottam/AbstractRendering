@@ -21,12 +21,11 @@ class Glyphset(list):
 @autojit
 def _project(viewxform, glyphset):
   tx,ty,sx,sy = viewxform
-  outglyphs = np.empty(glyphset.shape, dtype=np.int32)
+  outglyphs = np.ndarray(glyphset.shape, dtype=np.int32)
 
   # transform each glyph and add it to the grid
   for i in xrange(0, len(glyphset)):
     #apply the view transform
-    #(x,y,w,h,v) = glyphset[i]
     x = glyphset[i,0]
     y = glyphset[i,1]
     w = glyphset[i,2]
@@ -159,17 +158,10 @@ def render(glyphs, aggregator, trans, screen,ivt):
   ivt ------- INVERSE view transform (converts pixels to canvas space)
   """
 
-  with Timer("Load") as t:
-    grid = Grid(screen[0], screen[1], ivt.inverse())
-
-  with Timer("Project:") as t:
-    grid.project(glyphs)
-
-  with Timer("Aggregate") as t:
-    grid.aggregate(aggregator)
-
-  with Timer("Transfer") as t:
-    return grid.transfer(trans)
+  grid = Grid(screen[0], screen[1], ivt.inverse())
+  grid.project(glyphs)
+  grid.aggregate(aggregator)
+  return grid.transfer(trans)
 
 
 ###############################  Graphics Components ###############
@@ -178,10 +170,10 @@ def render(glyphs, aggregator, trans, screen,ivt):
 class AffineTransform(list):
   def __init__(self, tx, ty, sx, sy):
     list.__init__(self, [tx,ty,sx,sy])
-    self.sx=sx
-    self.sy=sy
     self.tx=tx
     self.ty=ty
+    self.sx=sx
+    self.sy=sy
 
   def trans(self, x, y):
     """Transform a passed point."""
@@ -200,7 +192,7 @@ class AffineTransform(list):
   def asarray(self): return np.array(self)
 
   def inverse(self):
-    return AffineTransform(-self.tx, -self.ty, 1/self.sx, 1/self.sy)
+    return AffineTransform(-self.tx/self.sx, -self.ty/self.sx, 1/self.sx, 1/self.sy)
 
 class Color(list):
   def __init__(self,r,g,b,a):
@@ -303,7 +295,7 @@ def main():
   size = float(sys.argv[6])
   glyphs = load_csv(source,skip,xc,yc,vc,size,size)
 
-  screen=(20,20)
+  screen=(10,10)
   ivt = zoom_fit(screen,bounds(glyphs))
 
   image = render(glyphs, 
