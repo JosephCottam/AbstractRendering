@@ -4,7 +4,11 @@ import sys
 import numpy as np
 from math import ceil, floor 
 
-from numba import autojit
+try:
+  from numba import autojit
+except ImportError:
+  print "Error loading numba."
+  autojit = lambda f: f
 
 from timer import Timer
 
@@ -14,6 +18,7 @@ class Glyphset(list):
   def asarray(self):
     return np.array(self)
 
+@autojit
 def _project(viewxform, glyphset):
   tx,ty,sx,sy = viewxform
   outglyphs = np.empty(glyphset.shape, dtype=np.int32)
@@ -37,6 +42,7 @@ def _project(viewxform, glyphset):
 
   return outglyphs
 
+#@autojit
 def _store(projected, outgrid):
   for i in xrange(0, len(projected)):
     x = projected[i,0]
@@ -61,13 +67,12 @@ class Grid(object):
     _glyphset = None
     _projected = None
     _aggregates = None
-
+    
     def __init__(self, w,h,viewxform):
       self.width=w
       self.height=h
       self.viewxform=viewxform
-      self.numba_project = autojit()(_project)
-      self.numba_store = autojit()(_store)
+      self._storefun = _store
 
     def project(self, glyphset):
       """
@@ -80,11 +85,9 @@ class Grid(object):
       Stores the passed glyphset in _glyphset
       """
       self._glyphset = glyphset
-      projected = self.numba_project(self.viewxform, glyphset.asarray())
-      #projected = _project(self.viewxform.asarray(), glyphset.asarray())
-      
       outgrid = np.ndarray((self.width, self.height), dtype=object)
-      #self._projected = self.numba_store(projected, outgrid)
+
+      projected = _project(self.viewxform, glyphset.asarray())
       self._projected = _store(projected, outgrid)
 
     def aggregate(self, aggregator):
