@@ -2,13 +2,6 @@ import ar
 import numpy as np
 
 ######## Aggregators ########
-def count(x):
-  if type(x) is list: 
-    return len(x) 
-  if type(x) is None: 
-    return 0
-  return 1
-
 class Count(ar.Aggregator):
   def aggregate(self, glyphset, indicies): 
     if (indicies == None):
@@ -18,50 +11,52 @@ class Count(ar.Aggregator):
 
 ######## Transfers ##########
 class Segment(ar.Transfer):
+  """
+  Paint all pixels with aggregate value above divider one color 
+  and below the divider another.
+  """
+
   def __init__(self, low, high, divider):
     self.high = high
     self.low = low
     self.divider = float(divider)
 
-  def f_vec(self, items):
-    keys = (items >= self.divider) # .astype(int)
-    out = np.empty(items.shape + (4,), dtype=np.uint8)
+  def f_vec(self, items, out):
+    keys = (items >= self.divider) 
     out[keys] = self.high
     out[~keys] = self.low
     return out
-    #return np.array([[self.high.np()],[self.low.np()]])[keys]
-
-    #side = np.greater_equal(items.flat, self.divider) 
-    #above = np.ma.masked_array(items.flat, side)
-
 
   def transfer(self, grid):
-    self.min=grid._aggregates.min()
-    self.max=grid._aggregates.max()
-    self.span = self.max-self.min
+    outgrid = self.makegrid(grid)
+    self.f_vec(grid._projected, outgrid) 
+    return outgrid
+
+
+
+class HDInterpolate(ar.Transfer):
+  """High-definition interpolation between two colors."""
+  def __init__(self, low, high, reserve):
+    self.low=low
+    self.high=high
+    self.reserve=reserve
+
+  def transfer(self, grid):
+    items = grid._aggregates
+    min = items.min()
+    max = items.max()
+    span = float(max-min) 
+    percents = (items-min)/span
     outgrid = self.makegrid(grid)
 
-#    def f(v):
-#      if (v > (self.span/self.divider)):
-#        return self.high.np()
-#      else: 
-#        return self.low.np()
-#
-    #gw, gh = outgrid.shape[:2]
-    #outgrid.reshape((gw*gh, outgrid.shape[2]))[:] = map(f, grid._projected.flat)
-    outgrid = self.f_vec(grid._projected) #.reshape(grid.width,grid.height,4)
+    outgrid[:][:][0] = (self.high.r - self.low.r) * percents + self.low.r
+    outgrid[:][:][1] = (self.high.g - self.low.g) * percents + self.low.g
+    outgrid[:][:][2] = (self.high.b - self.low.b) * percents + self.low.b
+    outgrid[:][:][3] = (self.high.a - self.low.a) * percents + self.low.a
+
+    #colors=map(lambda p: interpolateColors(p, self.low, self.high).asarray(), percents.flat) 
     return outgrid
- 
 
-
-def hdalpha(low, high):
-  def gen(aggs):
-    (min,max) = minmax(aggs)
-    def f(v):
-      return interpolateColors(low,high,min,max,v)
-    return f
-  return gen
-      
 
 
 ###### Other utilities ########
@@ -80,10 +75,15 @@ def interpolateColors(low, high, min,  max, v):
   if (v>max): v=max
   if (v<min): v=min
   distance = 1-((max-v)/float(max-min));
-  r = int(weightedAverage(high.r, low.r, distance))
-  g = int(weightedAverage(high.g, low.g, distance))
-  b = int(weightedAverage(high.b, low.b, distance))
-  a = int(weightedAverage(high.a, low.a, distance))
+
+def interpolateColors(percent, low, high):
+  if (percent<0): percent=0
+  if (percent>1): percent=1
+ 
+  r = int(weightedAverage(high.r, low.r, percent))
+  g = int(weightedAverage(high.g, low.g, percent))
+  b = int(weightedAverage(high.b, low.b, percent))
+  a = int(weightedAverage(high.a, low.a, percent))
   return ar.Color(r,g,b,a);
 
 
