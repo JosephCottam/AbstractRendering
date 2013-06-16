@@ -96,12 +96,7 @@ class Grid(object):
 
         Stores the results in _aggregates
         """
-        outgrid = np.empty_like(self._projected, dtype=np.int32)
-        #outgrid = np.empty_like(self._projected, dtype=aggregator.out_dtype)
-        outgrid.ravel()[:] = map(lambda ids: aggregator.aggregate(self._glyphset, ids), 
-                                    self._projected.flat)
-
-        self._aggregates = outgrid
+        self._aggregates = aggregator.aggregate(self)
 
     def transfer(self, transferer):
         """ Returns pixel grid of NxMxRGBA32 (for now) """
@@ -109,13 +104,14 @@ class Grid(object):
 
         
 class Aggregator(object):
-    infields = None
+    out_type = None
 
-    def aggregate(self, glyphset, indices):
+    def aggregate(self, grid):
         """ Returns the aggregated values from just the indicated fields and
         indicated elements of the glyphset
         """
         pass
+
 
 class Transfer(object):
   input_spec = None # tuple of (shape, dtype)
@@ -127,6 +123,17 @@ class Transfer(object):
 
   def transfer(self, grid):
     raise NotImplementedError
+
+class PixelAggregator(Aggregator):
+  def __init__(self, pixelfunc):
+    self.pixelfunc = pixelfunc
+
+  def aggregate(self, grid):
+      outgrid = np.empty_like(self._projected, dtype=np.int32)
+      #outgrid = np.empty_like(self._projected, dtype=aggregator.out_dtype)
+      outgrid.ravel()[:] = map(lambda ids: pixelfunc(self._glyphset, ids), self._projected.flat)
+
+    
 
  
 class PixelTransfer(Transfer):

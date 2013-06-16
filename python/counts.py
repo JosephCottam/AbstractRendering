@@ -3,10 +3,16 @@ import numpy as np
 
 ######## Aggregators ########
 class Count(ar.Aggregator):
-  def aggregate(self, glyphset, indicies): 
-    if (indicies == None):
-      return 0
-    return len(indicies)
+  out_type=np.int32
+
+  def aggregate(self, grid): 
+    def myLen(o):
+      if o == None:
+        return 0
+      return len(o)
+
+    f = np.vectorize(myLen)
+    return f(grid._projected)
 
 
 ######## Transfers ##########
