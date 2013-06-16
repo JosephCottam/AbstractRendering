@@ -47,15 +47,10 @@ class HDInterpolate(ar.Transfer):
     max = items.max()
     span = float(max-min) 
     percents = (items-min)/span
-    outgrid = self.makegrid(grid)
 
-    outgrid[:][:][0] = (self.high.r - self.low.r) * percents + self.low.r
-    outgrid[:][:][1] = (self.high.g - self.low.g) * percents + self.low.g
-    outgrid[:][:][2] = (self.high.b - self.low.b) * percents + self.low.b
-    outgrid[:][:][3] = (self.high.a - self.low.a) * percents + self.low.a
+    colorspan = self.high.asarray().astype(np.int32) - self.low.asarray().astype(np.int32)
+    return (percents[:,:,np.newaxis] * colorspan[np.newaxis,np.newaxis,:] + self.low.asarray()).astype(np.uint8)
 
-    #colors=map(lambda p: interpolateColors(p, self.low, self.high).asarray(), percents.flat) 
-    return outgrid
 
 
 

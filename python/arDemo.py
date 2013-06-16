@@ -33,8 +33,8 @@ def _create_plot_component():
     white = ar.Color(255,255,255,255)
     black = ar.Color(0,0,0,255)
     
-    glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
+    glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     
     screen = (800,800)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
@@ -47,7 +47,7 @@ def _create_plot_component():
       #image = ar.render(glyphs, ar.containing, infos.const(1), counts.count, counts.hdalpha(white,red), screen, ivt) 
       image = ar.render(glyphs, 
                         counts.Count(), 
-                        counts.Segment(red, black, .5),
+                        counts.HDInterpolate(white, red, 0),
                         screen,
                         ivt)
 

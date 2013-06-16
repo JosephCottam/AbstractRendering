@@ -96,7 +96,8 @@ class Grid(object):
 
         Stores the results in _aggregates
         """
-        outgrid = np.empty_like(self._projected)
+        outgrid = np.empty_like(self._projected, dtype=np.int32)
+        #outgrid = np.empty_like(self._projected, dtype=aggregator.out_dtype)
         outgrid.ravel()[:] = map(lambda ids: aggregator.aggregate(self._glyphset, ids), 
                                     self._projected.flat)
 
@@ -166,7 +167,6 @@ def render(glyphs, aggregator, trans, screen,ivt):
 
 ###############################  Graphics Components ###############
 
-#TODO: Verify that this is the right way to do affine transforms of shapes...at least as far as zoom/pan
 class AffineTransform(list):
   def __init__(self, tx, ty, sx, sy):
     list.__init__(self, [tx,ty,sx,sy])
@@ -202,7 +202,7 @@ class Color(list):
     self.b=b
     self.a=a
 
-  def asarray(self): return np.array(self)
+  def asarray(self): return np.array(self, dtype=np.uint8)
 
 class Glyph(list):
   def __init__(self,x,y,w,h,*props):
