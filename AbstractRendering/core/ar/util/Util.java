@@ -128,7 +128,6 @@ public final class Util {
 	 * @param vmax Value maximum
 	 * @param v    Value
 	 * @param basis
-	 * @return
 	 */
 	public static double logWeightedAvg(double rmin, double rmax,  double vmax, double v, double basis) {
 		if (v == 0) {return rmin;}

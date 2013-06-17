@@ -5,7 +5,6 @@ import java.awt.geom.*;
 import java.io.File;
 
 import ar.Glyphset;
-import ar.app.util.ColorNames;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Valuer;
 

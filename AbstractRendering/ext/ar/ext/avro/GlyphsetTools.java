@@ -39,9 +39,8 @@ public class GlyphsetTools {
 	 * All items from the file will be read and converted into glyph objects,
 	 * so the data is "fully loaded" in that all load-related computation is done.
 	 * 
-	 * @param sourceFile Name of the avro file
+	 * @param sourceName Name of the avro file
 	 * @param glypher Converter from generic-record to a glyph-derived class
-	 * @return
 	 * @throws IOException
 	 */
 	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher) throws IOException {
@@ -60,7 +59,6 @@ public class GlyphsetTools {
 	 * @param realizer Converter from generic-record to an value for use in shaper and valuer
 	 * @param shaper Used to eventually convert the generic-record into geometry
 	 * @param valuer Used ot eventually convert the generic-record into a value for a glyph
-	 * @return
 	 * @throws IOException
 	 */
 	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(String sourceFile, Valuer<GenericRecord,INNER> realizer,
