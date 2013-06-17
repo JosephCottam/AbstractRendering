@@ -7,6 +7,10 @@ import java.awt.event.ActionListener;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
+import ar.glyphsets.implicitgeometry.Valuer.Constant;
+import ar.glyphsets.implicitgeometry.Indexed.IndexedToRect;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 public class GlyphsetOptions extends CompoundPanel  {
 	private static final long serialVersionUID = 1L;
@@ -46,11 +50,11 @@ public class GlyphsetOptions extends CompoundPanel  {
 			return new GlyphList<Object>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (Double) size.getSelectedItem();
-			ImplicitGeometry.Shaper shaper = new ImplicitGeometry.IndexedToRect(sz, sz, false, 0,1);
-			ImplicitGeometry.Valuer valuer = new ImplicitGeometry.Constant<Double>(Color.red);
+			Shaper shaper = new IndexedToRect(sz, sz, false, 0,1);
+			Valuer valuer = new Constant<Double>(Color.red);
 			return new MemMapList(null, shaper, valuer);
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
-			return new DirectMatrix<>(null, 1, 1, true);
+			return new ImplicitMatrix<>(null, 1, 1, true);
 		} else {
 			throw new RuntimeException("Unknown glyphset type selected.");
 		}

@@ -12,10 +12,9 @@ import ar.Glyphset.Glyph;
 import ar.app.components.ARPanel;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
-import ar.glyphsets.ImplicitGeometry;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
-import ar.glyphsets.ImplicitGeometry.Glypher;
+import ar.glyphsets.implicitgeometry.Glypher;
 import ar.renderers.*;
 
 public class WrappedCollectionTest {
@@ -57,7 +56,7 @@ public class WrappedCollectionTest {
 		ArrayList<Integer> vs = new ArrayList<Integer>();
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
-		ImplicitGeometry.Glypher<Integer,Color> g = new RainbowCheckerboard<Integer>(11, 1);
+		Glypher<Integer,Color> g = new RainbowCheckerboard<Integer>(11, 1);
 		WrappedCollection<Integer,Color> gs = new WrappedCollection<Integer,Color>(vs, g,g);
 		
 		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst(), 

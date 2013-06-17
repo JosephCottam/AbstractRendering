@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import ar.Glyphset;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 
 
@@ -20,18 +21,18 @@ import ar.Glyphset;
  *
  * @param <T>
  */
-public class DirectMatrix<T> implements Glyphset<Color> {
+public class ImplicitMatrix<T> implements Glyphset<Color> {
 	private final T[][] matrix;
 	private final double xScale, yScale;
-	private final ImplicitGeometry.Valuer<T,Color> colorBy;
+	private final Valuer<T,Color> colorBy;
 	private final boolean nullIsValue;
 
 	
-	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue) {
-		this(matrix, xScale, yScale, nullIsValue, new ImplicitGeometry.AB<T>(null, Color.white, Color.blue));
+	public ImplicitMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue) {
+		this(matrix, xScale, yScale, nullIsValue, new Valuer.Binary<T,Color>(null, Color.white, Color.blue));
 	}
 	
-	public DirectMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, ImplicitGeometry.Valuer<T,Color> colorBy) {
+	public ImplicitMatrix(T[][] matrix, double xScale, double yScale, boolean nullIsValue, Valuer<T,Color> colorBy) {
 		this.matrix = matrix;
 		this.xScale = xScale;
 		this.yScale = yScale;

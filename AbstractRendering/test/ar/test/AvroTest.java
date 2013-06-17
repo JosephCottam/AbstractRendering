@@ -2,7 +2,6 @@ package ar.test;
 
 import static org.junit.Assert.*;
 
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 
 import org.apache.avro.Schema;
@@ -11,29 +10,30 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.parsing.Parser;
 import org.junit.Test;
 
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.ext.Avro;
-import ar.ext.Avro.Realizer;
 import ar.glyphsets.GlyphList;
-import ar.glyphsets.ImplicitGeometry;
-import ar.glyphsets.SimpleGlyph;
+import ar.glyphsets.implicitgeometry.Glypher;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
+import ar.glyphsets.implicitgeometry.WrappingGlypher;
 import ar.util.CSVtoGlyphSet;
 import ar.util.DelimitedReader;
 
 public class AvroTest {
 
 	public class AvroRect<V> implements Avro.Realizer<Glyph<V>> {
-		ImplicitGeometry.Shaper<ImplicitGeometry.Indexed> shaper;
-		ImplicitGeometry.Valuer<ImplicitGeometry.Indexed, V> valuer;
-		ImplicitGeometry.Glypher<ImplicitGeometry.Indexed, V> glypher;
+		Shaper<Indexed> shaper;
+		Valuer<Indexed, V> valuer;
+		Glypher<Indexed, V> glypher;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
-			shaper = new ImplicitGeometry.IndexedToRect(size, size, false, xfield, yfield);
-			valuer = new ImplicitGeometry.IndexedToValue<>(vfield);
-			glypher = new ImplicitGeometry.WrappingGlypher<>(shaper, valuer);
+			shaper = new Indexed.IndexedToRect(size, size, false, xfield, yfield);
+			valuer = new Indexed.IndexedToValue<>(vfield);
+			glypher = new WrappingGlypher<>(shaper, valuer);
 		}
 		
 		public Glyph<V> wrap(GenericRecord r) {

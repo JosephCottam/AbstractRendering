@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import ar.Glyphset;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.BigFileByteBuffer;
 
 
@@ -42,7 +43,7 @@ public class PointMemMapList implements Glyphset.RandomAccess<Color> {
 	private final double glyphHeight;
 	private final File source;
 	private final TYPE[] types;
-	private final ImplicitGeometry.Valuer<Double,Color> painter;
+	private final Valuer<Double,Color> painter;
 	
 	private final int recordEntries;
 	private final int recordSize;
@@ -51,10 +52,10 @@ public class PointMemMapList implements Glyphset.RandomAccess<Color> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	public PointMemMapList(File source, double glyphSize, ImplicitGeometry.Valuer<Double,Color> painter) {
+	public PointMemMapList(File source, double glyphSize, Valuer<Double,Color> painter) {
 		this(source, glyphSize, glyphSize, false, painter, null);
 	}
-	public PointMemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, ImplicitGeometry.Valuer<Double,Color> painter, TYPE[] types) {
+	public PointMemMapList(File source, double glyphWidth, double glyphHeight, boolean flipY, Valuer<Double,Color> painter, TYPE[] types) {
 		this.glyphWidth = glyphWidth;
 		this.glyphHeight = glyphHeight;
 		this.source = source;
@@ -130,7 +131,7 @@ public class PointMemMapList implements Glyphset.RandomAccess<Color> {
 		throw new RuntimeException("Unknown type specified at offset " + offset);
 	}
 
-	public ImplicitGeometry.Valuer<Double,Color> painter() {return painter;}
+	public Valuer<Double,Color> painter() {return painter;}
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}

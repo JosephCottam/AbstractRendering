@@ -9,7 +9,9 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
 import ar.Glyphset;
-import ar.glyphsets.ImplicitGeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.BigFileByteBuffer;
 import ar.util.Util;
 import ar.util.IndexedEncoding;
@@ -73,8 +75,8 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	
 	private final File source;
 	private final TYPE[] types;
-	private final ImplicitGeometry.Valuer<Indexed,V> painter;
-	private final ImplicitGeometry.Shaper<Indexed> shaper;
+	private final Valuer<Indexed,V> painter;
+	private final Shaper<Indexed> shaper;
 	
 	private final int recordEntries;
 	private final int recordSize;
@@ -82,11 +84,11 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	public MemMapList(File source, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
+	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
 		this(source, null, shaper, painter);
 	}
 	
-	public MemMapList(File source, TYPE[] types, ImplicitGeometry.Shaper<Indexed> shaper, ImplicitGeometry.Valuer<Indexed,V> painter) {
+	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
 		this.source = source;
 		this.painter = painter;
 		this.shaper = shaper;
@@ -142,8 +144,8 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
 
-	public ImplicitGeometry.Valuer<Indexed,V> valuer() {return painter;}
-	public ImplicitGeometry.Shaper<Indexed> shaper() {return shaper;}
+	public Valuer<Indexed,V> valuer() {return painter;}
+	public Shaper<Indexed> shaper() {return shaper;}
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}

@@ -12,15 +12,17 @@ import org.apache.avro.io.*;
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.glyphsets.GlyphList;
-import ar.glyphsets.ImplicitGeometry;
 import ar.glyphsets.WrappedCollection;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Utilities for interacting with Avro**/
 public class Avro {
 	/**Wrap an GenericRecord as a ImplicitGemoetry.Indexed item for use
 	 * with other implicit geometry tools using Indexed.
 	 */
-	public static class IndexedRecord implements ImplicitGeometry.Indexed {
+	public static class IndexedRecord implements Indexed {
 		private final GenericRecord r;
 		public IndexedRecord(GenericRecord r) {this.r=r;}
 		public Object get(int f) {return r.get(f);}
@@ -74,7 +76,7 @@ public class Avro {
 	 * @throws IOException
 	 */
 	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(String sourceFile, Realizer<INNER> realizer,
-			ImplicitGeometry.Shaper<INNER> shaper, ImplicitGeometry.Valuer<INNER, V> valuer) throws IOException {
+			Shaper<INNER> shaper, Valuer<INNER, V> valuer) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		ArrayList<INNER> l = new ArrayList<>();
 		for (GenericRecord r: reader) {l.add(realizer.wrap(r));}

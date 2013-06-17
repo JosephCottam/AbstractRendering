@@ -7,18 +7,20 @@ import java.util.Iterator;
 
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 
 /**Wrap an existing list of values as glyphs.**/
 public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	protected Collection<I> values;
-	protected ImplicitGeometry.Shaper<I> shaper;
-	protected ImplicitGeometry.Valuer<I,V> valuer;
+	protected Shaper<I> shaper;
+	protected Valuer<I,V> valuer;
 	
 	public WrappedCollection(Collection<I> values, 
-							ImplicitGeometry.Shaper<I> shaper, 
-							ImplicitGeometry.Valuer<I,V> valuer) {
+							Shaper<I> shaper, 
+							Valuer<I,V> valuer) {
 		this.values = values;
 		this.shaper = shaper;
 		this.valuer = valuer;
@@ -55,8 +57,8 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		protected final java.util.List<I> values;
 		
 		public List(java.util.List<I> values,
-				ImplicitGeometry.Shaper<I> shaper, 
-				ImplicitGeometry.Valuer<I,V> valuer) {
+				Shaper<I> shaper, 
+				Valuer<I,V> valuer) {
 			super(values, shaper, valuer);
 			this.values=values;
 		}

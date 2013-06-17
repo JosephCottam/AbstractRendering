@@ -7,6 +7,7 @@ import java.io.File;
 import ar.Glyphset;
 import ar.app.util.ColorNames;
 import ar.glyphsets.*;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 import static ar.Glyphset.Glyph;
 
@@ -28,6 +29,7 @@ public class CSVtoGlyphSet {
 		else {return bestMatch;}
 	}
 
+	
 	public static Glyphset autoLoad(File source, double glyphSize, Glyphset glyphs) {
 		try {
 			DelimitedReader r = new DelimitedReader(source, 0, DelimitedReader.CSV);
@@ -49,11 +51,11 @@ public class CSVtoGlyphSet {
 				skip =1;
 			}
 			
-			if (glyphs instanceof DirectMatrix) {
+			if (glyphs instanceof ImplicitMatrix) {
 				return loadMatrix(
 						source, skip, glyphSize, 
 						xField, yField, valueField,
-						0, new ToInt(), false);
+						0, new Valuer.ToInt<String>(), false);
 			} else if (glyphs instanceof MemMapList) {
 				MemMapList list = new MemMapList(source, ((MemMapList) glyphs).shaper(), ((MemMapList) glyphs).valuer());
 				System.out.printf("Setup list of %d entries.\n", list.size());
@@ -67,19 +69,12 @@ public class CSVtoGlyphSet {
 		catch (Exception e) {throw new RuntimeException(e);}
 	}
 
-	public static interface Converter<T> {public T convert(String[] items, int idx, T defaultValue);}
-	public static class ToInt implements Converter<Integer> {
-		public Integer convert(String[] items, int idx, Integer defaultValue) {
-			try {return Integer.parseInt(items[idx]);}
-			catch (Exception e) {return defaultValue;}
-		}
-	}
 	
 	//Loads a matrix from a file.  Assumes the first line tells the matrix dimensions
 	@SuppressWarnings("unchecked")
-	public static <T> DirectMatrix<T> loadMatrix(File file, int skip, double size, 
+	public static <T> ImplicitMatrix<T> loadMatrix(File file, int skip, double size, 
 			int rowField, int colField, int valueField, 
-			T defaultValue, Converter<T> converter,
+			T defaultValue, Valuer<String,T> valuer,
 			boolean nullIsValue) {
 		
 		DelimitedReader loader = new DelimitedReader(file, 0, DelimitedReader.CSV);
@@ -96,13 +91,13 @@ public class CSVtoGlyphSet {
 			
 			int row = Integer.parseInt(line[rowField]);
 			int col = Integer.parseInt(line[colField]);
-			T value = valueField >=0 ? converter.convert(line, valueField, defaultValue) : defaultValue;
+			T value = valueField >=0 ? valuer.value(line[valueField]) : defaultValue; 
 			matrix[row][col] = value;
 			count++;
 		}
 		
 		System.out.printf("Read %d entries into a %d x %d matrix.\n", count, rows, cols);
-		return new DirectMatrix<T>((T[][]) matrix,size,size, nullIsValue);
+		return new ImplicitMatrix<T>((T[][]) matrix,size,size, nullIsValue);
 	}
 
 
