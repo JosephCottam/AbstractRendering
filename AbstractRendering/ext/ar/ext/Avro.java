@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.apache.avro.*;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.*;
 import org.apache.avro.io.*;
@@ -36,17 +35,6 @@ public class Avro {
 		return fr;
 	}
 	
-	/**Unpack a generic-record into a concrete class.
-	 * TODO: Can this be merged with the ImplicitGeometry system?
-	 * **/
-	public static interface Realizer<A> {
-		public A wrap(GenericRecord r);
-		
-		public static final class ID implements Realizer<GenericRecord> {
-			public GenericRecord wrap(GenericRecord r) {return r;}
-		}
-	}
-	
 	/**Read an avro file into a glyphset.
 	 * All items from the file will be read and converted into glyph objects,
 	 * so the data is "fully loaded" in that all load-related computation is done.
@@ -56,10 +44,10 @@ public class Avro {
 	 * @return
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceFile, Realizer<A> glypher) throws IOException {
+	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceFile, Valuer<GenericRecord,Glyph<V>> glypher) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		GlyphList<V> l = new GlyphList<>();
-		for (GenericRecord r: reader) {l.add(glypher.wrap(r));}
+		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;
 	}
 	
@@ -75,11 +63,11 @@ public class Avro {
 	 * @return
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(String sourceFile, Realizer<INNER> realizer,
+	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(String sourceFile, Valuer<GenericRecord,INNER> realizer,
 			Shaper<INNER> shaper, Valuer<INNER, V> valuer) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		ArrayList<INNER> l = new ArrayList<>();
-		for (GenericRecord r: reader) {l.add(realizer.wrap(r));}
+		for (GenericRecord r: reader) {l.add(realizer.value(r));}
 		return new WrappedCollection.List<>(l, shaper, valuer);
 	}
 }

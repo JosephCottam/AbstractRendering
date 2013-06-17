@@ -26,7 +26,7 @@ import ar.util.DelimitedReader;
 
 public class AvroTest {
 
-	public class AvroRect<V> implements Avro.Realizer<Glyph<V>> {
+	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
 		Shaper<Indexed> shaper;
 		Valuer<Indexed, V> valuer;
 		Glypher<Indexed, V> glypher;
@@ -36,7 +36,7 @@ public class AvroTest {
 			glypher = new WrappingGlypher<>(shaper, valuer);
 		}
 		
-		public Glyph<V> wrap(GenericRecord r) {
+		public Glyph<V> value(GenericRecord r) {
 			return glypher.glyph(new Avro.IndexedRecord(r));
 		}
 	}
