@@ -12,7 +12,7 @@ import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
-import ar.glyphsets.implicitgeometry.Indexed.IndexedToRect;
+import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
 import ar.rules.AggregateReducers;
 
@@ -44,7 +44,7 @@ public class RenderSpeedTest {
 			long total=0;
 			try {
 				//Glyphset<?> glyphs = new MemMapList(source, .005, new ImplicitGeometry.Constant(Color.red));
-				Glyphset<?> glyphs = new MemMapList(source, new IndexedToRect(.005, .005, false, 0, 1), new Constant(Color.red));
+				Glyphset<?> glyphs = new MemMapList(source, new ToRect(.005, .005, false, 0, 1), new Constant(Color.red));
 				glyphs.bounds();
 				for (int i=0; i<iterations; i++) {
 					ARPanel panel = new ARPanel(aggregator, transfer, glyphs, render);

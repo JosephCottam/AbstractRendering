@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import ar.Glyphset;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
-import ar.glyphsets.implicitgeometry.Indexed.IndexedToRect;
+import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
@@ -50,7 +50,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 			return new GlyphList<Object>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (Double) size.getSelectedItem();
-			Shaper shaper = new IndexedToRect(sz, sz, false, 0,1);
+			Shaper shaper = new ToRect(sz, sz, false, 0,1);
 			Valuer valuer = new Constant<Double>(Color.red);
 			return new MemMapList(null, shaper, valuer);
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {

@@ -16,6 +16,7 @@ import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
+import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
@@ -142,7 +143,7 @@ public class Presets extends CompoundPanel {
 	
 	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "../data/circlepoints.csv", .1);
 	private static final Glyphset BOOST_MEMORY = load("BGL Memory", "../data/MemVisScaled.csv", .001);
-	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new IndexedToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
+	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
 	private static final Glyphset CHARITY_NET_MM = memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
@@ -164,7 +165,7 @@ public class Presets extends CompoundPanel {
 	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, Valuer valuer, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);
-		Shaper shaper = new IndexedToRect(width, height, flipY, 0, 1);
+		Shaper shaper = new Indexed.ToRect(width, height, flipY, 0, 1);
 
 		try {
 			long start = System.currentTimeMillis();

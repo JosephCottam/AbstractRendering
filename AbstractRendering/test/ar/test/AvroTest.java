@@ -20,7 +20,6 @@ import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.glyphsets.implicitgeometry.WrappingGlypher;
 import ar.util.CSVtoGlyphSet;
 import ar.util.DelimitedReader;
 
@@ -31,9 +30,9 @@ public class AvroTest {
 		Valuer<Indexed, V> valuer;
 		Glypher<Indexed, V> glypher;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
-			shaper = new Indexed.IndexedToRect(size, size, false, xfield, yfield);
-			valuer = new Indexed.IndexedToValue<>(vfield);
-			glypher = new WrappingGlypher<>(shaper, valuer);
+			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);
+			valuer = new Indexed.ToValue<>(vfield);
+			glypher = new Glypher.Composite<>(shaper, valuer);
 		}
 		
 		public Glyph<V> value(GenericRecord r) {

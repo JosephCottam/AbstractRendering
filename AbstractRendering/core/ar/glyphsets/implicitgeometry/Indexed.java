@@ -16,12 +16,13 @@ public interface Indexed {
 	/**Apply the passed valuer to the value at the indicated index.
 	 * The default value is the "IdentityValuer" found in the valuer class.
 	 * **/
-	public static class IndexedToValue<I,V> implements Valuer<Indexed,V> {
+	public static class ToValue<I,V> implements Valuer<Indexed,V> {
 		private final int vIdx;
 		private final Valuer<I,V> basis;
 		
-		public IndexedToValue(int vIdx) {this(vIdx, new IdentityValuer());}
-		public IndexedToValue(int vIdx, Valuer<I, V> basis) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public ToValue(int vIdx) {this(vIdx, new IdentityValuer());}
+		public ToValue(int vIdx, Valuer<I, V> basis) {
 			this.vIdx = vIdx;
 			this.basis = basis;
 		}
@@ -32,12 +33,14 @@ public interface Indexed {
 		}
 	}
 	
-	public static class IndexedToRect implements Shaper<Indexed> {
+
+	
+	public static class ToRect implements Shaper<Indexed> {
 		private final double width,height;
 		private final boolean flipY;
 		private final int xIdx, yIdx;
 		
-		public IndexedToRect(double width, double height, boolean flipY, int xIdx, int yIdx) {
+		public ToRect(double width, double height, boolean flipY, int xIdx, int yIdx) {
 			this.width=width;
 			this.height=height;
 			this.flipY=flipY;
