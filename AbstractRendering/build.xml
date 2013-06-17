@@ -4,6 +4,7 @@
   <property name="appSrc" value="app"/>
   <property name="appBin" value="${bin}/appBin" />
   <property name="appJar" value="ARApp.jar" />
+  <property name="extSrc" value="ext"/>
   <property name="coreSrc" value="core"/>
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
@@ -18,7 +19,6 @@
     <delete file="ARApp.jar"/>
   </target>
 
-
   <target name="core">
     <antcall target="compile">
       <param name="src" value="${coreSrc}"/>
@@ -30,38 +30,61 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value=""/>
     </antcall>
-    <antcall target="docs" />
+    <antcall target="docs">
+      <param name="src" value="${coreSrc}"/>
+      <param name="jars" value=""/>
+    </antcall>
   </target>
 
-  <target name="docs">
-    <javadoc sourcepath="${coreSrc}" destdir="${docs}"/>
+  <target name="extended">
+    <antcall target="compile">
+      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="target" value="${coreBin}"/>
+      <param name="jars" value="lib"/>
+    </antcall>
+    <antcall target="package">
+      <param name="file" value="${coreJar}"/>
+      <param name="bin" value="${coreBin}"/>
+      <param name="main" value=""/>
+    </antcall>
+    <antcall target="docs">
+      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="jars" value="lib"/>
+    </antcall>
   </target>
 
   <target name="app" depends="core">
     <antcall target="compile">
       <param name="src" value="${appSrc}"/>
       <param name="target" value="${appBin}"/>
-      <param name="jars" value="${coreJar}"/>
+      <param name="jars" value="."/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${appJar}"/>
       <param name="bin" value="${appBin}"/>
       <param name="main" value="ar.app.ARApp"/>
-      <param name="classpath" value="${coreJar}"/>
+      <param name="classpath" value="AR.jar"/>
     </antcall>
   </target>
-  
 
   <target name="compile">
     <mkdir dir="${target}"/>
     <javac destdir="${target}"  source="1.7" 
-           includeantruntime="false" classpath="${jars}">
-           <src> 
-             <pathelement path="${src}"/> 
-           </src>
+      includeantruntime="false" 
+      srcdir="${src}">
+      <classpath>
+        <fileset dir="${jars}" includes="*.jar"/>
+      </classpath>
     </javac>
   </target>
 
+  <target name="docs">
+    <javadoc sourcepath="${src}" destdir="${docs}">
+      <classpath>
+        <fileset dir="${jars}" includes="*.jar"/>
+      </classpath>
+    </javadoc>
+  </target>
 
   <target name="package">
     <jar jarfile="${file}" includes="*.class" basedir=".">
