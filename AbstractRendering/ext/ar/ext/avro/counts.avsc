@@ -1,0 +1,13 @@
+{"type" : "record",
+ "name" : "aggregates",
+ "fields" : 
+   [
+    {"name": "lowX", "type": "int"},
+    {"name": "lowY", "type": "int"},
+	{"name": "highX", "type": "int"},
+	{"name": "highY", "type": "int"},
+    {"name": "default", "type": "int"},
+	{"name": "values", "type": {"type": "array", "items":"int"}}
+   ]
+} 
+ 

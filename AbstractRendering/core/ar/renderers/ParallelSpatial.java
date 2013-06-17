@@ -20,11 +20,13 @@ import ar.util.Util;
  * (i.e., bin-driven iteration).
  * **/
 public final class ParallelSpatial<G,A> implements Renderer<G,A> {
+	public static final int DEFAULT_TASK_SIZE = 100000;
 	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder;
 
+	public ParallelSpatial() {this(DEFAULT_TASK_SIZE);}
 	public ParallelSpatial(int taskSize) {
 		this.taskSize = taskSize;
 		recorder = RenderUtils.recorder();

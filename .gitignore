@@ -8,3 +8,4 @@ data
 *.swp
 AbstractRendering/doc/*
 AbstractRendering/lib/*
+AbstractRendering/testResults/*

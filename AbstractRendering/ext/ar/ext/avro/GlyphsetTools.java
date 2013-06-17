@@ -1,4 +1,4 @@
-package ar.ext;
+package ar.ext.avro;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Utilities for interacting with Avro**/
-public class Avro {
+public class GlyphsetTools {
 	/**Wrap an GenericRecord as a ImplicitGemoetry.Indexed item for use
 	 * with other implicit geometry tools using Indexed.
 	 */
@@ -28,8 +28,8 @@ public class Avro {
 	}
 	
 	/**Internal utility for seting up an avro reader.**/
-	private static DataFileReader<GenericRecord> reader(String sourceFile) throws IOException {
-		File source = new File(sourceFile);
+	private static DataFileReader<GenericRecord> reader(String sourceName) throws IOException {
+		File source = new File(sourceName);
 		DatumReader<GenericRecord> dr = new GenericDatumReader<>();
 		DataFileReader<GenericRecord> fr =new DataFileReader<>(source, dr);
 		return fr;
@@ -44,8 +44,8 @@ public class Avro {
 	 * @return
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceFile, Valuer<GenericRecord,Glyph<V>> glypher) throws IOException {
-		DataFileReader<GenericRecord> reader = reader(sourceFile); 
+	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher) throws IOException {
+		DataFileReader<GenericRecord> reader = reader(sourceName); 
 		GlyphList<V> l = new GlyphList<>();
 		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;

@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
-import ar.ext.Avro;
+import ar.ext.avro.GlyphsetTools;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -23,7 +23,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.CSVtoGlyphSet;
 import ar.util.DelimitedReader;
 
-public class AvroTest {
+public class AvroGlyphs {
 
 	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
 		Shaper<Indexed> shaper;
@@ -36,7 +36,7 @@ public class AvroTest {
 		}
 		
 		public Glyph<V> value(GenericRecord r) {
-			return glypher.glyph(new Avro.IndexedRecord(r));
+			return glypher.glyph(new GlyphsetTools.IndexedRecord(r));
 		}
 	}
 	
@@ -45,11 +45,11 @@ public class AvroTest {
 	public void circlepointsRoundTrip() throws Exception {
 		String csv = "../data/circlepoints.csv";
 		String avro = "../data/circlepoints.avro";
-		String schema = "../data/circlepoints.json";
+		String schema = "../data/circlepoints.avsc";
 		encode(csv, avro, schema);
 		
 		GlyphList<?> reference =(GlyphList<?>) CSVtoGlyphSet.load(new GlyphList(), new File(csv), 1, .1, false, 2, 3, -1, 4); 
-		Glyphset.RandomAccess<?> result = Avro.fullLoad(avro, new AvroRect(.1, 2, 3, 4));
+		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4));
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {
