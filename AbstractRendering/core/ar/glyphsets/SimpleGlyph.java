@@ -21,6 +21,7 @@ public class SimpleGlyph<V> implements Glyph<V>{
 		return (other instanceof SimpleGlyph) &&
 				id.equals(((SimpleGlyph<?>) other).id);
 	}
+	
 	public int hashCode() {return id;}
 	public Shape shape() {return shape;}
 	public V value() {return value;}

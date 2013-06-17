@@ -29,13 +29,14 @@ public class Avro {
 	/**Internal utility for seting up an avro reader.**/
 	private static DataFileReader<GenericRecord> reader(String sourceFile) throws IOException {
 		File source = new File(sourceFile);
-		Schema schema = new Schema.Parser().parse(source);
-		DatumReader<GenericRecord> dr = new GenericDatumReader<>(schema);
+		DatumReader<GenericRecord> dr = new GenericDatumReader<>();
 		DataFileReader<GenericRecord> fr =new DataFileReader<>(source, dr);
 		return fr;
 	}
 	
-	/**Unpack a generic-record into a concrete class.**/
+	/**Unpack a generic-record into a concrete class.
+	 * TODO: Can this be merged with the ImplicitGeometry system?
+	 * **/
 	public static interface Realizer<A> {
 		public A wrap(GenericRecord r);
 		

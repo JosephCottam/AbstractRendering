@@ -27,7 +27,7 @@ public class DelimitedReader implements Iterator<String[]> {
 		try {
 			splitter = Pattern.compile(delimiter);
 			reader = new BufferedReader(new FileReader(file));
-			while (skip-- > 0) {reader.readLine();}
+			while (skip > 0) {reader.readLine(); skip--;}
 		} catch (IOException e) {throw new RuntimeException("Error intializing glyphset from " + file.getName(), e);}
 	}
 	

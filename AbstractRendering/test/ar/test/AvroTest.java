@@ -5,7 +5,13 @@ import static org.junit.Assert.*;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.parsing.Parser;
 import org.junit.Test;
 
 import ar.Glyphset;
@@ -16,6 +22,7 @@ import ar.glyphsets.GlyphList;
 import ar.glyphsets.ImplicitGeometry;
 import ar.glyphsets.SimpleGlyph;
 import ar.util.CSVtoGlyphSet;
+import ar.util.DelimitedReader;
 
 public class AvroTest {
 
@@ -42,20 +49,40 @@ public class AvroTest {
 		String schema = "../data/circlepoints.json";
 		encode(csv, avro, schema);
 		
-		GlyphList reference = (GlyphList) CSVtoGlyphSet.autoLoad(new File(csv), .1, new GlyphList());
-		Glyphset.RandomAccess result = Avro.fullLoad(avro, new AvroRect(.1, 0, 1, 2));
+		GlyphList<?> reference =(GlyphList<?>) CSVtoGlyphSet.load(new GlyphList(), new File(csv), 1, .1, false, 2, 3, -1, 4); 
+		Glyphset.RandomAccess<?> result = Avro.fullLoad(avro, new AvroRect(.1, 2, 3, 4));
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {
-			assertEquals(reference.get(i), result.get(i));
+			Glyph<?> res = result.get(i);
+			Glyph<?> ref = reference.get(i);
+			assertEquals("Shape did not match at " + i, ref.shape(), res.shape());
 		}
-		
-		
-		fail("Not yet implemented");
+
+		for (int i=0;i<reference.size(); i++) {
+			Glyph<?> res = result.get(i);
+			Glyph<?> ref = reference.get(i);
+			assertEquals("Value did not match at " + i, ref.value(), res.value().toString());
+		}
+
 	}
 	
-	public void encode(String source, String target, String schema) {
+	public void encode(String sourceFile, String targetFile, String schemaFile) throws Exception {
+		Schema schema = new Schema.Parser().parse(new File(schemaFile));
+		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
+		dataFileWriter.create(schema, new File(targetFile));
 		
+		DelimitedReader reader = new DelimitedReader(new File(sourceFile), 1, "\\s*,\\s*");
+		while (reader.hasNext()) {
+			final String[] record = reader.next();
+			if (record == null) {continue;}
+			final GenericRecord r = new GenericData.Record(schema);
+			for (int i=0; i<record.length;i++) {r.put(i, Double.parseDouble(record[i]));}
+			dataFileWriter.append(r);
+		}
+		
+		dataFileWriter.close();
 	}
 
 }

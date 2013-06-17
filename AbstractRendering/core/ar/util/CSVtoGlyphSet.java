@@ -59,7 +59,7 @@ public class CSVtoGlyphSet {
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {
-				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField);
+				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField, valueField);
 			}
 
 		} 
@@ -106,7 +106,7 @@ public class CSVtoGlyphSet {
 	}
 
 
-	public static Glyphset load(final Glyphset glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField) {
+	public static Glyphset load(final Glyphset glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField, int valueField) {
 		DelimitedReader loader = new DelimitedReader(file, skip, DelimitedReader.CSV);
 		final int yflip = flipy?-1:1;
 		int count =0;
@@ -114,19 +114,20 @@ public class CSVtoGlyphSet {
 		while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
-			if (skip >0) {skip--; continue;}
 
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]) * yflip;
 			Rectangle2D rect = new Rectangle2D	.Double(x,y,size,size);
-			Color color;
+			Object value;
 			if (colorField >=0) {
 				try {
-					color = ColorNames.byName(parts[colorField], Color.red);
+					value = ColorNames.byName(parts[colorField], Color.red);
 				} catch (Exception e) {throw new RuntimeException("Error loading color: " + parts[colorField]);}
-			} else {color = Color.RED;}
+			} else if (valueField > 0) {
+				value = parts[valueField];
+			} else {value = Color.RED;}
 
-			Glyph<Color> g = new SimpleGlyph(rect, color);
+			Glyph<Color> g = new SimpleGlyph(rect, value);
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
