@@ -29,25 +29,21 @@ from chaco.api import ArrayPlotData, Plot
 #===============================================================================
 def _create_plot_component():
     red = ar.Color(255,0,0,255)
-    blue = ar.Color(0,255,0,255)
+    green = ar.Color(0,255,0,255)
+    blue = ar.Color(0,0,255,255)
     white = ar.Color(255,255,255,255)
     black = ar.Color(0,0,0,255)
     
     #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
     glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     
-    screen = (800,800)
+    screen = (80,80)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
     with Timer("Aggregates/Transfer") as arTimer:   
-      #image = ar.render(glyphs, ar.containing, infos.const(1), counts.count, counts.hdalpha(white,red), screen, ivt)
-      #image = ar.render(glyphs, ar.containing, infos.attribute("value",None), rle.COC, rle.minPercent(.5,red,blue,white), screen, ivt) 
-      #image = ar.render(glyphs, ar.containing, infos.attribute("value",None), rle.COC, rle.minPercent(.5,red,blue,white), screen, ivt)
-      #image = ar.render(glyphs, ar.containing, infos.const(1), counts.count, counts.hdalpha(white,red), screen, ivt) 
-      #image = ar.render(glyphs, ar.containing, infos.const(1), counts.count, counts.hdalpha(white,red), screen, ivt) 
       image = ar.render(glyphs, 
-                        counts.Count(), 
-                        counts.HDInterpolate(white, red, 0),
+                        rle.CountCategories(), 
+                        rle.MinPercent(.5, blue, white, white),
                         screen,
                         ivt)
 

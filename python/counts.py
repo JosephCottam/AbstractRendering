@@ -27,15 +27,11 @@ class Segment(ar.Transfer):
     self.low = low
     self.divider = float(divider)
 
-  def f_vec(self, items, out):
-    keys = (items >= self.divider) 
-    out[keys] = self.high
-    out[~keys] = self.low
-    return out
-
   def transfer(self, grid):
-    outgrid = self.makegrid(grid)
-    self.f_vec(grid._projected, outgrid) 
+    outgrid = np.ndarray((grid.width, grid.height, 4), dtype=np.uint8)
+    mask = (grid._projected >= self.divider) 
+    outgrid[mask] = self.high
+    outgrid[~mask] = self.low
     return outgrid
 
 

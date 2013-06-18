@@ -1,6 +1,39 @@
+import ar
+import numpy as np
 from collections import OrderedDict 
 
+try:
+  from numba import autojit
+except ImportError:
+  print "Error loading numba."
+  autojit = lambda f: f
+
 ##### Aggregator ##########
+#@autojit
+def _count(projected, glyphset, catidx):
+  width, height = projected.shape
+  categories = np.unique(glyphset[:,catidx])
+  categories.sort()
+  outgrid=np.zeros((width, height, len(categories)), dtype=np.int32)
+
+  for x in xrange(0, width):
+    for y in xrange(0, height):
+      items = projected[x,y]
+      if (items == None) : continue
+      for item in items:
+        item = glyphset[item]
+        cat = item[catidx]
+        catnum = categories.searchsorted(cat) 
+        outgrid[x,y,catnum] += 1
+  
+  return outgrid
+
+class CountCategories(ar.Aggregator):
+  #Note: Generalize order by-way of argsort...which would need to be stored somewhere
+  def aggregate(self, grid):
+    return _count(grid._projected, grid._glyphset, 4) ## HACK --- Hard coded offset for now....
+
+
 def RLE(x):
   rle = RunLengthEncode() 
   if type(x) is None:
@@ -11,8 +44,6 @@ def RLE(x):
   else:
     rle.add(x)
   return rle
-
-def COC(x): return CountOfCategories(RLE(x))
 
 ##### Transfers ########
 
@@ -30,6 +61,25 @@ def hdalpha(colors, background):
       return Color(c.r,c.g,c.b,alpha)
     return f
   return gen
+
+class MinPercent(ar.Transfer):
+  def __init__(self, cutoff, above, below, background):
+    self.cutoff = cutoff
+    self.above = above.asarray()
+    self.below = below.asarray()
+    self.background = background.asarray()
+
+  def transfer(self, grid):
+    outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
+    
+    sums = np.sum(grid._aggregates, axis=2, dtype=np.float32)  ## Total values in all categories
+    maskbg = sums == 0 
+    mask = (grid._aggregates[:,:,0]/sums) >= self.cutoff
+
+    outgrid[mask] = self.above
+    outgrid[~mask] = self.below
+    outgrid[maskbg] = self.background
+    return outgrid
 
 def minPercent(cutoff, above, below, background):
   def gen(aggs):
@@ -79,35 +129,6 @@ class RunLengthEncode:
 
   def __str__(self):
     return str(zip(self.keys,self.counts))
-
-
-class CountOfCategories:
-  """Count-of-categories is an RLE where the item key will only appear once.
-     First-occurance order preserved.
-     """
-
-  def __init__(self, rle):
-    self.coc = OrderedDict()
-    for (key, count) in rle:
-      if (not self.coc.has_key(key)):
-        self.coc[key] = 0
-      
-      current = self.coc[key]
-      self.coc[key] = current+count
-
-  def first(self): return self.__iter__().next()[0]
-  def total(self): return reduce(lambda x,y:x+y, self.coc.values())
-
-  def __len__(self): return len(self.coc)
-  def __getitem__(self,key): return self.coc[key]
-  
-  def __iter__(self):
-    return zip(self.coc.keys(), self.coc.values()).__iter__()
-  
-  def __str__(self):
-    #Note sure that the keys and the values are in the same order...
-    return str(zip(self.coc.keys(), self.coc.values()))
-
 
 def minmax(aggs):
   sizes = map(len, aggs)

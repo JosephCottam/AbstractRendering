@@ -26,6 +26,7 @@ def _project(viewxform, glyphset):
   # transform each glyph and add it to the grid
   for i in xrange(0, len(glyphset)):
     #apply the view transform
+    #x,y,w,h,v = glyphset[i]
     x = glyphset[i,0]
     y = glyphset[i,1]
     w = glyphset[i,2]
@@ -43,6 +44,8 @@ def _project(viewxform, glyphset):
 
 #@autojit
 def _store(projected, outgrid):
+  empty = []
+  outgrid.fill(empty)
   for i in xrange(0, len(projected)):
     x = projected[i,0]
     y = projected[i,1]
@@ -51,7 +54,7 @@ def _store(projected, outgrid):
     for xx in xrange(x, x2):
       for yy in xrange(y, y2):
         ls = outgrid[xx,yy]
-        if (ls == None): 
+        if (ls is empty): 
           ls = []
         ls.append(i)
         outgrid[xx,yy]=ls
@@ -83,10 +86,10 @@ class Grid(object):
       Stores result in _projected.
       Stores the passed glyphset in _glyphset
       """
-      self._glyphset = glyphset
+      self._glyphset = glyphset.asarray()
       outgrid = np.ndarray((self.width, self.height), dtype=object)
 
-      projected = _project(self.viewxform, glyphset.asarray())
+      projected = _project(self.viewxform, self._glyphset)
       self._projected = _store(projected, outgrid)
 
     def aggregate(self, aggregator):
