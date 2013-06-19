@@ -102,41 +102,40 @@ class HDAlpha(ar.Transfer):
        background -- Color when the category list is empty (default is white)
     """
     #self.colors = dict(zip(colors.keys(), map(lambda v: v.asarray(), colors.values)))
-    self.colors = map(lambda v: v.asarray(), colors)
+    self.catcolors = np.array(map(lambda v: v.asarray(), colors))
     self.background = background.asarray()
     self.alphamin = alphamin
     self.log = log
     self.logbase = logbase
 
   def transfer(self, grid):
-    outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
     sums = ToCounts.transfer(grid, dtype=np.float32)
-    maxsum = sums.max()
-    
-    for x in xrange(0, grid.width):
-      for y in xrange(0, grid.height):
-        base = opaqueblend(grid._aggregates[x,y], sums[x,y], self.colors)
-        final = alpha(base, sums[x,y], maxsum, self.alphamin, self.background, self.log, self.logbase)
-        outgrid[x,y] = final 
-    return outgrid
+    mask = (sums!=0)
 
-    
-
+    colors = npopaqueblend(self.catcolors, grid._aggregates, sums)
+    colors[~mask] = self.background
+    alpha(colors, sums, mask, self.alphamin, self.log, self.logbase)
+    return colors
 
 ##### Utilities #######
-@autojit
-def alpha(color, count, maxval, alphamin, background, dolog=False, base=10):
-  if count == 0: return background
+def alpha(colors, sums, mask, alphamin, dolog=False, base=10):
+  maxval = sums.max()
+
   if (dolog):
     base = log(base)
-    count = log(count)/base
     maxval = log(maxval)/base
-  
-  alpha = alphamin + ((1-alphamin) * (count/maxval));
-  color[3] = alpha*255
-  return color
+    sums[mask] = log(sums[mask])/base
 
-@autojit
+  np.putmask(colors[:,:,3], mask,((alphamin + ((1-alphamin) * (sums/maxval)))*255).astype(np.uint8))
+
+def npopaqueblend(catcolors, counts, sums):
+  weighted = (counts/sums[:,:,np.newaxis]).astype(float)
+  weighted = catcolors[np.newaxis,np.newaxis,:]*weighted[:,:,:,np.newaxis]
+  colors = weighted.sum(axis=2).astype(np.uint8)
+  return colors 
+
+
+
 def opaqueblend(counts, total, colors):
   """counts --  A run-length encoding
      total  -- toal in counts (passed in because I happen to have it handy)
@@ -145,7 +144,7 @@ def opaqueblend(counts, total, colors):
   racc = 0;
   gacc = 0;
   bacc = 0;
- 
+  
   for i in xrange(0, len(counts)):
     count = counts[i]
     color = colors[i]
