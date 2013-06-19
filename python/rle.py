@@ -90,7 +90,6 @@ class MinPercent(ar.Transfer):
     outgrid[maskbg] = self.background
     return outgrid
 
-
 class HDAlpha(ar.Transfer):
   def __init__(self, colors, 
                background=ar.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
@@ -112,7 +111,7 @@ class HDAlpha(ar.Transfer):
     sums = ToCounts.transfer(grid, dtype=np.float32)
     mask = (sums!=0)
 
-    colors = npopaqueblend(self.catcolors, grid._aggregates, sums)
+    colors = opaqueblend(self.catcolors, grid._aggregates, sums)
     colors[~mask] = self.background
     alpha(colors, sums, mask, self.alphamin, self.log, self.logbase)
     return colors
@@ -128,37 +127,8 @@ def alpha(colors, sums, mask, alphamin, dolog=False, base=10):
 
   np.putmask(colors[:,:,3], mask,((alphamin + ((1-alphamin) * (sums/maxval)))*255).astype(np.uint8))
 
-def npopaqueblend(catcolors, counts, sums):
+def opaqueblend(catcolors, counts, sums):
   weighted = (counts/sums[:,:,np.newaxis]).astype(float)
   weighted = catcolors[np.newaxis,np.newaxis,:]*weighted[:,:,:,np.newaxis]
   colors = weighted.sum(axis=2).astype(np.uint8)
   return colors 
-
-
-
-def opaqueblend(counts, total, colors):
-  """counts --  A run-length encoding
-     total  -- toal in counts (passed in because I happen to have it handy)
-     colors -- A list of [r,g,b], one for each category in the category-cannonical order 
-  """
-  racc = 0;
-  gacc = 0;
-  bacc = 0;
-  
-  for i in xrange(0, len(counts)):
-    count = counts[i]
-    color = colors[i]
-    r = color[0]
-    g = color[1]
-    b = color[2]
-
-    p = count/total;
-    r2 = (r/255.0) * p 
-    g2 = (g/255.0) * p 
-    b2 = (b/255.0) * p 
-
-    racc += r2
-    gacc += g2
-    bacc += b2
-
-  return [racc*255,gacc*255,bacc*255,255]

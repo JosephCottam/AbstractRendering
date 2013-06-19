@@ -54,35 +54,3 @@ class HDInterpolate(ar.Transfer):
     return (percents[:,:,np.newaxis] * colorspan[np.newaxis,np.newaxis,:] + self.low.asarray()).astype(np.uint8)
 
 
-
-
-###### Other utilities ########
-
-def minmax(aggs):
-  return (min(aggs.values), max(aggs.values))
-
-def interpolateColors(low, high, min,  max, v):
-  """low--Color for the lowest position
-     high-- Color for the highest position
-     min -- Smallest value v will take
-     max -- largest value v will take
-     v -- current value
-  """
-
-  if (v>max): v=max
-  if (v<min): v=min
-  distance = 1-((max-v)/float(max-min));
-
-def interpolateColors(percent, low, high):
-  if (percent<0): percent=0
-  if (percent>1): percent=1
- 
-  r = int(weightedAverage(high.r, low.r, percent))
-  g = int(weightedAverage(high.g, low.g, percent))
-  b = int(weightedAverage(high.b, low.b, percent))
-  a = int(weightedAverage(high.a, low.a, percent))
-  return ar.Color(r,g,b,a);
-
-
-#TODO: Look at the inMens perceptually-weighted average
-def weightedAverage(v1, v2, weight): return (v1 -v2) * weight + v2
