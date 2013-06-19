@@ -1,6 +1,6 @@
 import ar
 import numpy as np
-from collections import OrderedDict 
+from math import log
 
 try:
   from numba import autojit
@@ -37,42 +37,43 @@ def _count(projected, glyphset, catidx):
   return outgrid
 
 class CountCategories(ar.Aggregator):
-  #Note: Generalize order by-way of argsort...which would need to be stored somewhere
+  #TODO: Store the catogories list somewhere
   def aggregate(self, grid):
     return _count(grid._projected, grid._glyphset, 4) ## HACK --- Hard coded offset for now....
 
 
-def RLE(x):
-  rle = RunLengthEncode() 
-  if type(x) is None:
-    pass
-  elif type(x) is list:
-    for i in x:
-      rle.add(i)
-  else:
-    rle.add(x)
-  return rle
-
 ##### Transfers ########
+class ToCounts(ar.Transfer):
+  """Convert from count-by-categories to just raw counts.
+     Then transfer functions from the count module can be used.
+  """
+  @staticmethod
+  def transfer(grid, dtype=np.int32):
+    return np.sum(grid._aggregates, axis=2, dtype=dtype)
 
-
-def hdalpha(colors, background):
-  def gen(aggs):
-    (min,max) = minmax(aggs)
-    def f(rle):
-      if len(rle) == 0:
-        c=background
-      else:
-        c=blend(rle,colors)
-        alpha = omin + ((1-omin) * (rle.fullSize()/max));
-
-      return Color(c.r,c.g,c.b,alpha)
-    return f
-  return gen
 
 class MinPercent(ar.Transfer):
-  def __init__(self, cutoff, above, below, background):
+  """
+  If the item in the specified bin represents more than a certain percent
+  of the total number of items, color it as "above" otherwise, color as "below"
+  
+     cutoff -- percent value to split above and below coloring
+     cat -- integer indicating which category number to use  
+            TODO: Change from idx to category label, lookup idx
+     above  -- color to paint above (default a red)
+     below  -- color to paint below (default a blue)
+     background -- color to paint when there are no values (default is clear)
+  """
+     
+  def __init__(self, 
+               cutoff, 
+               cat=0,
+               above=ar.Color(228, 26, 28,255), 
+               below=ar.Color(55, 126, 184,255), 
+               background=ar.Color(255,255,255,0)):
+
     self.cutoff = cutoff
+    self.cat = cat  
     self.above = above.asarray()
     self.below = below.asarray()
     self.background = background.asarray()
@@ -80,89 +81,78 @@ class MinPercent(ar.Transfer):
   def transfer(self, grid):
     outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
     
-    sums = np.sum(grid._aggregates, axis=2, dtype=np.float32)  ## Total values in all categories
+    sums = ToCounts.transfer(grid, dtype=np.float32)
     maskbg = sums == 0 
-    mask = (grid._aggregates[:,:,0]/sums) >= self.cutoff
+    mask = (grid._aggregates[:,:,self.cat]/sums) >= self.cutoff
 
     outgrid[mask] = self.above
     outgrid[~mask] = self.below
     outgrid[maskbg] = self.background
     return outgrid
 
-def minPercent(cutoff, above, below, background):
-  def gen(aggs):
-    def f(rle):
-      if len(rle) == 0:
-        return background
-      else:
-        first = rle[rle.first()]
-        percentFirst = first/(float(rle.total()))
-        return above if percentFirst >= cutoff else below
-    return f
-  return gen
 
+class HDAlpha(ar.Transfer):
+  def __init__(self, colors, 
+               background=ar.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
+    """colors -- a list of colors in cateogry-order.
+                 TODO: Change to a dictionary of category-to-color mapping
+       alphamin -- minimum alpha value when (default is 0)
+       log -- Log-based interpolate? (default is false)
+       logbase -- Base to use if log is true (default is 10)
+       background -- Color when the category list is empty (default is white)
+    """
+    #self.colors = dict(zip(colors.keys(), map(lambda v: v.asarray(), colors.values)))
+    self.colors = map(lambda v: v.asarray(), colors)
+    self.background = background.asarray()
+    self.alphamin = alphamin
+    self.log = log
+    self.logbase = logbase
 
+  def transfer(self, grid):
+    outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
+    sums = ToCounts.transfer(grid, dtype=np.float32)
+    maxsum = sums.max()
+    
+    for x in xrange(0, grid.width):
+      for y in xrange(0, grid.height):
+        base = opaqueblend(grid._aggregates[x,y], sums[x,y], self.colors)
+        final = alpha(base, sums[x,y], maxsum, self.alphamin, self.background, self.log, self.logbase)
+        outgrid[x,y] = final 
+    return outgrid
+
+    
 
 
 ##### Utilities #######
+def alpha(color, count, maxval, alphamin, background, dolog=False, base=10):
+  if count == 0: return background
+  #import pdb; pdb.set_trace()
+  if (dolog):
+    alpha = alphamin + ((1-alphamin) * (log(count, base)/log(maxval,base)));
+  else:
+    alpha = alphamin + ((1-alphamin) * (count/maxval));
 
+  return [color[0], color[1], color[2], alpha*255]
 
-class RunLengthEncode:
-  """Like a dictionary, except the same key can occur multiple times
-     and the order of the keys is preserved.  Is built by stateful 
-     accumulation.
+def opaqueblend(counts, total, colors):
+  """counts --  A run-length encoding
+     total  -- toal in counts (passed in because I happen to have it handy)
+     colors -- A list of [r,g,b], one for each category in the category-cannonical order 
   """
-
-  def __init__(self):
-      self.counts = []
-      self.keys=[]
-
-  def add(self, key):
-    if (len(self.keys)==0 or key != self.keys[len(self.keys)-1]):
-        self.keys.append(key)
-        self.counts.append(0)
-    self.counts[len(self.counts)-1] = self.counts[len(self.counts)-1]+1
-
-  def first(self): return self.keys[0]
-  def total(self): return reduce(lambda x,y:x+y, self.counts)
+  racc = 0;
+  gacc = 0;
+  bacc = 0;
   
-  def __len__(self): return len(self.counts)  
-  def __getitem__(self, key):
-    for (k,v) in self:
-      if (k == key) : return v
-    return None
-  
-  def __iter__(self): 
-    return zip(self.keys, self.counts).__iter__()
+  for (i,count) in enumerate(counts):
+    r,g,b,a = colors[i]
 
-  def __str__(self):
-    return str(zip(self.keys,self.counts))
+    p = count/total;
+    r2 = (r/255.0) * p 
+    g2 = (g/255.0) * p 
+    b2 = (b/255.0) * p 
 
-def minmax(aggs):
-  sizes = map(len, aggs)
-  return (min(sizes), max(sizes))
+    racc += r2
+    gacc += g2
+    bacc += b2
 
-
-def blend(rle, colors):
-  """rle --  A run-length encoding
-     colors -- An associative collection from the categories in the rle to colors
-  """
-
-  total = len(rle)
-  r = 0;
-  g = 0;
-  b = 0;
-  
-  for (key,val) in rle:
-    c = colors[key]
-
-    a2 = rle.count(i)/total;
-    r2 = (c.r/255.0) * a2;
-    g2 = (c.g/255.0) * a2;
-    b2 = (c.b/255.0) * a2;
-
-    r += r2;
-    g += g2;
-    b += b2;
-
-  return [r*255,g*255,b*255]
+  return [racc*255,gacc*255,bacc*255]
