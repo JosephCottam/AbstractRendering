@@ -42,9 +42,10 @@ def _project(viewxform, glyphset):
 
   return outglyphs
 
-#@autojit
-def _store(projected, outgrid):
+@autojit
+def _store(width, height, projected):
   empty = []
+  outgrid = np.ndarray((width, height), dtype=object)
   outgrid.fill(empty)
   for i in xrange(0, len(projected)):
     x = projected[i,0]
@@ -54,10 +55,10 @@ def _store(projected, outgrid):
     for xx in xrange(x, x2):
       for yy in xrange(y, y2):
         ls = outgrid[xx,yy]
-        if (ls is empty): 
+        if (ls == empty): 
           ls = []
+          outgrid[xx,yy] = ls 
         ls.append(i)
-        outgrid[xx,yy]=ls
   return outgrid
    
 
@@ -87,10 +88,9 @@ class Grid(object):
       Stores the passed glyphset in _glyphset
       """
       self._glyphset = glyphset.asarray()
-      outgrid = np.ndarray((self.width, self.height), dtype=object)
 
       projected = _project(self.viewxform, self._glyphset)
-      self._projected = _store(projected, outgrid)
+      self._projected = _store(self.width, self.height, projected)
 
     def aggregate(self, aggregator):
         """ 
