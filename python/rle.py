@@ -9,21 +9,29 @@ except ImportError:
   autojit = lambda f: f
 
 ##### Aggregator ##########
-#@autojit
+@autojit
+def _search(item, items):
+  for i in xrange(0,len(items)):
+    val = items[i]
+    if (val == item): return i
+
+  return -1
+
+@autojit
 def _count(projected, glyphset, catidx):
   width, height = projected.shape
   categories = np.unique(glyphset[:,catidx])
-  categories.sort()
   outgrid=np.zeros((width, height, len(categories)), dtype=np.int32)
 
   for x in xrange(0, width):
     for y in xrange(0, height):
-      items = projected[x,y]
-      if (items == None) : continue
-      for item in items:
-        item = glyphset[item]
-        cat = item[catidx]
-        catnum = categories.searchsorted(cat) 
+      glyphids = projected[x,y]
+      if (glyphids == None) : continue
+      for gidx in xrange(0, len(glyphids)):
+        glyphid = glyphids[gidx]
+        glyph = glyphset[glyphid]
+        cat = glyph[catidx]
+        catnum = _search(cat, categories) 
         outgrid[x,y,catnum] += 1
   
   return outgrid
