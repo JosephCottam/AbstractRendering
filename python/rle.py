@@ -124,16 +124,19 @@ class HDAlpha(ar.Transfer):
 
 
 ##### Utilities #######
+@autojit
 def alpha(color, count, maxval, alphamin, background, dolog=False, base=10):
   if count == 0: return background
-  #import pdb; pdb.set_trace()
   if (dolog):
-    alpha = alphamin + ((1-alphamin) * (log(count, base)/log(maxval,base)));
-  else:
-    alpha = alphamin + ((1-alphamin) * (count/maxval));
+    base = log(base)
+    count = log(count)/base
+    maxval = log(maxval)/base
+  
+  alpha = alphamin + ((1-alphamin) * (count/maxval));
+  color[3] = alpha*255
+  return color
 
-  return [color[0], color[1], color[2], alpha*255]
-
+@autojit
 def opaqueblend(counts, total, colors):
   """counts --  A run-length encoding
      total  -- toal in counts (passed in because I happen to have it handy)
@@ -142,9 +145,13 @@ def opaqueblend(counts, total, colors):
   racc = 0;
   gacc = 0;
   bacc = 0;
-  
-  for (i,count) in enumerate(counts):
-    r,g,b,a = colors[i]
+ 
+  for i in xrange(0, len(counts)):
+    count = counts[i]
+    color = colors[i]
+    r = color[0]
+    g = color[1]
+    b = color[2]
 
     p = count/total;
     r2 = (r/255.0) * p 
@@ -155,4 +162,4 @@ def opaqueblend(counts, total, colors):
     gacc += g2
     bacc += b2
 
-  return [racc*255,gacc*255,bacc*255]
+  return [racc*255,gacc*255,bacc*255,255]
