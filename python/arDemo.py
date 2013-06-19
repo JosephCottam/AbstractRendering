@@ -37,13 +37,13 @@ def _create_plot_component():
     #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
     glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     
-    screen = (80,80)
+    screen = (800,800)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
     with Timer("Aggregates/Transfer") as arTimer:   
       image = ar.render(glyphs, 
                         rle.CountCategories(), 
-                        rle.MinPercent(.5, blue, white, white),
+                        rle.HDAlpha([red, blue]),
                         screen,
                         ivt)
 
