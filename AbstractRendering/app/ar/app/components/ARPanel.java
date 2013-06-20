@@ -128,7 +128,7 @@ public class ARPanel extends JPanel {
 			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), width, height);
 			image = renderer.transfer(aggregates, (Transfer) transfer.op(), width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
-			System.out.printf("%,d ms (full)\n", (end-start));
+			System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
 			ARPanel.this.repaint();
 		}
 	}
@@ -138,7 +138,7 @@ public class ARPanel extends JPanel {
 			long start = System.currentTimeMillis();
 			image = renderer.transfer(aggregates, (Transfer) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
 			long end = System.currentTimeMillis();
-			System.out.printf("%,d ms (transfer)\n", (end-start));
+			System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
 			ARPanel.this.repaint();
 		}
 	}
@@ -277,6 +277,7 @@ public class ARPanel extends JPanel {
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
 	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		aggregates=null;
+		System.out.println(vt);
 		transferViewTransform(vt);
 	}
 	

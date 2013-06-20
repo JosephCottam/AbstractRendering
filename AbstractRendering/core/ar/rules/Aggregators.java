@@ -103,6 +103,12 @@ public class Aggregators {
 			}
 			return 0;
 		}
+		
+		public boolean equals(Object other) {
+			if (!(other instanceof RLE)) {return false;}
+			RLE alter = (RLE) other;
+			return counts.equals(alter.counts) && keys.equals(alter.keys);
+		}
 	}	
 
 

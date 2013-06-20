@@ -1,13 +1,10 @@
-{"type" : "record",
- "name" : "aggregates",
- "fields" : 
-   [
-    {"name": "lowX", "type": "int"},
-    {"name": "lowY", "type": "int"},
-	{"name": "highX", "type": "int"},
-	{"name": "highY", "type": "int"},
-    {"name": "default", "type": "int"},
-	{"name": "values", "type": {"type": "array", "items":"int"}}
-   ]
-} 
- 
+{"type":"record",
+ "name":"counts",
+ "aliases": ["recordType"],
+ "namespace":"ar.ext.avro",
+ "fields":[
+    {"name":"value", "type":"int"},
+    {"name":"x","type":"int"},
+    {"name":"y","type":"int"}
+  ]
+ }
