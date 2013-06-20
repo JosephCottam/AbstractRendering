@@ -60,7 +60,7 @@ public class SchemaResolver {
 
 	}
 
-	public SchemaResolver parseSchema(String schemaString) {
+	public SchemaResolver addSchema(String schemaString) {
 		try {
 			String completeSchema = resolveSchema(schemaString);
 			Schema schema = new Schema.Parser().parse(completeSchema);
@@ -71,19 +71,19 @@ public class SchemaResolver {
 		return this;
 	}
 
-	public SchemaResolver parseSchema(InputStream in)throws IOException {
+	public SchemaResolver loadSchema(InputStream in)throws IOException {
 		StringBuffer out = new StringBuffer();
 		byte[] b = new byte[4096];
 		for (int n; (n = in.read(b)) != -1;) {
 			out.append(new String(b, 0, n));
 		}
-		return parseSchema(out.toString());
+		return addSchema(out.toString());
 	}
 
-	public SchemaResolver parseSchema(File file)throws IOException {
+	public SchemaResolver loadSchema(File file)throws IOException {
 		FileInputStream fis = new FileInputStream(file);
 		try {
-			return parseSchema(fis);
+			return loadSchema(fis);
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + file.getName(), e.getCause());
 		}
@@ -91,7 +91,7 @@ public class SchemaResolver {
 	
 	public SchemaResolver loadSchema(String path) throws IOException {
 		try {
-		parseSchema(AggregateSerailizer.class.getClassLoader().getResourceAsStream(path));
+			loadSchema(AggregateSerailizer.class.getClassLoader().getResourceAsStream(path));
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + path, e.getCause());
 		}
