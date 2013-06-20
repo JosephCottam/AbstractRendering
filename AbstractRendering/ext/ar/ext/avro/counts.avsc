@@ -1,10 +1,7 @@
 {"type":"record",
- "name":"counts",
- "aliases": ["recordType"],
+ "name":"recordType",
  "namespace":"ar.ext.avro",
  "fields":[
-    {"name":"value", "type":"int"},
-    {"name":"x","type":"int"},
-    {"name":"y","type":"int"}
+    {"name":"value", "type":"int"}
   ]
  }

@@ -45,19 +45,14 @@ public class SchemaResolver {
 	}
 
 	static String replace(String str, String pattern, String replace) {
-
-		int s = 0;
-		int e = 0;
 		StringBuffer result = new StringBuffer();
-		while ((e = str.indexOf(pattern, s)) >= 0) {
-			result.append(str.substring(s, e-1));
-			result.append(replace);
-			s = e+pattern.length()+1;
-
-		}
-		result.append(str.substring(s));
+		int e = str.indexOf(pattern, 0);
+		if (e < 0) {return str;}
+		
+		result.append(str.substring(0, e-1));
+		result.append(replace);
+		result.append(str.substring(e+pattern.length()+1));
 		return result.toString();
-
 	}
 
 	public SchemaResolver addSchema(String schemaString) {
