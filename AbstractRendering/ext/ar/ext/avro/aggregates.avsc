@@ -1,0 +1,13 @@
+{"type" : "record",
+ "name" : "aggregates",
+ "namespace" : "ar.ext.avro",
+ "fields" : 
+   [
+    {"name": "lowX", "type": "int"},
+    {"name": "lowY", "type": "int"},
+    {"name": "highX", "type": "int"},
+    {"name": "highY", "type": "int"},
+    {"name": "default", "type": "ar.ext.avro.recordType"},
+    {"name": "values", "type": {"type": "array", "items":"ar.ext.avro.recordType"}}
+   ]
+}

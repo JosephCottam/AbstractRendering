@@ -1,0 +1,9 @@
+{"type": "record",
+   "name":"rle",
+   "aliases": [""recordType"],
+   "namespace":"ar.ext.avro",
+   "fields" : [
+     {"name":"keys", "type":"string"},
+     {"name":"values", "type":"int"}
+   ]
+}

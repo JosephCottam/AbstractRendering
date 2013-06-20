@@ -16,6 +16,7 @@ import ar.rules.Aggregators;
 import ar.util.CSVtoGlyphSet;
 
 import ar.ext.avro.AggregateSerailizer;
+import ar.ext.avro.CountConverter;
 
 public class AvroAggregates {
 	@Test
@@ -27,7 +28,7 @@ public class AvroAggregates {
 		
 		String filename = "./testResults/counts.avro";
 		AggregateSerailizer.serializeCounts(ref, filename);
-		Aggregates<Integer> res = AggregateSerailizer.deserialize(filename, Integer.class);
+		Aggregates<Integer> res = AggregateSerailizer.deserialize(filename, new CountConverter());
 
 		assertEquals(ref.lowX(), res.lowX());
 		assertEquals(ref.lowY(), res.lowY());
