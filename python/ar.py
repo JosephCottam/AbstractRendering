@@ -10,9 +10,6 @@ except ImportError:
   print "Error loading numba."
   autojit = lambda f: f
 
-from timer import Timer
-
-
 ############################  Core System ####################
 class Glyphset(list):
   def asarray(self):
@@ -269,7 +266,7 @@ def zoom_fit(screen, bounds):
   """
   (sw,sh) = screen
   (gx,gy,gw,gh) = bounds
-  scale = max(gw/sw, gh/sh)
+  scale = max(gw/float(sw), gh/float(sh))
   return AffineTransform(gx,gy,scale,scale)
 
 
