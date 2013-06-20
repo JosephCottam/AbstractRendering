@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
+import org.codehaus.jackson.JsonNode;
 
 /**Fluent tool for loading up a set of avro schemas
  * and generating a composite from them based on alias resolution
@@ -19,24 +22,15 @@ import org.apache.avro.Schema;
  *  
  * Based on http://www.infoq.com/articles/ApacheAvro.
  * **/
-public class SchemaResolver {
+public class SchemaComposer {
 
 	private final Map<String, Schema> schemas = new HashMap<String, Schema>();
 	private Schema mostRecent=null;
 
-	public Schema resolve() {return mostRecent;}
-	
-	/**Register a new schema with this repository.**/
-	public SchemaResolver addSchema(Schema schema){
-		for (String alias: schema.getAliases()) {
-			schemas.put(alias, schema);
-		}
-		schemas.put(schema.getFullName(), schema);
-		mostRecent = schema;
-		return this;
-	}
+	/**Return the most recently add item.**/
+	public Schema resolved() {return mostRecent;}
 
-	public String resolveSchema(String sc){
+	private String resolveSchema(String sc){
 		String result = sc;
 		for(Map.Entry<String, Schema> entry : schemas.entrySet())
 			result = replace(result, entry.getKey(),
@@ -44,7 +38,7 @@ public class SchemaResolver {
 		return result;
 	}
 
-	static String replace(String str, String pattern, String replace) {
+	private static String replace(String str, String pattern, String replace) {
 		StringBuffer result = new StringBuffer();
 		int e = str.indexOf(pattern, 0);
 		if (e < 0) {return str;}
@@ -55,42 +49,63 @@ public class SchemaResolver {
 		return result.toString();
 	}
 
-	public SchemaResolver addSchema(String schemaString) {
+	
+	
+	/**Register a new schema with this repository.**/
+	public SchemaComposer add(Schema schema){
+		for (String alias: schema.getAliases()) {
+			schemas.put(alias, schema);
+		}
+		schemas.put(schema.getFullName(), schema);
+		mostRecent = schema;
+		return this;
+	}
+
+
+	/**Load a schema, directly from the string.**/
+	public SchemaComposer add(String schemaString) {
 		try {
 			String completeSchema = resolveSchema(schemaString);
 			Schema schema = new Schema.Parser().parse(completeSchema);
-			this.addSchema(schema);
+			this.add(schema);
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema:" + schemaString, e);
 		}
 		return this;
 	}
 
-	public SchemaResolver loadSchema(InputStream in)throws IOException {
+	/**Load a schema from an input stream.**/
+	public SchemaComposer add(InputStream in)throws IOException {
 		StringBuffer out = new StringBuffer();
 		byte[] b = new byte[4096];
 		for (int n; (n = in.read(b)) != -1;) {
 			out.append(new String(b, 0, n));
 		}
-		return addSchema(out.toString());
+		return add(out.toString());
 	}
 
-	public SchemaResolver loadSchema(File file)throws IOException {
+	/**Load a schema from a file.**/
+	public SchemaComposer add(File file)throws IOException {
 		FileInputStream fis = new FileInputStream(file);
 		try {
-			return loadSchema(fis);
+			return add(fis);
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + file.getName(), e.getCause());
 		}
 	}
-	
-	public SchemaResolver loadSchema(String path) throws IOException {
+
+
+	/**Load a schema from a file (specified as a string).**/
+	public SchemaComposer addFile(String file)throws IOException {return add(new File(file));}
+
+		
+	/**Load a schema via the class-loader resource mechanism.**/
+	public SchemaComposer addResource(String path) throws IOException {
 		try {
-			loadSchema(AggregateSerailizer.class.getClassLoader().getResourceAsStream(path));
+			add(AggregateSerailizer.class.getClassLoader().getResourceAsStream(path));
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + path, e.getCause());
 		}
-
 		return this;
 	}
 }

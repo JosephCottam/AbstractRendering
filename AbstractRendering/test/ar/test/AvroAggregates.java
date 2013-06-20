@@ -20,7 +20,7 @@ import ar.util.CSVtoGlyphSet;
 
 import ar.ext.avro.AggregateSerailizer;
 import ar.ext.avro.Converters;
-import ar.ext.avro.SchemaResolver;
+import ar.ext.avro.SchemaComposer;
 
 public class AvroAggregates {
 	@Test
@@ -36,7 +36,7 @@ public class AvroAggregates {
 		Aggregates<Integer> ref = r.reduce(glyphs, new Aggregators.Count(), ivt, 500,500);
 		
 		String filename ="./testResults/counts.avro";
-		Schema s = new SchemaResolver().loadSchema("ar/ext/avro/counts.avsc").resolve();
+		Schema s = new SchemaComposer().addResource("ar/ext/avro/counts.avsc").resolved();
 		AggregateSerailizer.serialize(ref, filename, s, new Converters.FromCount(s));
 		Aggregates<Integer> res = AggregateSerailizer.deserialize(filename, new Converters.ToCount());
 
@@ -68,7 +68,7 @@ public class AvroAggregates {
 		Aggregates<RLE> ref = r.reduce(glyphs, new Aggregators.RLEColor(true, false), ivt, 500,500);
 		
 		String filename ="./testResults/rle.avro";
-		Schema s = new SchemaResolver().loadSchema("ar/ext/avro/rle.avsc").resolve();
+		Schema s = new SchemaComposer().addResource("ar/ext/avro/rle.avsc").resolved();
 		AggregateSerailizer.serialize(ref, filename, s, new Converters.FromRLE(s));
 		Aggregates<RLE> res = AggregateSerailizer.deserialize(filename, new Converters.ToRLE());
 

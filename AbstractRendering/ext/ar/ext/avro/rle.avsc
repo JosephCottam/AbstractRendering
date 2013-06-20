@@ -1,7 +1,7 @@
-{"type": "record",
-   "name":"recordType",
-   "namespace":"ar.ext.avro",
-   "fields" : [
+{"name":"recordType",
+ "namespace":"ar.avro",
+ "type": "record",
+ "fields" : [
      {"name":"keys", "type":{"type":"array", "items":"string"}},
      {"name":"counts", "type":{"type":"array", "items":"int"}}
    ]

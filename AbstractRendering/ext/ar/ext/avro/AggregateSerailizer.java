@@ -3,7 +3,10 @@ package ar.ext.avro;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -24,6 +27,13 @@ public class AggregateSerailizer {
 	public static final String COUNTS_SCHEMA="ar/ext/avro/counts.avsc";
 	public static final String RLE_SCHEMA="ar/ext/avro/rle.avsc";
 	
+	public static final Map<String,String> META;
+	static {
+		Map<String,String> map = new HashMap<>();
+		map.put("AbstractRendering", "Summer 2012");
+		META = Collections.unmodifiableMap(map);
+	}
+	
 	/**Common aggregates serialization code.
 	 * Note: Values must be either a collection or a reference-type array (sorry, no primitive arrays)
 	 */
@@ -33,8 +43,10 @@ public class AggregateSerailizer {
 		aggregates.put("lowY", aggs.lowY());
 		aggregates.put("highX", aggs.highX());
 		aggregates.put("highY", aggs.highY());
-		aggregates.put("default", defaultVal);
 		aggregates.put("values", values);
+		aggregates.put("default", defaultVal);
+		aggregates.put("Z", 0);
+		aggregates.put("meta", META);
 		
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
@@ -46,7 +58,7 @@ public class AggregateSerailizer {
 	}
 	
 	public static <A> void serialize(Aggregates<A> aggs, String targetName, Schema itemSchema, Valuer<A, GenericRecord> converter) throws IOException {
-		Schema fullSchema = new SchemaResolver().addSchema(itemSchema).loadSchema(AGGREGATES_SCHEMA).resolve();
+		Schema fullSchema = new SchemaComposer().add(itemSchema).addResource(AGGREGATES_SCHEMA).resolved();
 
 		List<List<GenericRecord>> records = new ArrayList<>();
 		A defVal = aggs.defaultValue();
