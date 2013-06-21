@@ -5,10 +5,9 @@ import java.awt.Color;
 
 import javax.swing.JFrame;
 
-import ar.Aggregates;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
+import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
 import ar.rules.Aggregators;
 import ar.rules.Transfers;
@@ -28,26 +27,63 @@ public interface WrappedTransfer<A> {
 		public Class<Number> type() {return Number.class;}
 		public String toString() {return "Scatter-based selection (int)";}
 		public void selected(ARApp app) {
-			if (flyAway != null) {flyAway.dispose();}
-			flyAway = new JFrame();
-			flyAway.setTitle("Parameters");
-			flyAway.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-			flyAway.setLayout(new BorderLayout());		
-			flyAway.setLocation(500,0);
-			flyAway.setSize(300,300);
-			flyAway.invalidate();
-			flyAway.setVisible(true);
-
-			flyAway.getContentPane().removeAll();
-			flyAway.add(control, BorderLayout.CENTER);
-			flyAway.revalidate();
-			
-			control.setSource(app);
-		}
+			if (flyAway == null) {
+				flyAway = new JFrame();
+				flyAway.setTitle("Parameters");
+				flyAway.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+				flyAway.setLayout(new BorderLayout());		
+				flyAway.setLocation(500,0);
+				flyAway.setSize(300,300);
+				flyAway.invalidate();
+				flyAway.setVisible(true);
+	
+				flyAway.getContentPane().removeAll();
+				flyAway.add(control, BorderLayout.CENTER);
+				flyAway.revalidate();
+				
+				control.setSource(app);
+			} else {
+				flyAway.setVisible(true);
+			}
+		} 
 		public void deselected() {
-			if (flyAway != null) {flyAway.dispose();}
+			if (flyAway != null) {flyAway.setVisible(false);}
 		}
 	}
+	
+	
+	public class DrawDarkVar implements WrappedTransfer<Integer> {
+		JFrame flyAway;
+		DrawDarkControl control = new DrawDarkControl ();
+		
+		public Transfer<Integer> op() {return control.getTransfer().op();}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return String.format("Draw the Dark");}
+		public void selected(ARApp app) {
+			if (flyAway == null) {
+				flyAway = new JFrame();
+				flyAway.setTitle("Parameters");
+				flyAway.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+				flyAway.setLayout(new BorderLayout());		
+				flyAway.setLocation(500,0);
+				flyAway.setSize(300,100);
+				flyAway.invalidate();
+				flyAway.setVisible(true);
+	
+				flyAway.getContentPane().removeAll();
+				flyAway.add(control, BorderLayout.CENTER);
+				flyAway.revalidate();
+			
+				control.setSource(app);
+			} else {
+				flyAway.setVisible(true);
+			}
+		}
+		public void deselected() {
+			if (flyAway != null) {flyAway.setVisible(false);}
+		}
+	}
+
 	
 	public class RedWhiteLinear implements WrappedTransfer<Integer> {
 		public Transfer<Integer> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
@@ -136,69 +172,6 @@ public interface WrappedTransfer<A> {
 		public String toString() {return "Linear HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
-	}
-	
-	public class DrawDarkVar implements WrappedTransfer<Integer> {
-		private int distance;
-		public DrawDarkVar() {this(10);}
-		public DrawDarkVar(int distance) {this.distance = distance;}
-		public Transfer<Integer> op() {return new DrawDark(Color.BLACK, Color.white, distance);}
-		public Class<Integer> type() {return Integer.class;}
-		public String toString() {return String.format("Draw Dark (%d)", distance);}
-		public void selected(ARApp app) {}
-		public void deselected() {}
-		
-		private class DrawDark implements Transfer<Integer> {
-			final int distance;
-			final Transfer<Integer> inner;
-			Aggregates<Integer> cached;
-			Aggregates<Integer> cacheKey;
-			
-			public DrawDark(Color low, Color high, int distance) {
-				this.distance=distance;
-				inner = new Transfers.Interpolate(low,high);
-			}
-
-			public Color at(int x, int y, Aggregates<Integer> aggregates) {
-				if (cacheKey == null || cacheKey != aggregates) {
-					preproc(aggregates); cacheKey=aggregates;
-				}
-				return inner.at(x,y,cached);
-			}
-			
-			private void preproc(Aggregates<Integer> aggs) {
-				Aggregates<Integer> out = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), 0);
-				
-				for (int x=aggs.lowX(); x <aggs.highX(); x++) {
-					for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-						if (aggs.at(x, y) >0) {
-							out.set(x, y, preprocOne(x,y,aggs));
-						} else {
-							out.set(x,y, 0);
-						}
-					}
-				}
-				this.cached = out;
-			}
-			
-			private int preprocOne(int x, int y, Aggregates<Integer> aggregates) {
-				int surroundingSum =0;
-				for (int d=-distance; d<=distance; d++) {
-					for (int dx=0; dx<=d; dx++) {
-						for (int dy=0; dy<=d; dy++) {
-							int cx=x+dx;
-							int cy=y+dy;
-							if (cx < aggregates.lowX() || cy < aggregates.lowY() || cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-							double dv = aggregates.at(cx,cy).doubleValue();
-							if (dv != 0) {surroundingSum++;}
-						}
-					}
-				}
-				return surroundingSum;
-
-			}
-			
-		}
 	}
 	
 	

@@ -25,6 +25,7 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
+import ar.app.util.TransferWrapper;
 import ar.app.util.WrappedTransfer;
 import ar.rules.Transfers;
 
@@ -68,7 +69,7 @@ public class ScatterControl extends JPanel {
 		double minV,maxV,minDV,maxDV;
 		
 		if (plot.region == null || plot.region.isEmpty()) {
-			return new Wrapper(new Transfers.Present<Number>(Color.RED, Color.WHITE));
+			return new TransferWrapper<>(new Transfers.Present<Number>(Color.RED, Color.WHITE), Number.class);
 		} else {
 		
 			Rectangle2D r;
@@ -79,7 +80,7 @@ public class ScatterControl extends JPanel {
 			minV = r.getMinY();
 			maxDV = r.getMaxX();
 			minDV = r.getMinX();
-			return new Wrapper(new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE));
+			return new TransferWrapper<>(new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE), Number.class);
 		}
 		
 	}
@@ -224,15 +225,6 @@ public class ScatterControl extends JPanel {
 			public void keyReleased(KeyEvent e) {}
 		}
 
-	}
-	
-	private static final class Wrapper implements WrappedTransfer<Number> {
-		private final Transfer<Number> transfer;
-		public Wrapper(Transfer<Number> t) {this.transfer=t;}
-		public void deselected() {}
-		public void selected(ARApp app) {}
-		public Transfer<Number> op() {return transfer;}
-		public Class<Number> type() {return Number.class;}
 	}
 		
 	//TODO: Extend to do additional transfer if it is 'in' instead of just return given color...possibly take in Aggregates+Image and set image to tansparent if out...
