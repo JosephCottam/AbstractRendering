@@ -5,7 +5,9 @@ import java.awt.Color;
 
 import javax.swing.JFrame;
 
+import ar.Aggregates;
 import ar.Transfer;
+import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
@@ -52,12 +54,12 @@ public interface WrappedTransfer<A> {
 	}
 	
 	
-	public class DrawDarkVar implements WrappedTransfer<Integer> {
+	public class DrawDarkVar implements WrappedTransfer<Number> {
 		JFrame flyAway;
-		DrawDarkControl control = new DrawDarkControl ();
+		DrawDarkControl control = new DrawDarkControl();
 		
-		public Transfer<Integer> op() {return control.getTransfer().op();}
-		public Class<Integer> type() {return Integer.class;}
+		public Transfer<Number> op() {return control.getTransfer().op();}
+		public Class<Number> type() {return Number.class;}
 		public String toString() {return String.format("Draw the Dark");}
 		public void selected(ARApp app) {
 			if (flyAway == null) {
@@ -85,17 +87,17 @@ public interface WrappedTransfer<A> {
 	}
 
 	
-	public class RedWhiteLinear implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
-		public Class<Integer> type() {return Integer.class;}
+	public class RedWhiteLinear implements WrappedTransfer<Number> {
+		public Transfer<Number> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
+		public Class<Number> type() {return Number.class;}
 		public String toString() {return "Red luminance linear (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class RedWhiteLog implements WrappedTransfer<Integer> {
-		public Transfer<Integer> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
-		public Class<Integer> type() {return Integer.class;}
+	public class RedWhiteLog implements WrappedTransfer<Number> {
+		public Transfer<Number> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
+		public Class<Number> type() {return Number.class;}
 		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -105,6 +107,22 @@ public interface WrappedTransfer<A> {
 		public Transfer<Integer> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "10% Alpha (int)";}
+		public void selected(ARApp app) {}
+		public void deselected() {}
+	}
+	
+	public class FixedAlphaB implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 255);}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return "Min Alpha (int)";}
+		public void selected(ARApp app) {}
+		public void deselected() {}
+	}
+	
+	public class Present implements WrappedTransfer<Integer> {
+		public Transfer<Integer> op() {return new Transfers.Present<>(Color.red, Color.white);}
+		public Class<Integer> type() {return Integer.class;}
+		public String toString() {return "Present (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
@@ -174,6 +192,44 @@ public interface WrappedTransfer<A> {
 		public void deselected() {}
 	}
 	
+	
+	public class ClearCol implements WrappedTransfer<Number> {
+
+		@Override
+		public Transfer<Number> op() {
+			return new Transfer<Number> () {
+				protected Aggregates<Color> cached;
+				protected Aggregates<? extends Number> key;
+				public Color at(int x, int y, Aggregates<? extends Number> aggs) {
+					if (key == null || key != aggs) {
+						cached = new FlatAggregates<>(aggs, Color.BLACK);
+						key =aggs;
+						for (int c=aggs.lowX(); c<aggs.highX(); c++) {
+							Color v = Color.RED;
+							for (int r=aggs.lowY(); r<aggs.highY(); r++) {
+								if (!(aggs.at(c,r).equals(aggs.defaultValue()))) {
+									v = Color.BLUE;
+									break;
+								}
+							}
+							
+							for (int r=aggs.lowY(); r<aggs.highY(); r++) {cached.set(c, r, v);}
+						}
+						
+					}
+					return cached.at(x, y);
+				}
+			};
+		}
+
+		@Override
+		public Class<Number> type() {return Number.class;}
+		public void deselected() {}
+		public void selected(ARApp app) {}
+		public String toString() {return "Column filled (int)";}
+
+
+	}
 	
 	
 	

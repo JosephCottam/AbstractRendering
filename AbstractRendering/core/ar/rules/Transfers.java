@@ -14,14 +14,14 @@ public class Transfers {
 	/**Return the color stored in the aggregate set;
 	 * essentially a pass-through for aggregators that produce colors.**/
 	public static final class IDColor implements Transfer<Color> {
-		public Color at(int x, int y, Aggregates<Color> aggregates) {return aggregates.at(x, y);}
+		public Color at(int x, int y, Aggregates<? extends Color> aggregates) {return aggregates.at(x, y);}
 	}
 
 	
 	public static final class ZScore implements Transfer<Integer> {
 		final Color low, high;
 		final boolean zeros;
-		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
+		private Aggregates<? extends Integer> cacheKey;	//Could be a weak-reference instead...
 		private Aggregates<Double> scored;
 		private Util.Stats stats;
 		
@@ -31,7 +31,7 @@ public class Transfers {
 			this.zeros = zeros;
 		}
 		
-		public Color at(int x, int y, Aggregates<Integer> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
 			if (cacheKey == null || cacheKey != aggregates) {
 				stats = Util.stats(aggregates, zeros);
 				scored = Util.score(aggregates, stats);
@@ -55,7 +55,7 @@ public class Transfers {
 			this.highv = highV;
 		}
 		
-		public Color at(int x, int y, Aggregates<Integer> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
 		}
 	}
@@ -63,7 +63,7 @@ public class Transfers {
 	public static final class Present<T> implements Transfer<T> {
 		private final Color present, absent;
 		public Present(Color present, Color absent) {this.present = present; this.absent=absent;}
-		public Color at(int x, int y, Aggregates<T> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends T> aggregates) {
 			Object v = aggregates.at(x, y);
 			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
 			return absent;
@@ -71,10 +71,10 @@ public class Transfers {
 		
 	}
 	
-	public static final class Interpolate implements Transfer<Integer> {
+	public static final class Interpolate implements Transfer<Number> {
 		private final Color low, high, empty;
 		private final int logBasis;
-		private Aggregates<Integer> cacheKey;	//Could be a weak-reference instead...
+		private Aggregates<? extends Number> cacheKey;	//Could be a weak-reference instead...
 		private Util.Stats extrema;
 		
 		public Interpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
@@ -85,19 +85,21 @@ public class Transfers {
 			this.logBasis = logBasis;
 		}
 		
-		public Color at(int x, int y, Aggregates<Integer> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 			if (cacheKey == null || cacheKey != aggregates) {
 				extrema = Util.stats(aggregates, false);
 				cacheKey = aggregates;
 			}
 			
-			int v = aggregates.at(x,y);
-			if (v == 0) {return empty;}
+			Number v = aggregates.at(x,y);
+			if (v.equals(aggregates.defaultValue())) {
+				return empty;
+			}
 			
 			if (logBasis <= 1) {
-				return Util.interpolate(low, high, extrema.min, extrema.max, v);
+				return Util.interpolate(low, high, extrema.min, extrema.max, v.doubleValue());
 			} else {
-				return Util.logInterpolate(low,high, extrema.min, extrema.max, v, logBasis);
+				return Util.logInterpolate(low,high, extrema.min, extrema.max, v.doubleValue(), logBasis);
 			}
 		}
 	}
@@ -121,7 +123,7 @@ public class Transfers {
 			this.firstKey = firstKey;
 		}
 		
-		public Color at(int x, int y, Aggregates<Aggregators.RLE> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Aggregators.RLE> aggregates) {
 			Aggregators.RLE rle = aggregates.at(x,y);
 			double size = rle.fullSize();
 			
@@ -148,7 +150,7 @@ public class Transfers {
 		private boolean log;
 		private double omin;
 		private Aggregates<Color> colors;
-		private Aggregates<Aggregators.RLE> cacheKey;
+		private Aggregates<? extends Aggregators.RLE> cacheKey;
 		
 		public HighAlpha(Color background, double omin, boolean log) {
 			this.background = background;
@@ -176,7 +178,7 @@ public class Transfers {
 			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
 		}
 		
-		public Color at(int x, int y, Aggregates<Aggregators.RLE> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Aggregators.RLE> aggregates) {
 			if (aggregates!=cacheKey) {
 				double max =0;
 				colors = new FlatAggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
@@ -211,7 +213,7 @@ public class Transfers {
 		public FirstItem(Color background) {
 			this.background = background;
 		}
-		public Color at(int x, int y, Aggregates<Aggregators.RLE> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends Aggregators.RLE> aggregates) {
 			Aggregators.RLE rle = aggregates.at(x,y);
 			double size = rle.fullSize();			
 			if (size == 0) {return background;}

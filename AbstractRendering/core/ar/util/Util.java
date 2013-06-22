@@ -142,7 +142,11 @@ public final class Util {
 	}
 
 
-	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers)**/
+	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers).
+	 * 
+	 * NaN's are skipped.
+	 * 
+	 * **/
 	public static Stats stats(Aggregates<? extends Number> aggregates, boolean ignoreZeros) {
 		//Single-pass std. dev: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods 
 		double count=0;
@@ -152,6 +156,7 @@ public final class Util {
 		for (Number n: aggregates) {
 			double v = n.doubleValue();
 			if (ignoreZeros && v == 0) {continue;}
+			if (n.doubleValue() == Double.NaN) {continue;}
 			if (min > v) {min = v;}
 			if (max < v) {max = v;}
 			sum += v;

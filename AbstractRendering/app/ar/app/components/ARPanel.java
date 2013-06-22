@@ -277,7 +277,6 @@ public class ARPanel extends JPanel {
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
 	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		aggregates=null;
-		System.out.println(vt);
 		transferViewTransform(vt);
 	}
 	

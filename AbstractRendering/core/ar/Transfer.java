@@ -15,5 +15,5 @@ public interface Transfer<A> {
 	 * These functions are not guaranteed to be  called from 
 	 * a single thread, so implementations must provide for thread safety.
 	 */
-	public Color at(int x, int y, Aggregates<A> aggregates);
+	public Color at(int x, int y, Aggregates<? extends A> aggregates);
 }

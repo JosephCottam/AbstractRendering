@@ -14,6 +14,8 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	private final int highX,highY;
 	private final A defaultVal;
 	
+	public FlatAggregates(Aggregates<?> like, A defaultVal) {this(like.lowX(), like.lowY(), like.highX(),  like.highY(), defaultVal);}
+	
 	/**Create a region of aggregates from (0,0) to (highX,highY)**/
 	public FlatAggregates (final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
 	
