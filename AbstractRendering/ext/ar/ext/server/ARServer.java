@@ -3,6 +3,7 @@ package ar.ext.server;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,14 +99,13 @@ public class ARServer extends NanoHTTPD {
 			
 			validate(dataset, agg, transfers);
 			Aggregates<?> aggs = execute(dataset, agg, transfers, vt, width, height);
-//			AggregateSerailizer.serialize(aggs, targetName, itemSchema, converter);
-//			Response r = new Response(Status.OK, "avro/" + format, msg);
-			
-
-			String response = String.format("DS: %s\nAgg: %s\nTrans: %s\nFormat:%s", datasetID, aggID, transferIDS, format);		
-			return new Response(response);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			AggregateSerailizer.serialize(aggs, baos, AggregateSerailizer.FORMAT.JSON);
+			Response response = new Response(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
+			return response;
 		} catch (Exception e) {
-			return new Response(Status.NOT_FOUND, MIME_PLAINTEXT, "Error:" + e.toString());
+			e.printStackTrace();
+			return new Response(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
 		}
 	}
 

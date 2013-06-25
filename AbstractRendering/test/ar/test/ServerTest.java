@@ -34,8 +34,7 @@ public class ServerTest {
 		server.start();
 		String r = sendMessage("circlepoints","Count","RedWhiteLinear", "localhost", 8080);
 		server.stop();
-		System.out.println(r);
-		assertTrue(r.startsWith("DS"));
+		assertTrue(r, r.startsWith("{\"lowX"));
 	}
 
 	public String sendMessage(String dataset, String aggregate, String transfer, String host, int port) throws Exception {

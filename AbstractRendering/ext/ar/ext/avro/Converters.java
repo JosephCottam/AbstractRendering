@@ -1,6 +1,8 @@
 package ar.ext.avro;
 
+import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -36,6 +38,7 @@ public class Converters {
 			return rle;
 		}
 	}
+	
 	/**Generic serialization for RLE.  
 	 * 
 	 * Can only safely handle categories that are isomorphic to their toString
@@ -53,6 +56,24 @@ public class Converters {
 			r.put("counts", from.counts);
 			return r;
 		}
+	}
+	
+	public static class ToColor implements Valuer<GenericRecord, Color> {
+		public Color value(GenericRecord from) {
+			List<Integer> vals = (List<Integer>) from.get("RGBA");
+			return new Color(vals.get(0), vals.get(1),vals.get(2), vals.get(3));
+		}
+	}
+	
+	public static class FromColor implements Valuer<Color, GenericRecord> {
+		private final Schema schema;
+		public FromColor(Schema s) {this.schema = s;}
+		public GenericRecord value(Color from) {
+			GenericRecord r = new GenericData.Record(schema);
+			r.put("RGBA", Arrays.asList(new Integer[]{from.getRed(), from.getGreen(), from.getBlue(), from.getAlpha()}));
+			return r;
+		}
+		
 	}
 
 }
