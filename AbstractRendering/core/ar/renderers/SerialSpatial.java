@@ -3,7 +3,6 @@ package ar.renderers;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -11,7 +10,6 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.FlatAggregates;
-import ar.util.Util;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.
  * This class is largely for reference.  In most caes, a parallel renderer is better.
@@ -38,15 +36,15 @@ public final class SerialSpatial<G,A> implements Renderer<G,A> {
 		return aggregates;
 	}
 	
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A,Color> t, int width, int height, Color background) {
-		BufferedImage i = Util.initImage(width, height, background);
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				try {i.setRGB(x, y, t.at(x, y, aggregates).getRGB());}
-				catch (Exception e) {throw new RuntimeException("Error transfering " + x + ", " + y, e);}
+	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A,Color> t) {
+		Aggregates<Color> out = new FlatAggregates<>(aggregates, t.identity());
+		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+				Color val = t.at(x, y, aggregates);
+				out.set(x,y,val);
 			}
 		}
-		return i;
+		return out;
 	}
 	public double progress() {return recorder.percent();}
 }

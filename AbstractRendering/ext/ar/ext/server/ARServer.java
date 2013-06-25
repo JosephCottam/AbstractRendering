@@ -118,8 +118,11 @@ public class ARServer extends NanoHTTPD {
 		} else {
 			r = new ParallelSpatial();
 		}
-		Aggregates<?> aggs = r.reduce(glyphs, agg, inverseView, width, height);
-		return r.transfer(aggs, trans.get(0), width, height, Color.white);
+		Aggregates aggs = r.reduce(glyphs, agg, inverseView, width, height);
+		for (Transfer t: trans) {
+			aggs = r.transfer(aggs, trans);
+		}
+		return aggs;
 	}
 	
 	/**Ensure that the requested information is consistent.

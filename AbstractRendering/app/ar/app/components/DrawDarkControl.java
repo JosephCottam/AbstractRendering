@@ -12,6 +12,7 @@ import ar.app.ARApp;
 import ar.app.util.TransferWrapper;
 import ar.app.util.WrappedTransfer;
 import ar.rules.Transfers;
+import ar.util.Util;
 
 public class DrawDarkControl extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -94,6 +95,7 @@ public class DrawDarkControl extends JPanel {
 			return surroundingSum/cellCount;
 		}
 
+		public Color identity() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 	}

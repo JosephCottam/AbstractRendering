@@ -5,7 +5,6 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,14 +77,15 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	
 	
 	
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A,Color> t, int width, int height, Color background) {
-		BufferedImage i = Util.initImage(width, height, background);
-		for (int x=Math.max(aggregates.lowX(), 0); x<Math.min(aggregates.highX(), width); x++) {
-			for (int y=Math.max(aggregates.lowY(), 0); y<Math.min(aggregates.highY(), height); y++) {
-				i.setRGB(x, y, t.at(x, y, aggregates).getRGB());
+	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A,Color> t) {
+		Aggregates<Color> rslt = new FlatAggregates<>(aggregates, t.identity());
+		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+				Color val = t.at(x,y, aggregates);
+				rslt.set(x, y, val);
 			}
 		}
-		return i;
+		return rslt;
 	}
 	
 	public double progress() {return recorder.percent();}

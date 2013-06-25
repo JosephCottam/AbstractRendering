@@ -126,7 +126,8 @@ public class ARPanel extends JPanel {
 			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
 			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), width, height);
-			image = renderer.transfer(aggregates, (Transfer) transfer.op(), width, height, Util.CLEAR);
+			Aggregates<Color> colors = renderer.transfer(aggregates, transfer.op());
+			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
 			ARPanel.this.repaint();
@@ -136,7 +137,11 @@ public class ARPanel extends JPanel {
 	public final class TransferRender implements Runnable {
 		public void run() {
 			long start = System.currentTimeMillis();
-			image = renderer.transfer(aggregates, (Transfer) transfer.op(), ARPanel.this.getWidth(), ARPanel.this.getHeight(), Util.CLEAR);			
+			int width = ARPanel.this.getWidth();
+			int height = ARPanel.this.getHeight();
+
+			Aggregates<Color> colors = renderer.transfer(aggregates, transfer.op());
+			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
 			ARPanel.this.repaint();

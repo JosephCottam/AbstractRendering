@@ -3,7 +3,6 @@ package ar.renderers;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
@@ -13,7 +12,6 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.FlatAggregates;
-import ar.util.Util;
 
 /**Task stealing renderer that operates on a per-pixel basis, designed to be used with a spatially-decomposed glyph set.
  * Divides aggregates space into regions and works on each region in isolation
@@ -42,14 +40,15 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 		return aggregates;
 	}
 	
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A,Color> t, int width, int height, Color background) {
-		BufferedImage i = Util.initImage(width, height, background);
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				i.setRGB(x, y, t.at(x, y, aggregates).getRGB());
+	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A,Color> t) {
+		Aggregates<Color> out = new FlatAggregates<>(aggregates, t.identity());
+		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+				Color val = t.at(x, y, aggregates);
+				out.set(x,y,val);
 			}
 		}
-		return i;
+		return out;
 	}
 
 	public double progress() {return recorder.percent();}

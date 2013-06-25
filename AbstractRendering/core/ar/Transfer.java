@@ -15,4 +15,6 @@ public interface Transfer<IN,OUT> extends Inspectable<IN,OUT> {
 	 * a single thread, so implementations must provide for thread safety.
 	 */
 	public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
+	
+	public OUT identity();
 }

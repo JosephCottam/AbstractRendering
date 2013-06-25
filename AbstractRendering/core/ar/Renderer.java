@@ -47,7 +47,7 @@ public interface Renderer<G,A> {
 	 * @param background Background color to put in the resulting image
 	 * @return The resulting image 
 	 */
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A, Color> t, int width, int height, Color background);
+	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A, Color> t);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.
@@ -58,4 +58,6 @@ public interface Renderer<G,A> {
 	 * @return The percent of predicted work that has been completed.
 	 */
 	public double progress();
+	
+	
 }

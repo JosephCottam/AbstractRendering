@@ -28,6 +28,7 @@ import ar.app.ARApp;
 import ar.app.util.TransferWrapper;
 import ar.app.util.WrappedTransfer;
 import ar.rules.Transfers;
+import ar.util.Util;
 
 public class ScatterControl extends JPanel {
 	private static final long serialVersionUID = 4425716699286853617L;
@@ -266,6 +267,7 @@ public class ScatterControl extends JPanel {
 			return out;
 		}
 
+		public Color identity() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 	}

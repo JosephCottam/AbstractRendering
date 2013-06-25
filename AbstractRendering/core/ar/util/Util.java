@@ -23,16 +23,6 @@ public final class Util {
 
 	private Util() {}
 
-	/**Create an RGB buffered image of the given size, filled with the requested color.**/
-	public static BufferedImage initImage(int width, int height, Color background) {
-		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics g = i.getGraphics();
-		g.setColor(background);
-		g.fillRect(0, 0, width, height);
-		g.dispose();
-		return i;
-	}
-
 	/**Create an indentation string of x*2 spaces.**/
 	public static String indent(int x) {
 		char[] chars = new char[x*2];
@@ -245,6 +235,7 @@ public final class Util {
 		return target;
 	}
 	
+	/**Calculate the affine transform to fit a box of the given size/location onto a 0,0,width,height space.**/
 	public static AffineTransform zoomFit(Rectangle2D content, int width, int height) {
 		if (content == null) {return new AffineTransform();}
 
@@ -252,6 +243,22 @@ public final class Util {
 		double h = height/content.getHeight();
 		double scale = Math.min(w, h);
 		return new AffineTransform(scale, 0,0, scale, w,h);
+	}
+	
+	/**From a set of color aggregates, make a new image.**/
+	public static BufferedImage asImage(Aggregates<Color> aggs, int width, int height, Color background) {
+		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics g = i.getGraphics();
+		g.setColor(background);
+		g.fillRect(0, 0, width, height);
+		g.dispose();
+		for (int x=Math.max(0, aggs.lowX()); x<Math.min(width, aggs.highX()); x++) {
+			for (int y=Math.max(0, aggs.lowY()); y<Math.min(width, aggs.highY()); y++) {
+				Color c = aggs.at(x, y);
+				if (c != null) {i.setRGB(x, y, c.getRGB());}			
+			}			
+		}
+		return i;
 	}
 
 }

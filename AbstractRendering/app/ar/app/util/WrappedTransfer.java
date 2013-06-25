@@ -217,6 +217,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 					}
 					return cached.at(x, y);
 				}
+				public Color identity() {return Util.CLEAR;}
 				public Class<Number> input() {return Number.class;}
 				public Class<Color> output() {return Color.class;}
 			};
