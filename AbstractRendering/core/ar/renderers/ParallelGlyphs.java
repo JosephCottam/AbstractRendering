@@ -73,7 +73,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	
 	
 	
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
+	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A,Color> t, int width, int height, Color background) {
 		BufferedImage i = Util.initImage(width, height, background);
 		for (int x=Math.max(aggregates.lowX(), 0); x<Math.min(aggregates.highX(), width); x++) {
 			for (int y=Math.max(aggregates.lowY(), 0); y<Math.min(aggregates.highY(), height); y++) {
@@ -168,7 +168,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 				int highy = (int) Math.ceil(highP.getY());
 
 				Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
-				A v = op.at(pixel, new GlyphSingleton<G>(g), inverseView);
+				A v = op.at(pixel, new GlyphSingleton<G>(g, subset.valueType()), inverseView);
 				
 				
 				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
@@ -187,12 +187,14 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	public static final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 		private final List<Glyph<G>> glyphs;
 		private final Glyph<G> glyph;
+		private final Class<G> valueType;
 		private final Rectangle2D bounds;
 		
-		public GlyphSingleton(Glyph<G> g) {
+		public GlyphSingleton(Glyph<G> g, Class<G> valueType) {
 			glyphs = Collections.singletonList(g);
 			glyph = g;
 			bounds = g.shape().getBounds2D();
+			this.valueType = valueType;
 		}
 		
 		public Iterator<Glyph<G>> iterator() {return glyphs.iterator();}
@@ -201,6 +203,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		public void add(Glyph<G> g) {throw new UnsupportedOperationException();}
 		public long size() {return glyphs.size();}
 		public Rectangle2D bounds() {return bounds;}
+		public Class<G> valueType() {return valueType;}
 
 		public Collection<Glyph<G>> intersects(Rectangle2D r) {
 			if (glyph.shape().intersects(r)) {return glyphs;}
@@ -238,6 +241,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		public long size() {return high-low;}
 		public Rectangle2D bounds() {return Util.bounds(this);}
 		public void add(Glyph<G> g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
+		public Class<G> valueType() {return glyphs.valueType();}
 
 		@Override
 		public Glyph<G> get(long l) {

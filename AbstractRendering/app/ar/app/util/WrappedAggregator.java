@@ -5,9 +5,8 @@ import java.awt.Color;
 import ar.Aggregator;
 import ar.rules.Aggregators;
 
-public interface WrappedAggregator<G,A> {
+public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	public Aggregator<G,A> op();
-	public Class<A> type();
 	
 	public class SolidBlue implements WrappedAggregator<Object, Color> {
 		public Aggregator<Object, Color> op() {return new Aggregators.IDColor(Color.BLUE);}

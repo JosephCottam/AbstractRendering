@@ -42,7 +42,7 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 		return aggregates;
 	}
 	
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background) {
+	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A,Color> t, int width, int height, Color background) {
 		BufferedImage i = Util.initImage(width, height, background);
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {

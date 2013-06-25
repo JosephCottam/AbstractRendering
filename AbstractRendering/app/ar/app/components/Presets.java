@@ -3,7 +3,6 @@ package ar.app.components;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.io.File;
 
 import javax.swing.JComboBox;
 
@@ -12,17 +11,13 @@ import ar.Renderer;
 import ar.app.ARApp;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
-import ar.glyphsets.DynamicQuadTree;
-import ar.glyphsets.MemMapList;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
-import ar.util.MemMapEncoder;
+import ar.util.GlyphsetLoader;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -66,14 +61,14 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction();
 		public Renderer renderer();
 		public Glyphset glyphset();
-		public WrappedTransfer<?> transfer();
+		public WrappedTransfer<?,?> transfer();
 	}
 	
 	public static class ScatterplotAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.FixedAlpha();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.FixedAlpha();}
 		public String toString() {return "Scatterplot: 10% Alpha" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 
@@ -81,7 +76,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
 		public String toString() {return "Scatterplot: HiDef Alpha (Linear)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 	
@@ -89,7 +84,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Scatterplot: HiDef Alpha (log)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
 	
@@ -97,7 +92,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent25();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent25();}
 		public String toString() {return "BGL Memory: 25% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
@@ -105,7 +100,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.Percent95();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent95();}
 		public String toString() {return "BGL Memory: 95% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
@@ -113,7 +108,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
@@ -121,7 +116,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.HighAlphaLog();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
@@ -129,7 +124,7 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
@@ -137,55 +132,16 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
 		public Glyphset glyphset() {return CHARITY_NET_MM;}
-		public WrappedTransfer<?> transfer() {return new WrappedTransfer.RedWhiteLog();}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
-	private static final Glyphset CIRCLE_SCATTER = load("Scatterplot", "../data/circlepoints.csv", .1);
-	private static final Glyphset BOOST_MEMORY = load("BGL Memory", "../data/MemVisScaled.csv", .001);
-	private static final Glyphset BOOST_MEMORY_MM = memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
-	private static final Glyphset CHARITY_NET_MM = memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<>(Color.BLUE), 1, "ii");
+	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetLoader.load("Scatterplot", "../data/circlepoints.csv", .1);
+	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetLoader.load("BGL Memory", "../data/MemVisScaled.csv", .001);
+	private static final Glyphset<Color> BOOST_MEMORY_MM = GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
+	private static final Glyphset<Color> CHARITY_NET_MM =GlyphsetLoader.memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<Indexed>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
 
-	public static final Glyphset load(String label, String file, double size) {
-		System.out.printf("Loading %s...", label);
-		try {
-			final long start = System.currentTimeMillis();
-			Glyphset g = ar.util.CSVtoGlyphSet.autoLoad(new File(file), size, DynamicQuadTree.make());
-			final long end = System.currentTimeMillis();
-			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
-			return g;
-		} catch (Exception e) {
-			System.out.println("Failed to load data.");
-			return null;
-		}
-	}
-	
-	public static final Glyphset memMap(String label, String file, double width, double height, boolean flipY, Valuer valuer, int skip, String types) {
-		System.out.printf("Memory mapping %s...", label);
-		File f = new File(file);
-		Shaper shaper = new Indexed.ToRect(width, height, flipY, 0, 1);
-
-		try {
-			long start = System.currentTimeMillis();
-			Glyphset g = new MemMapList(f, shaper, valuer);
-			long end = System.currentTimeMillis();
-			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
-			return g;
-		} catch (Exception e) {
-			try {
-				if (types != null) {
-					System.out.println("Error loading.  Attempting re-encode...");
-					File source = new File(file.replace(".hbin", ".csv"));
-					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return new MemMapList(f, shaper, valuer);	  //change types to null so it only tries to encode once
-				} else {throw e;}
-			} catch (Exception ex) {
-				System.out.println("Faield to load data.");
-				return null;
-			}
-		}
-	}
 	
 }

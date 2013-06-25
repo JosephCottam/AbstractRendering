@@ -15,12 +15,12 @@ import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
-import ar.util.CSVtoGlyphSet;
+import ar.util.GlyphsetLoader;
 
 public class ARApp implements PanelHolder {
 	private ARPanel image;
 	private final JFrame frame = new JFrame();
-	private final JComboBox<WrappedTransfer<?>> transfers = new JComboBox<WrappedTransfer<?>>();
+	private final JComboBox<WrappedTransfer<?,?>> transfers = new JComboBox<WrappedTransfer<?,?>>();
 	private final JComboBox<WrappedAggregator<?,?>> reductions = new JComboBox<WrappedAggregator<?,?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
@@ -93,7 +93,7 @@ public class ARApp implements PanelHolder {
 					transfers.getItemAt(i).deselected();
 				}
 				
-				WrappedTransfer<?> t = (WrappedTransfer<?>) transfers.getSelectedItem();
+				WrappedTransfer<?,?> t = (WrappedTransfer<?,?>) transfers.getSelectedItem();
 				app.changeImage(image.withTransfer(t));
 				t.selected(ARApp.this);
 			}});
@@ -143,7 +143,7 @@ public class ARApp implements PanelHolder {
 		this.image = newImage;
 		frame.revalidate();
 		
-		((WrappedTransfer<?>) transfers.getSelectedItem()).selected(this);
+		((WrappedTransfer<?,?>) transfers.getSelectedItem()).selected(this);
 	}
 
 	public Glyphset<?> loadData() {
@@ -152,7 +152,7 @@ public class ARApp implements PanelHolder {
 		System.out.print("Loading " + dataFile.getName() + "...");
 		double glyphSize = glyphsetOptions.glyphSize();
 		Glyphset<?> glyphSet = glyphsetOptions.makeGlyphset();
-		return CSVtoGlyphSet.autoLoad(dataFile, glyphSize, glyphSet);
+		return GlyphsetLoader.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	
 	/**

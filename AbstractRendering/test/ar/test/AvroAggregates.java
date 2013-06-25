@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.avro.Schema;
 import org.junit.Test;
@@ -16,7 +17,7 @@ import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.ParallelSpatial;
 import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
-import ar.util.CSVtoGlyphSet;
+import ar.util.GlyphsetLoader;
 
 import ar.ext.avro.AggregateSerailizer;
 import ar.ext.avro.Converters;
@@ -25,7 +26,7 @@ import ar.ext.avro.SchemaComposer;
 public class AvroAggregates {
 	@Test
 	public void countsRoundTrip() throws Exception {
-		Glyphset<Object> glyphs = CSVtoGlyphSet.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		Glyphset<Object> glyphs = GlyphsetLoader.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Object.class));
 		Renderer<Object, Integer> r = new ParallelSpatial<>();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
@@ -57,7 +58,7 @@ public class AvroAggregates {
 	
 	@Test
 	public void RLERoundTrip() throws Exception {
-		Glyphset<Color> glyphs = (Glyphset<Color>) CSVtoGlyphSet.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		Glyphset<Color> glyphs = (Glyphset<Color>) GlyphsetLoader.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
 		Renderer<Color, RLE> r = new ParallelSpatial<>();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
@@ -79,8 +80,15 @@ public class AvroAggregates {
 		assertEquals(ref.defaultValue(), res.defaultValue());
 		
 		for (int x=ref.lowX(); x<ref.highX(); x++) {
-			for (int y=ref.lowY(); y<ref.highY(); y++)
-				assertEquals(String.format("Value at (%d, %d)",x,y), ref.at(x, y), res.at(x, y));
+			for (int y=ref.lowY(); y<ref.highY(); y++) {
+				RLE rref = ref.at(x,y);
+				RLE rres = res.at(x,y);
+				assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rres.size(), rref.size());
+				assertEquals("Unequal counts.", rref.counts,  rres.counts);
+				
+				//HACK: Must test string-equality because generic serialization is based on string category key
+				assertEquals(Arrays.deepToString(rres.keys.toArray()), Arrays.deepToString(rref.keys.toArray()));
+			}
 		}
 
 	}

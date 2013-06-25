@@ -47,16 +47,22 @@ public class ImplicitMatrix<T> implements Glyphset<Color> {
 		long col = Math.round(Math.floor(pixel.getY()/yScale));
 
 		if (inBounds(row,col)) {
-			T v = matrix[(int) row][(int) col];
-			if (v == null && !nullIsValue) {return Collections.emptyList();}
-			
-			Rectangle2D s = new Rectangle2D.Double(row*xScale, col*yScale, xScale, yScale);
-			Color c = colorBy.value(v);
-			return Collections.singletonList(new SimpleGlyph<Color>(s,c));
+			Glyph<Color> g = at(row,col);
+			if (g == null) {return Collections.emptyList();}
+			else {return  Collections.singletonList(g);}
 		} else {
 			return Collections.emptyList();
 		}
 	}
+	
+	private Glyph<Color> at(long row, long col) {
+		T v = matrix[(int) row][(int) col];
+		if (v == null && !nullIsValue) {return null;}
+		Rectangle2D s = new Rectangle2D.Double(row*xScale, col*yScale, xScale, yScale);
+		Color c = colorBy.value(v);
+		return new SimpleGlyph<Color>(s,c);		
+	}
+	
 	private boolean inBounds(long row, long col) {
 		return row >=0 && col >= 0
 				&& row < matrix.length 
@@ -75,5 +81,7 @@ public class ImplicitMatrix<T> implements Glyphset<Color> {
 		else {return new Rectangle2D.Double(0,0,xScale*matrix[0].length, yScale*matrix.length);}
 	}
 
+	public Class<Color> valueType() {return Color.class;}
 	public void add(Glyph<Color> g) {throw new UnsupportedOperationException("Non-extensible glyph set.");}
+	
 }

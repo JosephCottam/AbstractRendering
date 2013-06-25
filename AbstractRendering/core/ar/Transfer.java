@@ -1,10 +1,9 @@
 package ar;
 
-import java.awt.Color;
-
+import ar.util.Inspectable;
 
 /**Transfer functions converts an aggregate into a pixel.**/
-public interface Transfer<A> {
+public interface Transfer<IN,OUT> extends Inspectable<IN,OUT> {
 	
 	/**What color should be used for the pixel at location X/Y.
 	 * 
@@ -15,5 +14,5 @@ public interface Transfer<A> {
 	 * These functions are not guaranteed to be  called from 
 	 * a single thread, so implementations must provide for thread safety.
 	 */
-	public Color at(int x, int y, Aggregates<? extends A> aggregates);
+	public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
 }

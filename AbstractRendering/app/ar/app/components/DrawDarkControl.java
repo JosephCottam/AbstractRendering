@@ -37,16 +37,16 @@ public class DrawDarkControl extends JPanel {
 		source.changeImage(p);
 	}
 
-	public WrappedTransfer<Number> getTransfer() {
+	public WrappedTransfer<Number,Color> getTransfer() {
 		if (cached == null || distance() != cached.distance) {
 			cached = new DrawDark(Color.black, Color.white, distance());
 		}
-		return new TransferWrapper<>(cached, Number.class);
+		return new TransferWrapper<Number, Color>(cached);
 	}
 	
-	public static class DrawDark implements Transfer<Number> {
+	public static class DrawDark implements Transfer<Number, Color> {
 		final int distance;
-		final Transfer<Number> inner;
+		final Transfer<Number, Color> inner;
 		Aggregates<Double> cached;
 		Aggregates<? extends Number> cacheKey;
 		
@@ -93,6 +93,8 @@ public class DrawDarkControl extends JPanel {
 			}
 			return surroundingSum/cellCount;
 		}
-		
+
+		public Class<Number> input() {return Number.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 }

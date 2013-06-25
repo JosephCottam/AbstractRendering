@@ -17,13 +17,16 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	protected Collection<I> values;
 	protected Shaper<I> shaper;
 	protected Valuer<I,V> valuer;
+	protected Class<V> valueType;
 	
 	public WrappedCollection(Collection<I> values, 
 							Shaper<I> shaper, 
-							Valuer<I,V> valuer) {
+							Valuer<I,V> valuer,
+							Class<V> valueType) {
 		this.values = values;
 		this.shaper = shaper;
 		this.valuer = valuer;
+		this.valueType = valueType;
 	}
 	
 	public Collection<ar.Glyphset.Glyph<V>> intersects(Rectangle2D r) {
@@ -58,8 +61,9 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		
 		public List(java.util.List<I> values,
 				Shaper<I> shaper, 
-				Valuer<I,V> valuer) {
-			super(values, shaper, valuer);
+				Valuer<I,V> valuer,
+				Class<V> valueType) {
+			super(values, shaper, valuer, valueType);
 			this.values=values;
 		}
 		
@@ -74,4 +78,6 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			return new SimpleGlyph<V>(shaper.shape(value), valuer.value(value));
 		}
 	}
+	
+	public Class<V> valueType() {return valueType;}
 }

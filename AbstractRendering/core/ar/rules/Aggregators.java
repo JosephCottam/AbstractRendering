@@ -29,7 +29,10 @@ public class Aggregators {
 		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {
 			return new Color(r.x/width, r.y/height,.5f ,1.0f);
 		}
-		public Color identity() {return Util.CLEAR;}	
+		public Color identity() {return Util.CLEAR;}
+		public Class<Object> input() {return Object.class;}
+		public Class<Color> output() {return Color.class;}
+
 	}
 
 	/**Create a solid fill.  
@@ -40,6 +43,8 @@ public class Aggregators {
 		public IDColor(Color c) {this.c=c;}
 		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {return c;}
 		public Color identity() {return Util.CLEAR;}
+		public Class<Object> input() {return Object.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 
 	
@@ -51,6 +56,8 @@ public class Aggregators {
 			return items.size();
 		}
 		public Integer identity() {return 0;}
+		public Class<Object> input() {return Object.class;}
+		public Class<Integer> output() {return Integer.class;}
 	}
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
@@ -62,6 +69,8 @@ public class Aggregators {
 			else {return Util.CLEAR;}
 		}
 		public Color identity() {return Util.CLEAR;}
+		public Class<Color> input() {return Color.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
@@ -74,6 +83,8 @@ public class Aggregators {
 			return color;
 		}
 		public Color identity() {return Util.CLEAR;}
+		public Class<Color> input() {return Color.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 
 
@@ -183,6 +194,8 @@ public class Aggregators {
 			return encode(ordered);
 		}
 		public RLE identity() {return new RLE();}
+		public Class<Color> input() {return Color.class;}
+		public Class<RLE> output() {return RLE.class;}
 	}
 
 	
@@ -223,6 +236,8 @@ public class Aggregators {
 			return count;
 		}
 		public Integer identity() {return 0;}
+		public Class<Object> input() {return Object.class;}
+		public Class<Integer> output() {return Integer.class;}
 	}
 
 }

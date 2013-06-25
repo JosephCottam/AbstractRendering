@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
+import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.glyphsets.implicitgeometry.Shaper;
@@ -45,14 +46,14 @@ public class GlyphsetOptions extends CompoundPanel  {
 	
 	public Glyphset<?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
-			return DynamicQuadTree.make();
+			return DynamicQuadTree.make(Color.class);
 		} else if (glyphsType.getSelectedItem().equals("List")) {
-			return new GlyphList<Object>();			
+			return new GlyphList<Color>(Color.class);			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (Double) size.getSelectedItem();
-			Shaper shaper = new ToRect(sz, sz, false, 0,1);
-			Valuer valuer = new Constant<Double>(Color.red);
-			return new MemMapList(null, shaper, valuer);
+			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);
+			Valuer<Indexed, Color> valuer = new Constant<Indexed>(Color.red);
+			return new MemMapList<>(null, shaper, valuer, Color.class);
 		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
 			return new ImplicitMatrix<>(null, 1, 1, true);
 		} else {

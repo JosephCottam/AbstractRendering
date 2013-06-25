@@ -92,6 +92,8 @@ public class PointMemMapList implements Glyphset.RandomAccess<Color> {
 		
 	}
 		
+	public Class<Color> valueType() {return Color.class;}
+	
 	@Override
 	public Collection<Glyph<Color>> intersects(Rectangle2D r) {
 		ArrayList<Glyph<Color>> contained = new ArrayList<Glyph<Color>>();

@@ -65,11 +65,12 @@ public class ScatterControl extends JPanel {
 	public void setSource(ARApp source) {this.source=source;}
 	public int distance() {return (Integer) distance.getValue();}
 	
-	public WrappedTransfer<Number> getTransfer() {
+	public WrappedTransfer<Number,Color> getTransfer() {
 		double minV,maxV,minDV,maxDV;
 		
 		if (plot.region == null || plot.region.isEmpty()) {
-			return new TransferWrapper<>(new Transfers.Present<Number>(Color.RED, Color.WHITE), Number.class);
+			Transfer<Number, Color> t = new Transfers.Present<Number>(Color.RED, Color.WHITE, Number.class);
+			return new TransferWrapper<Number,Color>(t);
 		} else {
 		
 			Rectangle2D r;
@@ -80,7 +81,8 @@ public class ScatterControl extends JPanel {
 			minV = r.getMinY();
 			maxDV = r.getMaxX();
 			minDV = r.getMinX();
-			return new TransferWrapper<>(new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE), Number.class);
+			Transfer<Number,Color> t = new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE);
+			return new TransferWrapper<Number,Color>(t);
 		}
 		
 	}
@@ -226,7 +228,7 @@ public class ScatterControl extends JPanel {
 	}
 		
 	//TODO: Extend to do additional transfer if it is 'in' instead of just return given color...possibly take in Aggregates+Image and set image to tansparent if out...
-	private static final class DeltaTransfer implements Transfer<Number> {
+	private static final class DeltaTransfer implements Transfer<Number,Color> {
 		private final double minV, maxV, minDV, maxDV;
 		private final int distance;
 		private final Color in,out;
@@ -263,7 +265,9 @@ public class ScatterControl extends JPanel {
 			}
 			return out;
 		}
-		
+
+		public Class<Number> input() {return Number.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
 }

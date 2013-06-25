@@ -6,11 +6,13 @@ import java.io.File;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
 import static ar.Glyphset.Glyph;
 
-public class CSVtoGlyphSet {
+public class GlyphsetLoader {
 	private static boolean isNumber(String s) {
 		try {Double.parseDouble(s); return true;}
 		catch (Exception e) {return false;}
@@ -29,7 +31,7 @@ public class CSVtoGlyphSet {
 	}
 
 	
-	public static Glyphset autoLoad(File source, double glyphSize, Glyphset glyphs) {
+	public static <T> Glyphset<T> autoLoad(File source, double glyphSize, Glyphset<T> glyphs) {
 		try {
 			DelimitedReader r = new DelimitedReader(source, 0, DelimitedReader.CSV);
 			String[] line = r.next();
@@ -51,12 +53,12 @@ public class CSVtoGlyphSet {
 			}
 			
 			if (glyphs instanceof ImplicitMatrix) {
-				return loadMatrix(
+				return (Glyphset<T>) loadMatrix(
 						source, skip, glyphSize, 
 						xField, yField, valueField,
 						0, new Valuer.ToInt<String>(), false);
 			} else if (glyphs instanceof MemMapList) {
-				MemMapList list = new MemMapList(source, ((MemMapList) glyphs).shaper(), ((MemMapList) glyphs).valuer());
+				MemMapList<T> list = new MemMapList<T>(source, ((MemMapList<T>) glyphs).shaper(), ((MemMapList<T>) glyphs).valuer(), glyphs.valueType());
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {
@@ -135,4 +137,45 @@ public class CSVtoGlyphSet {
 		return glyphs;
 	}
 
+
+	public static final Glyphset<Color> load(String label, String file, double size) {
+		System.out.printf("Loading %s...", label);
+		try {
+			final long start = System.currentTimeMillis();
+			Glyphset<Color> g = ar.util.GlyphsetLoader.autoLoad(new File(file), size, DynamicQuadTree.make(Color.class));
+			final long end = System.currentTimeMillis();
+			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
+			return g;
+		} catch (Exception e) {
+			System.out.println("Failed to load data.");
+			return null;
+		}
+	}
+	
+	public static final Glyphset<Color> memMap(String label, String file, double width, double height, boolean flipY, Valuer<Indexed, Color> valuer, int skip, String types) {
+		System.out.printf("Memory mapping %s...", label);
+		File f = new File(file);
+		Shaper<Indexed> shaper = new Indexed.ToRect(width, height, flipY, 0, 1);
+
+		try {
+			long start = System.currentTimeMillis();
+			Glyphset<Color> g = new MemMapList<>(f, shaper, valuer, Color.class);
+			long end = System.currentTimeMillis();
+			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
+			return g;
+		} catch (Exception e) {
+			try {
+				if (types != null) {
+					System.out.println("Error loading.  Attempting re-encode...");
+					File source = new File(file.replace(".hbin", ".csv"));
+					MemMapEncoder.write(source, skip, f, types.toCharArray());
+					return new MemMapList<>(f, shaper, valuer, Color.class);
+				} else {throw e;}
+			} catch (Exception ex) {
+				System.out.println("Faield to load data.");
+				return null;
+			}
+		}
+	}
+	
 }

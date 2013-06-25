@@ -3,8 +3,14 @@ package ar;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 
-/**Aggregators convert glyphs into aggregate items for a specific view.**/
-public interface Aggregator<FROM, TO> {
+import ar.util.Inspectable;
+
+/**Aggregators convert glyphs into aggregate items for a specific view.
+ * 
+ * FROM -- The type of the data element on the glyph
+ * TO -- The type of aggregates produced
+ * **/
+public interface Aggregator<FROM, TO> extends Inspectable<FROM, TO> {
 	
 	/**
 	 * Compute the aggregate for the given pixel in the give glyphset and view.

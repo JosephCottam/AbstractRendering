@@ -2,6 +2,7 @@ package ar.test;
 
 import static org.junit.Assert.*;
 
+import java.awt.Color;
 import java.io.File;
 
 import org.apache.avro.Schema;
@@ -20,7 +21,7 @@ import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.CSVtoGlyphSet;
+import ar.util.GlyphsetLoader;
 import ar.util.DelimitedReader;
 
 public class AvroGlyphs {
@@ -48,8 +49,8 @@ public class AvroGlyphs {
 		String schema = "../data/circlepoints.avsc";
 		encode(csv, avro, schema);
 		
-		GlyphList<?> reference =(GlyphList<?>) CSVtoGlyphSet.load(new GlyphList(), new File(csv), 1, .1, false, 2, 3, -1, 4); 
-		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4));
+		GlyphList<?> reference =(GlyphList<?>) GlyphsetLoader.load(new GlyphList(Color.class), new File(csv), 1, .1, false, 2, 3, -1, 4); 
+		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {

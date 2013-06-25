@@ -47,7 +47,7 @@ public interface Renderer<G,A> {
 	 * @param background Background color to put in the resulting image
 	 * @return The resulting image 
 	 */
-	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A> t, int width, int height, Color background);
+	public BufferedImage transfer(Aggregates<A> aggregates, Transfer<A, Color> t, int width, int height, Color background);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.

@@ -4,12 +4,10 @@ import ar.Transfer;
 import ar.app.ARApp;
 
 /**Lightweight transfer wrapper (for non-display items)**/
-public class TransferWrapper <A> implements WrappedTransfer<A> {
-	private final Transfer<A> transfer;
-	private final Class<A> c;
-	public TransferWrapper(Transfer<A> t, Class<A> c) {this.transfer=t; this.c = c;}
+public class TransferWrapper <A,B> implements WrappedTransfer<A,B> {
+	private final Transfer<A,B> transfer;
+	public TransferWrapper(Transfer<A,B> t) {this.transfer=t;}
 	public void deselected() {}
 	public void selected(ARApp app) {}
-	public Transfer<A> op() {return transfer;}
-	public Class<A> type() {return c;}
+	public Transfer<A,B> op() {return transfer;}
 }

@@ -30,6 +30,11 @@ public interface Glyphset<T> {
 	 */
 	public static interface RandomAccess<T> extends Glyphset<T> ,Iterable<Glyph<T>> {public Glyph<T> get(long l);}
 	
+	/**Return type type of values held by the glyphs. 
+	 * This is used for configuration validation.
+	 * **/
+	public Class<T> valueType();
+	
 	/**Simple wrapper class glyphs.**/
 	public static interface Glyph<V> {
 		public Shape shape();

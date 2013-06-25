@@ -30,7 +30,7 @@ public class ARPanel extends JPanel {
 	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?> transfer, Glyphset<?> glyphs, Renderer<?,?> renderer) {
+	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?,?> transfer, Glyphset<?> glyphs, Renderer<?,?> renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -59,7 +59,7 @@ public class ARPanel extends JPanel {
 		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
-	public  ARPanel withTransfer(WrappedTransfer<?> t) {
+	public  ARPanel withTransfer(WrappedTransfer<?,?> t) {
 		ARPanel p = new ARPanel(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
@@ -94,7 +94,7 @@ public class ARPanel extends JPanel {
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
-				|| !transfer.type().isAssignableFrom(reduction.type())) {
+				|| !transfer.op().input().isAssignableFrom(reduction.op().output())) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else if (aggregates == null || differentSizes(image, ARPanel.this)) {

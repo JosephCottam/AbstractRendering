@@ -43,9 +43,9 @@ public class GlyphsetTools {
 	 * @param glypher Converter from generic-record to a glyph-derived class
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher) throws IOException {
+	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher, Class<V> valueType) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceName); 
-		GlyphList<V> l = new GlyphList<>();
+		GlyphList<V> l = new GlyphList<>(valueType);
 		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;
 	}
@@ -61,11 +61,16 @@ public class GlyphsetTools {
 	 * @param valuer Used ot eventually convert the generic-record into a value for a glyph
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(String sourceFile, Valuer<GenericRecord,INNER> realizer,
-			Shaper<INNER> shaper, Valuer<INNER, V> valuer) throws IOException {
+	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(
+			String sourceFile, 
+			Valuer<GenericRecord,INNER> realizer,
+			Shaper<INNER> shaper, 
+			Valuer<INNER, V> valuer,
+			Class<V> valueType) throws IOException {
+		
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		ArrayList<INNER> l = new ArrayList<>();
 		for (GenericRecord r: reader) {l.add(realizer.value(r));}
-		return new WrappedCollection.List<>(l, shaper, valuer);
+		return new WrappedCollection.List<>(l, shaper, valuer, valueType);
 	}
 }

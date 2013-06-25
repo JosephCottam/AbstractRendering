@@ -20,6 +20,9 @@ import ar.util.Util;
 public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
 	protected final List<Glyph<T>> glyphs = new ArrayList<Glyph<T>>();
 	protected Rectangle2D bounds;
+	protected final Class<T> valueType;
+	
+	public GlyphList(Class<T> valueType) {this.valueType = valueType;}
 	
 	public Iterator<Glyph<T>> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
@@ -41,7 +44,5 @@ public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
 		return bounds;		
 	}
 	
-
-
-
+	public Class<T> valueType() {return valueType;}
 }

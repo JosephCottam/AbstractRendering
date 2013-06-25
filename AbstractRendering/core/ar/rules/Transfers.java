@@ -13,12 +13,15 @@ public class Transfers {
 
 	/**Return the color stored in the aggregate set;
 	 * essentially a pass-through for aggregators that produce colors.**/
-	public static final class IDColor implements Transfer<Color> {
+	public static final class IDColor implements Transfer<Color, Color> {
 		public Color at(int x, int y, Aggregates<? extends Color> aggregates) {return aggregates.at(x, y);}
+
+		public Class<Color> input() {return Color.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 
 	
-	public static final class ZScore implements Transfer<Integer> {
+	public static final class ZScore implements Transfer<Integer,Color> {
 		final Color low, high;
 		final boolean zeros;
 		private Aggregates<? extends Integer> cacheKey;	//Could be a weak-reference instead...
@@ -42,36 +45,50 @@ public class Transfers {
 			if (aggregates.at(x, y) ==0 ) {return Util.CLEAR;}
 			return Util.interpolate(low, high, stats.min, stats.max, scored.at(x, y));
 		}
-	}
-	
-	public static final class FixedAlpha implements Transfer<Integer> {
-		final Color low, high;
-		final double lowv, highv;
 		
-		public FixedAlpha(Color low, Color high, double lowV, double highV) {
-			this.low = low;
-			this.high = high;
-			this.lowv = lowV;
-			this.highv = highV;
-		}
-		
-		public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
-			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
-		}
+		public Class<Integer> input() {return Integer.class;}
+		public Class<Color> output() {return Color.class;}
+
 	}
 
-	public static final class Present<T> implements Transfer<T> {
+	public static final class Present<T> implements Transfer<T,Color> {
 		private final Color present, absent;
-		public Present(Color present, Color absent) {this.present = present; this.absent=absent;}
+		private final Class<T> inputType;
+		public Present(Color present, Color absent, Class<T> type) {
+			this.present = present; this.absent=absent;
+			inputType = type;
+		}
+		
 		public Color at(int x, int y, Aggregates<? extends T> aggregates) {
 			Object v = aggregates.at(x, y);
 			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
 			return absent;
 		}
 		
+		public Class<T> input() {return inputType;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
-	public static final class Interpolate implements Transfer<Number> {
+	public static final class FixedAlpha implements Transfer<Integer,Color> {
+		final Color low, high;
+		final double lowv, highv;
+
+		public FixedAlpha(Color low, Color high, double lowV, double highV) {
+			this.low = low;
+			this.high = high;
+			this.lowv = lowV;
+			this.highv = highV;
+		}
+
+		public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
+			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
+		}
+
+		public Class<Integer> input() {return Integer.class;}
+		public Class<Color> output() {return Color.class;}
+	}
+	
+	public static final class Interpolate implements Transfer<Number, Color> {
 		private final Color low, high, empty;
 		private final int logBasis;
 		private Aggregates<? extends Number> cacheKey;	//Could be a weak-reference instead...
@@ -102,6 +119,9 @@ public class Transfers {
 				return Util.logInterpolate(low,high, extrema.min, extrema.max, v.doubleValue(), logBasis);
 			}
 		}
+		
+		public Class<Number> input() {return Number.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
 	/**Switch between two colors depending on the percent contribution of
@@ -110,7 +130,7 @@ public class Transfers {
 	 * TODO: Convert from RLE to CoC based
 	 * 
 	 * **/
-	public static final class FirstPercent implements Transfer<Aggregators.RLE> {
+	public static final class FirstPercent implements Transfer<Aggregators.RLE, Color> {
 		private final double ratio;
 		private final Color background, match, noMatch;
 		private final Object firstKey;
@@ -133,6 +153,8 @@ public class Transfers {
 			else {return noMatch;}
 		}
 		
+		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
 	
@@ -145,7 +167,7 @@ public class Transfers {
 	 * @author jcottam
 	 *
 	 */
-	public static final class HighAlpha implements Transfer<Aggregators.RLE> {
+	public static final class HighAlpha implements Transfer<Aggregators.RLE, Color> {
 		private final Color background;
 		private boolean log;
 		private double omin;
@@ -205,12 +227,15 @@ public class Transfers {
 			}
 			return colors.at(x, y);			
 		}
+		
+		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
-	/**Pull the first item from a run-lenght encoding.**/
-	public static final class FirstItem implements Transfer<Aggregators.RLE> {
+	/**Pull the nth-item from a run-length encoding.**/
+	public static final class NthItem implements Transfer<Aggregators.RLE, Color> {
 		private final Color background;
-		public FirstItem(Color background) {
+		public NthItem(Color background) {
 			this.background = background;
 		}
 		public Color at(int x, int y, Aggregates<? extends Aggregators.RLE> aggregates) {
@@ -219,6 +244,9 @@ public class Transfers {
 			if (size == 0) {return background;}
 			else {return (Color) rle.key(0);}
 		}
+		
+		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
+		public Class<Color> output() {return Color.class;}
 	}
 	
 
