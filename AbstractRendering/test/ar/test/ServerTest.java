@@ -26,7 +26,6 @@ public class ServerTest {
 		
 		assertEquals(9, server.getAggregators().size());
 		assertEquals(16, server.getTransfers().size());
-		
 	}
 	
 	@Test

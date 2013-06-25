@@ -30,7 +30,7 @@ public class ARPanel extends JPanel {
 	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?,?> transfer, Glyphset<?> glyphs, Renderer<?,?> renderer) {
+	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
@@ -74,7 +74,7 @@ public class ARPanel extends JPanel {
 		return p;
 	}
 	
-	public ARPanel withRenderer(Renderer<?,?> r) {
+	public ARPanel withRenderer(Renderer r) {
 		ARPanel p = new ARPanel(reduction, transfer, dataset, r);
 		return p;
 	}
@@ -149,7 +149,7 @@ public class ARPanel extends JPanel {
 	}
 	
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
-	public Renderer<?,?> getRenderer() {return renderer;}
+	public Renderer getRenderer() {return renderer;}
 	public Glyphset<?> dataset() {return dataset;}
 	
 	

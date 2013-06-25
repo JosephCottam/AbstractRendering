@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.concurrent.ForkJoinPool;
@@ -17,7 +16,7 @@ import ar.aggregates.FlatAggregates;
  * Divides aggregates space into regions and works on each region in isolation
  * (i.e., bin-driven iteration).
  * **/
-public final class ParallelSpatial<G,A> implements Renderer<G,A> {
+public final class ParallelSpatial implements Renderer {
 	public static final int DEFAULT_TASK_SIZE = 100000;
 	private final ForkJoinPool pool = new ForkJoinPool();
 
@@ -32,24 +31,18 @@ public final class ParallelSpatial<G,A> implements Renderer<G,A> {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op, 
+	public <V,A> Aggregates<A> reduce(final Glyphset<V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height) {
 		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity()); 
-		ReduceTask<G,A> t = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
+		ReduceTask<V,A> t = new ReduceTask<V,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;
 	}
 	
-	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A,Color> t) {
-		Aggregates<Color> out = new FlatAggregates<>(aggregates, t.identity());
-		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
-			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-				Color val = t.at(x, y, aggregates);
-				out.set(x,y,val);
-			}
-		}
-		return out;
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN,OUT> t) {
+		return new SerialSpatial().transfer(aggregates, t);
 	}
+
 
 	public double progress() {return recorder.percent();}
 	

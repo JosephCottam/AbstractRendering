@@ -52,7 +52,7 @@ public class RendererOptions extends CompoundPanel {
 		} else if (renderers.getSelectedItem().equals("Serial")) {
 			return new SerialSpatial();
 		} else if (renderers.getSelectedItem().equals("Parallel (Glyphs)")) {
-			return new ParallelGlyphs(size, (AggregateReducer<?,?,?>) reducers.getSelectedItem());
+			return new ParallelGlyphs(size, (AggregateReducer) reducers.getSelectedItem());
 		} else {
 			throw new RuntimeException("Unknown renderer selected: " + renderers.getSelectedItem());
 		}

@@ -37,9 +37,9 @@ public class RenderSpeedTest {
 		
 		WrappedAggregator<?,?> aggregator = new WrappedAggregator.Count();
 		WrappedTransfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear();
-		AggregateReducer<?,?,?> reduction = new AggregateReducers.Count();
+		AggregateReducer reduction = new AggregateReducers.Count();
 		
-		Renderer<?,?> render = new ParallelGlyphs(1000, reduction);
+		Renderer render = new ParallelGlyphs(1000, reduction);
 
 		for (File source: files) {
 			long total=0;

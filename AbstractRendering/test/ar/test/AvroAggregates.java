@@ -27,7 +27,7 @@ public class AvroAggregates {
 	@Test
 	public void countsRoundTrip() throws Exception {
 		Glyphset<Object> glyphs = GlyphsetLoader.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Object.class));
-		Renderer<Object, Integer> r = new ParallelSpatial<>();
+		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
 				0.0, 
@@ -59,7 +59,7 @@ public class AvroAggregates {
 	@Test
 	public void RLERoundTrip() throws Exception {
 		Glyphset<Color> glyphs = (Glyphset<Color>) GlyphsetLoader.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
-		Renderer<Color, RLE> r = new ParallelSpatial<>();
+		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
 				0.0, 

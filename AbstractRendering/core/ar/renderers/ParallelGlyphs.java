@@ -33,19 +33,19 @@ import ar.Transfer;
  * <p>
  * TODO: Extend beyond aggregate reducers with same LEFT/RIGHT/OUT
  */
-public class ParallelGlyphs<G,A> implements Renderer<G,A> {
+public class ParallelGlyphs implements Renderer {
 	public static int DEFAULT_TASK_SIZE = 100000;
 	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
-	private final AggregateReducer<A,A,A> reducer;
+	private final AggregateReducer<?,?,?> reducer;
 	private final RenderUtils.Progress recorder;
 
-	public ParallelGlyphs(AggregateReducer<A,A,A> red) {
+	public <A> ParallelGlyphs(AggregateReducer<A,A,A> red) {
 		this(DEFAULT_TASK_SIZE, red);
 	}
 	
-	public ParallelGlyphs(int taskSize, AggregateReducer<A,A,A> red) {
+	public <A> ParallelGlyphs(int taskSize, AggregateReducer<A,A,A> red) {
 		this.taskSize = taskSize;
 		this.reducer = red;
 		recorder = RenderUtils.recorder();
@@ -54,7 +54,7 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public Aggregates<A> reduce(Glyphset<G> glyphs, Aggregator<G,A> op, 
+	public <V,A> Aggregates<A> reduce(Glyphset<V> glyphs, Aggregator<V,A> op, 
 			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;
@@ -62,10 +62,13 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		recorder.reset(glyphs.size());
 		
-		ReduceTask<G,A> t = new ReduceTask<G,A>(
-				(Glyphset.RandomAccess<G>) glyphs, 
+		if (!reducer.left().isAssignableFrom(op.output())) {throw new IllegalArgumentException("Reducer type does not match aggregator type.");}
+		
+		ReduceTask<V,A> t = new ReduceTask<V,A>(
+				(Glyphset.RandomAccess<V>) glyphs, 
 				view, inverseView, 
-				op, reducer, 
+				op, 
+				(AggregateReducer<A,A,A>) reducer, 
 				width, height, taskSize,
 				recorder,
 				0, glyphs.size());
@@ -76,16 +79,8 @@ public class ParallelGlyphs<G,A> implements Renderer<G,A> {
 	}
 	
 	
-	
-	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A,Color> t) {
-		Aggregates<Color> rslt = new FlatAggregates<>(aggregates, t.identity());
-		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
-			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-				Color val = t.at(x,y, aggregates);
-				rslt.set(x, y, val);
-			}
-		}
-		return rslt;
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN,OUT> t) {
+		return new SerialSpatial().transfer(aggregates, t);
 	}
 	
 	public double progress() {return recorder.percent();}

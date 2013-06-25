@@ -46,7 +46,7 @@ public class WrappedCollectionTest {
 
 		@Override
 		public Glyph<Color> glyph(Integer from) {
-			return new SimpleGlyph(this.shape(from), this.value(from));
+			return new SimpleGlyph<>(this.shape(from), this.value(from));
 		}
 	}
 	
@@ -62,7 +62,7 @@ public class WrappedCollectionTest {
 		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst(), 
 								new WrappedTransfer.EchoColor(), 
 								gs, 
-								new ParallelSpatial<Number, Color>(100));
+								new ParallelSpatial(100));
 		
 		frame.setLayout(new BorderLayout());
 		frame.add(p, BorderLayout.CENTER);

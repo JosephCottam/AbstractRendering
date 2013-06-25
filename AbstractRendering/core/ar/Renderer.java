@@ -1,8 +1,6 @@
 package ar;
 
-import java.awt.Color;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 
 /**A renderer implements a strategy for converting glyphs (geometry+data) into images.
  * Strategies can include parallelization, different iterations orders, synch/asynch return, 
@@ -10,7 +8,7 @@ import java.awt.image.BufferedImage;
  *   
  * @author jcottam
  */
-public interface Renderer<G,A> {
+public interface Renderer {
 	
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
@@ -25,11 +23,11 @@ public interface Renderer<G,A> {
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
 	 */
-	public Aggregates<A> reduce(final Glyphset<G> glyphs, final Aggregator<G,A> op, 
+	public <V,A> Aggregates<A> reduce(final Glyphset<V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height);
 	
 	
-	/**Produces an image for rendering, converting a set of aggregates into a set of colors.
+	/**Produces an new set of aggregates for rendering, converting a set of aggregates into a set of colors.
 	 * 
 	 * Since aggregates are produced with-respect-to a particular viewport, converting to colors
 	 * is essentially producing an image.  Therefore, this image returns an image ready-to-display.
@@ -42,12 +40,9 @@ public interface Renderer<G,A> {
 	 *   
 	 * @param aggregates Set of aggregates to perform transfer on 
 	 * @param t Transfer function to apply
-	 * @param width Width of the image to render
-	 * @param height Height of the image to render
-	 * @param background Background color to put in the resulting image
-	 * @return The resulting image 
+	 * @return A resulting set of aggregates
 	 */
-	public Aggregates<Color> transfer(Aggregates<A> aggregates, Transfer<A, Color> t);
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN, OUT> t);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.
