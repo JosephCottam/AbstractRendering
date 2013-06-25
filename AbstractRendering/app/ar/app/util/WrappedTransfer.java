@@ -18,6 +18,7 @@ import ar.util.Util;
 public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	public void deselected();
 	public void selected(ARApp app);
+	public Transfer<IN,OUT> op();
 	
 	public class SelectiveDistribution implements WrappedTransfer<Number,Color> {
 		JFrame flyAway;

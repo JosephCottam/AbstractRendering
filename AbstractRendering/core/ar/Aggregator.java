@@ -7,10 +7,10 @@ import ar.util.Inspectable;
 
 /**Aggregators convert glyphs into aggregate items for a specific view.
  * 
- * FROM -- The type of the data element on the glyph
- * TO -- The type of aggregates produced
+ * IN -- The type of the data element on the glyph
+ * OUT -- The type of aggregates produced
  * **/
-public interface Aggregator<FROM, TO> extends Inspectable<FROM, TO> {
+public interface Aggregator<IN, OUT> extends Inspectable<IN, OUT> {
 	
 	/**
 	 * Compute the aggregate for the given pixel in the give glyphset and view.
@@ -24,7 +24,7 @@ public interface Aggregator<FROM, TO> extends Inspectable<FROM, TO> {
 	 * @param inverseView Transformation from screen space to canvas space
 	 * @return The aggregate value
 	 */
-	public TO at(Rectangle pixel, Glyphset<FROM> glyphs, AffineTransform inverseView);
+	public OUT at(Rectangle pixel, Glyphset<IN> glyphs, AffineTransform inverseView);
 	
 	
 	/**What value is an mathematical identity value for this operation?
@@ -35,5 +35,5 @@ public interface Aggregator<FROM, TO> extends Inspectable<FROM, TO> {
 	 * be an identity (thus the name).  However, not all renderers rely on this
 	 * property (for example, pixel-serial rendering just uses it for the background).
 	 **/
-	public TO identity();
+	public OUT identity();
 }

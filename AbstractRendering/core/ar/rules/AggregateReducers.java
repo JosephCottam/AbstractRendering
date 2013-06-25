@@ -14,6 +14,9 @@ public class AggregateReducers {
 		public Integer combine(Integer left, Integer right) {return left+right;}
 		public String toString() {return "Count (int x int -> int)";}
 		public Integer identity() {return 0;}
+		public Class<Integer> left() {return Integer.class;}
+		public Class<Integer> right() {return Integer.class;}
+		public Class<Integer> output() {return Integer.class;}
 	}
 
 	/**Merge per-category counts.
@@ -49,6 +52,9 @@ public class AggregateReducers {
 		
 		public RLE identity() {return new RLE();}
 		public String toString() {return "CoC (RLE x RLE -> RLE)";}
+		public Class<RLE> left() {return RLE.class;}
+		public Class<RLE> right() {return RLE.class;}
+		public Class<RLE> output() {return RLE.class;}
 	}
 
 	

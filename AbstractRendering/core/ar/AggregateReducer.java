@@ -26,4 +26,8 @@ public interface AggregateReducer<LEFT,RIGHT,OUT> {
 	public OUT combine(LEFT left, RIGHT right);
 	
 	public OUT identity();
+	
+	public Class<LEFT> left();
+	public Class<RIGHT> right();
+	public Class<OUT> output();
 }

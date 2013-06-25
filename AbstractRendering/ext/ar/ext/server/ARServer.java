@@ -1,6 +1,8 @@
 package ar.ext.server;
 
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,37 +10,61 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ar.AggregateReducer;
+import ar.Aggregates;
 import ar.Aggregator;
+import ar.Renderer;
 import ar.Transfer;
 import ar.app.util.Wrapped;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
+import ar.ext.avro.AggregateSerailizer;
+import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
+import ar.renderers.ParallelGlyphs;
+import ar.renderers.ParallelSpatial;
+import ar.rules.AggregateReducers;
 import ar.util.GlyphsetLoader;
+import ar.util.Util;
 import ar.Glyphset;
 
 
 public class ARServer extends NanoHTTPD {
-	private static Map<String, Transfer> TRANSFERS = load(Transfer.class, WrappedTransfer.class);
-	private static Map<String, Aggregator> AGGREGATORS = load(Aggregator.class, WrappedAggregator.class);
-	private static Map<String, Glyphset> DATASETS = new HashMap();
+	private static Map<String, Transfer> TRANSFERS = 
+			load(Transfer.class, 
+					WrappedTransfer.class, 
+					new Valuer<Transfer,String>() {public String value(Transfer o) {return o.getClass().getSimpleName();}},
+					new Valuer<WrappedTransfer,Transfer>() {public Transfer value(WrappedTransfer o) {return o.op();}});
+	private static Map<String, Aggregator> AGGREGATORS = 
+			load(Aggregator.class, 
+					WrappedAggregator.class, 
+					new Valuer<Aggregator,String>() {public String value(Aggregator o) {return o.getClass().getSimpleName();}},
+					new Valuer<WrappedAggregator, Aggregator>() {public Aggregator value(WrappedAggregator o) {return o.op();}});
+	private static Map<Class<?>, AggregateReducer> REDUCERS = 
+			load(AggregateReducer.class, 
+					AggregateReducers.class, 
+					new Valuer<AggregateReducer, Class<?>>() {public Class value(AggregateReducer o) {return ((AggregateReducer) o).left();}},
+					new Valuer.IdentityValuer<AggregateReducer>());
+	private static Map<String, Glyphset<?>> DATASETS = new HashMap<>();
 	
 	static {
 		DATASETS.put("CIRCLEPOINTS", GlyphsetLoader.load("Scatterplot", "../data/circlepoints.csv", .1));
 		DATASETS.put("BOOST", GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
 	}
 	
-	private static <T> Map<String, T> load(Class<T> type, Class<?> index) {
-		Map<String, T> instances = new HashMap<>();
+	private static <K,WV,V> Map<K,V> load(Class<V> type, Class<?> index, Valuer<V,K> makeKey, Valuer<WV,V> valuer) {
+		Map<K,V> instances = new HashMap<>();
 		Class<?>[] items = index.getClasses();
 
 		for (Class<?> item: items) {
 			if (!Wrapped.class.isAssignableFrom(item)) {continue;}
 			try {
-				Constructor<?> c = item.getConstructor();
-				Object t = c.newInstance();
-				instances.put(item.getSimpleName(), ((T) ((Wrapped) t).op()));
+				Constructor<WV> c = (Constructor<WV>) item.getConstructor();
+				V v = valuer.value(c.newInstance());
+				K k = makeKey.value(v);
+				instances.put(k,v);
 			} catch (Exception e) {continue;}
 		}
 		return instances;
@@ -57,23 +83,52 @@ public class ARServer extends NanoHTTPD {
 			String datasetID = errorGet(parms, "data");
 			String aggID = safeGet(parms, "aggregate", "count");
 			String transferIDS = safeGet(parms, "transfers", ""); 
-			String typeID = safeGet(parms, "format", "json");
+			String format = safeGet(parms, "format", "json");
+			int width = Integer.parseInt(safeGet(parms, "width", "500"));
+			int height = Integer.parseInt(safeGet(parms, "format", "500"));
+			String viewTransTXT = safeGet(parms, "vt", null);
+			
+			if (!format.equals("json") && !format.equals("binary")) {throw new RuntimeException("Invalid return format: " + format);}
 			
 			Glyphset<?> dataset = loadData(datasetID);
 			Aggregator<?,?> agg = getAgg(aggID);
 			List<Transfer<?,?>> transfers = getTransfers(transferIDS);
+			AffineTransform vt = viewTransform(viewTransTXT, dataset, width, height);
 			
 			validate(dataset, agg, transfers);
-			
-			
-			// TODO Auto-generated method stub
-			String response = String.format("DS: %s\nAgg: %s\nTrans: %s\nType:%s", datasetID, aggID, transferIDS,typeID);		
+			Aggregates<?> aggs = execute(dataset, agg, transfers, vt, width, height);
+//			AggregateSerailizer.serialize(aggs, targetName, itemSchema, converter);
+//			Response r = new Response(Status.OK, "avro/" + format, msg);
+//			
+
+			String response = String.format("DS: %s\nAgg: %s\nTrans: %s\nFormat:%s", datasetID, aggID, transferIDS, format);		
 			return new Response(response);
 		} catch (Exception e) {
-			return new Response("Error:" + e.toString());
+			return new Response(Status.BAD_REQUEST, MIME_PLAINTEXT, "Error:" + e.toString());
 		}
 	}
 
+	
+	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator<?,?> agg, List<Transfer<?,?>> trans, AffineTransform inverseView, int width, int height) {
+		Renderer r;
+		if (glyphs instanceof Glyphset.RandomAccess<?>) {
+			AggregateReducer red = REDUCERS.get(agg.output());
+			if (red == null) {throw new RuntimeException("Could not find aggregate reducer for type " + agg.output());}
+			r = new ParallelGlyphs(red);
+		} else {
+			r = new ParallelSpatial();
+		}
+		Aggregates<?> aggs = r.reduce(glyphs, agg, inverseView, width, height);
+		return r.transfer(aggs, trans.get(0), width, height, Color.white);
+	}
+	
+	/**Ensure that the requested information is consistent.
+	 * Essentially making sure that the input/output types all line up.
+	 * 
+	 * @param glyphs
+	 * @param aggs
+	 * @param trans
+	 */
 	public void validate(Glyphset<?> glyphs, Aggregator<?,?> aggs, List<Transfer<?,?>> trans) {
 		Class<?> root = glyphs.valueType();
 		if (!aggs.input().isAssignableFrom(root)) {
@@ -88,6 +143,21 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
+	
+	public AffineTransform viewTransform(String vtTXT, Glyphset<?> g, int width, int height) {
+		if (vtTXT == null) {
+			Rectangle2D bounds = g.bounds();
+			return Util.zoomFit(bounds, width, height);
+		} else {
+			String[] parts = vtTXT.split(",");
+			Double sx = Double.parseDouble(parts[0]);
+			Double sy = Double.parseDouble(parts[1]);
+			Double tx = Double.parseDouble(parts[2]);
+			Double ty = Double.parseDouble(parts[3]);
+			AffineTransform vt = new AffineTransform(sx,0,0,sy,tx,ty);
+			return vt;
+		}
+	}
 	
 	public Glyphset<?> loadData(String id) {
 		Glyphset<?> d = DATASETS.get(id.toUpperCase());

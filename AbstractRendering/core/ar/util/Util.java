@@ -3,6 +3,7 @@ package ar.util;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -242,6 +243,15 @@ public final class Util {
 			}
 		}
 		return target;
+	}
+	
+	public static AffineTransform zoomFit(Rectangle2D content, int width, int height) {
+		if (content == null) {return new AffineTransform();}
+
+		double w = width/content.getWidth();
+		double h = height/content.getHeight();
+		double scale = Math.min(w, h);
+		return new AffineTransform(scale, 0,0, scale, w,h);
 	}
 
 }

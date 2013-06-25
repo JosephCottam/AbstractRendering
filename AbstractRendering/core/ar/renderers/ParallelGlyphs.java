@@ -34,13 +34,18 @@ import ar.Transfer;
  * <p>
  * TODO: Extend beyond aggregate reducers with same LEFT/RIGHT/OUT
  */
-public class ParallelGlyphs<G,A> implements Renderer<G,A> {	
+public class ParallelGlyphs<G,A> implements Renderer<G,A> {
+	public static int DEFAULT_TASK_SIZE = 100000;
 	private final ForkJoinPool pool = new ForkJoinPool();
 
 	private final int taskSize;
 	private final AggregateReducer<A,A,A> reducer;
 	private final RenderUtils.Progress recorder;
 
+	public ParallelGlyphs(AggregateReducer<A,A,A> red) {
+		this(DEFAULT_TASK_SIZE, red);
+	}
+	
 	public ParallelGlyphs(int taskSize, AggregateReducer<A,A,A> red) {
 		this.taskSize = taskSize;
 		this.reducer = red;
