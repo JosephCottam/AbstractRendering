@@ -1,0 +1,71 @@
+package ar.ext.rhipe;
+
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+
+import ar.Aggregates;
+import ar.Glyphset;
+import ar.Glyphset.Glyph;
+import ar.glyphsets.SimpleGlyph;
+import ar.glyphsets.WrappedCollection;
+import ar.glyphsets.implicitgeometry.Glypher;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
+
+public class RHIPETools {
+
+	/**Provide a delimited string and receive a glyphset.
+	 * Lines are wrapped into indexed entries, so the shaper and valuer
+	 * should operate on ar.glyphsets.implicitGeometry.Indexed items.
+	 * 
+	 * @param text A delimited set of entries
+	 * @param lineTerminal String that delimits between entry
+	 * @param fieldTerminal String that delimits a field (cannot be the same as lineTerminal) 
+	 * @param shaper Function to convert 
+	 * @param valuer
+	 * @param valueType
+	 * @return
+	 */
+	public static final <T> Glyphset<T> fromText(String text, String lineTerminal, String fieldTerminal, Glypher<Indexed,T> glypher, Class<T> valueType) {
+		List<Indexed>  items = new ArrayList<Indexed>();
+		for (String entry: text.split(lineTerminal)) {
+			String[] raw = entry.split(fieldTerminal);
+			Indexed item = new Indexed.ArrayWrapper(raw);
+			items.add(item);
+		}
+		return new WrappedCollection.List<Indexed, T>(items,glypher, glypher, valueType);
+	}
+	
+	
+	public static final class TraceEntry implements Glypher<Indexed, String> {
+		private final int xField, yField, catField;
+		private final double size;
+		public TraceEntry(){this(0,1,2, .1);}
+		public TraceEntry(int xField, int yField, int catField, double size) {
+			this.catField=catField;
+			this.xField=xField;
+			this.yField=yField;
+			this.size = size;
+		}
+		public Shape shape(Indexed from) {
+			double x = Double.parseDouble(from.get(xField).toString());
+			double y = Double.parseDouble(from.get(yField).toString());
+			return new Rectangle2D.Double(x,y,size,size);
+		}
+		public String value(Indexed from) {return (String) from.get(catField);} 
+		public Glyph<String> glyph(Indexed from) {return new SimpleGlyph<String>(shape(from), value(from));}
+	}
+	
+	public static String[] reduceKeys(Aggregates<?> aggs) {
+		ArrayList<String> entries = new ArrayList<>();
+		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
+			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+				entries.add(String.format("%d,%d,%d",x,y,aggs.at(x, y)));
+			}
+		}
+		return entries.toArray(new String[entries.size()]);
+	}
+}

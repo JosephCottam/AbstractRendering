@@ -1,6 +1,7 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.awt.geom.Rectangle2D;
+import java.lang.reflect.Array;
 
 /**Interface designating something has an int-valued "get" function.
  * This interface is the basis for array-based and file-record conversions
@@ -10,7 +11,13 @@ import java.awt.geom.Rectangle2D;
  * 
  * **/
 public interface Indexed {
-	public Object get(int f);
+	public Object get(int i);
+	
+	public static class ArrayWrapper implements Indexed {
+		private final Object array;
+		public ArrayWrapper(Object array) {this.array = array;}
+		public Object get(int i) {return Array.get(array, i);}
+	}
 	
 
 	/**Apply the passed valuer to the value at the indicated index.
