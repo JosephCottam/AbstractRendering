@@ -5,8 +5,6 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
@@ -157,14 +155,15 @@ public class ARApp implements PanelHolder {
 	
 	/**
 	 * @param args
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {
 			new ARApp();
 		} else {
 			System.out.println("Execute with -ext for extended inteface.");
 			new ARDemoApp();
-		}
+		} 
 	}
 
 	@Override

@@ -2,14 +2,23 @@ Abstract Rendering: Java
 ======================
 
 Build:
-* With demo app: ant build
-* Just core: ant core
-* With extensions: ant ext
+* With demo app: ./build.sh build
+* Just core: ./build.sh core
+* With extensions: ./build.sh ext
+
+The java implementation is built via a bash script that auto-fetches dependencies
+and an apache ant. We don't fetch ant or java 1.7, so you'll need those on your system
+already.  Also, make sure that java 1.7 is the selected version.  If you have already
+the dependencies satisified, you can skip the bash-script (called "build.sh") and
+just use ant directly.  If not, the bash script will attempt to acquire them for you
+and then invoke ant.  The bash script takes as a parameter the ant task to execute.
+
+
 
 Demo Application(s)
 -----------------
 
-Build with the demo app (default build) and execute "java -jar ARDemo.jar"
+Build with the demo application (default build) and execute "java -jar ARDemo.jar"
 A number of preset datasets/treatments are available in the drop-down box.
 Shifting between datasets results in a full rendering, but only shifting
 between a treatments results in partial re-rendering (just 
@@ -44,4 +53,21 @@ and Jackson 1.9
 ([part 1](http://repo1.maven.org/maven2/org/codehaus/jackson/jackson-core-asl/1.9.12/jackson-core-asl-1.9.12.jar);
 [part 2](http://repo1.maven.org/maven2/org/codehaus/jackson/jackson-mapper-asl/1.9.12/jackson-mapper-asl-1.9.12.jar) 
 to be in the ./lib directory.
+
+### Sever
+The ARServer is a self-contained HTTP server that responds to post messages that describe
+a dataset and treatment.  It returns json-encoded aggregates that result 
+If the AR.jar file was built with extensions, the server can be executed with
+"java -jar AR.jar ar.ext.server.ARServer" paramters are -host and -port 
+(which default to "localhost" and "8080," respectively).  The sever uses the Avro extensions
+to format the return result.
+
+### Avro
+The Avro extensions provide serialization support for aggregates and
+tools for working with input datasets encoded as avro files (through the implicit geometry system).
+Serialization is based on schemas that are included as JAR resources (current count, RLE and color
+are supported as aggregate types). Avro can be used to serialize to binary or to JSON files.
+
+
+
 

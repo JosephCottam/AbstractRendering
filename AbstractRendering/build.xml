@@ -36,19 +36,19 @@
     </antcall>
   </target>
 
-  <target name="extended">
+  <target name="ext">
     <antcall target="compile">
-      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value="lib"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
-      <param name="main" value=""/>
+      <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
     <antcall target="docs">
-      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="jars" value="lib"/>
     </antcall>
   </target>
@@ -69,7 +69,7 @@
 
   <target name="compile">
     <mkdir dir="${target}"/>
-    <javac destdir="${target}"  source="1.7" 
+    <javac destdir="${target}"  source="1.7" target="1.7"
       includeantruntime="false" 
       srcdir="${src}">
       <classpath>
