@@ -300,8 +300,11 @@ public class ARPanel extends JPanel {
 	
 	public void zoomFit() {
 		try {
-			AffineTransform t = Util.zoomFit(dataset().bounds(), getWidth(), getHeight());
-			setViewTransform(t);
+			Rectangle2D bounds = dataset().bounds();
+			AffineTransform t = Util.zoomFit(bounds, getWidth(), getHeight());
+			Point2D center = new Point2D.Double(bounds.getCenterX(), bounds.getCenterY());
+			this.zoomAbs(center, t.getScaleX());
+			this.panToAbs(center);
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 }

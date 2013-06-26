@@ -207,12 +207,15 @@ public final class Util {
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
 	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
+		if (left == null) {return right;}
+		if (right == null) {return left;}
+		
 		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
 		Aggregates<T> target;
 		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
 		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
 		Rectangle bounds = rb.union(lb);
-
+		
 		if (lb.contains(bounds)) {
 			sources.add(right);
 			target = left;
@@ -239,10 +242,15 @@ public final class Util {
 	public static AffineTransform zoomFit(Rectangle2D content, int width, int height) {
 		if (content == null) {return new AffineTransform();}
 
-		double w = width/content.getWidth();
-		double h = height/content.getHeight();
-		double scale = Math.min(w, h);
-		return new AffineTransform(scale, 0,0, scale, w,h);
+		double ws = width/content.getWidth();
+		double hs = height/content.getHeight();
+		double scale = Math.min(ws, hs);
+		double tx = content.getCenterX();
+		double ty = content.getCenterY();
+
+		AffineTransform t = AffineTransform.getScaleInstance(scale,scale);
+		t.translate(tx,ty);
+		return t;
 	}
 	
 	/**From a set of color aggregates, make a new image.**/
