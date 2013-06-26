@@ -34,8 +34,8 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	 */
 	@SuppressWarnings("unchecked")
 	public FlatAggregates(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
-		if (lowX >= highX) {throw new IllegalArgumentException(String.format("Inverted bounds: lowX (%d) must be lower than highX (%d)", lowX, highX));}
-		if (lowY >= highY) {throw new IllegalArgumentException(String.format("Inverted bounds: lowY (%d) must be lower than highY (%d)", lowY, highY));}
+		if (lowX > highX) {throw new IllegalArgumentException(String.format("Inverted bounds: lowX (%d) must be lower than highX (%d)", lowX, highX));}
+		if (lowY > highY) {throw new IllegalArgumentException(String.format("Inverted bounds: lowY (%d) must be lower than highY (%d)", lowY, highY));}
 		
 		this.lowX = lowX;
 		this.lowY = lowY;

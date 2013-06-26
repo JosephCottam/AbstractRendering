@@ -9,6 +9,11 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 	private final int lowX, lowY, highX, highY;
 	public ConstantAggregates(A value) {this(0,0,0,0, value);}
 	public ConstantAggregates(int lowX, int lowY, int highX, int highY, A value) {
+		if (lowX > highX) {
+			throw new IllegalArgumentException(String.format("Inverted bounds: lowX (%d) must be lower than highX (%d)", lowX, highX));}
+		if (lowY > highY) {
+			throw new IllegalArgumentException(String.format("Inverted bounds: lowY (%d) must be lower than highY (%d)", lowY, highY));}
+
 		this.val = value;
 		this.lowX = lowX;
 		this.lowY = lowY;
@@ -29,8 +34,8 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 	public A at(int x, int y) {return val;}
 	public void set(int x, int y, A val) {throw new UnsupportedOperationException();}
 	public A defaultValue() {return val;}
-	public int lowX() {return 0;}
-	public int lowY() {return 0;}
-	public int highX() {return 0;}
-	public int highY() {return 0;}
+	public int lowX() {return lowX;}
+	public int lowY() {return lowY;}
+	public int highX() {return highX;}
+	public int highY() {return highY;}
 }

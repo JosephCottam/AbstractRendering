@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -141,8 +140,10 @@ public class ParallelGlyphs implements Renderer {
 			bounds = bounds.intersection(new Rectangle(0,0,width,height));
 			
 			if (bounds.isEmpty()) {
-				return new ConstantAggregates<>(bounds.x, bounds.y, 
-												bounds.x+bounds.width, bounds.y+bounds.height, 
+				int x2 = bounds.x+bounds.width;
+				int y2 = bounds.y+bounds.height;
+				return new ConstantAggregates<>(Math.min(x2, bounds.x), Math.min(y2, bounds.y),
+												Math.max(x2, bounds.x), Math.min(y2, bounds.y),
 												op.identity());
 			}				
 			Aggregates<A> aggregates = new FlatAggregates<>(bounds.x, bounds.y,

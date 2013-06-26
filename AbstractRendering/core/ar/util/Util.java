@@ -14,6 +14,7 @@ import java.util.List;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Glyphset.Glyph;
+import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 
 /**Collection of various utilities that don't have other homes.**/
@@ -192,6 +193,11 @@ public final class Util {
 		}
 		public String toString() {return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);}
 	}
+	
+	/**Null-safe .equals caller.**/
+	public static <T> boolean isEqual(T one, T two) {
+		return one == two || (one != null && one.equals(two));
+	}
 
 	/**Combine two aggregate sets according to the passed reducer.
 	 * 
@@ -209,6 +215,11 @@ public final class Util {
 	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}
+		
+		T identity = red.identity();
+		
+		if ((left instanceof ConstantAggregates) && isEqual(identity, left.defaultValue())) {return right;}
+		if ((right instanceof ConstantAggregates) && isEqual(identity, right.defaultValue())) {return right;}
 		
 		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
 		Aggregates<T> target;
