@@ -6,8 +6,10 @@ import java.awt.geom.Rectangle2D;
 
 import org.junit.Test;
 
+import ar.Aggregates;
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
+import ar.aggregates.FlatAggregates;
 import ar.ext.rhipe.*;
 import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -44,6 +46,20 @@ public class TestRHIPE {
 	
 	@Test
 	public void reduceKeys() {
+		Aggregates<Integer> aggs = new FlatAggregates<>(10,10,0);
 		
+		for(int x=aggs.lowX();x<aggs.highX(); x++) {
+			for (int y=aggs.lowY();y<aggs.highY(); y++) {
+				aggs.set(x, y, x*y);
+			}
+		}
+		
+		for(String s: RHIPETools.reduceKeys(aggs)) {
+			String[] parts = s.split(",");
+			int x = Integer.parseInt(parts[0]);
+			int y = Integer.parseInt(parts[1]);
+			int val = Integer.parseInt(parts[2]);
+			assertEquals(String.format("Error at %d,%s", x,y), x*y,val);
+		}
 	}
 }
