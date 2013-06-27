@@ -12,7 +12,10 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 
-/**Wrap an existing collection as glyphs.**/
+/**Wrap an existing collection as glyphs.
+ * 
+ * Also includes tools for working with existing collections of object to turn them into glyphs.
+ * **/
 public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	protected Collection<I> values;
 	protected Shaper<I> shaper;
@@ -98,4 +101,18 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			return new WrappedCollection<>(basis, shaper, valuer, valueType);
 		}
 	}	
+	
+	/**Copies items from the basis into a quad-tree.**/
+	public static <I,V> Glyphset<V> toQuadTree(
+			Collection<I> basis, 
+			Shaper<I> shaper, 
+			Valuer<I,V> valuer, 
+			Class<V> valueType) {
+		Glyphset<V> glyphs = DynamicQuadTree.make(valueType);
+		for (I val: basis) {
+			Glyph<V> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			glyphs.add(g);
+		}
+		return glyphs;		
+	}
 }
