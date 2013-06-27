@@ -12,6 +12,9 @@ import ar.util.Util;
 
 /**Explicit geometry, spatially arranged glyphset with dynamically growing extent.
  * 
+ * This class should be constructed using the "make" method, thus no constructor is exposed.
+ * 
+ * 
  * In this quad tree, items appear in each node that they touch (e.g., multi-homed).
  * Can split an existing node into sub-nodes or move "up" and make the root a sub-node with new siblings/parent.
  * No items are held in intermediate nodes.
@@ -62,6 +65,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	protected final Rectangle2D concernBounds;
 	protected final Class<V> valueType;
 
+	/**Construct a dynamic quad tree for the given value type.*/
 	public static <V> DynamicQuadTree<V> make(Class<V> valueType) {return new DynamicQuadTree.RootHolder<V>(valueType);}
 
 	protected DynamicQuadTree(Rectangle2D concernBounds, Class<V> valueType) {

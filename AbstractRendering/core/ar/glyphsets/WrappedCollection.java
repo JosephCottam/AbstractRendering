@@ -12,7 +12,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 
-/**Wrap an existing list of values as glyphs.**/
+/**Wrap an existing collection as glyphs.**/
 public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	protected Collection<I> values;
 	protected Shaper<I> shaper;
@@ -59,6 +59,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	public Class<V> valueType() {return valueType;}
 
 
+	/**Wrap a list as a set of glyphs.**/
 	public static class List<I,V> extends WrappedCollection<I,V> implements Glyphset.RandomAccess<V> {
 		protected final java.util.List<I> values;
 		
@@ -83,6 +84,8 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	}
 	
 	
+	/**Create a glyphset from a collection.  
+	 * Attempts to pick the most efficient option for the given basis.**/
 	public static <I,V> WrappedCollection<I,V> make(
 				Collection<I> basis, 
 				Shaper<I> shaper, 
@@ -94,6 +97,5 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		} else {
 			return new WrappedCollection<>(basis, shaper, valuer, valueType);
 		}
-		
-	}
+	}	
 }

@@ -10,8 +10,9 @@ import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
-import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 public class RHIPETools {
 
@@ -27,20 +28,26 @@ public class RHIPETools {
 	 * @param valueType
 	 * @return
 	 */
-	public static final <T> Glyphset.RandomAccess<T> fromText(String text, String lineTerminal, String fieldTerminal, Glypher<Indexed,T> glypher, Class<T> valueType) {
+	public static final <T> Glyphset.RandomAccess<T> fromText(
+			String text, 
+			String lineTerminal, 
+			String fieldTerminal, 
+			Shaper<Indexed> shaper, 
+			Valuer<Indexed,T> valuer, 
+			Class<T> valueType) {
 		List<Indexed>  items = new ArrayList<Indexed>();
 		for (String entry: text.split(lineTerminal)) {
 			String[] raw = entry.split(fieldTerminal);
 			Indexed item = new Indexed.ArrayWrapper(raw);
 			items.add(item);
 		}
-		return new WrappedCollection.List<Indexed, T>(items,glypher, glypher, valueType);
+		return new WrappedCollection.List<Indexed, T>(items, shaper, valuer, valueType);
 	}
 	
 	
 	/**Glypher to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
 	 */
-	public static final class TraceEntry implements Glypher<Indexed, String> {
+	public static final class TraceEntry implements Shaper<Indexed>, Valuer<Indexed, String> {
 		private final int xField, yField, catField;
 		private final double size;
 		public TraceEntry(){this(0,1,2, .1);}

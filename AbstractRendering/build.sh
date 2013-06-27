@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo Checking Dependencies ------------------------------------------------
+
 if [ ! -d ./lib ]; then
     mkdir -p ./lib;
 fi;

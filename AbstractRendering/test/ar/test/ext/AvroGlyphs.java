@@ -17,7 +17,7 @@ import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.ext.avro.GlyphsetTools;
 import ar.glyphsets.GlyphList;
-import ar.glyphsets.implicitgeometry.Glypher;
+import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -29,15 +29,14 @@ public class AvroGlyphs {
 	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
 		Shaper<Indexed> shaper;
 		Valuer<Indexed, V> valuer;
-		Glypher<Indexed, V> glypher;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
 			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);
 			valuer = new Indexed.ToValue<>(vfield);
-			glypher = new Glypher.Composite<>(shaper, valuer);
 		}
 		
 		public Glyph<V> value(GenericRecord r) {
-			return glypher.glyph(new GlyphsetTools.IndexedRecord(r));
+			Indexed from =new GlyphsetTools.IndexedRecord(r);
+			return new SimpleGlyph<V>(shaper.shape(from), valuer.value(from));
 		}
 	}
 	

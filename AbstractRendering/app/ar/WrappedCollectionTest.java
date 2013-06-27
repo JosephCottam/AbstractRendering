@@ -8,19 +8,18 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 
-import ar.Glyphset.Glyph;
 import ar.app.components.ARPanel;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
-import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
-import ar.glyphsets.implicitgeometry.Glypher;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.*;
 
 public class WrappedCollectionTest {
 
 	/**Demo geometry creator.**/
-	public static final class RainbowCheckerboard<T> implements Glypher<Integer, Color> {
+	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Integer> {
 		private static final Color[] COLORS = new Color[]{Color.RED, Color.BLUE, Color.GREEN,Color.PINK,Color.ORANGE};
 		private final int columns;
 		private final double size;
@@ -43,11 +42,6 @@ public class WrappedCollectionTest {
 		public Color value(Integer from) {
 			return COLORS[from%COLORS.length];
 		}
-
-		@Override
-		public Glyph<Color> glyph(Integer from) {
-			return new SimpleGlyph<>(this.shape(from), this.value(from));
-		}
 	}
 	
 	
@@ -56,7 +50,7 @@ public class WrappedCollectionTest {
 		ArrayList<Integer> vs = new ArrayList<Integer>();
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
-		Glypher<Integer,Color> g = new RainbowCheckerboard<Integer>(11, 1);
+		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
 		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g, Color.class);
 		
 		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst().op(), 
