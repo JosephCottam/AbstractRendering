@@ -15,7 +15,6 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
 public class RHIPETools {
-
 	/**Provide a delimited string and receive a glyphset.
 	 * Lines are wrapped into indexed entries, so the shaper and valuer
 	 * should operate on ar.glyphsets.implicitGeometry.Indexed items.
@@ -28,24 +27,25 @@ public class RHIPETools {
 	 * @param valueType
 	 * @return
 	 */
-	public static final <T> Glyphset.RandomAccess<T> fromText(
+	public static final Glyphset.RandomAccess<String> fromText(
 			String text, 
 			String lineTerminal, 
 			String fieldTerminal, 
-			Shaper<Indexed> shaper, 
-			Valuer<Indexed,T> valuer, 
-			Class<T> valueType) {
+			TraceEntry glypher) {
 		List<Indexed>  items = new ArrayList<Indexed>();
 		for (String entry: text.split(lineTerminal)) {
 			String[] raw = entry.split(fieldTerminal);
 			Indexed item = new Indexed.ArrayWrapper(raw);
 			items.add(item);
 		}
-		return new WrappedCollection.List<Indexed, T>(items, shaper, valuer, valueType);
+		return new WrappedCollection.List<>(items, glypher, glypher, String.class);
 	}
 	
+
+	/**Construct a TraceEntry object.  Provide for convenience working with rJava**/
+	public static TraceEntry traceEntry(int x, int y, int cat, double size) {return new TraceEntry(x,y,cat, size);}
 	
-	/**Glypher to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
+	/**Shaper/Valuer to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
 	 */
 	public static final class TraceEntry implements Shaper<Indexed>, Valuer<Indexed, String> {
 		private final int xField, yField, catField;

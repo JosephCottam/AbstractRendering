@@ -34,7 +34,7 @@ public class TestRHIPE {
 		String entries = "10,20,30,40\n11,21,31,41\n12,22,32,42\n13,23,33,43\n14,24,34,44";
 		
 		RHIPETools.TraceEntry te = new RHIPETools.TraceEntry(0,1,3,1);
-		Glyphset.RandomAccess<String> glyphset = RHIPETools.fromText(entries, "\n", ",", te, te, String.class);
+		Glyphset.RandomAccess<String> glyphset = RHIPETools.fromText(entries, "\n", ",", te);
 		
 		for (int i=0; i<glyphset.size(); i++) {
 			Glyph<String> g = glyphset.get(i);
