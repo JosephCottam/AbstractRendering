@@ -12,8 +12,6 @@ import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Glypher;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 
 public class RHIPETools {
 
@@ -29,7 +27,7 @@ public class RHIPETools {
 	 * @param valueType
 	 * @return
 	 */
-	public static final <T> Glyphset<T> fromText(String text, String lineTerminal, String fieldTerminal, Glypher<Indexed,T> glypher, Class<T> valueType) {
+	public static final <T> Glyphset.RandomAccess<T> fromText(String text, String lineTerminal, String fieldTerminal, Glypher<Indexed,T> glypher, Class<T> valueType) {
 		List<Indexed>  items = new ArrayList<Indexed>();
 		for (String entry: text.split(lineTerminal)) {
 			String[] raw = entry.split(fieldTerminal);
@@ -40,6 +38,8 @@ public class RHIPETools {
 	}
 	
 	
+	/**Glypher to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
+	 */
 	public static final class TraceEntry implements Glypher<Indexed, String> {
 		private final int xField, yField, catField;
 		private final double size;
@@ -59,6 +59,12 @@ public class RHIPETools {
 		public Glyph<String> glyph(Indexed from) {return new SimpleGlyph<String>(shape(from), value(from));}
 	}
 	
+	
+	/**Convert a set of aggregates into a set of reduction keys/values.
+	 * For "convenience" the keys/values are returned as a csv-string with the value in the last spot.
+	 * @param aggs
+	 * @return
+	 */
 	public static String[] reduceKeys(Aggregates<?> aggs) {
 		ArrayList<String> entries = new ArrayList<>();
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
