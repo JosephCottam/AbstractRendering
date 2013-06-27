@@ -7,11 +7,12 @@ Build:
 * With extensions: ./build.sh ext
 
 The java implementation is built via a bash script that auto-fetches dependencies
-and an apache ant. We don't fetch ant or java 1.7, so you'll need those on your system
+and an apache ant script. We don't fetch ant or java 1.7, so you'll need those on your system
 already.  Also, make sure that java 1.7 is the selected version.  If you have already
 the dependencies satisified, you can skip the bash-script (called "build.sh") and
-just use ant directly.  If not, the bash script will attempt to acquire them for you
-and then invoke ant.  The bash script takes as a parameter the ant task to execute.
+just use ant directly.  If not, the bash script will attempt to acquire them,
+put them in a directory called "lib" and then invoke ant.  The bash script 
+takes as a parameter the ant task to execute.
 
 
 
@@ -67,7 +68,4 @@ The Avro extensions provide serialization support for aggregates and
 tools for working with input datasets encoded as avro files (through the implicit geometry system).
 Serialization is based on schemas that are included as JAR resources (current count, RLE and color
 are supported as aggregate types). Avro can be used to serialize to binary or to JSON files.
-
-
-
 

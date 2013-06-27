@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ ! -d ./lib ]; then
+    mkdir -p ./lib;
+fi;
+
 if [ ! -f ./lib/avro-1.7.4.jar ]; then
   curl http://mirror.metrocast.net/apache/avro/avro-1.7.4/java/avro-1.7.4.jar -o ./lib/avro-1.7.4.jar
 else 
@@ -32,7 +36,12 @@ if [[ "$_java" ]]; then
     version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
     echo version "$version"
     if [[ "$version" < "1.7" ]]; then
+        echo
+        echo
+        echo ERROR ---------------- ERROR --------------- ERROR ---------- ERROR
         echo Must build with at least java 1.7 since fork/join tools are used 
+        echo
+        echo
         exit 1
     fi
 fi
