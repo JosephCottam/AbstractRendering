@@ -55,6 +55,9 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	public void add(ar.Glyphset.Glyph<V> g) {
 		throw new UnsupportedOperationException("Cannot add directly to wrapped list.  Must add to backing collection.");
 	}
+	
+	public Class<V> valueType() {return valueType;}
+
 
 	public static class List<I,V> extends WrappedCollection<I,V> implements Glyphset.RandomAccess<V> {
 		protected final java.util.List<I> values;
@@ -79,5 +82,18 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		}
 	}
 	
-	public Class<V> valueType() {return valueType;}
+	
+	public static <I,V> WrappedCollection<I,V> make(
+				Collection<I> basis, 
+				Shaper<I> shaper, 
+				Valuer<I,V> valuer,
+				Class<V> valueType) {
+		
+		if (basis instanceof java.util.List) {
+			return new List<>((java.util.List<I>) basis, shaper, valuer, valueType);
+		} else {
+			return new WrappedCollection<>(basis, shaper, valuer, valueType);
+		}
+		
+	}
 }

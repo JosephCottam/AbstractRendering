@@ -59,8 +59,8 @@ public class WrappedCollectionTest {
 		Glypher<Integer,Color> g = new RainbowCheckerboard<Integer>(11, 1);
 		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g, Color.class);
 		
-		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst(), 
-								new WrappedTransfer.EchoColor(), 
+		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst().op(), 
+								new WrappedTransfer.EchoColor().op(), 
 								gs, 
 								new ParallelSpatial(100));
 		

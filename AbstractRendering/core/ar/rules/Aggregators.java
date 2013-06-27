@@ -32,6 +32,7 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 		public Class<Object> input() {return Object.class;}
 		public Class<Color> output() {return Color.class;}
+		public boolean equals(Object other) {return other instanceof Gradient;}
 
 	}
 
@@ -45,6 +46,7 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 		public Class<Object> input() {return Object.class;}
 		public Class<Color> output() {return Color.class;}
+		public boolean equals(Object other) {return other instanceof IDColor;}
 	}
 
 	
@@ -58,6 +60,7 @@ public class Aggregators {
 		public Integer identity() {return 0;}
 		public Class<Object> input() {return Object.class;}
 		public Class<Integer> output() {return Integer.class;}
+		public boolean equals(Object other) {return other instanceof Count;}
 	}
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
@@ -71,6 +74,7 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 		public Class<Color> input() {return Color.class;}
 		public Class<Color> output() {return Color.class;}
+		public boolean equals(Object other) {return other instanceof First;}
 	}
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
@@ -85,6 +89,7 @@ public class Aggregators {
 		public Color identity() {return Util.CLEAR;}
 		public Class<Color> input() {return Color.class;}
 		public Class<Color> output() {return Color.class;}
+		public boolean equals(Object other) {return other instanceof Last;}
 	}
 
 
@@ -196,6 +201,11 @@ public class Aggregators {
 		public RLE identity() {return new RLE();}
 		public Class<Color> input() {return Color.class;}
 		public Class<RLE> output() {return RLE.class;}
+		public boolean equals(Object other) {
+			if (!(other instanceof RLEColor)) {return false;}
+			RLEColor alter = (RLEColor) other;
+			return alter.sort == sort && alter.topLeft == topLeft;
+		}
 	}
 
 	
@@ -238,6 +248,11 @@ public class Aggregators {
 		public Integer identity() {return 0;}
 		public Class<Object> input() {return Object.class;}
 		public Class<Integer> output() {return Integer.class;}
+		public boolean equals(Object other) {
+			if (!(other instanceof DeltaNeighbors)) {return false;}
+			DeltaNeighbors alter = (DeltaNeighbors) other;
+			return alter.reach == reach;
+		}
 	}
 
 }

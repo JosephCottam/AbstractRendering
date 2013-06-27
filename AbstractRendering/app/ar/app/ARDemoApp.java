@@ -74,10 +74,10 @@ public class ARDemoApp implements PanelHolder {
 		frame.setSize(500, 500);
 		frame.validate();
 		frame.setVisible(true);
-		Thread.yield();
-
-		app.changeImage(presets.update(app.image));
-		image.zoomFit();
+		final ARPanel img = image;
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {public void run() {img.zoomFit();}});
+		} catch (InvocationTargetException | InterruptedException e1) {}
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {

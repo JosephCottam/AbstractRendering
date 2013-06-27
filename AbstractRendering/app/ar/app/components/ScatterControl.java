@@ -66,12 +66,11 @@ public class ScatterControl extends JPanel {
 	public void setSource(ARApp source) {this.source=source;}
 	public int distance() {return (Integer) distance.getValue();}
 	
-	public WrappedTransfer<Number,Color> getTransfer() {
+	public Transfer<Number,Color> getTransfer() {
 		double minV,maxV,minDV,maxDV;
 		
 		if (plot.region == null || plot.region.isEmpty()) {
-			Transfer<Number, Color> t = new Transfers.Present<Number>(Color.RED, Color.WHITE, Number.class);
-			return new TransferWrapper<Number,Color>(t);
+			return new Transfers.Present<Number>(Color.RED, Color.WHITE, Number.class);
 		} else {
 		
 			Rectangle2D r;
@@ -83,7 +82,7 @@ public class ScatterControl extends JPanel {
 			maxDV = r.getMaxX();
 			minDV = r.getMinX();
 			Transfer<Number,Color> t = new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE);
-			return new TransferWrapper<Number,Color>(t);
+			return t;
 		}
 		
 	}

@@ -11,7 +11,7 @@ public class BoundsSpeedTest {
 	public static void main(String[] args) throws Exception {
 		int iterations = args.length >0 ? Integer.parseInt(args[0]) : 10;
 		
-		File root = new File("./data/");
+		File root = new File("../data/");
 		File[] files = root.listFiles(new FilenameFilter(){
 			public boolean accept(File dir, String name) {
 				return name.toUpperCase().endsWith("FULL.HBIN");

@@ -38,11 +38,11 @@ public class DrawDarkControl extends JPanel {
 		source.changeImage(p);
 	}
 
-	public WrappedTransfer<Number,Color> getTransfer() {
+	public Transfer<Number,Color> getTransfer() {
 		if (cached == null || distance() != cached.distance) {
 			cached = new DrawDark(Color.black, Color.white, distance());
 		}
-		return new TransferWrapper<Number, Color>(cached);
+		return cached;
 	}
 	
 	public static class DrawDark implements Transfer<Number, Color> {

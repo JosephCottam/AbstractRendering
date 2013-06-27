@@ -47,6 +47,7 @@ public interface Indexed {
 		private final boolean flipY;
 		private final int xIdx, yIdx;
 		
+		public ToRect(double size, int xIdx, int yIdx) {this(size,size,false,xIdx,yIdx);}
 		public ToRect(double width, double height, boolean flipY, int xIdx, int yIdx) {
 			this.width=width;
 			this.height=height;

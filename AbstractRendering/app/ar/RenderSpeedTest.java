@@ -35,8 +35,8 @@ public class RenderSpeedTest {
 		f.setSize(500,500);
 		f.setVisible(true);
 		
-		WrappedAggregator<?,?> aggregator = new WrappedAggregator.Count();
-		WrappedTransfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear();
+		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
+		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
 		AggregateReducer reduction = new AggregateReducers.Count();
 		
 		Renderer render = new ParallelGlyphs(1000, reduction);

@@ -2,8 +2,6 @@ package ar.app.components;
 
 import javax.swing.JPanel;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -11,38 +9,30 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import ar.*;
-import ar.app.util.WrappedAggregator;
-import ar.app.util.WrappedTransfer;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
 public class ARPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private final WrappedAggregator reduction;
-	private final WrappedTransfer transfer;
+	private final Aggregator reduction;
+	private final Transfer transfer;
 	private final Glyphset<?> dataset;
 	private Renderer renderer;
 	
 	private AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 
+	private volatile boolean renderAgain = false;
 	private volatile BufferedImage image;
 	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
 	
-	public ARPanel(WrappedAggregator<?,?> reduction, WrappedTransfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public ARPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
 		this.reduction = reduction;
 		this.transfer = transfer;
 		this.dataset = glyphs;
 		this.renderer = renderer;
-		
-		this.addComponentListener(new ComponentListener() {
-			public void componentResized(ComponentEvent e) {ARPanel.this.validate();}
-			public void componentMoved(ComponentEvent e) {}
-			public void componentShown(ComponentEvent e) {}
-			public void componentHidden(ComponentEvent e) {}
-		});
 		
 		ZoomPanHandler h = new ZoomPanHandler();
 		super.addMouseListener(h);
@@ -59,7 +49,7 @@ public class ARPanel extends JPanel {
 		return new ARPanel(reduction, transfer, data, renderer);
 	}
 	
-	public  ARPanel withTransfer(WrappedTransfer<?,?> t) {
+	public  ARPanel withTransfer(Transfer<?,?> t) {
 		ARPanel p = new ARPanel(reduction, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
@@ -67,7 +57,7 @@ public class ARPanel extends JPanel {
 		return p;
 	}
 	
-	public ARPanel withReduction(WrappedAggregator<?,?> r) {
+	public ARPanel withReduction(Aggregator<?,?> r) {
 		ARPanel p = new ARPanel(r, transfer, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
@@ -80,7 +70,7 @@ public class ARPanel extends JPanel {
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
-	public WrappedAggregator<?,?> reduction() {return reduction;}
+	public Aggregator<?,?> reduction() {return reduction;}
 	public void aggregates(Aggregates<?> aggregates) {this.aggregates = aggregates;}
 	
 	private final boolean differentSizes(BufferedImage image, JPanel p) {
@@ -94,22 +84,24 @@ public class ARPanel extends JPanel {
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
-				|| !transfer.op().input().isAssignableFrom(reduction.op().output())) {
+				|| !transfer.input().isAssignableFrom(reduction.output())) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else if (aggregates == null || differentSizes(image, ARPanel.this)) {
+		} else if (renderAgain || aggregates == null || differentSizes(image, ARPanel.this)) {
 			action = new FullRender();
 		} else if (image == null) {
 			action = new TransferRender();
 		}
 
 		if (action != null && (renderThread == null || !renderThread.isAlive())) {
+			renderAgain =false; 
 			renderThread = new Thread(action, "Render Thread");
 			renderThread.setDaemon(true);
 			renderThread.start();
 		}
 	
 		if (image != null) {
+			//Debug.ASCCIImage(image);
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			Graphics2D g2 = (Graphics2D) g;
@@ -125,8 +117,9 @@ public class ARPanel extends JPanel {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
-			aggregates = renderer.reduce(dataset, reduction.op(), inverseViewTransform(), width, height);
-			Aggregates<Color> colors = renderer.transfer(aggregates, transfer.op());
+			AffineTransform ivt = inverseViewTransform();
+			aggregates = renderer.reduce(dataset, reduction, ivt, width, height);
+			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
@@ -140,7 +133,7 @@ public class ARPanel extends JPanel {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 
-			Aggregates<Color> colors = renderer.transfer(aggregates, transfer.op());
+			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
 			System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
@@ -281,7 +274,7 @@ public class ARPanel extends JPanel {
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
 	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
-		aggregates=null;
+		renderAgain = true;
 		transferViewTransform(vt);
 	}
 	
@@ -289,7 +282,7 @@ public class ARPanel extends JPanel {
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
-		this.repaint(this.getBounds());
+		this.repaint();
 	}
 	
 	/**Use this transform to convert screen values to the absolute/canvas

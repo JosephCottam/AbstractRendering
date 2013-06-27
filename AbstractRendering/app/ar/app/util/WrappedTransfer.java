@@ -24,7 +24,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		JFrame flyAway;
 		ScatterControl control = new ScatterControl();
 
-		public Transfer<Number,Color> op() {return control.getTransfer().op();}
+		public Transfer<Number,Color> op() {return control.getTransfer();}
 		public String toString() {return "Scatter-based selection (int)";}
 		public void selected(ARApp app) {
 			if (flyAway == null) {
@@ -56,7 +56,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		JFrame flyAway;
 		DrawDarkControl control = new DrawDarkControl();
 		
-		public Transfer<Number,Color> op() {return control.getTransfer().op();}
+		public Transfer<Number,Color> op() {return control.getTransfer();}
 		public Class<Number> type() {return Number.class;}
 		public String toString() {return String.format("Draw the Dark");}
 		public void selected(ARApp app) {

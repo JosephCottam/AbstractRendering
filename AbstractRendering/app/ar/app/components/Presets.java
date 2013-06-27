@@ -36,12 +36,12 @@ public class Presets extends CompoundPanel {
 
 		return oldPanel == null
 				|| oldPanel.dataset() != p.glyphset()
-				|| !oldPanel.reduction().equals(p.reduction());
+				|| !oldPanel.reduction().equals(p.reduction().op());
 	}
 	
 	public ARPanel update(ARPanel oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		ARPanel newPanel = new ARPanel(p.reduction(), p.transfer(), p.glyphset(), p.renderer());
+		ARPanel newPanel = new ARPanel(p.reduction().op(), p.transfer().op(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.reduction().equals(oldPanel.reduction())) {

@@ -82,7 +82,7 @@ public class ARApp implements PanelHolder {
 		reductions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				WrappedAggregator<?,?> r = (WrappedAggregator<?,?>) reductions.getSelectedItem();
-				app.changeImage(image.withReduction(r));
+				app.changeImage(image.withReduction(r.op()));
 			}});
 		
 		transfers.addActionListener(new ActionListener() {
@@ -92,14 +92,14 @@ public class ARApp implements PanelHolder {
 				}
 				
 				WrappedTransfer<?,?> t = (WrappedTransfer<?,?>) transfers.getSelectedItem();
-				app.changeImage(image.withTransfer(t));
+				app.changeImage(image.withTransfer(t.op()));
 				t.selected(ARApp.this);
 			}});
 	
 		
 		
-		image = new ARPanel(((WrappedAggregator) reductions.getSelectedItem()), 
-							((WrappedTransfer) transfers.getSelectedItem()), 
+		image = new ARPanel(((WrappedAggregator) reductions.getSelectedItem()).op(), 
+							((WrappedTransfer) transfers.getSelectedItem()).op(), 
 							loadData(),
 							rendererOptions.renderer());
 		
