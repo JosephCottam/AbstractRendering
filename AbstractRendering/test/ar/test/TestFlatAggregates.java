@@ -10,7 +10,7 @@ public class TestFlatAggregates {
 
 	@Test
 	public void Store() {
-		Aggregates<Integer> aggs = new FlatAggregates<>(10,10,0);
+		Aggregates<Integer> aggs = new FlatAggregates<Integer>(10,10,0);
 		
 		for(int x=aggs.lowX();x<aggs.highX(); x++) {
 			for (int y=aggs.lowY();y<aggs.lowY(); y++) {

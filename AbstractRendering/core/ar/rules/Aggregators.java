@@ -132,7 +132,7 @@ public class Aggregators {
 	public static final class RLEColor implements Aggregator<Color, RLE> {
 		private static final Comparator<Glyph<Color>> glyphColorSorter  = new Comparator<Glyph<Color>>() {
 			public int compare(Glyph<Color> o1, Glyph<Color> o2) {
-				return Integer.compare(o1.value().getRGB(), o2.value().getRGB());
+				return o1.value().getRGB() - o2.value().getRGB();
 			}
 		};
 

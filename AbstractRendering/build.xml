@@ -9,7 +9,7 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
-  <property name="oneSixExcludes" value="**/Parallel*.java;**/ARServer.*"/> 
+  <property name="oneSixExcludes" value="**/Parallel*.java;**/ARServer.*;**/MemMap*.java"/> 
 
   <target name="build" depends="clean,core,app" />
 
@@ -51,7 +51,7 @@
       <param name="exclude" value="${oneSixExcludes}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value="lib"/>
-      <param name="ver" value="1.7"/>
+      <param name="ver" value="1.6"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
