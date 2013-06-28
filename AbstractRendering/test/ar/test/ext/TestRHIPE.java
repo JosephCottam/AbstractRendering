@@ -24,7 +24,7 @@ public class TestRHIPE {
 		Indexed item = new Indexed.ArrayWrapper(entry);
 		RHIPETools.TraceEntry te = new RHIPETools.TraceEntry(0,1,2,size);
 		
-		Glyph g = te.glyph(item);
+		Glyph<String> g = te.glyph(item);
 		assertEquals("Category did not match.", cat, g.value());
 		assertEquals("Shape did not match", new Rectangle2D.Double(x,y,size,size), g.shape());
 	}

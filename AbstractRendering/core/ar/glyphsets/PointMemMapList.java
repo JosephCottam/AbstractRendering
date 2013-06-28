@@ -13,7 +13,7 @@ import ar.util.BigFileByteBuffer;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
- * <p>
+ * 
  * Specialization of the MemMapList to focus on just points.  
  * Primarily a set of experiments, but should be serviceable.  
  * See MemMapList for input format details, etc.

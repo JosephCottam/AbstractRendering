@@ -22,9 +22,7 @@ public class RHIPETools {
 	 * @param text A delimited set of entries
 	 * @param lineTerminal String that delimits between entry
 	 * @param fieldTerminal String that delimits a field (cannot be the same as lineTerminal) 
-	 * @param shaper Function to convert 
-	 * @param valuer
-	 * @param valueType
+	 * @param glypher Object that converts String arrays into glyphs
 	 * @return
 	 */
 	public static final Glyphset.RandomAccess<String> fromText(
@@ -70,7 +68,7 @@ public class RHIPETools {
 	/**Convert a set of aggregates into a set of reduction keys/values.
 	 * For "convenience" the keys/values are returned as a csv-string with the value in the last spot.
 	 * @param aggs
-	 * @return
+	 * @return Set of reduce keys
 	 */
 	public static String[] reduceKeys(Aggregates<?> aggs) {
 		ArrayList<String> entries = new ArrayList<>();

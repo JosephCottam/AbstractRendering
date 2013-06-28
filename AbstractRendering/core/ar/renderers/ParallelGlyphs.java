@@ -29,7 +29,6 @@ import ar.Transfer;
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
  * 
- * <p>
  * TODO: Extend beyond aggregate reducers with same LEFT/RIGHT/OUT
  */
 public class ParallelGlyphs implements Renderer {

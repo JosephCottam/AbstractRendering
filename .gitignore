@@ -6,6 +6,7 @@ data
 *.pyc
 *.hbin
 *.swp
+AbstractRendering/docs/*
 AbstractRendering/doc/*
 AbstractRendering/lib/*
 AbstractRendering/testResults/*

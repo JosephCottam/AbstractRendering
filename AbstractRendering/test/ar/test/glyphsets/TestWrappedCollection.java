@@ -30,7 +30,7 @@ public class TestWrappedCollection {
 	@Test
 	public void wrapList() {
 		ArrayList<Indexed> data = data();
-		Glyphset g = WrappedCollection.make(data, shaper(), valuer(), Color.class);
+		Glyphset g = WrappedCollection.wrap(data, shaper(), valuer(), Color.class);
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
@@ -46,15 +46,13 @@ public class TestWrappedCollection {
 		Collection<Indexed> data = new HashSet<>();
 		data.addAll(data());
 		
-		Glyphset g = WrappedCollection.make(data, shaper(), valuer(), Color.class);
+		Glyphset g = WrappedCollection.wrap(data, shaper(), valuer(), Color.class);
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
 		assertFalse("Incorrectly identified list.", g.getClass() == WrappedCollection.List.class);
 	}
 
-	
-	
 	public Shaper shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer valuer() {return new Indexed.ToValue<>(2);}
 	

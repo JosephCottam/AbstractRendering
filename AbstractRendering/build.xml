@@ -8,7 +8,7 @@
   <property name="coreSrc" value="core"/>
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
-  <property name="docs" value="doc" />
+  <property name="docs" value="docs" />
 
   <target name="build" depends="clean,core,app" />
 
@@ -30,7 +30,14 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value=""/>
     </antcall>
-    <antcall target="docs">
+    <antcall target="_docs">
+      <param name="src" value="${coreSrc}"/>
+      <param name="jars" value=""/>
+    </antcall>
+  </target>
+
+  <target name="docs">
+    <antcall target="_docs">
       <param name="src" value="${coreSrc}"/>
       <param name="jars" value=""/>
     </antcall>
@@ -47,7 +54,7 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
-    <antcall target="docs">
+    <antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="jars" value="lib"/>
     </antcall>
@@ -78,8 +85,9 @@
     </javac>
   </target>
 
-  <target name="docs">
+  <target name="_docs">
     <javadoc sourcepath="${src}" destdir="${docs}">
+      <doclet name="com.visural.doclets.markdown.standard.Standard" path="./lib/MarkdownDoclet.jar"/>
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>

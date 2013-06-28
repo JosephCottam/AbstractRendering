@@ -89,7 +89,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	
 	/**Create a glyphset from a collection.  
 	 * Attempts to pick the most efficient option for the given basis.**/
-	public static <I,V> WrappedCollection<I,V> make(
+	public static <I,V> WrappedCollection<I,V> wrap(
 				Collection<I> basis, 
 				Shaper<I> shaper, 
 				Valuer<I,V> valuer,
@@ -102,7 +102,29 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		}
 	}	
 	
-	/**Copies items from the basis into a quad-tree.**/
+	/**Copies items from the basis into a list.  
+	 * 
+	 * Copying is advisable if the source data structure is either (1) actively being changed
+	 * or (2) a glyph-parallel rendering is desired but the source data is not random access.
+	 */
+	public static <I,V> Glyphset<V> toList(
+			Collection<I> basis, 
+			Shaper<I> shaper, 
+			Valuer<I,V> valuer, 
+			Class<V> valueType) {
+		Glyphset<V> glyphs = DynamicQuadTree.make(valueType);
+		for (I val: basis) {
+			Glyph<V> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			glyphs.add(g);
+		}
+		return glyphs;		
+	}
+	
+	/**Copies items from the basis into a quad-tree.
+	 * 	  
+	 * Copying to quad-tree is advisable if the source data structure is either (1) actively being changed
+	 * or (2) a pixel-parallel rendering is desired.
+	 * **/
 	public static <I,V> Glyphset<V> toQuadTree(
 			Collection<I> basis, 
 			Shaper<I> shaper, 
