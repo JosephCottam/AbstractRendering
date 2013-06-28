@@ -1,8 +1,15 @@
 import ar
 import numpy as np
 
+try:
+  from numba import autojit
+except ImportError:
+  print "Error loading numba."
+  autojit = lambda f: f
+
 ######## Aggregators ########
 class Count(ar.Aggregator):
+  """Count the number of items that fall into a particular grid element."""
   out_type=np.int32
 
   def aggregate(self, grid): 
@@ -14,6 +21,33 @@ class Count(ar.Aggregator):
     f = np.vectorize(myLen)
     return f(grid._projected)
 
+
+@autojit
+def _sum(projected, glyphset, validx):
+  width, height = projected.shape
+  outgrid=np.zeros((width, height), dtype=np.int32)
+  outflat = outgrid.flat
+  inflat = projected.flat
+
+  for i in xrange(0, len(outgrid.flat)):
+    glyphids = inflat[i]
+    if (glyphids == None): continue
+    for gidx in xrange(0, len(glyphids)):
+      glyphid = glyphids[gidx]
+      glyph = glyphset[glyphid]
+      outflat[i]+=glyph[validx]
+  
+  return outgrid
+
+class Sum(ar.Aggregator):
+   """Sum the items in each grid element."""
+   out_type=np.int32
+
+   def __init__(self, validx=4):
+     self._validx = validx
+
+   def aggregate(self, grid):
+     return _sum(grid._projected, grid._glyphset, self._validx)
 
 ######## Transfers ##########
 class Segment(ar.Transfer):
@@ -38,7 +72,7 @@ class Segment(ar.Transfer):
 
 class HDInterpolate(ar.Transfer):
   """High-definition interpolation between two colors."""
-  def __init__(self, low, high, reserve):
+  def __init__(self, low, high, reserve=ar.Color(255,255,255,255)):
     self.low=low
     self.high=high
     self.reserve=reserve
@@ -49,6 +83,8 @@ class HDInterpolate(ar.Transfer):
     max = items.max()
     span = float(max-min) 
     percents = (items-min)/span
+
+    #TODO: mask in reserve for zero-values
 
     colorspan = self.high.asarray().astype(np.int32) - self.low.asarray().astype(np.int32)
     return (percents[:,:,np.newaxis] * colorspan[np.newaxis,np.newaxis,:] + self.low.asarray()).astype(np.uint8)
