@@ -19,12 +19,20 @@ takes as a parameter the ant task to execute.
 Demo Application(s)
 -----------------
 
-Build with the demo application (default build) and execute "java -jar ARDemo.jar"
-A number of preset datasets/treatments are available in the drop-down box.
+All demo applications are available through the demo-application build (i.e, the default build).
+If there is no ARApp.jar, the demo app has not been built.
+
+
+The simplest application is titled "SimpleApp." It is executed with
+"java -cp ARapp.jar ar.SimpleApp".  This will produce a simple scatterplot visualization.
+The source code (found in app/ar/SimpleApp.jar) provides documented example of how
+to use Abstract Rendering through the provided swing panel or to produce images directly.
+
+For a more interactive demo, run "java -jar ARApp.jar".
+This application presents a number of preset datasets/treatments in the drop-down box.
 Shifting between datasets results in a full rendering, but only shifting
 between a treatments results in partial re-rendering (just 
 re-executing the transfer function).
-
 
 Pan is done with Drag.  Zoom is done with Shift+Drag.
 Triple-click on the main plot area to zoom-extents.
@@ -34,8 +42,7 @@ A JSON encoding of int-aggregates can be saved with the
 the TransferJS directory, this file will be used as the 
 dataset for the pixel-shader implementation.
 
-
-For a more full-featured application execute "java -jar ARdemo.jar -ext"
+For a more full-featured application execute "java -jar ARApp.jar -ext".
 This application allows exploration of your own data and various treatments.
 However, there are combinations that will not work (for example, glyph-parallel 
 rendering requires a list-based glyph container type).  No effort is made to 
