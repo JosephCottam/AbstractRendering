@@ -37,7 +37,7 @@ public class AggregateSerailizer {
 
 	public static final Map<String,String> META;
 	static {
-		Map<String,String> map = new HashMap<>();
+		Map<String,String> map = new HashMap<String,String>();
 		map.put("AbstractRendering", "Summer 2012");
 		META = Collections.unmodifiableMap(map);
 	}
@@ -96,12 +96,12 @@ public class AggregateSerailizer {
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, FORMAT format, Valuer<A, GenericRecord> converter) throws IOException {
 		Schema fullSchema = new SchemaComposer().add(itemSchema).addResource(AGGREGATES_SCHEMA).resolved();
 
-		List<List<GenericRecord>> records = new ArrayList<>();
+		List<List<GenericRecord>> records = new ArrayList<List<GenericRecord>>();
 		A defVal = aggs.defaultValue();
 		GenericRecord defrec = converter.value(defVal);
 
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-			List<GenericRecord> row = new ArrayList<>();
+			List<GenericRecord> row = new ArrayList<GenericRecord>();
 			records.add(row);
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				A val = aggs.at(x,y);
@@ -148,9 +148,9 @@ public class AggregateSerailizer {
 	}
 
 	public static <A> Aggregates<A> deserialize(String filename, Valuer<GenericRecord, A> converter) {
-		DatumReader<GenericRecord> dr = new GenericDatumReader<>();
+		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
 		try {
-			DataFileReader<GenericRecord> fr =new DataFileReader<>(new File(filename), dr);
+			DataFileReader<GenericRecord> fr =new DataFileReader<GenericRecord>(new File(filename), dr);
 			GenericRecord r = fr.next();
 
 			int lowX = (Integer) r.get("lowX");
@@ -161,7 +161,7 @@ public class AggregateSerailizer {
 			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
 					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
 
-			Aggregates<A> aggs = new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
+			Aggregates<A> aggs = new FlatAggregates<A>(lowX, lowY, highX, highY, defVal);
 			for (int row=0; row<rows.size(); row++) {
 				int x = row+aggs.lowX();
 				GenericData.Array<GenericRecord> cols = rows.get(row);

@@ -47,7 +47,7 @@ public class AvroAggregates {
 				238.49100176586487, 
 				236.13546883394775).createInverse();
 		count = r.reduce(glyphs, new Aggregators.Count(), ivt, 500,500);
-		rles = r.reduce(glyphs, new Aggregators.RLEColor(true, false), ivt, 500,500);
+		rles = r.reduce(glyphs, new Aggregators.RLEColor(true), ivt, 500,500);
 	}
 	
 	@Test

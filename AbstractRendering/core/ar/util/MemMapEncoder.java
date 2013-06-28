@@ -32,7 +32,7 @@ import static ar.glyphsets.PointMemMapList.TYPE;
  * entry type.  The entry type characters match those passed to the encoder 
  * (except that 'x' is not valid in the header).
  * 
- * @TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
+ * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
  * 
  * @author jcottam
  */

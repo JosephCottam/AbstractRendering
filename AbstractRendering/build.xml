@@ -9,6 +9,7 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
+  <property name="oneSixExcludes" value="**/Parallel*.java;**/ARServer.*"/> 
 
   <target name="build" depends="clean,core,app" />
 
@@ -24,6 +25,7 @@
       <param name="src" value="${coreSrc}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value=""/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
@@ -43,11 +45,31 @@
     </antcall>
   </target>
 
-  <target name="ext">
+  <target name="onesix">
     <antcall target="compile">
-      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
+      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="exclude" value="${oneSixExcludes}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value="lib"/>
+      <param name="ver" value="1.7"/>
+    </antcall>
+    <antcall target="package">
+      <param name="file" value="${coreJar}"/>
+      <param name="bin" value="${coreBin}"/>
+      <param name="main" value="ar.ext.server.ARServer"/>
+    </antcall>
+    <antcall target="_docs">
+      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
+      <param name="jars" value="lib"/>
+    </antcall>
+  </target>
+
+  <target name="ext">
+    <antcall target="compile">
+      <param name="src" value="${coreSrc}:${extSrc}"/>
+      <param name="target" value="${coreBin}"/>
+      <param name="jars" value="lib"/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
@@ -65,6 +87,7 @@
       <param name="src" value="${appSrc}"/>
       <param name="target" value="${appBin}"/>
       <param name="jars" value="."/>
+      <param name="ver" value="1.6"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${appJar}"/>
@@ -76,9 +99,11 @@
 
   <target name="compile">
     <mkdir dir="${target}"/>
-    <javac destdir="${target}"  source="1.7" target="1.7"
+    <javac destdir="${target}"  source="${ver}" target="${ver}"
       includeantruntime="false" 
+      sourcepath=""
       srcdir="${src}">
+      <exclude name="${exclude}"/>
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>

@@ -159,7 +159,7 @@ public class GlyphsetLoader {
 
 		try {
 			long start = System.currentTimeMillis();
-			Glyphset<Color> g = new MemMapList<>(f, shaper, valuer, Color.class);
+			Glyphset<Color> g = new MemMapList<Color>(f, shaper, valuer, Color.class);
 			long end = System.currentTimeMillis();
 			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
 			return g;
@@ -169,7 +169,7 @@ public class GlyphsetLoader {
 					System.out.println("Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return new MemMapList<>(f, shaper, valuer, Color.class);
+					return new MemMapList<Color>(f, shaper, valuer, Color.class);
 				} else {throw e;}
 			} catch (Exception ex) {
 				System.out.println("Faield to load data.");

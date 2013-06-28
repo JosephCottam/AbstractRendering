@@ -31,7 +31,7 @@ public class AvroGlyphs {
 		Valuer<Indexed, V> valuer;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
 			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);
-			valuer = new Indexed.ToValue<>(vfield);
+			valuer = new Indexed.ToValue<Object,V>(vfield);
 		}
 		
 		public Glyph<V> value(GenericRecord r) {

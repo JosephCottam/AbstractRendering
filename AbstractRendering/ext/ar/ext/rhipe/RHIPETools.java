@@ -23,7 +23,6 @@ public class RHIPETools {
 	 * @param lineTerminal String that delimits between entry
 	 * @param fieldTerminal String that delimits a field (cannot be the same as lineTerminal) 
 	 * @param glypher Object that converts String arrays into glyphs
-	 * @return
 	 */
 	public static final Glyphset.RandomAccess<String> fromText(
 			String text, 
@@ -36,7 +35,7 @@ public class RHIPETools {
 			Indexed item = new Indexed.ArrayWrapper(raw);
 			items.add(item);
 		}
-		return new WrappedCollection.List<>(items, glypher, glypher, String.class);
+		return new WrappedCollection.List<Indexed,String>(items, glypher, glypher, String.class);
 	}
 	
 
@@ -71,7 +70,7 @@ public class RHIPETools {
 	 * @return Set of reduce keys
 	 */
 	public static String[] reduceKeys(Aggregates<?> aggs) {
-		ArrayList<String> entries = new ArrayList<>();
+		ArrayList<String> entries = new ArrayList<String>();
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				entries.add(String.format("%d,%d,%d",x,y,aggs.at(x, y)));

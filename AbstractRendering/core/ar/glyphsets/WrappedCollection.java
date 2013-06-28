@@ -96,9 +96,9 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 				Class<V> valueType) {
 		
 		if (basis instanceof java.util.List) {
-			return new List<>((java.util.List<I>) basis, shaper, valuer, valueType);
+			return new List<I,V>((java.util.List<I>) basis, shaper, valuer, valueType);
 		} else {
-			return new WrappedCollection<>(basis, shaper, valuer, valueType);
+			return new WrappedCollection<I,V>(basis, shaper, valuer, valueType);
 		}
 	}	
 	
@@ -114,7 +114,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			Class<V> valueType) {
 		Glyphset<V> glyphs = DynamicQuadTree.make(valueType);
 		for (I val: basis) {
-			Glyph<V> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			Glyph<V> g = new SimpleGlyph<V>(shaper.shape(val), valuer.value(val));
 			glyphs.add(g);
 		}
 		return glyphs;		
@@ -132,7 +132,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			Class<V> valueType) {
 		Glyphset<V> glyphs = DynamicQuadTree.make(valueType);
 		for (I val: basis) {
-			Glyph<V> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			Glyph<V> g = new SimpleGlyph<V>(shaper.shape(val), valuer.value(val));
 			glyphs.add(g);
 		}
 		return glyphs;		

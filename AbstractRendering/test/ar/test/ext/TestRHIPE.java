@@ -46,7 +46,7 @@ public class TestRHIPE {
 	
 	@Test
 	public void reduceKeys() {
-		Aggregates<Integer> aggs = new FlatAggregates<>(10,10,0);
+		Aggregates<Integer> aggs = new FlatAggregates<Integer>(10,10,0);
 		
 		for(int x=aggs.lowX();x<aggs.highX(); x++) {
 			for (int y=aggs.lowY();y<aggs.highY(); y++) {

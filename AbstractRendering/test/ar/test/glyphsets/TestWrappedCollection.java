@@ -43,7 +43,7 @@ public class TestWrappedCollection {
 
 	@Test
 	public void wrapNonlist() {
-		Collection<Indexed> data = new HashSet<>();
+		Collection<Indexed> data = new HashSet<Indexed>();
 		data.addAll(data());
 		
 		Glyphset g = WrappedCollection.wrap(data, shaper(), valuer(), Color.class);
@@ -54,7 +54,7 @@ public class TestWrappedCollection {
 	}
 
 	public Shaper shaper() {return new Indexed.ToRect(1, 0, 1);}
-	public Valuer valuer() {return new Indexed.ToValue<>(2);}
+	public Valuer valuer() {return new Indexed.ToValue<Object,Object>(2);}
 	
 	public ArrayList<Indexed> data() {
 		ArrayList<Indexed> values = new ArrayList();
