@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,62 +15,55 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.app.util.Wrapped;
-import ar.app.util.WrappedAggregator;
-import ar.app.util.WrappedTransfer;
 import ar.ext.avro.AggregateSerailizer;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
+import ar.rules.Aggregators;
+import ar.rules.Aggregators.RLE;
+import ar.rules.Transfers;
 import ar.util.GlyphsetLoader;
 import ar.util.Util;
 import ar.Glyphset;
 
 
 public class ARServer extends NanoHTTPD {
-	private static Map<String, Transfer> TRANSFERS = 
-			load(Transfer.class, 
-					WrappedTransfer.class, 
-					new Valuer<WrappedTransfer,String>() {public String value(WrappedTransfer o) {return o.getClass().getSimpleName();}},
-					new Valuer<WrappedTransfer,Transfer>() {public Transfer value(WrappedTransfer o) {return o.op();}});
-	private static Map<String, Aggregator> AGGREGATORS = 
-			load(Aggregator.class, 
-					WrappedAggregator.class, 
-					new Valuer<WrappedAggregator,String>() {public String value(WrappedAggregator o) {return o.getClass().getSimpleName();}},
-					new Valuer<WrappedAggregator, Aggregator>() {public Aggregator value(WrappedAggregator o) {return o.op();}});
-	private static Map<Class<?>, AggregateReducer> REDUCERS = 
-			load(AggregateReducer.class, 
-					AggregateReducers.class, 
-					new Valuer<AggregateReducer, Class<?>>() {public Class value(AggregateReducer o) {return ((AggregateReducer) o).left();}},
-					new Valuer.IdentityValuer<AggregateReducer>());
-	private static Map<String, Glyphset<?>> DATASETS = new HashMap<>();
+	private static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
+	private static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
+	private static Map<Class<?>, AggregateReducer<?,?,?>> REDUCERS = new HashMap<Class<?>, AggregateReducer<?,?,?>>();
+	private static Map<String, Glyphset<?>> DATASETS = new HashMap<String, Glyphset<?>>();
 	
 	static {
 		DATASETS.put("CIRCLEPOINTS", GlyphsetLoader.load("Scatterplot", "../data/circlepoints.csv", .1));
-		DATASETS.put("BOOST", GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
+		DATASETS.put("BOOST", GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
+		
+		TRANSFERS.put("RedWhiteLinear", new Transfers.Interpolate(new Color(255,0,0,38), Color.red));
+		TRANSFERS.put("RedWhiteLog", new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));
+		TRANSFERS.put("Alpha10", new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5));
+		TRANSFERS.put("AlphaMin", new Transfers.FixedAlpha(Color.white, Color.red, 0, 255));
+		TRANSFERS.put("Present", new Transfers.Present<Integer>(Color.red, Color.white, Integer.class));
+		TRANSFERS.put("90Percent", new Transfers.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("25Percent", new Transfers.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("EchoColor", new Transfers.IDColor());
+		TRANSFERS.put("HDAlpha", new Transfers.HighAlpha(Color.white, .1, false));
+		TRANSFERS.put("HDAlphaLog", new Transfers.HighAlpha(Color.white, .1, true));
+				
+				
+		REDUCERS.put(Integer.class, new AggregateReducers.Count());
+		REDUCERS.put(RLE.class, new AggregateReducers.MergeCOC());
+		
+		AGGREGATORS.put("Blue",new Aggregators.IDColor(Color.BLUE));
+		AGGREGATORS.put("Gradient", new Aggregators.Gradient(500, 500));
+		AGGREGATORS.put("First", new Aggregators.First());
+		AGGREGATORS.put("Last", new Aggregators.Last());
+		AGGREGATORS.put("Count", new Aggregators.Count());
+		AGGREGATORS.put("RLEColor", new Aggregators.RLEColor(true));
+		AGGREGATORS.put("RLEUnsortColor", new Aggregators.RLEColor(false));
+		AGGREGATORS.put("Delta5", new Aggregators.DeltaNeighbors(5));		
 	}
-	
-	private static <K,WV,V> Map<K,V> load(Class<V> type, Class<?> index, Valuer<WV,K> makeKey, Valuer<WV,V> valuer) {
-		Map<K,V> instances = new HashMap<>();
-		Class<?>[] items = index.getClasses();
-
-		for (Class<?> item: items) {
-			if (!Wrapped.class.isAssignableFrom(item)) {continue;}
-			try {
-				Constructor<WV> c = (Constructor<WV>) item.getConstructor();
-				WV wv = c.newInstance();
-				V v = valuer.value(wv);
-				K k = makeKey.value(wv);
-				instances.put(k,v);
-			} catch (Exception e) {continue;}
-		}
-		return instances;
-	}
-	
 	
 	public ARServer(String hostname, int port) {
 		super(hostname, port);
@@ -177,7 +169,7 @@ public class ARServer extends NanoHTTPD {
 	
 	public List<Transfer<?,?>> getTransfers(String transfers) {
 		String[] trans = transfers.split(";");
-		List<Transfer<?,?>> ts = new ArrayList<>(trans.length);
+		List<Transfer<?,?>> ts = new ArrayList<Transfer<?,?>>(trans.length);
 		for (String tID:trans) {
 			Transfer<?,?> t = TRANSFERS.get(tID);
 			if (t==null) {throw new RuntimeException("Transfer not found: " + tID);}
