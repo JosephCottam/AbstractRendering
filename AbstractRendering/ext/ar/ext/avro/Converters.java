@@ -50,7 +50,7 @@ public class Converters {
 		public FromRLE(Schema s) {this.schema = s;}
 		public GenericRecord value(RLE from) {
 			GenericRecord r = new GenericData.Record(schema);
-			List<String> keys = new ArrayList<>();
+			List<String> keys = new ArrayList<String>();
 			for (Object k: from.keys) {keys.add(k.toString());}
 			r.put("keys", keys);
 			r.put("counts", from.counts);

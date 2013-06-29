@@ -39,13 +39,11 @@ if [[ "$_java" ]]; then
     if [[ "$version" < "1.7" ]]; then
         echo
         echo
-        echo ERROR ---------------- ERROR --------------- ERROR ---------- ERROR
-        echo Must build with at least java 1.7 since fork/join tools are used 
+        echo WARNING --------- 
+        echo The full version requires java 1.7 due to fork/join dependencies
+        echo To proceed, always build with \"ant onesix\"
         echo
         echo
         exit 1
     fi
 fi
-
-ant $1 
-

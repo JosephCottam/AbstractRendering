@@ -25,8 +25,8 @@ import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.ParallelSpatial;
 import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
-import ar.util.GlyphsetLoader;
 
+import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerailizer;
 import ar.ext.avro.AggregateSerailizer.FORMAT;
 import ar.ext.avro.Converters;
@@ -38,7 +38,7 @@ public class AvroAggregates {
 	
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset glyphs = GlyphsetLoader.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
+		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
 		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
@@ -47,7 +47,7 @@ public class AvroAggregates {
 				238.49100176586487, 
 				236.13546883394775).createInverse();
 		count = r.reduce(glyphs, new Aggregators.Count(), ivt, 500,500);
-		rles = r.reduce(glyphs, new Aggregators.RLEColor(true, false), ivt, 500,500);
+		rles = r.reduce(glyphs, new Aggregators.RLEColor(true), ivt, 500,500);
 	}
 	
 	@Test

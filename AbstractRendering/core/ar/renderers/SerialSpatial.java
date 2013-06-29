@@ -36,7 +36,7 @@ public final class SerialSpatial implements Renderer {
 	}
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN,OUT> t) {
-		Aggregates<OUT> out = new FlatAggregates<>(aggregates, t.identity());
+		Aggregates<OUT> out = new FlatAggregates<OUT>(aggregates, t.identity());
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 				OUT val = t.at(x, y, aggregates);

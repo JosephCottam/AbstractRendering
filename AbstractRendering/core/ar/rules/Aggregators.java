@@ -132,16 +132,13 @@ public class Aggregators {
 	public static final class RLEColor implements Aggregator<Color, RLE> {
 		private static final Comparator<Glyph<Color>> glyphColorSorter  = new Comparator<Glyph<Color>>() {
 			public int compare(Glyph<Color> o1, Glyph<Color> o2) {
-				return Integer.compare(o1.value().getRGB(), o2.value().getRGB());
+				return o1.value().getRGB() - o2.value().getRGB();
 			}
 		};
 
 		private final boolean sort;
-		private final boolean topLeft;
-		public RLEColor(boolean sort) {this(sort, false);}
-		public RLEColor(boolean sort, boolean topLeft) {
+		public RLEColor(boolean sort) {
 			this.sort = sort;
-			this.topLeft = topLeft;
 		}
 
 		private List<? extends Glyph<Color>> sortColors(Collection<? extends Glyph<Color>> glyphs) {
@@ -176,23 +173,6 @@ public class Aggregators {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
 			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
 
-			if (topLeft) {
-				//FIXME: This top-left business is not working...FIX IT!
-				Collection<Glyph<Color>> superHits = new ArrayList<Glyph<Color>>(hits.size());
-				for (Glyph<Color> g: hits) {
-					Rectangle2D bounds = g.shape().getBounds2D();
-					Rectangle2D r = new Rectangle2D.Double(pixel.x,pixel.y,1,1);
-					r = v.createTransformedShape(r).getBounds2D();
-
-					if (r.contains(bounds.getX(), bounds.getY())) {
-						superHits.add(g);
-					}
-				}
-				hits = superHits;
-				if (hits.size() >0) {System.out.println("SIZE:" + hits.size());}
-			}
-
-
 			List<? extends Glyph<Color>> ordered;
 			if (sort) {ordered = sortColors(hits);}
 			else {ordered = new ArrayList<Glyph<Color>>(hits);}
@@ -204,7 +184,7 @@ public class Aggregators {
 		public boolean equals(Object other) {
 			if (!(other instanceof RLEColor)) {return false;}
 			RLEColor alter = (RLEColor) other;
-			return alter.sort == sort && alter.topLeft == topLeft;
+			return alter.sort == sort;
 		}
 	}
 

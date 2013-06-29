@@ -30,8 +30,8 @@ public class GlyphsetTools {
 	/**Internal utility for seting up an avro reader.**/
 	private static DataFileReader<GenericRecord> reader(String sourceName) throws IOException {
 		File source = new File(sourceName);
-		DatumReader<GenericRecord> dr = new GenericDatumReader<>();
-		DataFileReader<GenericRecord> fr =new DataFileReader<>(source, dr);
+		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
+		DataFileReader<GenericRecord> fr =new DataFileReader<GenericRecord>(source, dr);
 		return fr;
 	}
 	
@@ -45,7 +45,7 @@ public class GlyphsetTools {
 	 */
 	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher, Class<V> valueType) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceName); 
-		GlyphList<V> l = new GlyphList<>(valueType);
+		GlyphList<V> l = new GlyphList<V>(valueType);
 		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;
 	}
@@ -69,8 +69,8 @@ public class GlyphsetTools {
 			Class<V> valueType) throws IOException {
 		
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
-		ArrayList<INNER> l = new ArrayList<>();
+		ArrayList<INNER> l = new ArrayList<INNER>();
 		for (GenericRecord r: reader) {l.add(realizer.value(r));}
-		return new WrappedCollection.List<>(l, shaper, valuer, valueType);
+		return new WrappedCollection.List<INNER, V>(l, shaper, valuer, valueType);
 	}
 }

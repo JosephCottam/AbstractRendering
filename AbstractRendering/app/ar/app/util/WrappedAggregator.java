@@ -43,13 +43,6 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 	}
 	
-  public class RLEColorsTL implements WrappedAggregator<Color, Aggregators.RLE> {
-		public Aggregator<Color, Aggregators.RLE> op() {return new Aggregators.RLEColor(true,true);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
-		public String toString() {return "Color RLE sorted & TL (RLE)";}
-		public boolean equals(Object other) {return other.toString().equals(this.toString());}
-	}
-	
 	public class RLEColors implements WrappedAggregator<Color, Aggregators.RLE> {
 		public Aggregator<Color, Aggregators.RLE> op() {return new Aggregators.RLEColor(true);}
 		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}

@@ -141,11 +141,11 @@ public class ParallelGlyphs implements Renderer {
 			if (bounds.isEmpty()) {
 				int x2 = bounds.x+bounds.width;
 				int y2 = bounds.y+bounds.height;
-				return new ConstantAggregates<>(Math.min(x2, bounds.x), Math.min(y2, bounds.y),
+				return new ConstantAggregates<A>(Math.min(x2, bounds.x), Math.min(y2, bounds.y),
 												Math.max(x2, bounds.x), Math.min(y2, bounds.y),
 												op.identity());
 			}				
-			Aggregates<A> aggregates = new FlatAggregates<>(bounds.x, bounds.y,
+			Aggregates<A> aggregates = new FlatAggregates<A>(bounds.x, bounds.y,
 														 bounds.x+bounds.width, bounds.y+bounds.height, 
 														 op.identity());
 			

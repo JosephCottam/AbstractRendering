@@ -9,6 +9,7 @@ import javax.swing.JComboBox;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.app.ARApp;
+import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
@@ -17,7 +18,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.rules.AggregateReducers;
-import ar.util.GlyphsetLoader;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -136,10 +136,10 @@ public class Presets extends CompoundPanel {
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
-	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetLoader.load("Scatterplot", "../data/circlepoints.csv", .1);
-	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetLoader.load("BGL Memory", "../data/MemVisScaled.csv", .001);
-	private static final Glyphset<Color> BOOST_MEMORY_MM = GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
-	private static final Glyphset<Color> CHARITY_NET_MM =GlyphsetLoader.memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<Indexed>(Color.BLUE), 1, "ii");
+	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetUtils.load("Scatterplot", "../data/circlepoints.csv", .1);
+	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetUtils.load("BGL Memory", "../data/MemVisScaled.csv", .001);
+	private static final Glyphset<Color> BOOST_MEMORY_MM = GlyphsetUtils.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
+	private static final Glyphset<Color> CHARITY_NET_MM =GlyphsetUtils.memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<Indexed>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));
 //	private static final GlyphSet DATE_STATE = load("Charity Net", "./data/dateStateXY.csv", .01);
 

@@ -15,13 +15,13 @@ import org.junit.Test;
 
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
+import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.GlyphsetTools;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.GlyphsetLoader;
 import ar.util.DelimitedReader;
 
 public class AvroGlyphs {
@@ -31,7 +31,7 @@ public class AvroGlyphs {
 		Valuer<Indexed, V> valuer;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
 			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);
-			valuer = new Indexed.ToValue<>(vfield);
+			valuer = new Indexed.ToValue<Object,V>(vfield);
 		}
 		
 		public Glyph<V> value(GenericRecord r) {
@@ -48,7 +48,7 @@ public class AvroGlyphs {
 		String schema = "../data/circlepoints.avsc";
 		encode(csv, avro, schema);
 		
-		GlyphList<?> reference =(GlyphList<?>) GlyphsetLoader.load(new GlyphList(Color.class), new File(csv), 1, .1, false, 2, 3, -1, 4); 
+		GlyphList<?> reference =(GlyphList<?>) GlyphsetUtils.load(new GlyphList(Color.class), new File(csv), 1, .1, false, 2, 3, -1, 4); 
 		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());

@@ -1,5 +1,4 @@
 <project name="AbstractRendering" default="build" basedir=".">
-
   <property name="bin" value="bin"/>
   <property name="appSrc" value="app"/>
   <property name="appBin" value="${bin}/appBin" />
@@ -9,7 +8,7 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
-
+  
   <target name="build" depends="clean,core,app" />
 
   <target name="clean">
@@ -24,6 +23,7 @@
       <param name="src" value="${coreSrc}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value=""/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
@@ -43,11 +43,36 @@
     </antcall>
   </target>
 
+  <target name="onesix" depends="clean">
+    <mkdir dir="${coreBin}"/>
+    
+    <javac destdir="${coreBin}" source="1.6" target="1.6" includeantruntime="false"
+      sourcepath="" srcdir="${coreSrc}:${extSrc}">
+      <exclude name="**/ARServer*"/> 
+      <exclude name="**/Parallel*"/>
+      <exclude name="**/MemMapList*"/> 
+      <classpath>
+        <fileset dir="lib" includes="*.jar"/>
+      </classpath>
+    </javac>
+    
+    <antcall target="package">
+      <param name="file" value="${coreJar}"/>
+      <param name="bin" value="${coreBin}"/>
+      <param name="main" value="ar.ext.server.ARServer"/>
+    </antcall>
+    <antcall target="_docs">
+      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
+      <param name="jars" value="lib"/>
+    </antcall>
+  </target>
+
   <target name="ext">
     <antcall target="compile">
-      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
+      <param name="src" value="${coreSrc}:${extSrc}"/>
       <param name="target" value="${coreBin}"/>
       <param name="jars" value="lib"/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
@@ -65,6 +90,7 @@
       <param name="src" value="${appSrc}"/>
       <param name="target" value="${appBin}"/>
       <param name="jars" value="."/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${appJar}"/>
@@ -76,9 +102,8 @@
 
   <target name="compile">
     <mkdir dir="${target}"/>
-    <javac destdir="${target}"  source="1.7" target="1.7"
-      includeantruntime="false" 
-      srcdir="${src}">
+    <javac destdir="${target}" source="${ver}" target="${ver}" includeantruntime="false"
+      sourcepath="" srcdir="${src}">
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>
