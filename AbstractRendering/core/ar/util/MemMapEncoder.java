@@ -5,9 +5,6 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.io.*;
 
-
-import static ar.glyphsets.PointMemMapList.TYPE;
-
 /**Utility for encoding delimited files into a binary format that
  * can be read by the included mem-mapped list.  
  * 
@@ -37,7 +34,15 @@ import static ar.glyphsets.PointMemMapList.TYPE;
  * @author jcottam
  */
 public class MemMapEncoder {
-	
+	/**Types the encoder understands.
+	 * The "X" type is used to indicate that the field is being skipped.
+	 */
+	public enum TYPE {
+		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4), X(0);
+		public final int bytes;
+		private TYPE(int bytes) {this.bytes=bytes;}
+	};
+
 	
 
 	/**Which are the types of the fields kept (e.g. are not 'x')**/

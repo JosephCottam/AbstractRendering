@@ -2,8 +2,8 @@ package ar.util;
 
 import java.nio.ByteBuffer;
 
-import ar.glyphsets.MemMapList.TYPE;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.util.MemMapEncoder.TYPE;
 
 public class IndexedEncoding implements Indexed {
 	private final TYPE[] types;

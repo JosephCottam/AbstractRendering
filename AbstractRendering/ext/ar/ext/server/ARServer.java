@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,6 +18,10 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.ext.avro.AggregateSerailizer;
 import ar.ext.server.NanoHTTPD.Response.Status;
+import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.MemMapList;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.renderers.ParallelGlyphs;
@@ -25,7 +30,10 @@ import ar.rules.AggregateReducers;
 import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
 import ar.rules.Transfers;
+import ar.util.DelimitedReader;
 import ar.util.GlyphsetLoader;
+import ar.util.MemMapEncoder;
+import ar.util.MemMapEncoder.TYPE;
 import ar.util.Util;
 import ar.Glyphset;
 
@@ -37,8 +45,22 @@ public class ARServer extends NanoHTTPD {
 	private static Map<String, Glyphset<?>> DATASETS = new HashMap<String, Glyphset<?>>();
 	
 	static {
-		DATASETS.put("CIRCLEPOINTS", GlyphsetLoader.load("Scatterplot", "../data/circlepoints.csv", .1));
-		DATASETS.put("BOOST", GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
+		DATASETS.put("CIRCLEPOINTS",
+				GlyphsetLoader.load(
+						DynamicQuadTree.make(Integer.class),
+						new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
+						new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
+						new Indexed.ToRect(1, 2, 3),
+						new Indexed.ToValue<>(4, new Valuer.ToInt<Object>())));
+		DATASETS.put("BOOST",
+				new MemMapList<Color>(
+						new File("../data/MemVisScaledB.hbin"),
+						new MemMapEncoder.TYPE[]{TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT},
+						new Indexed.ToRect(.001, .001, true, 0, 1), 
+						new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
+						Color.class));
+				//GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
+		
 		
 		TRANSFERS.put("RedWhiteLinear", new Transfers.Interpolate(new Color(255,0,0,38), Color.red));
 		TRANSFERS.put("RedWhiteLog", new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));

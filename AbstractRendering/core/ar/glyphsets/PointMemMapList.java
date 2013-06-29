@@ -10,6 +10,7 @@ import java.util.Iterator;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.BigFileByteBuffer;
+import ar.util.MemMapEncoder.TYPE;
 
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
@@ -22,12 +23,6 @@ import ar.util.BigFileByteBuffer;
  *
  */
 public class PointMemMapList implements Glyphset.RandomAccess<Color> {
-	public enum TYPE {
-		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4);
-		public final int bytes;
-		private TYPE(int bytes) {this.bytes=bytes;}
-	};
-	
 	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
 	
 	private final ThreadLocal<BigFileByteBuffer> buffer = 

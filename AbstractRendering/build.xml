@@ -56,15 +56,15 @@
       </classpath>
     </javac>
     
-    <!--antcall target="package">
+    <antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
-    </antcall-->
-    <!--antcall target="_docs">
+    </antcall>
+    <antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="jars" value="lib"/>
-    </antcall -->
+    </antcall>
   </target>
 
   <target name="ext">

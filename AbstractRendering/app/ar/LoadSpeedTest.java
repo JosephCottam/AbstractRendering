@@ -3,8 +3,8 @@ package ar;
 import java.io.File;
 import java.io.FilenameFilter;
 
+import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.*;
-import ar.util.GlyphsetLoader;
 
 public class LoadSpeedTest {
 	public static void main(String[] args) throws Exception {
@@ -19,7 +19,7 @@ public class LoadSpeedTest {
 			try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				GlyphsetLoader.autoLoad(source, .005, DynamicQuadTree.make(Object.class));
+				GlyphsetUtils.autoLoad(source, .005, DynamicQuadTree.make(Object.class));
 				long end = System.currentTimeMillis();
 				System.out.printf("%s, %d, %d\n", source.getName(), end-start, i);
 				total += (end-start);

@@ -3,6 +3,8 @@ package ar.glyphsets.implicitgeometry;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Array;
 
+import ar.util.MemMapEncoder;
+
 /**Interface designating something has an int-valued "get" function.
  * This interface is the basis for array-based and file-record conversions
  * where the only reliable field accessor is the index.
@@ -15,11 +17,37 @@ public interface Indexed {
 	
 	public static class ArrayWrapper implements Indexed {
 		private final Object array;
-		public ArrayWrapper(Object array) {this.array = array;}
+		public ArrayWrapper(Object parts) {this.array = parts;}
 		public Object get(int i) {return Array.get(array, i);}
 	}
-	
 
+	/**Converts the elements of the passed array to the given types.
+	 * Uses toString and primitive parsers.
+	 */
+	public static class Converter implements Indexed {
+		private final MemMapEncoder.TYPE[] types;
+		private final Object[] values;
+		public Converter(Object[] values, MemMapEncoder.TYPE... types) {
+			this.values = values;
+			this.types = types;
+		}
+
+		@Override
+		public Object get(int i) {
+			String s = values[i].toString();
+			switch (types[i]) {
+				case INT: return Integer.parseInt(s);
+				case LONG: return Long.parseLong(s);
+				case DOUBLE: return Double.parseDouble(s);
+				case FLOAT: return Float.parseFloat(s);
+				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
+			}
+		}
+		
+		public Converter makeFor(Object[] values) {return new Converter(values, types);}
+	}
+	
+	
 	/**Apply the passed valuer to the value at the indicated index.
 	 * The default value is the "IdentityValuer" found in the valuer class.
 	 * **/
