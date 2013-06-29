@@ -1,5 +1,4 @@
 <project name="AbstractRendering" default="build" basedir=".">
-
   <property name="bin" value="bin"/>
   <property name="appSrc" value="app"/>
   <property name="appBin" value="${bin}/appBin" />
@@ -9,8 +8,7 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
-  <property name="oneSixExcludes" value="**/Parallel*.java,**/ARServer.*,**/MemMap*.java"/> 
-
+  
   <target name="build" depends="clean,core,app" />
 
   <target name="clean">
@@ -46,18 +44,23 @@
   </target>
 
   <target name="onesix" depends="clean">
-    <antcall target="compile">
-      <param name="src" value="${coreSrc}:${extSrc}"/>
-      <param name="exclude" value="${oneSixExcludes}"/>
-      <param name="target" value="${coreBin}"/>
-      <param name="jars" value="lib"/>
-      <param name="ver" value="1.6"/>
-    </antcall>
-    <antcall target="package">
+    <mkdir dir="${coreBin}"/>
+    
+    <javac destdir="${coreBin}" source="1.6" target="1.6" includeantruntime="false"
+      sourcepath="" srcdir="${coreSrc}:${extSrc}">
+      <exclude name="**/ARServer*"/> 
+      <exclude name="**/Parallel*"/>
+      <exclude name="**/MemMapList*"/> 
+      <classpath>
+        <fileset dir="lib" includes="*.jar"/>
+      </classpath>
+    </javac>
+    
+    <!--antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
-    </antcall>
+    </antcall-->
     <!--antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="jars" value="lib"/>
@@ -100,9 +103,7 @@
   <target name="compile">
     <mkdir dir="${target}"/>
     <javac destdir="${target}" source="${ver}" target="${ver}" includeantruntime="false"
-      excludes="**/Parallel* **/ARServer.* **/MemMap*">
-      <src path="${src}"/>
-
+      sourcepath="" srcdir="${src}">
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>
