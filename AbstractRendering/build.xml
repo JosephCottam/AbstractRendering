@@ -9,7 +9,7 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
-  <property name="oneSixExcludes" value="**/Parallel*.java;**/ARServer.*;**/MemMap*.java"/> 
+  <property name="oneSixExcludes" value="**/Parallel*.java,**/ARServer.*,**/MemMap*.java"/> 
 
   <target name="build" depends="clean,core,app" />
 
@@ -45,7 +45,7 @@
     </antcall>
   </target>
 
-  <target name="onesix">
+  <target name="onesix" depends="clean">
     <antcall target="compile">
       <param name="src" value="${coreSrc}:${extSrc}"/>
       <param name="exclude" value="${oneSixExcludes}"/>
@@ -58,10 +58,10 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
-    <antcall target="_docs">
+    <!--antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
       <param name="jars" value="lib"/>
-    </antcall>
+    </antcall -->
   </target>
 
   <target name="ext">
@@ -87,7 +87,7 @@
       <param name="src" value="${appSrc}"/>
       <param name="target" value="${appBin}"/>
       <param name="jars" value="."/>
-      <param name="ver" value="1.6"/>
+      <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
       <param name="file" value="${appJar}"/>
@@ -99,11 +99,10 @@
 
   <target name="compile">
     <mkdir dir="${target}"/>
-    <javac destdir="${target}"  source="${ver}" target="${ver}"
-      includeantruntime="false" 
-      sourcepath=""
-      srcdir="${src}">
-      <exclude name="${exclude}"/>
+    <javac destdir="${target}" source="${ver}" target="${ver}" includeantruntime="false"
+      excludes="**/Parallel* **/ARServer.* **/MemMap*">
+      <src path="${src}"/>
+
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>

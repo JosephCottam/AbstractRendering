@@ -1,18 +1,19 @@
 Abstract Rendering: Java
 ======================
 
+Fetching Dependencies:
+dependencies.sh  -- Will attempt to acquire the dependencies. Only needs to be run once.
+
 Build:
-* With demo app: ./build.sh build
-* Just core: ./build.sh core
-* With extensions: ./build.sh ext
+* With demo app: ./ant
+* Just core: ./ant core
+* With extensions: ./ant ext
 
 The java implementation is built via a bash script that auto-fetches dependencies
 and an apache ant script. We don't fetch ant or java 1.7, so you'll need those on your system
 already.  Also, make sure that java 1.7 is the selected version.  If you have already
-the dependencies satisified, you can skip the bash-script (called "build.sh") and
-just use ant directly.  If not, the bash script will attempt to acquire them,
-put them in a directory called "lib" and then invoke ant.  The bash script 
-takes as a parameter the ant task to execute.
+the dependencies satisified, you can skip the bash-script (called "dependencies.sh") and
+just use ant. 
 
 
 
