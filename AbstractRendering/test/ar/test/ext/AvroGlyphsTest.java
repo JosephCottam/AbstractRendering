@@ -24,7 +24,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.DelimitedReader;
 
-public class AvroGlyphs {
+public class AvroGlyphsTest {
 
 	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
 		Shaper<Indexed> shaper;

@@ -32,7 +32,7 @@ import ar.ext.avro.AggregateSerailizer.FORMAT;
 import ar.ext.avro.Converters;
 import ar.ext.avro.SchemaComposer;
 
-public class AvroAggregates {
+public class AvroAggregatesTest {
 	public static Aggregates<Integer> count;
 	public static Aggregates<RLE> rles;
 	
@@ -118,7 +118,17 @@ public class AvroAggregates {
 				assertEquals(Arrays.deepToString(rres.keys.toArray()), Arrays.deepToString(rref.keys.toArray()));
 			}
 		}
-
+	}
+	
+	@Test
+	public void readOcculusTile() throws Exception {
+		String filename = "../data/avroTiles/0/0/0.avro";
+		Aggregates<Integer> res = AggregateSerailizer.deserializeTile(filename, new Converters.ToCount(),0,0,255,255);
+		
+		assertEquals(0, res.lowX());
+		assertEquals(0, res.lowY());
+		assertEquals(255, res.highX());
+		assertEquals(255, res.highY());
 	}
 }
 

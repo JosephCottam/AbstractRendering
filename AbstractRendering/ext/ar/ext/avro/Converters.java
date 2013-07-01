@@ -14,7 +14,10 @@ import ar.rules.Aggregators.RLE;
 
 public class Converters {
 	public static class ToCount implements Valuer<GenericRecord, Integer> {
-		public Integer value(GenericRecord from) {return (Integer) from.get(0);}
+		public Integer value(GenericRecord from) {
+			if (from == null) {return 0;}
+			else {return (Integer) from.get(0);}
+		}
 	}
 	
 	public static class FromCount implements Valuer<Integer, GenericRecord> {

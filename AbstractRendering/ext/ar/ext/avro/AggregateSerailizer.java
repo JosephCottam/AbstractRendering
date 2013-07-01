@@ -182,4 +182,38 @@ public class AggregateSerailizer {
 			return aggs;
 		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
 	}
+	
+	/**Deserialize a tile that is encoded as an set of aggregates.
+	 * 
+	 * TODO: Remove when tiles include bounds metadata  (also remove dependency fetcher from download)
+	 * **/
+	public static <A> Aggregates<A> deserializeTile(
+			String filename, Valuer<GenericRecord, A> converter, 
+			int lowX, int lowY, int highX, int highY) {
+		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
+		try {
+			InputStream stream = new FileInputStream(filename);
+			DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr);
+			GenericRecord r = fr.next();
+
+			A defVal = converter.value((GenericRecord) r.get("default"));			
+			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
+					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
+
+			Aggregates<A> aggs = new FlatAggregates<A>(lowX, lowY, highX, highY, defVal);
+			for (int row=0; row<rows.size(); row++) {
+				int x = row+aggs.lowX();
+				GenericData.Array<GenericRecord> cols = rows.get(row);
+				for (int col=0; col<cols.size(); col++){
+					int y=col+aggs.lowY();
+					GenericRecord val = cols.get(col);
+					aggs.set(x, y, converter.value(val));
+				}
+			}
+			fr.close();
+			return aggs;
+		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
+	}
+
+	
 }
