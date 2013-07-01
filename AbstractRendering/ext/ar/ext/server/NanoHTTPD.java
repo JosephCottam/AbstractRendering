@@ -1065,8 +1065,8 @@ public abstract class NanoHTTPD {
     }
 
     private static final class ResponseException extends Exception {
-
-        private final Response.Status status;
+		private static final long serialVersionUID = -8420038123410139269L;
+		private final Response.Status status;
 
         public ResponseException(Response.Status status, String message) {
             super(message);

@@ -33,8 +33,8 @@ import ar.ext.avro.Converters;
 import ar.ext.avro.SchemaComposer;
 
 public class AvroAggregates {
-	private static Aggregates<Integer> count;
-	private static Aggregates<RLE> rles;
+	public static Aggregates<Integer> count;
+	public static Aggregates<RLE> rles;
 	
 	@BeforeClass
 	public static void load() throws Exception {

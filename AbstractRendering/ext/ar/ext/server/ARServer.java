@@ -87,6 +87,7 @@ public class ARServer extends NanoHTTPD {
 		AGGREGATORS.put("Delta5", new Aggregators.DeltaNeighbors(5));		
 	}
 	
+	public ARServer(String hostname) {this(hostname, 8739);}
 	public ARServer(String hostname, int port) {
 		super(hostname, port);
 	}

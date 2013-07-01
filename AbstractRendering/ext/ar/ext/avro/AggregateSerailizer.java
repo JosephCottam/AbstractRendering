@@ -1,8 +1,10 @@
 package ar.ext.avro;
 
 import java.awt.Color;
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -147,10 +149,15 @@ public class AggregateSerailizer {
 		serialize(aggs, outputStream, schema, format, conv);
 	}
 
-	public static <A> Aggregates<A> deserialize(String filename, Valuer<GenericRecord, A> converter) {
+	public static <A> Aggregates<A> deserialize(String filename, Valuer<GenericRecord, A> converter) throws FileNotFoundException {
+		return deserialize(new FileInputStream(filename), converter);
+	}
+	
+	
+	public static <A> Aggregates<A> deserialize(InputStream stream, Valuer<GenericRecord, A> converter) {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
 		try {
-			DataFileReader<GenericRecord> fr =new DataFileReader<GenericRecord>(new File(filename), dr);
+			DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr);
 			GenericRecord r = fr.next();
 
 			int lowX = (Integer) r.get("lowX");
