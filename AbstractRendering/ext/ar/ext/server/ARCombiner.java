@@ -18,7 +18,7 @@ import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.ext.avro.AggregateSerailizer;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.Util;
+import ar.util.AggregateReducers;
 
 /**Receives Avro-encoded aggregates from a remote and combines them.
  *
@@ -78,7 +78,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = Util.reduceAggregates(aggs, item, reducer);
+				aggs = AggregateReducers.foldLeft(aggs, item, reducer);
 			}
 		}
 		return aggs;

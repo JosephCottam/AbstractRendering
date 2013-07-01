@@ -20,6 +20,7 @@ import ar.Glyphset.Glyph;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 import ar.glyphsets.GlyphsetIterator;
+import ar.util.AggregateReducers;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -128,7 +129,7 @@ public class ParallelGlyphs implements Renderer {
 			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
 			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
-			Aggregates<A> aggs = Util.reduceAggregates(top.getRawResult(), bottom.getRawResult(), reducer);
+			Aggregates<A> aggs = AggregateReducers.foldLeft(top.getRawResult(), bottom.getRawResult(), reducer);
 			return aggs;
 		}
 		

@@ -1,5 +1,7 @@
 package ar;
 
+import java.util.List;
+
 /**Combine two aggregate values into a third composite aggregate.
  * 
  * This class is the inner function for combining two aggregate sets together.
@@ -13,7 +15,7 @@ package ar;
  * @param <OUT> Resulting aggregate type
  */
 public interface AggregateReducer<LEFT,RIGHT,OUT> {
-	
+
 	/**Combine two aggregate values.
 	 * This is a combination point-wise of the aggregate values, not of the aggregate sets.
 	 * 
@@ -25,7 +27,18 @@ public interface AggregateReducer<LEFT,RIGHT,OUT> {
 	 */
 	public OUT combine(LEFT left, RIGHT right);
 	
-	public OUT identity();
+
+	/**Reduce a few aggregate values into a single value.  
+	 * This is used for reducing the resolution of a single set of aggregates (e.g., for zooming without recomputing aggregates). 
+	 * 
+	 * @param sources Values from the base aggregates
+	 * @return Combination of the passed aggregates
+	 */
+	public OUT rollup(List<LEFT> sources);
+	
+	/** Value that is an identity under this operation in the output space.
+	 * This value is used when no data is present for reduction in either aggregate or for padding in rollup.**/
+	public OUT zero();
 	
 	public Class<LEFT> left();
 	public Class<RIGHT> right();

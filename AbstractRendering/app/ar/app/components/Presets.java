@@ -17,7 +17,7 @@ import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
-import ar.rules.AggregateReducers;
+import ar.rules.AggregateReductions;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -114,7 +114,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.MergeCOC());}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReductions.MergeCOC());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
@@ -122,7 +122,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReductions.Count());}
 		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
@@ -130,7 +130,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class CharityNet implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReducers.Count());}
+		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregateReductions.Count());}
 		public Glyphset glyphset() {return CHARITY_NET_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
