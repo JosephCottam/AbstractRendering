@@ -26,7 +26,7 @@ import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
-import ar.rules.AggregateReducers;
+import ar.rules.AggregateReductions;
 import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
 import ar.rules.Transfers;
@@ -74,8 +74,8 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("HDAlphaLog", new Transfers.HighAlpha(Color.white, .1, true));
 				
 				
-		REDUCERS.put(Integer.class, new AggregateReducers.Count());
-		REDUCERS.put(RLE.class, new AggregateReducers.MergeCOC());
+		REDUCERS.put(Integer.class, new AggregateReductions.Count());
+		REDUCERS.put(RLE.class, new AggregateReductions.MergeCOC());
 		
 		AGGREGATORS.put("Blue",new Aggregators.IDColor(Color.BLUE));
 		AGGREGATORS.put("Gradient", new Aggregators.Gradient(500, 500));

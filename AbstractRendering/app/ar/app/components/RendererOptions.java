@@ -6,7 +6,7 @@ import ar.*;
 import ar.Renderer;
 import ar.app.ARApp;
 import ar.renderers.*;
-import ar.rules.AggregateReducers;
+import ar.rules.AggregateReductions;
 
 public class RendererOptions extends CompoundPanel {
 	private static final long serialVersionUID = 1L;
@@ -32,7 +32,7 @@ public class RendererOptions extends CompoundPanel {
 		taskSize.setSelectedItem(100000);
 		taskSize.addActionListener(new DelegateAction(this));		
 
-		ARApp.loadInstances(reducers, AggregateReducers.class, "Parallel (Glyphs)");
+		ARApp.loadInstances(reducers, AggregateReductions.class, "Parallel (Glyphs)");
 		reducers.addActionListener(new DelegateAction(this));
 
 		

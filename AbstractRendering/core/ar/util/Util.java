@@ -198,56 +198,6 @@ public final class Util {
 	public static <T> boolean isEqual(T one, T two) {
 		return one == two || (one != null && one.equals(two));
 	}
-
-	/**Combine two aggregate sets according to the passed reducer.
-	 * 
-	 * The resulting aggregate set will have a realized subset region sufficient to
-	 * cover the realized sbuset region of both source aggregate sets (regardless of 
-	 * the values found in those sources).  If one of the two aggregate sets provided
-	 * is already of sufficient size, it will be used as both a source and a target.
-	 * 
-	 * 
-	 * @param left Aggregate set to use for left-hand arguments
-	 * @param right Aggregate set to use for right-hand arguments
-	 * @param red Reduction operation
-	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
-	 */
-	public static <T> Aggregates<T> reduceAggregates(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
-		if (left == null) {return right;}
-		if (right == null) {return left;}
-		
-		T identity = red.identity();
-		
-		if ((left instanceof ConstantAggregates) && isEqual(identity, left.defaultValue())) {return right;}
-		if ((right instanceof ConstantAggregates) && isEqual(identity, right.defaultValue())) {return right;}
-		
-		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
-		Aggregates<T> target;
-		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
-		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
-		Rectangle bounds = rb.union(lb);
-		
-		if (lb.contains(bounds)) {
-			sources.add(right);
-			target = left;
-		} else if (rb.contains(bounds)) {
-			sources.add(left);
-			target = right;
-		} else {
-			sources.add(right);
-			sources.add(left);
-			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
-		}
-
-		for (Aggregates<T> source: sources) {
-			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
-				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
-					target.set(x,y, red.combine(target.at(x,y), source.at(x,y)));
-				}
-			}
-		}
-		return target;
-	}
 	
 	/**Calculate the affine transform to fit a box of the given size/location onto a 0,0,width,height space.**/
 	public static AffineTransform zoomFit(Rectangle2D content, int width, int height) {

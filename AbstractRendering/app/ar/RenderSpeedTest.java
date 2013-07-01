@@ -15,7 +15,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
-import ar.rules.AggregateReducers;
+import ar.rules.AggregateReductions;
 
 /**Tests the amount of time to render count visualizations.
  * 
@@ -37,7 +37,7 @@ public class RenderSpeedTest {
 		
 		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
 		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
-		AggregateReducer reduction = new AggregateReducers.Count();
+		AggregateReducer reduction = new AggregateReductions.Count();
 		
 		Renderer render = new ParallelGlyphs(1000, reduction);
 
