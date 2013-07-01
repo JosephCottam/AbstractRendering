@@ -52,7 +52,7 @@ public class CombinerTests {
 		for (int i=1; i<=10; i++) {
 			send(aggs, "localhost", 8739);
 			Aggregates<Integer> recvd = c.combined();
-			assertEquals("Combined count error.", i,c.combinedCount());	
+			assertEquals("Combined count error.", i,c.count());	
 			assertNotNull("Nothing received.", recvd);
 			for (int x=aggs.lowX();x<aggs.highX();x++) {
 				for (int y=aggs.lowY(); y<aggs.highY();y++) {
