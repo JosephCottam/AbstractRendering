@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>data</name>
+			<type>2</type>
+			<location>/Users/jcottam/Documents/Projects/AbstractRendering/data</location>
+		</link>
+	</linkedResources>
 </projectDescription>

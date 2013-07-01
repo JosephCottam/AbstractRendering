@@ -2,19 +2,14 @@ package ar.util;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
-import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Glyphset.Glyph;
-import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 
 /**Collection of various utilities that don't have other homes.**/

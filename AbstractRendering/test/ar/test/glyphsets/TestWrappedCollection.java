@@ -1,7 +1,6 @@
 package ar.test.glyphsets;
 
 import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
 import java.util.ArrayList;

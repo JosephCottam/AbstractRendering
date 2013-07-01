@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericData;
-import org.codehaus.jackson.JsonNode;
 
 /**Fluent tool for loading up a set of avro schemas
  * and generating a composite from them based on alias resolution

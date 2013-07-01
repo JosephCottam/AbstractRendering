@@ -27,6 +27,7 @@ public class IndexedEncoding implements Indexed {
 			case FLOAT: return buffer.getFloat();
 			case BYTE: return buffer.get();
 			case CHAR: return buffer.getChar();
+			case X: throw new IllegalArgumentException("'Skip-type' not supported (denoted 'X'); found at index " + offset);
 		}
 		
 		throw new RuntimeException("Unknown type specified at offset " + offset);

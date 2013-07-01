@@ -1,6 +1,5 @@
 package ar.test;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 import ar.util.Util;
