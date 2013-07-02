@@ -49,8 +49,9 @@ import ar.util.IndexedEncoding;
  */
 public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
-	private final ForkJoinPool pool = new ForkJoinPool();
 	private final ThreadLocal<BigFileByteBuffer> buffer = 
 			new ThreadLocal<BigFileByteBuffer>() {
 		public BigFileByteBuffer initialValue() {

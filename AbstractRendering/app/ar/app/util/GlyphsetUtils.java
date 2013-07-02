@@ -137,7 +137,7 @@ public class GlyphsetUtils {
 
 		//The check below causes an issue if memory is tight...the check has a non-trivial overhead on some glyphset types
 		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
-		System.out.printf("Read %d entries\n", count);
+		
 
 		return glyphs;
 	}
@@ -149,7 +149,7 @@ public class GlyphsetUtils {
 			final long start = System.currentTimeMillis();
 			Glyphset<Color> g = autoLoad(new File(file), size, DynamicQuadTree.make(Color.class));
 			final long end = System.currentTimeMillis();
-			System.out.printf("\tLoad time (%s ms)\n ", (end-start));
+			if (label != null) {System.out.printf("\tLoad time (%s ms)\n ", (end-start));}
 			return g;
 		} catch (Exception e) {
 			System.out.println("Failed to load data.");
@@ -166,7 +166,7 @@ public class GlyphsetUtils {
 			long start = System.currentTimeMillis();
 			Glyphset<Color> g = new MemMapList<Color>(f, shaper, valuer, Color.class);
 			long end = System.currentTimeMillis();
-			System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);
+			if (label != null) {System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);}
 			return g;
 		} catch (Exception e) {
 			try {

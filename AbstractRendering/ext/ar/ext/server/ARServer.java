@@ -223,7 +223,7 @@ public class ARServer extends NanoHTTPD {
 	public Collection<String> getTransfers() {return TRANSFERS.keySet();}
 	
 	
-	private static String get(String[] args, String flag, String def) {
+	private static String arg(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();
 		for (int i=0; i<args.length; i++) {
 			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
@@ -232,8 +232,8 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		String host = get(args, "-host", "localhost");
-		int port = Integer.parseInt(get(args, "-port", "8080"));
+		String host = arg(args, "-host", "localhost");
+		int port = Integer.parseInt(arg(args, "-port", "8080"));
 		ARServer server = new ARServer(host, port);
 		
 		server.start();

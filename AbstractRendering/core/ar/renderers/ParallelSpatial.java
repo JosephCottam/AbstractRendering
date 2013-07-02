@@ -18,7 +18,8 @@ import ar.aggregates.FlatAggregates;
  * **/
 public final class ParallelSpatial implements Renderer {
 	public static final int DEFAULT_TASK_SIZE = 100000;
-	private final ForkJoinPool pool = new ForkJoinPool();
+	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder;

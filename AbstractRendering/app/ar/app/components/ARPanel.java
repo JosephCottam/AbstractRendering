@@ -13,6 +13,8 @@ import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
 public class ARPanel extends JPanel {
+	public static boolean PERF_MON = false;
+	
 	private static final long serialVersionUID = 1L;
 	private final Aggregator reduction;
 	private final Transfer transfer;
@@ -101,11 +103,11 @@ public class ARPanel extends JPanel {
 		}
 	
 		if (image != null) {
-			//Debug.ASCCIImage(image);
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			Graphics2D g2 = (Graphics2D) g;
 			g2.drawRenderedImage(image,g2.getTransform());
+			if (PERF_MON) {synchronized(this) {this.notifyAll();}}
 		} else {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -122,7 +124,7 @@ public class ARPanel extends JPanel {
 			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
-			System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
+			if (!PERF_MON) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
 			ARPanel.this.repaint();
 		}
 	}
@@ -136,7 +138,7 @@ public class ARPanel extends JPanel {
 			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
-			System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());
+			if (!PERF_MON) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
 			ARPanel.this.repaint();
 		}
 	}
