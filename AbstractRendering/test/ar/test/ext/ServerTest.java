@@ -1,6 +1,8 @@
 package ar.test.ext;
 
 import static org.junit.Assert.*;
+import org.junit.Test;
+
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -9,8 +11,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-
-import org.junit.Test;
 
 import ar.ext.server.ARServer;
 

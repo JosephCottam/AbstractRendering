@@ -1,6 +1,7 @@
 package ar.ext.avro;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,7 +30,7 @@ import ar.aggregates.FlatAggregates;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.Aggregators.RLE;
 
-public class AggregateSerailizer {
+public class AggregateSerializer {
 	public static final String AGGREGATES_SCHEMA ="ar/ext/avro/aggregates.avsc";
 	public static final String COUNTS_SCHEMA="ar/ext/avro/count.avsc";
 	public static final String RLE_SCHEMA="ar/ext/avro/rle.avsc";
@@ -149,6 +150,11 @@ public class AggregateSerailizer {
 		serialize(aggs, outputStream, schema, format, conv);
 	}
 
+
+	public static <A> Aggregates<A> deserialize(File file, Valuer<GenericRecord, A> converter) throws FileNotFoundException {
+		return deserialize(new FileInputStream(file), converter);
+	}
+	
 	public static <A> Aggregates<A> deserialize(String filename, Valuer<GenericRecord, A> converter) throws FileNotFoundException {
 		return deserialize(new FileInputStream(filename), converter);
 	}

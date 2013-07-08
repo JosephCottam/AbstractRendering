@@ -4,6 +4,10 @@ import java.util.Iterator;
 
 import ar.Aggregates;
 
+
+/**An aggregate set that all cells have the same value.
+ * Still tracks the low/high bounds, but the in-bounds and out-of-bounds values are the same.
+ */
 public final class ConstantAggregates<A> implements Aggregates<A> {
 	private final A val;
 	private final int lowX, lowY, highX, highY;
@@ -20,13 +24,13 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 		this.highX = highX;
 		this.highY = highY;
 	}
+	
 	public Iterator<A> iterator() {
 		final int size = (highX - lowX) * (highY-lowY);
 		return new Iterator<A>() {
 			int count = 0;
 			public boolean hasNext() {return count < size;}
 			public A next() {count++; return val;}
-			@Override
 			public void remove() {throw new UnsupportedOperationException();}
 		};
 	}

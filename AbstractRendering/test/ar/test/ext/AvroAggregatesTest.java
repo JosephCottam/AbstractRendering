@@ -27,8 +27,8 @@ import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
 
 import ar.app.util.GlyphsetUtils;
-import ar.ext.avro.AggregateSerailizer;
-import ar.ext.avro.AggregateSerailizer.FORMAT;
+import ar.ext.avro.AggregateSerializer;
+import ar.ext.avro.AggregateSerializer.FORMAT;
 import ar.ext.avro.Converters;
 import ar.ext.avro.SchemaComposer;
 
@@ -56,8 +56,8 @@ public class AvroAggregatesTest {
 		String filename ="./testResults/counts.avro";
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
 		OutputStream out = new FileOutputStream(filename);
-		AggregateSerailizer.serialize(ref, out, s, new Converters.FromCount(s));
-		Aggregates<Integer> res = AggregateSerailizer.deserialize(filename, new Converters.ToCount());
+		AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
+		Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
 
 		assertEquals(ref.lowX(), res.lowX());
 		assertEquals(ref.lowY(), res.lowY());
@@ -77,7 +77,7 @@ public class AvroAggregatesTest {
 		Aggregates<Integer> ref = count;
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		AggregateSerailizer.serialize(ref, baos, s, FORMAT.JSON, new Converters.FromCount(s));
+		AggregateSerializer.serialize(ref, baos, s, FORMAT.JSON, new Converters.FromCount(s));
 		String output = new String(baos.toByteArray(), "UTF-8");
 		JsonParser p = new JsonFactory().createJsonParser(output);		
 		ObjectMapper mapper = new ObjectMapper();
@@ -98,8 +98,8 @@ public class AvroAggregatesTest {
 		String filename = "./testResults/rle.avro";
 		OutputStream out = new FileOutputStream(filename);
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/rle.avsc").resolved();
-		AggregateSerailizer.serialize(ref, out, s, new Converters.FromRLE(s));
-		Aggregates<RLE> res = AggregateSerailizer.deserialize(filename, new Converters.ToRLE());
+		AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
+		Aggregates<RLE> res = AggregateSerializer.deserialize(filename, new Converters.ToRLE());
 
 		assertEquals(ref.lowX(), res.lowX());
 		assertEquals(ref.lowY(), res.lowY());
@@ -123,7 +123,7 @@ public class AvroAggregatesTest {
 	@Test
 	public void readOcculusTile() throws Exception {
 		String filename = "../data/avroTiles/0/0/0.avro";
-		Aggregates<Integer> res = AggregateSerailizer.deserializeTile(filename, new Converters.ToCount(),0,0,255,255);
+		Aggregates<Integer> res = AggregateSerializer.deserializeTile(filename, new Converters.ToCount(),0,0,255,255);
 		
 		assertEquals(0, res.lowX());
 		assertEquals(0, res.lowY());

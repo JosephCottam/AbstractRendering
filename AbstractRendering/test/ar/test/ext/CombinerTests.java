@@ -13,7 +13,7 @@ import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.app.util.GlyphsetUtils;
-import ar.ext.avro.AggregateSerailizer;
+import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.ParallelSpatial;
@@ -67,7 +67,7 @@ public class CombinerTests {
 	
 	public void send(Aggregates<?> aggs, String host, int port) throws Exception {
 		Socket s = new Socket(host, port);
-		AggregateSerailizer.serialize(aggs, s.getOutputStream());
+		AggregateSerializer.serialize(aggs, s.getOutputStream());
 		s.close();
 		Thread.sleep(1000);
 	}
