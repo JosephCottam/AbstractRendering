@@ -91,7 +91,7 @@ class Interpolate(ar.Transfer):
   low -- Color ot use for lowest value
   high -- Color to use for highest values 
   log -- Set to desired log base to use log-based interpolation 
-         (use "e" for base-e; default is False)
+         (use True or "e" for base-e; default is False)
   reserve -- color to use for empty cells
   """
   in_type=(1,np.number)
@@ -115,7 +115,7 @@ class Interpolate(ar.Transfer):
       max = math.log10(max)
       span = float(max-min)
       percents = (np.log10(items)-min)/span
-    elif (self.log == "e"):
+    elif (self.log == math.e || self.log == True):
       min = math.log(min)
       max = math.log(max)
       span = float(max-min)
@@ -126,7 +126,6 @@ class Interpolate(ar.Transfer):
       span = float(max-min)
       percents = (np.log2(items)-min)/span
     else:
-      #import pdb; pdb.set_trace()
       rebase = math.log(self.log)
       min = math.log(min, self.log)
       max = math.log(max, self.log)
