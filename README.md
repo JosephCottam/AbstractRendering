@@ -92,8 +92,8 @@ system described above.
 ----------
 #### Organizational Note
 
-This repository is divided into two main sections.  The "AbstractRendering" directory
-contains a java implementation of the described system.  A readme in that directory
+This repository is divided into sections based on implementation.  The "AbstractRendering" directory
+contains a Java implementation of the system described above.  README.md in that directory
 describes building the system and execution of an example application.  JavaDocs
 can also be generated to describe the API.
 
@@ -101,3 +101,7 @@ The "TransferJS" directory demonstrates a JavaScript and WebGL implementation of
 the transfer function.  It is a proof-of-concept for one form of distributed
 rendering supported by the Abstract Rendering system.  The readme in that directory
 also describes how to use this demonstration application.
+
+The "python" directory contains an implementation of Abstract Rendering using numpy 
+and Blaze (optional).  README.md in that directory provides details on the python
+implementation.
