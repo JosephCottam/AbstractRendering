@@ -1,8 +1,7 @@
-import bokeh.glyphs 
 import re
 import sys
 import numpy as np
-from math import ceil, floor 
+from math import  floor 
 
 try:
   from numba import autojit
@@ -131,7 +130,7 @@ class PixelAggregator(Aggregator):
   def aggregate(self, grid):
       outgrid = np.empty_like(self._projected, dtype=np.int32)
       #outgrid = np.empty_like(self._projected, dtype=aggregator.out_dtype)
-      outgrid.ravel()[:] = map(lambda ids: pixelfunc(self._glyphset, ids), self._projected.flat)
+      outgrid.ravel()[:] = map(lambda ids: self.pixelfunc(self._glyphset, ids), self._projected.flat)
 
     
 
@@ -290,9 +289,9 @@ def load_csv(filename, skip, xc,yc,vc,width,height):
 
 def main():
   ##Abstract rendering function implementation modules (for demo purposes only)
-  import rle
+  import numeric
+  import categories
   import infos
-  import counts
 
   source = sys.argv[1]
   skip = int(sys.argv[2])
@@ -306,8 +305,8 @@ def main():
   ivt = zoom_fit(screen,bounds(glyphs))
 
   image = render(glyphs, 
-                 counts.Count(), 
-                 counts.Segment(Color(0,0,0,0), Color(255,255,255,255), .5),
+                 numeric.Count(), 
+                 numeric.Segment(Color(0,0,0,0), Color(255,255,255,255), .5),
                  screen, 
                  ivt)
 

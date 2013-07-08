@@ -10,8 +10,8 @@ Draws a colormapped image plot
 """
 # Abstract rendering imports
 import ar
-import counts
-import rle
+import numeric 
+import categories 
 import infos
 
 from timer import Timer
@@ -41,9 +41,14 @@ def _create_plot_component():
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
     with Timer("Aggregates/Transfer") as arTimer:   
+#      image = ar.render(glyphs, 
+#                        categories.CountCategories(), 
+#                        categories.HDAlpha([red, blue]),
+#                        screen,
+#                        ivt)
       image = ar.render(glyphs, 
-                        rle.CountCategories(), 
-                        rle.HDAlpha([red, blue]),
+                        numeric.Count(), 
+                        numeric.Interpolate(blue,red,log=10),
                         screen,
                         ivt)
 

@@ -37,9 +37,13 @@ def _count(projected, glyphset, catidx):
   return outgrid
 
 class CountCategories(ar.Aggregator):
-  #TODO: Store the catogories list somewhere
-  def aggregate(self, grid):
-    return _count(grid._projected, grid._glyphset, 4) ## HACK --- Hard coded offset for now....
+  """
+  Count the number of items of each category in every cell.
+  """
+  #TODO: Store the categories list somewhere
+  out_type = ("A", np.int32)
+  def aggregate(self, grid, catidx=4):
+    return _count(grid._projected, grid._glyphset, catidx)
 
 
 ##### Transfers ########
@@ -115,6 +119,8 @@ class HDAlpha(ar.Transfer):
     colors[~mask] = self.background
     alpha(colors, sums, mask, self.alphamin, self.log, self.logbase)
     return colors
+
+
 
 ##### Utilities #######
 def alpha(colors, sums, mask, alphamin, dolog=False, base=10):

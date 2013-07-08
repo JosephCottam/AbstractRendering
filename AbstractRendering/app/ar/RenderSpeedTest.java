@@ -56,7 +56,6 @@ public class RenderSpeedTest {
 						new File(source), 
 						new ToRect(.005, .005, false, 0, 1), 
 						new Constant<Indexed>(Color.red), Color.class);
-
 		} else if (rend.startsWith("PIXEL")) {
 			render = new ParallelSpatial(task);
 			glyphs = GlyphsetUtils.load(null, source, .005);
@@ -66,7 +65,7 @@ public class RenderSpeedTest {
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}
-
+		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
 		
 		JFrame f = new JFrame();
 		f.setLayout(new BorderLayout());
@@ -77,8 +76,6 @@ public class RenderSpeedTest {
 		System.out.println("source, elapse/avg, iter num, renderer, cores, task-size");
 		long total=0;
 		try {
-			
-			glyphs.bounds();
 			for (int i=0; i<iterations; i++) {
 				ARPanel panel = new ARPanel(aggregator, transfer, glyphs, render);
 				f.add(panel, BorderLayout.CENTER);
