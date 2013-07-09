@@ -19,19 +19,33 @@ def _projectRects(viewxform, inputs, outputs):
     if (inputs.flags.f_contiguous): 
       inputs = inputs.T
       outputs = outputs.T
+
     assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
     assert(inputs.shape == outputs.shape)
-    t = ctypes.POINTER(ctypes.c_double)
+
+    if inputs.dtype == np.float64:
+        inputtype = ctypes.c_double
+        func = _lib.transform_d
+    elif inputs.dtype == np.float32:
+        inputtype = ctypes.c_float
+        func = _lib.transform_f
+    else:
+        raise TypeError("ProjectRects only works for np.float32 and np.float64 inputs")
+
+    assert(outputs.dtype == np.int32)
+
+    t = ctypes.POINTER(inputtype)
     cast = ctypes.cast
-    c_xforms = (ctypes.c_double * 4)(*viewxform)
+    c_xforms = (inputtype * 4)(*viewxform)
     c_inputs = (t * 4)(*(cast(inputs[i].ctypes.data, t) 
                          for i in range(0, 4)))
     c_outputs = (t* 4)(*(cast(outputs[i].ctypes.data, t)
                          for i in range(0,4)))
-    _lib.transform_d(ctypes.byref(c_xforms),
-                     ctypes.byref(c_inputs),
-                     ctypes.byref(c_outputs),
-                     inputs.shape[1])
+    func(ctypes.byref(c_xforms),
+         ctypes.byref(c_inputs),
+         ctypes.byref(c_outputs),
+         inputs.shape[1])
+        
 
 
 def _project_element(viewxform, inputs, output):
@@ -45,10 +59,6 @@ def _project_element(viewxform, inputs, output):
     np.floor(sy * y2 + ty, out=output[3,:])
 
 
-def fast_project_1(viewxform, boundbox_array):
-    pass
-
-
 def simple_test():
     from time import time
 
@@ -58,19 +68,41 @@ def simple_test():
 
     t = time()
     out = np.empty(use_shape, dtype=np.int32)
-    _project_many(xform, mock_in, out)
+    _projectRects(xform, mock_in, out)
     t = time() - t
-    print("c version took %f ms" % (t*1000))
+    print("c version (double) took %f ms" % (t*1000))
     t = time()
     out2 = np.empty(use_shape, dtype=np.int32)
     _project_element(xform, mock_in, out2)
     t = time() - t
-    print("numpy version took %f ms" % (t*1000))
+    print("numpy version (double) took %f ms" % (t*1000))
 
-    for i in xrange(1, use_shape[1]):
-        if not np.allclose(out[:,i], out2[:,i]):
-            print('%d fails\nc:\n%snp:%s\n' % (i, str(out[:,i]), str(out2[:,i])))
-    
+    mock_in = mock_in.astype(np.float32)
+
+    t = time()
+    out3 = np.empty(use_shape, dtype=np.int32)
+    _projectRects(xform, mock_in, out3)
+    t = time() - t
+    print("c version (single) took %f ms" % (t*1000))
+    t = time()
+    out4 = np.empty(use_shape, dtype=np.int32)
+    _project_element(xform, mock_in, out4)
+    t = time() - t
+    print("numpy version (single) took %f ms" % (t*1000))
+
+
+    if not np.allclose(out, out2):
+        for i in xrange(1, use_shape[1]):
+            if not np.allclose(out[:,i], out2[:,i]):
+                print('%d fails <double>\nc:\n%snp:%s\n' % 
+                      (i, str(out[:,i]), str(out2[:,i])))
+
+    if not np.allclose(out3, out4):
+        for i in xrange(1, use_shape[1]):
+            if not np.allclose(out3[:,i], out4[:,i]):
+                print('%d fails <single>\nc:\n%snp:%s\n' % 
+                      (i, str(out3[:,i]), str(out4[:,i])))
+        
 
 if __name__ == '__main__':
     simple_test()
