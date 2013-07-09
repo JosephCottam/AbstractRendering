@@ -1,0 +1,20 @@
+<ivy-module version="2.0">
+  <info organisation="edu.indiana" module="AbstractRendering"/>
+  <configurations>
+    <conf name="dev" description="binary jars location"/>
+    <conf name="deploy" description="binary jars location"/>
+  </configurations>    
+  <dependencies>
+    <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
+    <dependency org="commons-io" name="commons-io" rev="2.1"/>
+    <dependency org="org.apache.avro" name="avro" rev="1.7.4"/>
+
+    <exclude type="javadoc" ext="jar" conf="deploy"/>
+    <exclude type="sources" ext="jar" conf="deploy"/>
+    <exclude type="source" ext="jar" conf="deploy"/>
+    <exclude org="org.tukaani" conf="deploy" />
+    <exclude org="com.thoughtworks.paranamer" conf="deploy"/>
+    <exclude org="org.xerial.snappy" conf="deploy"/>
+    <exclude org="org.slf4j" conf="deploy" />
+  </dependencies>
+</ivy-module>

@@ -1,28 +1,19 @@
 Abstract Rendering: Java
 ======================
-
-Fetching Dependencies:
-dependencies.sh  -- Will attempt to acquire the dependencies. Only needs to be run once.
-
 Build:
 * With demo app: ./ant
 * Just core: ./ant core
 * With extensions: ./ant ext
+* Java 1.6 subset: ./ant onesix
+* Extended dependencies: ./ant depends-dev  (useful for development environments; not required for basic build)
 
-The java implementation is built via a bash script that auto-fetches dependencies
-and an apache ant script. We don't fetch ant or java 1.7, so you'll need those on your system
-already.  Also, make sure that java 1.7 is the selected version.  If you have already
-the dependencies satisified, you can skip the bash-script (called "dependencies.sh") and
-just use ant. 
-
-
+Dependencies for all extension are downloaded, regardless of the build configuration.
 
 Demo Application(s)
 -----------------
 
 All demo applications are available through the demo-application build (i.e, the default build).
 If there is no ARApp.jar, the demo app has not been built.
-
 
 The simplest application is titled "SimpleApp." It is executed with
 "java -cp ARapp.jar ar.SimpleApp".  This will produce a simple scatterplot visualization.
@@ -54,14 +45,15 @@ Plot area navigation and aggregate exports work as in the simpler demo applicati
 Extensions
 -----------
 
-There are two extensions: Avro serialization and Server.
-These can be compiled into the main jar by invoking "ant ext".
-Avro extension requires the 
-[Avro library (1.7.4)](http://mirror.metrocast.net/apache/avro/avro-1.7.4/java/avro-1.7.4.jar)
-and Jackson 1.9 
-([part 1](http://repo1.maven.org/maven2/org/codehaus/jackson/jackson-core-asl/1.9.12/jackson-core-asl-1.9.12.jar);
-[part 2](http://repo1.maven.org/maven2/org/codehaus/jackson/jackson-mapper-asl/1.9.12/jackson-mapper-asl-1.9.12.jar) 
-to be in the ./lib directory.
+Extensions are experimental or task-specific tools being co-developed with the core
+Abstract Rendering system. Extensions are all compiled together (no cherry-picking 
+extensions at this time).  To compile extensions, invoke "ant ext".
+
+### Avro
+The avro extensions provide tools for working with [apache avro](avro.apache.org) serialization.
+Support for saving/restoring aggregate sets and raw datasets (through implicit geometry) are implemented.
+Serialization is based on schemas that are included as JAR resources (current count, RLE and color
+are supported as aggregate types). Avro can be used to serialize to binary or to JSON files.
 
 ### Sever
 The ARServer is a self-contained HTTP server that responds to post messages that describe
@@ -71,9 +63,12 @@ If the AR.jar file was built with extensions, the server can be executed with
 (which default to "localhost" and "8080," respectively).  The sever uses the Avro extensions
 to format the return result.
 
-### Avro
-The Avro extensions provide serialization support for aggregates and
-tools for working with input datasets encoded as avro files (through the implicit geometry system).
-Serialization is based on schemas that are included as JAR resources (current count, RLE and color
-are supported as aggregate types). Avro can be used to serialize to binary or to JSON files.
+### Tiles
+Tools for manipulating aggregates for use with a tile-server.
+Can create tiles from aggregates or combine multiple tiles into an aggregate set.
+RElies on the Avro extension.
+
+### RHIPE Tools
+A set of tools for working with R-integration. Targeted at the [RHIPE](http://www.datadr.org/).
+
 

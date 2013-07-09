@@ -8,8 +8,9 @@
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
+  <property name="lib" value="./lib"/>
   
-  <target name="build" depends="clean,core,app" />
+  <target name="build" depends="clean,depends,core,app" />
 
   <target name="clean">
     <delete dir="${bin}"/>
@@ -18,7 +19,7 @@
     <delete file="ARApp.jar"/>
   </target>
 
-  <target name="core">
+  <target name="core" depends="depends">
     <antcall target="compile">
       <param name="src" value="${coreSrc}"/>
       <param name="target" value="${coreBin}"/>
@@ -43,7 +44,7 @@
     </antcall>
   </target>
 
-  <target name="onesix" depends="clean">
+  <target name="onesix" depends="clean,depends">
     <mkdir dir="${coreBin}"/>
     
     <javac destdir="${coreBin}" source="1.6" target="1.6" includeantruntime="false"
@@ -52,7 +53,7 @@
       <exclude name="**/Parallel*"/>
       <exclude name="**/MemMapList*"/> 
       <classpath>
-        <fileset dir="lib" includes="*.jar"/>
+        <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javac>
     
@@ -63,15 +64,15 @@
     </antcall>
     <antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
-      <param name="jars" value="lib"/>
+      <param name="jars" value="${lib}"/>
     </antcall>
   </target>
 
-  <target name="ext">
+  <target name="ext" depends="depends">
     <antcall target="compile">
       <param name="src" value="${coreSrc}:${extSrc}"/>
       <param name="target" value="${coreBin}"/>
-      <param name="jars" value="lib"/>
+      <param name="jars" value="${lib}"/>
       <param name="ver" value="1.7"/>
     </antcall>
     <antcall target="package">
@@ -81,7 +82,7 @@
     </antcall>
     <antcall target="_docs">
       <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
-      <param name="jars" value="lib"/>
+      <param name="jars" value="${lib}"/>
     </antcall>
   </target>
 
@@ -110,16 +111,16 @@
     </javac>
   </target>
 
-  <target name="_docs">
+  <target name="_docs" depends="depends">
     <javadoc sourcepath="${src}" destdir="${docs}">
-      <doclet name="com.visural.doclets.markdown.standard.Standard" path="./lib/MarkdownDoclet.jar"/>
+      <doclet name="com.visural.doclets.markdown.standard.Standard" path="${lib}/MarkdownDoclet.jar"/>
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>
     </javadoc>
   </target>
 
-  <target name="package">
+  <target name="package" depends="depends">
     <jar jarfile="${file}" includes="*.class" basedir=".">
       <fileset dir="${bin}"/>
       <manifest>
@@ -128,5 +129,13 @@
         <attribute name="Class-Path" value="${classpath}"/>
       </manifest>
     </jar>
+  </target>
+
+  <include file="ivy-ant.xml" as="ivy"/> 
+  <target name="depends" depends="ivy.fetch"/>
+  <target name="depends-dev" depends="ivy.fetch-dev"/>
+  <target name="clean-deep" depends="clean,ivy.deep-clean"/>
+  <target name="clean-depends">
+    <delete dir="${lib}"/>
   </target>
 </project>

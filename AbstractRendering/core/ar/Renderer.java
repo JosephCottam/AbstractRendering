@@ -22,9 +22,6 @@ public interface Renderer {
 	 * @param width The width of the current viewport
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
-	 * 
-	 * @
-	 * 
 	 */
 	public <V,A> Aggregates<A> reduce(final Glyphset<V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height);
