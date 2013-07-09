@@ -115,7 +115,7 @@ class Interpolate(ar.Transfer):
       max = math.log10(max)
       span = float(max-min)
       percents = (np.log10(items)-min)/span
-    elif (self.log == math.e || self.log == True):
+    elif (self.log == math.e or self.log == True):
       min = math.log(min)
       max = math.log(max)
       span = float(max-min)

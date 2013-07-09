@@ -2,6 +2,7 @@
 .metadata/
 bin
 data
+*.dylib
 *.jar
 *.pyc
 *.hbin

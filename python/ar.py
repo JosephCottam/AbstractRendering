@@ -1,7 +1,8 @@
 import re
 import sys
 import numpy as np
-from math import  floor 
+from math import floor 
+import ctypes
 
 try:
   from numba import autojit
@@ -10,44 +11,57 @@ except ImportError:
   autojit = lambda f: f
 
 ############################  Core System ####################
+_lib = ctypes.CDLL('libtransform.dylib')
+
 class Glyphset(list):
   def asarray(self):
     return np.array(self)
 
-@autojit
 def _project(viewxform, glyphset):
-  tx,ty,sx,sy = viewxform
-  outglyphs = np.ndarray(glyphset.shape, dtype=np.int32)
+  """Project the points found in the glyphset according tot he view transform."""
+  points = _correctFormat(glyphset)
+  out = np.empty_like(points,dtype=np.int32)
+  _projectRects(viewxform.asarray(), points, out)
+  return out
 
-  # transform each glyph and add it to the grid
-  for i in xrange(0, len(glyphset)):
-    #apply the view transform
-    #x,y,w,h,v = glyphset[i]
-    x = glyphset[i,0]
-    y = glyphset[i,1]
-    w = glyphset[i,2]
-    h = glyphset[i,3]
-    v = glyphset[i,4]
-    x2 = x + w
-    y2 = y + h
-    x = floor(sx * x + tx)
-    y = floor(sy * y + ty)
-    x2 = floor(sx * x2 + tx)
-    y2 = floor(sy * y2 + ty)
-    outglyphs[i:i+5] = [x,y,x2,y2,v]
+def _projectRects(viewxform, inputs, outputs):
+    assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
+    assert(inputs.shape == outputs.shape)
+    t = ctypes.POINTER(ctypes.c_double)
+    cast = ctypes.cast
+    c_xforms = (ctypes.c_double * 4)(*viewxform)
+    c_inputs = (t * 4)(*(cast(inputs[i].ctypes.data, t) 
+                         for i in range(0, 4)))
+    c_outputs = (t* 4)(*(cast(outputs[i].ctypes.data, t)
+                         for i in range(0,4)))
+    _lib.transform_d(ctypes.byref(c_xforms),
+                     ctypes.byref(c_inputs),
+                     ctypes.byref(c_outputs),
+                     inputs.shape[1])
 
-  return outglyphs
+
+def _correctFormat(glyphset):
+  """
+  Converter a glyphset into a list of four-tuples (X,Y,W,H).
+  The input array may be row-major or column-major.
+  The input array must have at least four columns.
+  The output is a column-major array, four columns wide.
+  """
+  out = np.empty((4, len(glyphset)), dtype=np.float32)
+  subset = glyphset[:,:4].asfortranarray()
+  return reorder.reshape((4,-1))
+   
 
 @autojit
 def _store(width, height, projected):
   empty = []
   outgrid = np.ndarray((width, height), dtype=object)
   outgrid.fill(empty)
-  for i in xrange(0, len(projected)):
-    x = projected[i,0]
-    y = projected[i,1]
-    x2 = projected[i,2]
-    y2 = projected[i,3]
+  for i in xrange(0, projected.shape[0]):
+    x = projected[0,i]
+    y = projected[1,i]
+    x2 = projected[2,i]
+    y2 = projected[3,i]
     for xx in xrange(x, x2):
       for yy in xrange(y, y2):
         ls = outgrid[xx,yy]
@@ -86,6 +100,7 @@ class Grid(object):
       self._glyphset = glyphset.asarray()
 
       projected = _project(self.viewxform, self._glyphset)
+      import pdb; pdb.set_trace()
       self._projected = _store(self.width, self.height, projected)
 
     def aggregate(self, aggregator):
