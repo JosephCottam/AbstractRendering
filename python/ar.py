@@ -15,16 +15,19 @@ _lib = ctypes.CDLL('libtransform.dylib')
 
 class Glyphset(list):
   def asarray(self):
-    return np.array(self)
+    return np.array(self, order="F")
 
 def _project(viewxform, glyphset):
   """Project the points found in the glyphset according tot he view transform."""
-  points = _correctFormat(glyphset)
+  points = glyphset[:,:4]
   out = np.empty_like(points,dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
   return out
 
 def _projectRects(viewxform, inputs, outputs):
+    if (inputs.flags.f_contiguous): 
+      inputs = inputs.T
+      outputs = outputs.T
     assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
     assert(inputs.shape == outputs.shape)
     t = ctypes.POINTER(ctypes.c_double)
@@ -40,28 +43,16 @@ def _projectRects(viewxform, inputs, outputs):
                      inputs.shape[1])
 
 
-def _correctFormat(glyphset):
-  """
-  Converter a glyphset into a list of four-tuples (X,Y,W,H).
-  The input array may be row-major or column-major.
-  The input array must have at least four columns.
-  The output is a column-major array, four columns wide.
-  """
-  out = np.empty((4, len(glyphset)), dtype=np.float32)
-  subset = glyphset[:,:4].asfortranarray()
-  return reorder.reshape((4,-1))
-   
-
 @autojit
 def _store(width, height, projected):
   empty = []
   outgrid = np.ndarray((width, height), dtype=object)
   outgrid.fill(empty)
   for i in xrange(0, projected.shape[0]):
-    x = projected[0,i]
-    y = projected[1,i]
-    x2 = projected[2,i]
-    y2 = projected[3,i]
+    x = projected[i,0]
+    y = projected[i,1]
+    x2 = projected[i,2]
+    y2 = projected[i,3]
     for xx in xrange(x, x2):
       for yy in xrange(y, y2):
         ls = outgrid[xx,yy]
@@ -100,7 +91,6 @@ class Grid(object):
       self._glyphset = glyphset.asarray()
 
       projected = _project(self.viewxform, self._glyphset)
-      import pdb; pdb.set_trace()
       self._projected = _store(self.width, self.height, projected)
 
     def aggregate(self, aggregator):
