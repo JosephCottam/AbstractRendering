@@ -8,7 +8,6 @@ import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.aggregates.FlatAggregates;
 import ar.rules.AggregateReductions;
-import ar.util.*;
 
 public class TestAggregateReducers {
 
@@ -18,7 +17,7 @@ public class TestAggregateReducers {
 		int height=12;
 		AggregateReducer<Integer,Integer,Integer> red = new AggregateReductions.Count();
 		Aggregates<Integer> start = new FlatAggregates<>(0,0,width,height,1);
-		Aggregates<Integer> end = AggregateReducers.foldUp(start, red);
+		Aggregates<Integer> end = AggregateReducer.Strategies.foldUp(start, red);
 		
 		assertEquals(0, end.lowX());
 		assertEquals(0, end.lowY());

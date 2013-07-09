@@ -99,7 +99,7 @@ public class SchemaComposer {
 	/**Load a schema via the class-loader resource mechanism.**/
 	public SchemaComposer addResource(String path) throws IOException {
 		try {
-			add(AggregateSerailizer.class.getClassLoader().getResourceAsStream(path));
+			add(AggregateSerializer.class.getClassLoader().getResourceAsStream(path));
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + path, e.getCause());
 		}

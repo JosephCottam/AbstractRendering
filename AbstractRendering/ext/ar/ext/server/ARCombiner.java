@@ -16,9 +16,8 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.AggregateReducer;
 import ar.Aggregates;
-import ar.ext.avro.AggregateSerailizer;
+import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.AggregateReducers;
 
 /**Receives Avro-encoded aggregates from a remote and combines them.
  *
@@ -78,7 +77,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = AggregateReducers.foldLeft(aggs, item, reducer);
+				aggs = AggregateReducer.Strategies.foldLeft(aggs, item, reducer);
 			}
 		}
 		return aggs;
@@ -120,7 +119,7 @@ public class ARCombiner<A> {
 	                if (inputStream == null) {safeClose(finalAccept);}
 	                
 	                //TODO: Lazier deserialization (don't tie up the server here)
-	                Aggregates<A> aggs = AggregateSerailizer.deserialize(inputStream, elementConverter);
+	                Aggregates<A> aggs = AggregateSerializer.deserialize(inputStream, elementConverter);
 	                ARCombiner.this.addToQueue(aggs);
 				} catch (Exception e) {
 					//Ignore all errors if server socket is closed

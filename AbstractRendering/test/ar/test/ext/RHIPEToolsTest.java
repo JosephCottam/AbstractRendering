@@ -14,7 +14,7 @@ import ar.ext.rhipe.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 
 
-public class TestRHIPE {
+public class RHIPEToolsTest {
 	
 	@Test
 	public void traceEntries() {

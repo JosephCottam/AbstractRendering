@@ -16,7 +16,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.ext.avro.AggregateSerailizer;
+import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
@@ -115,7 +115,7 @@ public class ARServer extends NanoHTTPD {
 			validate(dataset, agg, transfers);
 			Aggregates<?> aggs = execute(dataset, agg, transfers, vt, width, height);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			AggregateSerailizer.serialize(aggs, baos, AggregateSerailizer.FORMAT.JSON);
+			AggregateSerializer.serialize(aggs, baos, AggregateSerializer.FORMAT.JSON);
 			Response response = new Response(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
 			return response;
 		} catch (Exception e) {
