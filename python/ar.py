@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from math import floor 
 import ctypes
+from fast_project import _projectRects
 
 try:
   from numba import autojit
@@ -23,25 +24,6 @@ def _project(viewxform, glyphset):
   out = np.empty_like(points,dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
   return out
-
-def _projectRects(viewxform, inputs, outputs):
-    if (inputs.flags.f_contiguous): 
-      inputs = inputs.T
-      outputs = outputs.T
-    assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
-    assert(inputs.shape == outputs.shape)
-    t = ctypes.POINTER(ctypes.c_double)
-    cast = ctypes.cast
-    c_xforms = (ctypes.c_double * 4)(*viewxform)
-    c_inputs = (t * 4)(*(cast(inputs[i].ctypes.data, t) 
-                         for i in range(0, 4)))
-    c_outputs = (t* 4)(*(cast(outputs[i].ctypes.data, t)
-                         for i in range(0,4)))
-    _lib.transform_d(ctypes.byref(c_xforms),
-                     ctypes.byref(c_inputs),
-                     ctypes.byref(c_outputs),
-                     inputs.shape[1])
-
 
 @autojit
 def _store(width, height, projected):
