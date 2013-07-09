@@ -16,7 +16,7 @@ public class Transfers {
 	public static final class IDColor implements Transfer<Color, Color> {
 		public Color at(int x, int y, Aggregates<? extends Color> aggregates) {return aggregates.at(x, y);}
 
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Color> input() {return Color.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -47,7 +47,7 @@ public class Transfers {
 			return Util.interpolate(low, high, stats.min, stats.max, scored.at(x, y));
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Integer> input() {return Integer.class;}
 		public Class<Color> output() {return Color.class;}
 
@@ -67,7 +67,7 @@ public class Transfers {
 			return absent;
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<T> input() {return inputType;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -87,7 +87,7 @@ public class Transfers {
 			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
 		}
 
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Color.WHITE;}
 		public Class<Integer> input() {return Integer.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -124,7 +124,7 @@ public class Transfers {
 			}
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -158,7 +158,7 @@ public class Transfers {
 			else {return noMatch;}
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -234,7 +234,7 @@ public class Transfers {
 			return colors.at(x, y);			
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -252,7 +252,7 @@ public class Transfers {
 			else {return (Color) rle.key(0);}
 		}
 		
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Aggregators.RLE> input() {return Aggregators.RLE.class;}
 		public Class<Color> output() {return Color.class;}
 	}

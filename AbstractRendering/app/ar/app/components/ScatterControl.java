@@ -266,7 +266,7 @@ public class ScatterControl extends JPanel {
 			return out;
 		}
 
-		public Color identity() {return Util.CLEAR;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 	}

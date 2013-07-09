@@ -3,11 +3,14 @@ package ar.app.components;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.util.Comparator;
 
 import javax.swing.JComboBox;
 
+import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
@@ -17,7 +20,9 @@ import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
+import ar.rules.Advise;
 import ar.rules.AggregateReductions;
+import ar.rules.Transfers;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -135,6 +140,46 @@ public class Presets extends CompoundPanel {
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
+	
+	public static class Overplot implements Preset {
+		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
+		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public WrappedTransfer<?,?> transfer() {
+			return new WrappedTransfer<Number, Color>() {
+				public void deselected() {}
+				public void selected(ARApp app) {}
+				public Transfer op() {
+					return new Transfer<Integer, Color>() {
+						Transfer<Integer, Color> base = new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+						Transfer<Integer, Boolean> under = new Advise.UnderSaturate<>(base);
+						Transfer<Integer, Boolean> over = new Advise.OverSaturate<>(base, new NumberComp());
+						public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
+							boolean below = under.at(x, y, aggregates);
+							boolean above = over.at(x, y, aggregates);
+							if (above || below) {
+								return Color.BLACK;
+							} else {
+								return base.at(x, y, aggregates);
+							}
+						}
+
+						public Class<Integer> input() {return Integer.class;}
+						public Class<Color> output() {return Color.class;}
+						public Color emptyValue() {return base.emptyValue();}
+					};
+				}
+			};
+		}
+		public String toString() {return "Scatterplot: clipping warning (int)" + ((glyphset() == null) ? "(FAILED)" : "");}
+		private static class NumberComp implements Comparator<Integer> {
+			public int compare(Integer o1, Integer o2) {return o1.intValue()-o2.intValue();}
+			
+		}
+	}
+	
+	
+	
 	
 	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetUtils.load("Scatterplot", "../data/circlepoints.csv", .1);
 	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetUtils.load("BGL Memory", "../data/MemVisScaled.csv", .001);

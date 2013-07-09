@@ -16,5 +16,6 @@ public interface Transfer<IN,OUT> extends Inspectable<IN,OUT> {
 	 */
 	public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
 	
-	public OUT identity();
+	/**What value that represents "empty" from this transfer function?*/
+	public OUT emptyValue();
 }
