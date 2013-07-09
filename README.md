@@ -9,7 +9,7 @@ under levels of abstraction in the rendering system.  Abstract Rendering
 takes the opposite approach: expose the pixels and gain powerful pixel-level
 control.  This pixel-level power is a complement many existing visualization
 techniques.  It is an elaboration on rendering, not an analytic or projection step,
-so it can be used as epilog to many existing techniques.
+so it can be used as epilogue to many existing techniques.
 
 
 In standard rendering, geometric objects are projected to an image and 
@@ -84,7 +84,7 @@ This repository represents extensive investigation into efficient and
 convenient ways to work with such pixel-level intermediates.
 It explores multiple ways to store and access data, including
 two parallelization strategies, out-of-core data access, distributed rendering
-and interfacing with pre-existing data structures.  In all, the variety of options
+and interfacing with preexisting data structures.  In all, the variety of options
 leads to many efficient (and some inefficient) ways of realizing the
 system described above.
 
