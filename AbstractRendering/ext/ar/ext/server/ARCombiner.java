@@ -105,9 +105,7 @@ public class ARCombiner<A> {
 			serverSocket.bind((hostname != null) ? new InetSocketAddress(hostname, port) : new InetSocketAddress(port));
 		}
 		
-		public void stop() {
-			safeClose(serverSocket);
-		}
+		public void stop() {safeClose(serverSocket);}
 		
 		public void run() {
 			Socket finalAccept = null;
@@ -132,15 +130,19 @@ public class ARCombiner<A> {
 		}
 			
 		public boolean running() {return running;}
-	    private final void safeClose(Closeable thing) {
+	    private final void safeClose(Socket thing) {
 	        if (thing != null) {
-	            try {
-	            	thing.close();
-	            }
-	            catch(IOException e) {
-	            }
+	            try {thing.close();}
+	            catch(IOException e) {}
 	        }
 	    }
+	    private final void safeClose(ServerSocket thing) {
+	        if (thing != null) {
+	            try {thing.close();}
+	            catch(IOException e) {}
+	        }
+	    }
+
 	}
 	
 	
