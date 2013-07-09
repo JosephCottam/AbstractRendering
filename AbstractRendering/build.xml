@@ -63,10 +63,6 @@
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
-    <antcall target="_docs">
-      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
-      <param name="jars" value="${lib}"/>
-    </antcall>
   </target>
 
   <target name="ext" depends="depends">
