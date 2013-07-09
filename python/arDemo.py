@@ -40,7 +40,7 @@ def _create_plot_component():
     screen = (800,800)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
-    with Timer("Aggregates/Transfer") as arTimer:   
+    with Timer("Abstract-Render") as arTimer:   
 #      image = ar.render(glyphs, 
 #                        categories.CountCategories(), 
 #                        categories.HDAlpha([red, blue]),

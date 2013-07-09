@@ -15,7 +15,10 @@ import numpy as np
 
 _lib = ctypes.CDLL('libtransform.dylib')
 
-def _project_many(viewxform, inputs, outputs):
+def _projectRects(viewxform, inputs, outputs):
+    if (inputs.flags.f_contiguous): 
+      inputs = inputs.T
+      outputs = outputs.T
     assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
     assert(inputs.shape == outputs.shape)
     t = ctypes.POINTER(ctypes.c_double)
