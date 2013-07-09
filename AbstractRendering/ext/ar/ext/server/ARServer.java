@@ -51,7 +51,7 @@ public class ARServer extends NanoHTTPD {
 						new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 						new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 						new Indexed.ToRect(1, 2, 3),
-						new Indexed.ToValue<>(4, new Valuer.ToInt<Object>())));
+						new Indexed.ToValue(4, new Valuer.ToInt<Object>())));
 		DATASETS.put("BOOST",
 				new MemMapList<Color>(
 						new File("../data/MemVisScaledB.hbin"),

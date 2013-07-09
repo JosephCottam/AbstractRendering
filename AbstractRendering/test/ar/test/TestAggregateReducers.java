@@ -16,7 +16,7 @@ public class TestAggregateReducers {
 		int width=10;
 		int height=12;
 		AggregateReducer<Integer,Integer,Integer> red = new AggregateReductions.Count();
-		Aggregates<Integer> start = new FlatAggregates<>(0,0,width,height,1);
+		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
 		Aggregates<Integer> end = AggregateReducer.Strategies.foldUp(start, red);
 		
 		assertEquals(0, end.lowX());

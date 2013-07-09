@@ -113,7 +113,7 @@ public interface AggregateReducer<LEFT,RIGHT,OUT> {
 		 * TODO: Extend to dxd rollup
 		 * **/
 		public static <T> Aggregates<T> foldUp(Aggregates<T> start, AggregateReducer<T,T,T> red) {
-			Aggregates<T> end = new FlatAggregates<>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.zero());
+			Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.zero());
 			
 			for (int x = start.lowX(); x < start.highX(); x=x+2) {
 				for (int y=start.lowY(); y < start.highY(); y=y+2) {
