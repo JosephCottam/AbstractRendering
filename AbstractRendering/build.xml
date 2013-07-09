@@ -52,6 +52,7 @@
       <exclude name="**/ARServer*"/> 
       <exclude name="**/Parallel*"/>
       <exclude name="**/MemMapList*"/> 
+      <exclude name="**/tiles/**"/>
       <classpath>
         <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
