@@ -267,7 +267,7 @@ def load_csv(filename, skip, xc,yc,vc,width,height):
     line = re.split("\s*,\s*", line)
     x = float(line[xc].strip())
     y = float(line[yc].strip())
-    v = float(line[vc].strip())
+    v = float(line[vc].strip()) if vc >=0 else 1 
     g = Glyph(x,y,width,height,v)
     glyphs.append(g)
 
