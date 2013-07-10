@@ -57,7 +57,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		DrawDarkControl control = new DrawDarkControl();
 		
 		public Transfer<Number,Color> op() {return control.getTransfer();}
-		public Class<Number> type() {return Number.class;}
 		public String toString() {return String.format("Draw the Dark");}
 		public void selected(ARApp app) {
 			if (flyAway == null) {
@@ -87,7 +86,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class RedWhiteLinear implements WrappedTransfer<Number,Color> {
 		public Transfer<Number,Color> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
-		public Class<Number> type() {return Number.class;}
 		public String toString() {return "Red luminance linear (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -95,7 +93,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class RedWhiteLog implements WrappedTransfer<Number,Color> {
 		public Transfer<Number,Color> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
-		public Class<Number> type() {return Number.class;}
 		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -103,7 +100,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class FixedAlpha implements WrappedTransfer<Integer,Color> {
 		public Transfer<Integer,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
-		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "10% Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -111,7 +107,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class FixedAlphaB implements WrappedTransfer<Integer,Color> {
 		public Transfer<Integer,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 255);}
-		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Min Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -119,7 +114,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class Present implements WrappedTransfer<Integer,Color> {
 		public Transfer<Integer,Color> op() {return new Transfers.Present<Integer>(Color.red, Color.white, Integer.class);}
-		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Present (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -127,7 +121,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class OutlierHighlight implements WrappedTransfer<Integer,Color> {
 		public Transfer<Integer,Color> op() {return new Transfers.ZScore(Color.white, Color.red, true);}
-		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Outlier Highlight (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -135,7 +128,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class OutlierHighlightB implements WrappedTransfer<Integer,Color> {
 		public Transfer<Integer,Color> op() {return new Transfers.ZScore(Color.white, Color.red, false);}
-		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Outlier Highlight w/0's (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -144,7 +136,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class Percent90 implements WrappedTransfer<Aggregators.RLE,Color> {
 		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "90% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -152,7 +143,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 
 	public class Percent95 implements WrappedTransfer<Aggregators.RLE,Color> {
 		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.95, Color.blue, Color.white, Color.blue, Color.red);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "95% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -160,7 +150,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 
 	public class Percent25 implements WrappedTransfer<Aggregators.RLE,Color> {
 		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "25% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -168,7 +157,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class EchoColor implements WrappedTransfer<Color,Color> {
 		public Transfer<Color,Color> op() {return new Transfers.IDColor();}
-		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Echo (Color)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -176,7 +164,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class HighAlphaLog implements WrappedTransfer<Aggregators.RLE,Color> {
 		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "Log HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -184,7 +171,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	
 	public class HighAlphaLin implements WrappedTransfer<Aggregators.RLE,Color> {
 		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
-		public Class<Aggregators.RLE> type() {return Aggregators.RLE.class;}
 		public String toString() {return "Linear HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -217,7 +203,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 					}
 					return cached.at(x, y);
 				}
-				public Color identity() {return Util.CLEAR;}
+				public Color emptyValue() {return Util.CLEAR;}
 				public Class<Number> input() {return Number.class;}
 				public Class<Color> output() {return Color.class;}
 			};
