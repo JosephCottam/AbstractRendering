@@ -25,8 +25,6 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
-import ar.app.util.TransferWrapper;
-import ar.app.util.WrappedTransfer;
 import ar.rules.Transfers;
 import ar.util.Util;
 
@@ -36,6 +34,8 @@ public class ScatterControl extends JPanel {
 	protected ARApp source;
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
+	Transfer<Number, Color> basis = new Transfers.Interpolate(new Color(255,200,200), Color.RED); 
+
 	
 	public ScatterControl() {
 		this.setLayout(new BorderLayout());
@@ -70,7 +70,7 @@ public class ScatterControl extends JPanel {
 		double minV,maxV,minDV,maxDV;
 		
 		if (plot.region == null || plot.region.isEmpty()) {
-			return new Transfers.Present<Number>(Color.RED, Color.WHITE, Number.class);
+			return basis;
 		} else {
 		
 			Rectangle2D r;
@@ -81,7 +81,7 @@ public class ScatterControl extends JPanel {
 			minV = r.getMinY();
 			maxDV = r.getMaxX();
 			minDV = r.getMinX();
-			Transfer<Number,Color> t = new DeltaTransfer(minV, maxV, minDV, maxDV, distance(), Color.RED, Color.WHITE);
+			Transfer<Number,Color> t = new DeltaTransfer(minV, maxV, minDV, maxDV, distance(),basis, new Color(250,250,250));
 			return t;
 		}
 		
@@ -231,15 +231,16 @@ public class ScatterControl extends JPanel {
 	private static final class DeltaTransfer implements Transfer<Number,Color> {
 		private final double minV, maxV, minDV, maxDV;
 		private final int distance;
-		private final Color in,out;
+		private final Color out;
+		private final Transfer<Number, Color> basis;
 		
-		public DeltaTransfer(double minV, double maxV, double minDV, double maxDV, int distance, Color in, Color out) {
+		public DeltaTransfer(double minV, double maxV, double minDV, double maxDV, int distance, Transfer<Number, Color> basis, Color out) {
 			this.minV=minV;
 			this.maxV=maxV;
 			this.minDV=minDV;
 			this.maxDV=maxDV;
 			this.distance=distance;
-			this.in = in;
+			this.basis = basis;
 			this.out = out;
 		}
 		
@@ -247,8 +248,9 @@ public class ScatterControl extends JPanel {
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 			double v = aggregates.at(x, y).doubleValue();
 			
+			if (v==aggregates.defaultValue().doubleValue()) {return basis.emptyValue();}
+			
 			if (v >= minV && v <= maxV) {
-
 				for (int d=-distance; d<=distance; d++) {
 					for (int dx=0; dx<=d; dx++) {
 						for (int dy=0; dy<=d; dy++) {
@@ -257,7 +259,7 @@ public class ScatterControl extends JPanel {
 							if (cx < aggregates.lowX() || cy < aggregates.lowY() || cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
 							double dv = aggregates.at(cx,cy).doubleValue();
 							if (dv >= minDV && dv < maxDV) {
-								return in;
+								return basis.at(x, y, aggregates);
 							}
 						}
 					}
