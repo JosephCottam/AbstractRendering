@@ -26,7 +26,7 @@ inline void transf_single(IT tx, IT ty, IT sx, IT sy,
 template <typename INPUT_TYPE, typename OUTPUT_TYPE>
 inline void transform(INPUT_TYPE* xtransform, 
                       INPUT_TYPE** in_arrays, 
-                      OUTPUT_TYPE** RESTRICT out_arrays,
+                      OUTPUT_TYPE * RESTRICT * out_arrays,
                       size_t count)
 {
     INPUT_TYPE tx = xtransform[0];
@@ -54,19 +54,13 @@ inline void transform(INPUT_TYPE* xtransform,
 }
 
 extern "C" void 
-transform_f(void* xtr, void** in, void** RESTRICT out, size_t count)
+transform_f(float* xtr, float** in, int32_t *RESTRICT* out, size_t count)
 {
-    transform<float, int32_t>(reinterpret_cast<float*>(xtr),
-                              reinterpret_cast<float**>(in),
-                              reinterpret_cast<int32_t** RESTRICT>(out),
-                              count);
+    transform<float, int32_t>(xtr, in, out, count);
 }
 
 extern "C" void 
-transform_d(void* xtr, void** in, void** RESTRICT out, size_t count)
+transform_d(double* xtr, double** in, int32_t * RESTRICT * out, size_t count)
 {
-    transform<double, int32_t>(reinterpret_cast<double*>(xtr),
-                               reinterpret_cast<double**>(in),
-                               reinterpret_cast<int32_t** RESTRICT>(out),
-                               count);
+    transform<double, int32_t>(xtr, in, out, count);
 }

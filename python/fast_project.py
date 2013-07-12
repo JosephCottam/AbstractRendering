@@ -15,7 +15,13 @@ import numpy as np
 
 _lib = ctypes.CDLL('libtransform.dylib')
 
-def _projectRects(viewxform, inputs, outputs):
+try:
+    _lib_dispatch = ctypes.CDLL('libtransform_libdispatch.dylib')
+except OSError:
+    print ("no libdispatch version found")
+    _lib_dispatch = _lib
+
+def _projectRects(viewxform, inputs, outputs, use_dispatch = False):
     if (inputs.flags.f_contiguous): 
       inputs = inputs.T
       outputs = outputs.T
@@ -23,12 +29,14 @@ def _projectRects(viewxform, inputs, outputs):
     assert(len(inputs.shape) == 2 and inputs.shape[0] == 4)
     assert(inputs.shape == outputs.shape)
 
+    use_lib = _lib_dispatch if use_dispatch else _lib
+
     if inputs.dtype == np.float64:
         inputtype = ctypes.c_double
-        func = _lib.transform_d
+        func = use_lib.transform_d
     elif inputs.dtype == np.float32:
         inputtype = ctypes.c_float
-        func = _lib.transform_f
+        func = use_lib.transform_f
     else:
         raise TypeError("ProjectRects only works for np.float32 and np.float64 inputs")
 
@@ -59,50 +67,66 @@ def _project_element(viewxform, inputs, output):
     np.floor(sy * y2 + ty, out=output[3,:])
 
 
+def report_diffs(a, b, name):
+    last_dim = a.shape[1]
+    if not np.allclose(a, b):
+        for i in xrange(1, last_dim):
+            if not np.allclose(a[:,i], b[:,i]):
+                print('%s::%d fails \nc:\n%s != %s\n' % 
+                      (name, i, str(a[:,i]), str(b[:,i])))
+
 def simple_test():
     from time import time
 
-    use_shape = (4, 10**6)
+    use_shape = (4, 10**8)
     mock_in = np.random.random(use_shape)
     xform = [3.0, 4.0, 2.0, 2.0]
 
+    out = np.zeros(use_shape, dtype=np.int32)
+
     t = time()
-    out = np.empty(use_shape, dtype=np.int32)
+    _projectRects(xform, mock_in, out, use_dispatch=True)
+    t = time() - t
+    out0 = np.copy(out)
+    print("c version - libdispatch (double) took %f ms" % (t*1000))
+
+    t = time()
     _projectRects(xform, mock_in, out)
     t = time() - t
+    out1 = np.copy(out)
     print("c version (double) took %f ms" % (t*1000))
+
     t = time()
-    out2 = np.empty(use_shape, dtype=np.int32)
-    _project_element(xform, mock_in, out2)
+    _project_element(xform, mock_in, out)
     t = time() - t
+    out2 = np.copy(out)
     print("numpy version (double) took %f ms" % (t*1000))
 
     mock_in = mock_in.astype(np.float32)
 
     t = time()
-    out3 = np.empty(use_shape, dtype=np.int32)
-    _projectRects(xform, mock_in, out3)
+    _projectRects(xform, mock_in, out, use_dispatch=True)
     t = time() - t
-    print("c version (single) took %f ms" % (t*1000))
+    out3 = np.copy(out)
+    print("c version - libdispatch (single) took %f ms" % (t*1000))
+
     t = time()
-    out4 = np.empty(use_shape, dtype=np.int32)
-    _project_element(xform, mock_in, out4)
+    _projectRects(xform, mock_in, out)
     t = time() - t
+    out4 = np.copy(out)
+    print("c version (single) took %f ms" % (t*1000))
+
+    t = time()
+    _project_element(xform, mock_in, out)
+    t = time() - t
+    out5 = np.copy(out)
     print("numpy version (single) took %f ms" % (t*1000))
 
-
-    if not np.allclose(out, out2):
-        for i in xrange(1, use_shape[1]):
-            if not np.allclose(out[:,i], out2[:,i]):
-                print('%d fails <double>\nc:\n%snp:%s\n' % 
-                      (i, str(out[:,i]), str(out2[:,i])))
-
-    if not np.allclose(out3, out4):
-        for i in xrange(1, use_shape[1]):
-            if not np.allclose(out3[:,i], out4[:,i]):
-                print('%d fails <single>\nc:\n%snp:%s\n' % 
-                      (i, str(out3[:,i]), str(out4[:,i])))
-        
+    report_diffs(out0, out2, "libdispatch (double)")
+    report_diffs(out1, out2, "plain C (double)")
+    report_diffs(out3, out5, "libdispatch (single)")
+    report_diffs(out4, out5, "plain C (single)")
+         
 
 if __name__ == '__main__':
     simple_test()
