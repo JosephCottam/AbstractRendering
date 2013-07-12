@@ -11,6 +11,7 @@ import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
+import ar.rules.Advise;
 import ar.rules.Aggregators;
 import ar.rules.Transfers;
 import ar.util.Util;
@@ -98,15 +99,15 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		public void deselected() {}
 	}
 	
-	public class FixedAlpha implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
+	public class FixedAlpha implements WrappedTransfer<Number,Color> {
+		public Transfer<Number,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
 		public String toString() {return "10% Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class FixedAlphaB implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 255);}
+	public class FixedAlphaB implements WrappedTransfer<Number,Color> {
+		public Transfer<Number,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 255);}
 		public String toString() {return "Min Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -175,6 +176,26 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
+	
+	public class OverUnder implements WrappedTransfer<Number, Color> {
+		public void deselected() {}
+		public void selected(ARApp app) {}
+		public Transfer<Number, Color> op() {
+			Transfer<Number, Color> basis = new FixedAlpha().op();
+			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
+		}
+		public String toString() {return "Clip Warn 10% alpha (int)";}
+	};
+
+	public class OverUnder2 implements WrappedTransfer<Number, Color> {
+		public void deselected() {}
+		public void selected(ARApp app) {}
+		public Transfer<Number, Color> op() {
+			Transfer<Number, Color> basis =new RedWhiteLog().op();
+			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
+		}
+		public String toString() {return "Clip Warn HDALpha log (int)";}
+	};
 	
 	
 	public class ClearCol implements WrappedTransfer<Number,Color> {

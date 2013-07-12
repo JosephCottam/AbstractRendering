@@ -145,37 +145,9 @@ public class Presets extends CompoundPanel {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset glyphset() {return CIRCLE_SCATTER;}
-		public WrappedTransfer<?,?> transfer() {
-			return new WrappedTransfer<Number, Color>() {
-				public void deselected() {}
-				public void selected(ARApp app) {}
-				public Transfer op() {
-					return new Transfer<Integer, Color>() {
-						Transfer<Integer, Color> base = new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);
-						Transfer<Integer, Boolean> under = new Advise.UnderSaturate<>(base);
-						Transfer<Integer, Boolean> over = new Advise.OverSaturate<>(base, new NumberComp());
-						public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
-							boolean below = under.at(x, y, aggregates);
-							boolean above = over.at(x, y, aggregates);
-							if (above || below) {
-								return Color.BLACK;
-							} else {
-								return base.at(x, y, aggregates);
-							}
-						}
-
-						public Class<Integer> input() {return Integer.class;}
-						public Class<Color> output() {return Color.class;}
-						public Color emptyValue() {return base.emptyValue();}
-					};
-				}
-			};
-		}
+		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.OverUnder();}
 		public String toString() {return "Scatterplot: clipping warning (int)" + ((glyphset() == null) ? "(FAILED)" : "");}
-		private static class NumberComp implements Comparator<Integer> {
-			public int compare(Integer o1, Integer o2) {return o1.intValue()-o2.intValue();}
-			
-		}
+
 	}
 	
 	

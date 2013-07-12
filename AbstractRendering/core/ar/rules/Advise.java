@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.util.Comparator;
 
@@ -11,6 +12,7 @@ public class Advise {
 	//TODO: Extend to reporting the magnitude of the under-saturation
 	//TODO: Should this look at mins instead-of/in-addition-to empty?
 	//TODO: What if there are multiple "smallest" values?
+	//TODO: What about "perceptual differences" vs just absolute differences
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
@@ -28,6 +30,7 @@ public class Advise {
 	
 	//TODO: Extend to reporting the magnitude of the over-saturation
 	//TODO: What if there are multiple "largest" values?
+	//TODO: What about "perceptual differences" vs just absolute differences
 	public static class OverSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		private A max;
@@ -54,6 +57,42 @@ public class Advise {
 		}
 	}
 	
+	
+	public static class OverUnder implements Transfer<Number, Color> {
+		private final Transfer<Number, Color> base;
+		private final Transfer<Number, Boolean> under;
+		private final Transfer<Number, Boolean> over;
+		private final Color overColor, underColor;
+		
+		public OverUnder(Color overColor, Color underColor, Transfer<Number, Color> base) {
+			this.overColor = overColor;
+			this.underColor = underColor;
+			this.base = base;
+			this.under = new Advise.UnderSaturate<>(base);
+			this.over = new Advise.OverSaturate<>(base, new NumberComp());
+		}
+		
+		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+			boolean below = under.at(x, y, aggregates);
+			boolean above = over.at(x, y, aggregates);
+			if (above) {
+				return overColor;
+			} else if (below) {
+				return underColor;
+			} else {
+				return base.at(x, y, aggregates);
+			}
+		}
+
+		public Class<Number> input() {return Number.class;}
+		public Class<Color> output() {return Color.class;}
+		public Color emptyValue() {return base.emptyValue();}
+	}
+	
+	
+	private static class NumberComp implements Comparator<Number> {
+		public int compare(Number o1, Number o2) {return (int) (o1.doubleValue()-o2.doubleValue());}
+	}
 
 	/**Find the smallest value.  
 	 * 

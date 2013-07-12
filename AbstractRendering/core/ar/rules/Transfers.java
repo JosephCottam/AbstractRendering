@@ -72,7 +72,7 @@ public class Transfers {
 		public Class<Color> output() {return Color.class;}
 	}
 	
-	public static final class FixedAlpha implements Transfer<Integer,Color> {
+	public static final class FixedAlpha implements Transfer<Number,Color> {
 		final Color low, high;
 		final double lowv, highv;
 
@@ -83,12 +83,12 @@ public class Transfers {
 			this.highv = highV;
 		}
 
-		public Color at(int x, int y, Aggregates<? extends Integer> aggregates) {
-			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y));
+		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y).doubleValue());
 		}
 
 		public Color emptyValue() {return Color.WHITE;}
-		public Class<Integer> input() {return Integer.class;}
+		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 	}
 	
