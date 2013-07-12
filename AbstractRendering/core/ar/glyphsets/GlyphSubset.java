@@ -85,7 +85,6 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	public static <G> GlyphSubset<G> make(Glyphset.RandomAccess<G> source, long low, long high) {
 		if (source instanceof MemMapList 
 				|| source instanceof PointMemMapList
-				|| source instanceof ImplicitMatrix
 				|| source instanceof WrappedCollection) {
 			return make(source, low, high, true);
 		} else {

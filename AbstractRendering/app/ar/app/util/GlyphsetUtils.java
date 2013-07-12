@@ -7,7 +7,6 @@ import java.io.File;
 import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.glyphsets.DynamicQuadTree;
-import ar.glyphsets.ImplicitMatrix;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -57,12 +56,7 @@ public class GlyphsetUtils {
 				skip =1;
 			}
 			
-			if (glyphs instanceof ImplicitMatrix) {
-				return (Glyphset<T>) loadMatrix(
-						source, skip, glyphSize, 
-						xField, yField, valueField,
-						0, new Valuer.ToInt<String>(), false);
-			} else if (glyphs instanceof MemMapList) {
+			if (glyphs instanceof MemMapList) {
 				MemMapList<T> list = new MemMapList<T>(source, ((MemMapList<T>) glyphs).shaper(), ((MemMapList<T>) glyphs).valuer(), glyphs.valueType());
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
@@ -73,37 +67,6 @@ public class GlyphsetUtils {
 		} 
 		catch (RuntimeException e) {throw e;}
 		catch (Exception e) {throw new RuntimeException(e);}
-	}
-
-	
-	//Loads a matrix from a file.  Assumes the first line tells the matrix dimensions
-	@SuppressWarnings("unchecked")
-	public static <T> ImplicitMatrix<T> loadMatrix(File file, int skip, double size, 
-			int rowField, int colField, int valueField, 
-			T defaultValue, Valuer<String,T> valuer,
-			boolean nullIsValue) {
-		
-		DelimitedReader loader = new DelimitedReader(file, 0, DelimitedReader.CSV);
-		String[] header = loader.next();
-		int rows = Integer.parseInt(header[1]);
-		int cols = Integer.parseInt(header[2]);
-		Object[][] matrix = new Object[rows][cols];
-		
-		while (skip>0) {loader.next(); skip--;}
-		int count = 0;
-		while (loader.hasNext()) {
-			String[] line = loader.next();
-			if (line == null) {continue;}
-			
-			int row = Integer.parseInt(line[rowField]);
-			int col = Integer.parseInt(line[colField]);
-			T value = valueField >=0 ? valuer.value(line[valueField]) : defaultValue; 
-			matrix[row][col] = value;
-			count++;
-		}
-		
-		System.out.printf("Read %d entries into a %d x %d matrix.\n", count, rows, cols);
-		return new ImplicitMatrix<T>((T[][]) matrix,size,size, nullIsValue);
 	}
 
 

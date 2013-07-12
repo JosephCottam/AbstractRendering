@@ -22,7 +22,6 @@ public class GlyphsetOptions extends CompoundPanel  {
 
 		glyphsType.addItem("Quad Tree");
 		glyphsType.addItem("List");
-		glyphsType.addItem("Matrix");
 		glyphsType.addItem("MemMap List");
 		glyphsType.setSelectedItem("MemMap List");
 		this.add(new LabeledItem("Glyph Storage:", glyphsType));
@@ -54,8 +53,6 @@ public class GlyphsetOptions extends CompoundPanel  {
 			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);
 			Valuer<Indexed, Color> valuer = new Constant<Indexed>(Color.red);
 			return new MemMapList<>(null, shaper, valuer, Color.class);
-		} else if (glyphsType.getSelectedItem().equals("Matrix")) {
-			return new ImplicitMatrix<>(null, 1, 1, true);
 		} else {
 			throw new RuntimeException("Unknown glyphset type selected.");
 		}
