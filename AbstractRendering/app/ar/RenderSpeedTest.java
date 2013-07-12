@@ -42,7 +42,7 @@ public class RenderSpeedTest {
 		
 		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
 		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
-		AggregateReducer reduction = new AggregateReductions.Count();
+		AggregateReducer<Integer,Integer,Integer> reduction = new AggregateReductions.Count();
 	
 		ARPanel.PERF_MON = true;
 		ParallelGlyphs.THREAD_POOL_SIZE = cores;

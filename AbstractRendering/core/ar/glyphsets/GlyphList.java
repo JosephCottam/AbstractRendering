@@ -45,4 +45,11 @@ public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
 	}
 	
 	public Class<T> valueType() {return valueType;}
+
+	public long limit() {return size();}
+
+	public ar.Glyphset.Segementable<T> segement(long bottom, long top)
+			throws IllegalArgumentException {
+		return new GlyphSubset.Uncached<T>(this, bottom, top);
+	}
 }

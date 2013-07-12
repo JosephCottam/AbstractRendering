@@ -23,7 +23,7 @@ public interface Renderer {
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
 	 */
-	public <V,A> Aggregates<A> reduce(final Glyphset<V> glyphs, final Aggregator<V,A> op, 
+	public <V,A> Aggregates<A> reduce(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height);
 	
 	
@@ -42,7 +42,7 @@ public interface Renderer {
 	 * @param t Transfer function to apply
 	 * @return A resulting set of aggregates
 	 */
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN, OUT> t);
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.

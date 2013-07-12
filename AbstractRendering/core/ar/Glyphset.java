@@ -16,14 +16,24 @@ public interface Glyphset<T> {
 	/**Is this glyphset empty?*/
 	public boolean isEmpty();
 	
-	/**How many items in this glyphset?*/
-	public long size();
-	
 	/**What are the overall bounds of the items in this glyphset?**/
 	public Rectangle2D bounds();
+
+	/**How many items in this glyphset?
+	 * TODO: Is this required?  Memmap can't do it, matrix can't do it, several wrapper types can't do it.
+	 * */
+	public long size();
 	
-	/**Add a new item to this glyphset**/
+	/**Add a new item to this glyphset.
+	 * TODO: Is this required? It is only used in utility spaces, most of which already "know" the glyphset type.
+	 * @throws UnsupportedOperationException -- Not all glyphsets support adding items.
+	 ***/
 	public void add(Glyph<T> g);
+	
+	/**Return type type of values held by the glyphs. 
+	 * This is used for configuration validation.
+	 * **/
+	public Class<T> valueType();
 	
 	/**Glyphsets that support random access.
 	 * This interface is largely to support parallel execution.
@@ -56,7 +66,7 @@ public interface Glyphset<T> {
 		/**One greater than the highest value for top.
 		 * Analogous to "length" or "size" but without the semantic interpretation. 
 		 **/
-		public int limit();
+		public long limit();
 
 		/**
 		 * Get a subset of the data.
@@ -77,13 +87,8 @@ public interface Glyphset<T> {
 		 * @param top Upper marker. This is an exclusive bound.
 		 * @return A subset of the data.
 		 */
-		public Glyphset.Segementable<T> segement(int bottom, int top) throws IllegalArgumentException;
+		public Glyphset.Segementable<T> segement(long bottom, long top) throws IllegalArgumentException;
 	}
-	
-	/**Return type type of values held by the glyphs. 
-	 * This is used for configuration validation.
-	 * **/
-	public Class<T> valueType();
 	
 	/**Simple wrapper class glyphs.**/
 	public static interface Glyph<V> {

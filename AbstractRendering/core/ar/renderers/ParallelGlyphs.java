@@ -4,11 +4,6 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
@@ -19,7 +14,8 @@ import ar.Glyphset;
 import ar.Glyphset.Glyph;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
-import ar.glyphsets.GlyphsetIterator;
+import ar.glyphsets.GlyphSingleton;
+import ar.glyphsets.GlyphSubset;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -53,7 +49,7 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <V,A> Aggregates<A> reduce(Glyphset<V> glyphs, Aggregator<V,A> op, 
+	public <V,A> Aggregates<A> reduce(Glyphset<? extends V> glyphs, Aggregator<V,A> op, 
 			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;
@@ -78,7 +74,7 @@ public class ParallelGlyphs implements Renderer {
 	}
 	
 	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN,OUT> t) {
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
 		return new SerialSpatial().transfer(aggregates, t);
 	}
 	
@@ -135,7 +131,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			Glyphset.RandomAccess<G> subset = new GlyphSubset<G>(glyphs, low, high);
+			Glyphset.RandomAccess<G> subset = GlyphSubset.make(glyphs, low, high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			bounds = bounds.intersection(new Rectangle(0,0,width,height));
 			
@@ -181,77 +177,6 @@ public class ParallelGlyphs implements Renderer {
 			
 			recorder.update(high-low);
 			return aggregates;
-		}
-	}
-	
-	
-	public static final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
-		private final List<Glyph<G>> glyphs;
-		private final Glyph<G> glyph;
-		private final Class<G> valueType;
-		private final Rectangle2D bounds;
-		
-		public GlyphSingleton(Glyph<G> g, Class<G> valueType) {
-			glyphs = Collections.singletonList(g);
-			glyph = g;
-			bounds = g.shape().getBounds2D();
-			this.valueType = valueType;
-		}
-		
-		public Iterator<Glyph<G>> iterator() {return glyphs.iterator();}
-		public Glyph<G> get(long i) {return glyphs.get(0);}
-		public boolean isEmpty() {return glyphs.isEmpty();}
-		public void add(Glyph<G> g) {throw new UnsupportedOperationException();}
-		public long size() {return glyphs.size();}
-		public Rectangle2D bounds() {return bounds;}
-		public Class<G> valueType() {return valueType;}
-
-		public Collection<Glyph<G>> intersects(Rectangle2D r) {
-			if (glyph.shape().intersects(r)) {return glyphs;}
-			else {return Collections.emptyList();}
-		}
-	}
-	
-	public static final class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
-		private final Glyphset.RandomAccess<G> glyphs;
-		private final long low,high;
-		private final Glyph<G>[] cache;
-		
-		@SuppressWarnings("unchecked")
-		public GlyphSubset (Glyphset.RandomAccess<G> glyphs, long low, long high) {
-			this.glyphs = glyphs;
-			this.low = low; 
-			this.high=high;
-			if (high-low > Integer.MAX_VALUE) {throw new IllegalArgumentException("Must subset smaller number of items (this class uses int-based caching)");}
-			this.cache = new Glyph[(int) (high-low)];
-		}
-		
-		public GlyphsetIterator<G> iterator() {return new GlyphsetIterator<G>(this,low,high);}
-
-		public Collection<Glyph<G>> intersects(Rectangle2D r) {
-			ArrayList<Glyph<G>> contained = new ArrayList<Glyph<G>>();
-			for (int i=0; i<cache.length; i++) {
-				Glyph<G> g = get(i+low);
-				if (g.shape().intersects(r)) {contained.add(g);}
-			}
-			for (Glyph<G> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
-			return contained;
-		}
-
-		public boolean isEmpty() {return low >= high;}
-		public long size() {return high-low;}
-		public Rectangle2D bounds() {return Util.bounds(this);}
-		public void add(Glyph<G> g) {throw new UnsupportedOperationException("Cannot add items to subset view.");}
-		public Class<G> valueType() {return glyphs.valueType();}
-
-		@Override
-		public Glyph<G> get(long l) {
-			long at = l-low;
-			if (at > cache.length) {throw new IllegalArgumentException();}
-			int i= (int) at;
-			
-			if (cache[i] == null) {cache[i] = glyphs.get(l);}
-			return cache[i];
 		}
 	}
 }

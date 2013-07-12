@@ -24,7 +24,7 @@ public interface Aggregator<IN, OUT> extends Inspectable<IN, OUT> {
 	 * @param inverseView Transformation from screen space to canvas space
 	 * @return The aggregate value
 	 */
-	public OUT at(Rectangle pixel, Glyphset<IN> glyphs, AffineTransform inverseView);
+	public OUT at(Rectangle pixel, Glyphset<? extends IN> glyphs, AffineTransform inverseView);
 	
 	
 	/**What value is an mathematical identity value for this operation?

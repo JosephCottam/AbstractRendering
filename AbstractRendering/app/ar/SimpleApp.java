@@ -48,7 +48,7 @@ public class SimpleApp {
 		//However, in exchange we need to supply the "shaper" and the "valuer" instances.
 		//These instances are defined above and depend on what exactly is
 		//held in the collection being wrapped.
-		Glyphset<?> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4), Double.class);
+		Glyphset<Double> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4), Double.class);
 		
 
 
@@ -62,12 +62,12 @@ public class SimpleApp {
 
 		//The Aggregator is used to combine values from multiple glyphs into a value for a single
 		//aggregate bin.  The 'Count' aggregator simply counts how many glyphs fell into the bin.
-		Aggregator aggregator = new Aggregators.Count();
+		Aggregator<Object,Integer> aggregator = new Aggregators.Count();
 		
 
 		//The transfer function is used to convert one set of aggregates into another.
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
-		Transfer transfer = new Transfers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+		Transfer<Number, Color> transfer = new Transfers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
 		
 		
 		//A panel is constructed from a specific configuration.
@@ -89,8 +89,8 @@ public class SimpleApp {
 		int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		vt.invert();
-		Aggregates aggregates = r.reduce(dataset, aggregator, vt, width, height);
-		Aggregates colors = r.transfer(aggregates, transfer);
+		Aggregates<Integer> aggregates = r.reduce(dataset, aggregator, vt, width, height);
+		Aggregates<Color> colors = r.transfer(aggregates, transfer);
 		Util.asImage(colors, width, height, Color.white);
 
 

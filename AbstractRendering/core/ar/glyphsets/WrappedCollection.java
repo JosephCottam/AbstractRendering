@@ -84,6 +84,14 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			I value = values.get((int) l);
 			return new SimpleGlyph<V>(shaper.shape(value), valuer.value(value));
 		}
+
+		@Override
+		public long limit() {return size();}
+
+		@Override
+		public ar.Glyphset.Segementable<V> segement(long bottom, long top) {
+			return GlyphSubset.make(this, bottom, top);
+		}
 	}
 	
 	

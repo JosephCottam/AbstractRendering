@@ -32,7 +32,7 @@ public final class ParallelSpatial implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public <V,A> Aggregates<A> reduce(final Glyphset<V> glyphs, final Aggregator<V,A> op, 
+	public <V,A> Aggregates<A> reduce(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height) {
 		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity()); 
 		ReduceTask<V,A> t = new ReduceTask<V,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
@@ -40,7 +40,7 @@ public final class ParallelSpatial implements Renderer {
 		return aggregates;
 	}
 	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<IN> aggregates, Transfer<IN,OUT> t) {
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
 		return new SerialSpatial().transfer(aggregates, t);
 	}
 
@@ -54,11 +54,11 @@ public final class ParallelSpatial implements Renderer {
 		private final int lowx, lowy, highx, highy;
 		private final Aggregates<A> aggs;
 		private final Aggregator<G,A> op;
-		private final Glyphset<G> glyphs;
+		private final Glyphset<? extends G> glyphs;
 		private final AffineTransform inverseView;
 		private final RenderUtils.Progress recorder;
 		
-		public ReduceTask(Glyphset<G> glyphs, AffineTransform inverseView, 
+		public ReduceTask(Glyphset<? extends G> glyphs, AffineTransform inverseView, 
 				Aggregator<G,A> op, RenderUtils.Progress recorder, int taskSize,   
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy) {
 			this.glyphs = glyphs;

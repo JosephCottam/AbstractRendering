@@ -157,5 +157,12 @@ public class PointMemMapList implements Glyphset.RandomAccess<Color> {
 		}
 		return bounds;
 	}
+	@Override
+	public long limit() {return size();}
+	@Override
+	public ar.Glyphset.Segementable<Color> segement(long bottom, long top)
+			throws IllegalArgumentException {
+		return GlyphSubset.make(this, bottom, top);
+	}
 	
 }

@@ -190,4 +190,12 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	}
 
+	public long limit() {return size();}
+
+	@Override
+	public ar.Glyphset.Segementable<V> segement(long bottom, long top)
+			throws IllegalArgumentException {
+		return GlyphSubset.make(this, bottom, top);
+	}
+
 }

@@ -26,7 +26,7 @@ public class Aggregators {
 	public static final class Gradient implements Aggregator<Object, Color> {
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
-		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {
+		public Color at(Rectangle r, Glyphset<? extends Object> glyphs, AffineTransform inverseView) {
 			return new Color(r.x/width, r.y/height,.5f ,1.0f);
 		}
 		public Color identity() {return Util.CLEAR;}
@@ -42,7 +42,7 @@ public class Aggregators {
 	public static final class IDColor implements Aggregator<Object, Color> {
 		private final Color c;
 		public IDColor(Color c) {this.c=c;}
-		public Color at(Rectangle r, Glyphset<Object> glyphs, AffineTransform inverseView) {return c;}
+		public Color at(Rectangle r, Glyphset<? extends Object> glyphs, AffineTransform inverseView) {return c;}
 		public Color identity() {return Util.CLEAR;}
 		public Class<Object> input() {return Object.class;}
 		public Class<Color> output() {return Color.class;}
@@ -52,9 +52,9 @@ public class Aggregators {
 	
 	/**How many items are in the given pixel**/
 	public static final class Count implements Aggregator<Object, Integer> {
-		public Integer at(Rectangle pixel, Glyphset<Object> glyphs, AffineTransform v) {
+		public Integer at(Rectangle pixel, Glyphset<? extends Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<Object>> items = glyphs.intersects(b);
+			Collection<? extends Glyph<? extends Object>> items = glyphs.intersects(b);
 			return items.size();
 		}
 		public Integer identity() {return 0;}
@@ -65,9 +65,9 @@ public class Aggregators {
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
-		public Color at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
+		public Color at(Rectangle pixel, Glyphset<? extends Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
+			Collection<? extends Glyph<? extends Color>> hits = glyphs.intersects(b);
 			if (hits.size()>0) {return hits.iterator().next().value();}
 			else {return Util.CLEAR;}
 		}
@@ -79,11 +79,11 @@ public class Aggregators {
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
 	public static final class Last implements Aggregator<Color, Color> {
-		public Color at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
+		public Color at(Rectangle pixel, Glyphset<? extends Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
+			Collection<? extends Glyph<? extends Color>> hits = glyphs.intersects(b);
 			Color color = Util.CLEAR;
-			for (Glyph<Color> g:hits) {color = g.value();}
+			for (Glyph<? extends Color> g:hits) {color = g.value();}
 			return color;
 		}
 		public Color identity() {return Util.CLEAR;}
@@ -130,8 +130,8 @@ public class Aggregators {
 
 	/**Run-length encode based on colors.  Optionally sort the items by color before encoding.**/ 
 	public static final class RLEColor implements Aggregator<Color, RLE> {
-		private static final Comparator<Glyph<Color>> glyphColorSorter  = new Comparator<Glyph<Color>>() {
-			public int compare(Glyph<Color> o1, Glyph<Color> o2) {
+		private static final Comparator<Glyph<? extends Color>> glyphColorSorter  = new Comparator<Glyph<? extends Color>>() {
+			public int compare(Glyph<? extends Color> o1, Glyph<? extends Color> o2) {
 				return o1.value().getRGB() - o2.value().getRGB();
 			}
 		};
@@ -141,19 +141,19 @@ public class Aggregators {
 			this.sort = sort;
 		}
 
-		private List<? extends Glyph<Color>> sortColors(Collection<? extends Glyph<Color>> glyphs) {
-			ArrayList<Glyph<Color>> l = new ArrayList<Glyph<Color>>(glyphs);
+		private List<Glyph<? extends Color>> sortColors(Collection<? extends Glyph<? extends Color>> glyphs) {
+			ArrayList<Glyph<? extends Color>> l = new ArrayList<Glyph<? extends Color>>(glyphs);
 			Collections.sort(l, glyphColorSorter);
 			return l;
 		}
 
-		private RLE encode(List<? extends Glyph<Color>> glyphs) {
+		private RLE encode(List<? extends Glyph<? extends Color>> glyphs) {
 			RLE rle = new RLE();
 			Color key = null;
 			int count=0;
 
 			if (glyphs.size() ==0) {return rle;}
-			for (Glyph<Color> g: glyphs) {
+			for (Glyph<? extends Color> g: glyphs) {
 				Color val = g.value();
 				if ((key == null && val == null) || (key != null && key.equals(val))) {count++;}
 				else if (count == 0) {
@@ -169,13 +169,13 @@ public class Aggregators {
 			return rle;
 		}
 
-		public RLE at(Rectangle pixel, Glyphset<Color> glyphs, AffineTransform v) {
+		public RLE at(Rectangle pixel, Glyphset<? extends Color> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<Color>> hits = glyphs.intersects(b);
+			Collection<? extends Glyph<? extends Color>> hits = glyphs.intersects(b);
 
-			List<? extends Glyph<Color>> ordered;
+			List<Glyph<? extends Color>> ordered;
 			if (sort) {ordered = sortColors(hits);}
-			else {ordered = new ArrayList<Glyph<Color>>(hits);}
+			else {ordered = new ArrayList<Glyph<? extends Color>>(hits);}
 			return encode(ordered);
 		}
 		public RLE identity() {return new RLE();}
@@ -201,14 +201,14 @@ public class Aggregators {
 	public static final class DeltaNeighbors implements Aggregator<Object, Integer> {
 		private final int reach;
 		public DeltaNeighbors(int reach) {this.reach = reach;}
-		public Integer at(Rectangle pixel, Glyphset<Object> glyphs, AffineTransform v) {
+		public Integer at(Rectangle pixel, Glyphset<? extends Object> glyphs, AffineTransform v) {
 			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<Object>> gs = glyphs.intersects(b);
+			Collection<? extends Glyph<? extends Object>> gs = glyphs.intersects(b);
 			if (gs.size()==0) {return 0;}
 
 			int count=0;
 			HashSet<Object> categories = new HashSet<Object>();
-			for (Glyph<Object> g:gs) {categories.add(g.value());}
+			for (Glyph<? extends Object> g:gs) {categories.add(g.value());}
 		
 			int x = pixel.x;
 			int y = pixel.y;
@@ -220,7 +220,7 @@ public class Aggregators {
 					Rectangle r2 = new Rectangle(x,y, pixel.width, pixel.height);
 					b = v.createTransformedShape(r2).getBounds2D();
 					gs = glyphs.intersects(b);
-					for (Glyph<Object> g:gs) {if (!categories.contains(g.value())) {count++;}}
+					for (Glyph<? extends Object> g:gs) {if (!categories.contains(g.value())) {count++;}}
 				}
 			}
 			return count;
