@@ -15,7 +15,6 @@ import ar.Glyphset.Glyph;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 import ar.glyphsets.GlyphSingleton;
-import ar.glyphsets.GlyphSubset;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -57,10 +56,12 @@ public class ParallelGlyphs implements Renderer {
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		recorder.reset(glyphs.size());
 		
-		if (!reducer.left().isAssignableFrom(op.output())) {throw new IllegalArgumentException("Reducer type does not match aggregator type.");}
+		if (!reducer.left().isAssignableFrom(op.output())) {
+			throw new IllegalArgumentException("Reducer type does not match aggregator type.");
+		}
 		
 		ReduceTask<V,A> t = new ReduceTask<V,A>(
-				(Glyphset.RandomAccess<V>) glyphs, 
+				(Glyphset.Segementable<V>) glyphs, 
 				view, inverseView, 
 				op, 
 				(AggregateReducer<A,A,A>) reducer, 
@@ -86,7 +87,7 @@ public class ParallelGlyphs implements Renderer {
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final Glyphset.RandomAccess<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final Glyphset.Segementable<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
@@ -95,7 +96,7 @@ public class ParallelGlyphs implements Renderer {
 		private final RenderUtils.Progress recorder;
 
 		
-		public ReduceTask(Glyphset.RandomAccess<G> glyphs, 
+		public ReduceTask(Glyphset.Segementable<G> glyphs, 
 				AffineTransform view, AffineTransform inverseView,
 				Aggregator<G,A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
@@ -131,7 +132,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			Glyphset.RandomAccess<G> subset = GlyphSubset.make(glyphs, low, high);
+			Glyphset.Segementable<G> subset = glyphs.segement(low,  high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			bounds = bounds.intersection(new Rectangle(0,0,width,height));
 			
