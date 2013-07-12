@@ -77,7 +77,7 @@ inline void transform_dispatch(IN_T *xtr,
     size_t task_count = (count + task_size - 1) / task_size;
     transform_params_t *params = reinterpret_cast<transform_params_t*>(alloca(sizeof(transform_params_t) * task_count));
 
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
     dispatch_group_t group = dispatch_group_create();
     for (size_t i = 0; i < task_count; i++)

@@ -78,7 +78,7 @@ def report_diffs(a, b, name):
 def simple_test():
     from time import time
 
-    use_shape = (4, 10**6)
+    use_shape = (4, 10**8)
     mock_in = np.random.random(use_shape)
     xform = [3.0, 4.0, 2.0, 2.0]
 
