@@ -2,10 +2,13 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
 
@@ -20,8 +23,6 @@ import ar.util.Util;
  * No items are held in intermediate nodes.
  * 
  * This class can be used efficiently with the pixel serial or pixel parallel renderer.
- * TODO: Extend with RandomAccess to support glyph-parallel rendering (use the quad-tree structure to do numbering so aggregate sub-sets are compact) 
- * 
  * 
  * There are four types of nodes:
  *   ** RootHolder is a proxy for a root node, 
@@ -124,6 +125,11 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		return target;
 	}
 
+	private static <G> Glyphset<G> subset(DynamicQuadTree<G>[] glyphs, int bottom, int top, Class<G> valueType) {
+		DynamicQuadTree<G>[] subset = Arrays.copyOfRange(glyphs, bottom, top);
+		return new InnerNode<G>(subset, valueType);
+	}
+	
 	@SuppressWarnings({ "unused", "rawtypes" })
 	//Utility method, helpful in debugging tree splits
 	private static String boundsReport(DynamicQuadTree<?> t) {
@@ -176,7 +182,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 
 			child = DynamicQuadTree.addTo(child, glyph);
 		}
-		
+				
 		/**Grow the tree so it covers more area than it does currently.
 		 * The strategies are based on heuristics and have not been evaluated
 		 * for optimality (only sufficiency).
@@ -272,12 +278,13 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		public void items(Collection<Glyph<V>> collector) {child.items(collector);}
 		public void intersects(Rectangle2D pixel, Collection<Glyph<V>> collector) {child.intersects(pixel, collector);}
 		public String toString(int indent) {return child.toString(indent);}
+		public long limit() {return child.limit();}
+		public Glyphset<V> segment(long bottom, long top) {return child.segment(bottom, top);}
+		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 	}
 
 	private static final class InnerNode<V> extends DynamicQuadTree<V> {
-		
-		@SuppressWarnings("unchecked")
-		private final DynamicQuadTree<V>[] quads =new DynamicQuadTree[4];
+		private final DynamicQuadTree<V>[] quads;
 
 		/**Create a new InnerNode from an existing leaf node.
 		 * The quads of the leaf can be copied directly to the children of this node.
@@ -290,12 +297,19 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 			}
 			for (Glyph<V> g:source.spanningItems) {add(g);}
 		}
+		
+		@SuppressWarnings("unchecked")
 		private InnerNode(Rectangle2D concernBounds, Class<V> valueType) {
 			super(concernBounds, valueType);
+			quads = new DynamicQuadTree[4];
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
 				quads[i] = new DynamicQuadTree.LeafNode<V>(subs.quads[i], valueType);
 			}
+		}
+		private InnerNode(DynamicQuadTree<V>[] parts, Class<V> valueType) {
+			super(null, valueType);
+			this.quads = parts;
 		}
 
 		public void add(Glyph<V> glyph) {
@@ -343,6 +357,11 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 			for (DynamicQuadTree<V> q: quads) {b.append(q.toString(indent+1));}
 			return String.format("%sNode: %d items\n", Util.indent(indent), size()) + b.toString();
 		}
+		public long limit() {return quads.length;}
+		public Glyphset<V> segment(long bottom, long top) {
+			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
+		}
+		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 	}
 	
 	private static final class LeafNode<V> extends DynamicQuadTree<V> {
@@ -434,13 +453,20 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 			collector.addAll(spanningItems);
 			for (DynamicQuadTree<V> q: quads) {q.items(collector);}
 		}
+		
+		public long limit() {return quads.length;}
+		public Glyphset<V> segment(long bottom, long top) {
+			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
+		}
+		public Iterator<Glyph<V>> iterator() {return items().iterator();}
+
 	}	
 
 	/**Sub-leaf is a quadrant of a leaf.
 	 * It represents a set of items that would be entirely in one leaf quadrant if the leaf were to split.
 	 * This class exists so leaf-split decisions can be made efficiently.
 	 */
-	private static final class LeafQuad<V> extends DynamicQuadTree<V> {
+	private static final class LeafQuad<V> extends DynamicQuadTree<V> implements Glyphset.RandomAccess<V> {
 		private final List<Glyph<V>> items;
 		
 		protected LeafQuad(Rectangle2D concernBounds, Class<V> valueType) {
@@ -462,6 +488,12 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		protected void intersects(Rectangle2D pixel, Collection<Glyph<V>> collector) {
 			for (Glyph<V> g: items) {if (g.shape().intersects(pixel)) {collector.add(g);}}
 		}
+		public long limit() {return items.size();}
+		public Glyphset<V> segment(long bottom, long top) {
+			return new GlyphSubset.Uncached<V>(this, bottom, top);
+		}
+		public Iterator<Glyph<V>> iterator() {return items().iterator();}
+		public Glyph<V> get(long l) {return items.get((int) l);}
 	}
 	
 }

@@ -4,6 +4,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
 
@@ -27,7 +28,7 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public Class<G> valueType() {return glyphs.valueType();}
 	public long limit() {return high - low;}
-	public ar.Glyphset.Segementable<G> segement(long bottom, long top)
+	public Glyphset<G> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		return new Cached<G>(glyphs, bottom + this.low, top + this.low);
 	}

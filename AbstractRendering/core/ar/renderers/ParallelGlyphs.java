@@ -10,8 +10,8 @@ import java.util.concurrent.RecursiveTask;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 import ar.glyphsets.GlyphSingleton;
@@ -61,13 +61,13 @@ public class ParallelGlyphs implements Renderer {
 		}
 		
 		ReduceTask<V,A> t = new ReduceTask<V,A>(
-				(Glyphset.Segementable<V>) glyphs, 
+				(Glyphset<V>) glyphs, 
 				view, inverseView, 
 				op, 
 				(AggregateReducer<A,A,A>) reducer, 
 				width, height, taskSize,
 				recorder,
-				0, glyphs.size());
+				0, glyphs.limit());
 		
 		Aggregates<A> a= pool.invoke(t);
 		
@@ -87,7 +87,7 @@ public class ParallelGlyphs implements Renderer {
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final Glyphset.Segementable<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final Glyphset<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
 		private final AffineTransform view, inverseView;
 		private final int width;
 		private final int height;
@@ -96,7 +96,7 @@ public class ParallelGlyphs implements Renderer {
 		private final RenderUtils.Progress recorder;
 
 		
-		public ReduceTask(Glyphset.Segementable<G> glyphs, 
+		public ReduceTask(Glyphset<G> glyphs, 
 				AffineTransform view, AffineTransform inverseView,
 				Aggregator<G,A> op, AggregateReducer<A,A,A> reducer, 
 				int width, int height, int taskSize,
@@ -132,7 +132,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			Glyphset.Segementable<G> subset = glyphs.segement(low,  high);
+			Glyphset<G> subset = glyphs.segment(low,  high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
 			bounds = bounds.intersection(new Rectangle(0,0,width,height));
 			

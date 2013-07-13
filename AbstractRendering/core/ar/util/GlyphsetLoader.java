@@ -2,6 +2,7 @@ package ar.util;
 
 import java.awt.Shape;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -9,7 +10,6 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 
-import static ar.Glyphset.Glyph;
 
 public class GlyphsetLoader {
 	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.

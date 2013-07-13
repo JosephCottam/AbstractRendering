@@ -2,7 +2,7 @@ package ar.glyphsets;
 
 import java.awt.Shape;
 
-import ar.Glyphset.Glyph;
+import ar.Glyph;
 
 /**Basic glyph that stores literal values passed during its construction.
  * @param <V> Type of the value stored

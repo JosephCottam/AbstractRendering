@@ -2,8 +2,8 @@ package ar.glyphsets;
 
 import java.util.Iterator;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 
 /**Iterate over the elements of a glyphset.
  * This class assumes that if a subset is specified, 

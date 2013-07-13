@@ -12,8 +12,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.util.Util;
 import ar.Aggregator;
 

@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import ar.Aggregates;
-import ar.Glyphset.Glyph;
+import ar.Glyph;
 import ar.aggregates.FlatAggregates;
 
 /**Collection of various utilities that don't have other homes.**/

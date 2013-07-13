@@ -2,11 +2,12 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
@@ -16,7 +17,7 @@ import ar.util.Util;
  * 
  * Also includes tools for working with existing collections of object to turn them into glyphs.
  * **/
-public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
+public class WrappedCollection<I,V> implements Glyphset<V> {
 	protected Collection<I> values;
 	protected Shaper<I> shaper;
 	protected Valuer<I,V> valuer;
@@ -32,8 +33,8 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		this.valueType = valueType;
 	}
 	
-	public Collection<ar.Glyphset.Glyph<V>> intersects(Rectangle2D r) {
-		ArrayList<ar.Glyphset.Glyph<V>> hits = new ArrayList<ar.Glyphset.Glyph<V>>();
+	public Collection<ar.Glyph<V>> intersects(Rectangle2D r) {
+		ArrayList<ar.Glyph<V>> hits = new ArrayList<ar.Glyph<V>>();
 		for (Glyph<V> g: this) {
 			if (g.shape().getBounds2D().intersects(r)) {hits.add(g);}
 		}
@@ -43,11 +44,11 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 	public boolean isEmpty() {return values == null || values.isEmpty();}
 	public long size() {return values==null ? 0 : values.size();}
 	public Rectangle2D bounds() {return Util.bounds(this);}
-	public Iterator<ar.Glyphset.Glyph<V>> iterator() {
-		return new Iterator<ar.Glyphset.Glyph<V>>() {
+	public Iterator<ar.Glyph<V>> iterator() {
+		return new Iterator<ar.Glyph<V>>() {
 			Iterator<I> basis = values.iterator();
 			public boolean hasNext() {return basis.hasNext();}
-			public ar.Glyphset.Glyph<V> next() {
+			public ar.Glyph<V> next() {
 				I next = basis.next();
 				return next == null ? null : new SimpleGlyph<V>(shaper.shape(next), valuer.value(next));
 			}
@@ -55,13 +56,30 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		};
 	}
 	
-	public void add(ar.Glyphset.Glyph<V> g) {
+	public void add(ar.Glyph<V> g) {
 		throw new UnsupportedOperationException("Cannot add directly to wrapped list.  Must add to backing collection.");
 	}
 	
 	public Class<V> valueType() {return valueType;}
 
+	
 
+	@Override
+	public long limit() {return values.size();}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	//TODO: investigate reifying the glyphs at this point and using GlyphList instead of wrapped list (would also remove the suprress)
+	public Glyphset<V> segment(long bottom, long top) throws IllegalArgumentException {
+		int size = (int) (top-bottom);
+		final I[] vals = (I[]) new Object[size];
+		Iterator<I> it = values.iterator();
+		for (long i=0; i<bottom; i++) {it.next();}
+		for (int i=0; i<size; i++) {vals[i]=it.next();}
+		return new WrappedCollection.List<I,V>(Arrays.asList(vals), shaper, valuer, valueType);
+	}
+
+	
 	/**Wrap a list as a set of glyphs.**/
 	public static class List<I,V> extends WrappedCollection<I,V> implements Glyphset.RandomAccess<V> {
 		protected final java.util.List<I> values;
@@ -74,11 +92,11 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 			this.values=values;
 		}
 		
-		public Iterator<ar.Glyphset.Glyph<V>> iterator() {
+		public Iterator<ar.Glyph<V>> iterator() {
 			return new GlyphsetIterator<V>(this);
 		}
 		
-		public ar.Glyphset.Glyph<V> get(long l) {
+		public ar.Glyph<V> get(long l) {
 			if (l > Integer.MAX_VALUE) {throw new IllegalArgumentException("Can only index through ints in wrapped list.");}
 			if (l < 0) {throw new IllegalArgumentException("Negative index not allowed.");}
 			I value = values.get((int) l);
@@ -89,7 +107,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 		public long limit() {return size();}
 
 		@Override
-		public ar.Glyphset.Segementable<V> segement(long bottom, long top) {
+		public Glyphset<V> segment(long bottom, long top) {
 			return GlyphSubset.make(this, bottom, top, true);
 		}
 	}

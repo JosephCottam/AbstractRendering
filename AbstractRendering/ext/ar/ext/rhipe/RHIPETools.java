@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ar.Aggregates;
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;

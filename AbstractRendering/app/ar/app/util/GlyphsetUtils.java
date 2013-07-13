@@ -4,8 +4,8 @@ import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SimpleGlyph;

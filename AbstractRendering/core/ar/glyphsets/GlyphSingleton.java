@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import ar.Glyph;
 import ar.Glyphset;
 
 /**Single-element glyphset.**/
@@ -36,6 +37,6 @@ public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 	}
 
 	public long limit() {return 1;}
-	public ar.Glyphset.Segementable<G> segement(long bottom, long top)
+	public Glyphset<G> segment(long bottom, long top)
 			throws IllegalArgumentException {return this;}
 }

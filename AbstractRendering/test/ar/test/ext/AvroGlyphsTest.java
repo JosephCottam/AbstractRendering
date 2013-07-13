@@ -13,8 +13,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 import org.junit.Test;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.GlyphsetTools;
 import ar.glyphsets.GlyphList;

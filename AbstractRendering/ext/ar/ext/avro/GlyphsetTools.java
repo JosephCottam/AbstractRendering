@@ -8,8 +8,8 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.*;
 import org.apache.avro.io.*;
 
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;

@@ -7,8 +7,8 @@ import java.awt.geom.Rectangle2D;
 import org.junit.Test;
 
 import ar.Aggregates;
+import ar.Glyph;
 import ar.Glyphset;
-import ar.Glyphset.Glyph;
 import ar.aggregates.FlatAggregates;
 import ar.ext.rhipe.*;
 import ar.glyphsets.implicitgeometry.Indexed;

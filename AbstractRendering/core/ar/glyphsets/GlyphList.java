@@ -3,6 +3,7 @@ package ar.glyphsets;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
 
@@ -48,7 +49,7 @@ public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
 
 	public long limit() {return size();}
 
-	public ar.Glyphset.Segementable<T> segement(long bottom, long top)
+	public Glyphset<T> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		return new GlyphSubset.Uncached<T>(this, bottom, top);
 	}

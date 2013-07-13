@@ -43,7 +43,7 @@ public class ARPanel extends JPanel {
 	
 	@SuppressWarnings("deprecation")
 	protected void finalize() {
-		renderThread.stop();
+		if (renderThread != null) {renderThread.stop();}
 	}
 	
 
@@ -295,8 +295,8 @@ public class ARPanel extends JPanel {
 	
 	public void zoomFit() {
 		try {
+			if (dataset() == null || dataset().bounds() ==null) {return;}
 			Rectangle2D content = dataset().bounds();
-			if (content == null) {return;}
 
 			double w = getWidth()/content.getWidth();
 			double h = getHeight()/content.getHeight();

@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
@@ -193,7 +194,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	public long limit() {return size();}
 
 	@Override
-	public ar.Glyphset.Segementable<V> segement(long bottom, long top)
+	public Glyphset<V> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		return GlyphSubset.make(this, bottom, top, true);
 	}
