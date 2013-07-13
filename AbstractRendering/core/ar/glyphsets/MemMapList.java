@@ -195,7 +195,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	@Override
 	public ar.Glyphset.Segementable<V> segement(long bottom, long top)
 			throws IllegalArgumentException {
-		return GlyphSubset.make(this, bottom, top);
+		return GlyphSubset.make(this, bottom, top, true);
 	}
 
 }

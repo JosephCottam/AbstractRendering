@@ -90,7 +90,7 @@ public class WrappedCollection<I,V> implements Glyphset<V>, Iterable<Glyph<V>> {
 
 		@Override
 		public ar.Glyphset.Segementable<V> segement(long bottom, long top) {
-			return GlyphSubset.make(this, bottom, top);
+			return GlyphSubset.make(this, bottom, top, true);
 		}
 	}
 	
