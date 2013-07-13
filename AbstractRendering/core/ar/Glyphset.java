@@ -40,7 +40,7 @@ import java.util.Collection;
 public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	
 	/**Return all glyphs that intersect the passed rectangle.**/
-	public Collection<? extends Glyph<T>> intersects(Rectangle2D r);
+	public Collection<Glyph<T>> intersects(Rectangle2D r);
 	
 	/**Is this glyphset empty?*/
 	public boolean isEmpty();
