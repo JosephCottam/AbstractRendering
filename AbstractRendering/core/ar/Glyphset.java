@@ -49,7 +49,6 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	public Rectangle2D bounds();
 
 	/**How many items in this glyphset?
-	 * TODO: Is this required?  Memmap can't do it, matrix can't do it, several wrapper types can't do it.
 	 * */
 	public long size();
 	

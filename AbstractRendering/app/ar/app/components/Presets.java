@@ -95,7 +95,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostAlpha25 implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(1000);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent25();}
 		public String toString() {return "BGL Memory: 25% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
@@ -103,7 +103,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostAlpha95 implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(1000);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent95();}
 		public String toString() {return "BGL Memory: 95% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
@@ -111,7 +111,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(1000);}
 		public Glyphset glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
