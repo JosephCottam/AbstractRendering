@@ -5,7 +5,8 @@ import java.io.FilenameFilter;
 
 import ar.Glyphset;
 import ar.glyphsets.*;
-import ar.glyphsets.implicitgeometry.Valuer.Constant;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 public class BoundsSpeedTest {
 	public static void main(String[] args) throws Exception {
@@ -22,10 +23,10 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				Glyphset<?> glyphs = new PointMemMapList(source, .1, new Constant<Double>());
-//					Glyphset<?> glyphs = new GenMemMapList(source, 
-//							new ImplicitGeometry.IndexedToRect(.1, false, 0, 1), 
-//							new ImplicitGeometry.Constant<Double>());
+					Glyphset<Double> glyphs = new MemMapList(source, 
+							new Indexed.ToRect(.1,.1, false, 0, 1), 
+							new Valuer.Constant<Double>(),
+							Double.class);
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();
