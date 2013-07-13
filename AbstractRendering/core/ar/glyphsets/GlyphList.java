@@ -47,7 +47,7 @@ public class GlyphList<T> implements Glyphset<T>, Glyphset.RandomAccess<T> {
 	
 	public Class<T> valueType() {return valueType;}
 
-	public long limit() {return size();}
+	public long segments() {return size();}
 
 	public Glyphset<T> segment(long bottom, long top)
 			throws IllegalArgumentException {

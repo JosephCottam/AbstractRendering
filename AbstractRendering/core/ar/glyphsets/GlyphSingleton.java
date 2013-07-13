@@ -36,7 +36,7 @@ public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 		else {return Collections.emptyList();}
 	}
 
-	public long limit() {return 1;}
+	public long segments() {return 1;}
 	public Glyphset<G> segment(long bottom, long top)
 			throws IllegalArgumentException {return this;}
 }

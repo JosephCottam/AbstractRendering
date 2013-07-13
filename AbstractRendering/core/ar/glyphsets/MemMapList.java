@@ -191,7 +191,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	}
 
-	public long limit() {return size();}
+	public long segments() {return size();}
 
 	@Override
 	public Glyphset<V> segment(long bottom, long top)

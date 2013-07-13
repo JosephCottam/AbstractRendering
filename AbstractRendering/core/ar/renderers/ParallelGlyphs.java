@@ -67,7 +67,7 @@ public class ParallelGlyphs implements Renderer {
 				(AggregateReducer<A,A,A>) reducer, 
 				width, height, taskSize,
 				recorder,
-				0, glyphs.limit());
+				0, glyphs.segments());
 		
 		Aggregates<A> a= pool.invoke(t);
 		

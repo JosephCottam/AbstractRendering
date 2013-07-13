@@ -27,7 +27,7 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	public long size() {return high - low;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public Class<G> valueType() {return glyphs.valueType();}
-	public long limit() {return high - low;}
+	public long segments() {return high - low;}
 	public Glyphset<G> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		return new Cached<G>(glyphs, bottom + this.low, top + this.low);

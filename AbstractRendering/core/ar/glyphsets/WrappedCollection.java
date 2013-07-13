@@ -65,7 +65,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	
 
 	@Override
-	public long limit() {return values.size();}
+	public long segments() {return values.size();}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -104,7 +104,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 		}
 
 		@Override
-		public long limit() {return size();}
+		public long segments() {return size();}
 
 		@Override
 		public Glyphset<V> segment(long bottom, long top) {

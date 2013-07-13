@@ -278,7 +278,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		public void items(Collection<Glyph<V>> collector) {child.items(collector);}
 		public void intersects(Rectangle2D pixel, Collection<Glyph<V>> collector) {child.intersects(pixel, collector);}
 		public String toString(int indent) {return child.toString(indent);}
-		public long limit() {return child.limit();}
+		public long segments() {return child.segments();}
 		public Glyphset<V> segment(long bottom, long top) {return child.segment(bottom, top);}
 		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 	}
@@ -357,7 +357,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 			for (DynamicQuadTree<V> q: quads) {b.append(q.toString(indent+1));}
 			return String.format("%sNode: %d items\n", Util.indent(indent), size()) + b.toString();
 		}
-		public long limit() {return quads.length;}
+		public long segments() {return quads.length;}
 		public Glyphset<V> segment(long bottom, long top) {
 			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
 		}
@@ -454,7 +454,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 			for (DynamicQuadTree<V> q: quads) {q.items(collector);}
 		}
 		
-		public long limit() {return quads.length;}
+		public long segments() {return quads.length;}
 		public Glyphset<V> segment(long bottom, long top) {
 			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
 		}
@@ -488,7 +488,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		protected void intersects(Rectangle2D pixel, Collection<Glyph<V>> collector) {
 			for (Glyph<V> g: items) {if (g.shape().intersects(pixel)) {collector.add(g);}}
 		}
-		public long limit() {return items.size();}
+		public long segments() {return items.size();}
 		public Glyphset<V> segment(long bottom, long top) {
 			return new GlyphSubset.Uncached<V>(this, bottom, top);
 		}

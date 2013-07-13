@@ -69,25 +69,29 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 */
 	public static interface RandomAccess<T> extends Glyphset<T> {public Glyph<T> get(long l);}
 		
-	/**One greater than the highest value for top.
-	 * Analogous to "length" or "size" but without the semantic interpretation. 
+	
+	/**One greater than the highest value for "top" in "segment".
+	 * 
+	 * Analogous to "length" or "size" but without the semantic interpretation on what underlies
+	 * this glyphset.  This only controls how many segments can be reliably made. 
 	 **/
-	public long limit();
+	public long segments();
 
 	/**
 	 * Get a subset of the data.
 	 * 
 	 * The precise meaning of "bottom" and "top" is left up to the
 	 * implementation. To simplify requests, bottom is considered inclusive
-	 * and top as non-inclusive. This enables array-slicing conventions to
+	 * and top as non-inclusive. This enables array-subset conventions to
 	 * be followed. (Old top becomes new bottom.) Similarly, the highest
-	 * valid value from top is returned by the limit method.
+	 * valid value from top is returned by the "segments" method.
 	 * 
-	 * Bottom must be lower than top. A value above limit should be an
+	 * Bottom must be lower than top. A value above "segments" should be an
 	 * exception.
 	 * 
 	 * Equally spaced bottom/top pairs **do not** need to return subsets of
-	 * the same size.
+	 * the same size.  Similarly, if s1=segment(a,b) and s2=segment(b,c)
+	 * then s1 and s2 do not need to contain contiguous chunks.  
 	 * 
 	 * @param bottom  Lower marker. This is an inclusive bound.
 	 * @param top Upper marker. This is an exclusive bound.
