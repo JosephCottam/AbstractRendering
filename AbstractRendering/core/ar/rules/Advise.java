@@ -68,8 +68,8 @@ public class Advise {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
-			this.under = new Advise.UnderSaturate<>(base);
-			this.over = new Advise.OverSaturate<>(base, new NumberComp());
+			this.under = new Advise.UnderSaturate<Number, Color>(base);
+			this.over = new Advise.OverSaturate<Number, Color>(base, new NumberComp());
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
