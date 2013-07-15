@@ -1,18 +1,23 @@
 package ar.ext.rhipe;
 
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.Glyph;
 import ar.Glyphset;
+import ar.Renderer;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.SerialSpatial;
+import ar.rules.Aggregators;
 
 public class RHIPETools {
 	/**Provide a delimited string and receive a glyphset.
@@ -77,5 +82,22 @@ public class RHIPETools {
 			}
 		}
 		return entries.toArray(new String[entries.size()]);
+	}
+	
+	/**Convenience method for using the RHIPE tools in their default configurations.
+	 * Also servers as an example call sequence if being used from R.
+	 * @param entries
+	 * @param ivt
+	 * @param width
+	 * @param height
+	 * @return
+	 */
+	public static String[] render(String entries, AffineTransform ivt, int width, int height) {
+		TraceEntry te = new TraceEntry();
+		Glyphset glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
+		Renderer r = new SerialSpatial();
+		Aggregator agg = new Aggregators.Count();
+		Aggregates aggs = r.reduce(glyphs, agg, ivt, width, height);
+		return reduceKeys(aggs);
 	}
 }
