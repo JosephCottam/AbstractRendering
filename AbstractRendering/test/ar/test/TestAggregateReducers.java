@@ -7,7 +7,7 @@ import org.junit.Test;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.aggregates.FlatAggregates;
-import ar.rules.AggregateReductions;
+import ar.renderers.AggregationStrategies;
 
 public class TestAggregateReducers {
 
@@ -15,7 +15,7 @@ public class TestAggregateReducers {
 	public void rollupSimpleIntegers() {
 		int width=10;
 		int height=12;
-		AggregateReducer<Integer,Integer,Integer> red = new AggregateReductions.Count();
+		AggregateReducer<Integer,Integer,Integer> red = new AggregationStrategies.Count();
 		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
 		Aggregates<Integer> end = AggregateReducer.Strategies.foldUp(start, red);
 		

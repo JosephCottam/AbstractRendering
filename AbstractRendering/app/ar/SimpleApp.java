@@ -12,8 +12,8 @@ import javax.swing.SwingUtilities;
 import ar.app.components.ARPanel;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
-import ar.rules.AggregateReductions;
 import ar.rules.Aggregators;
 import ar.rules.Transfers;
 import ar.util.DelimitedReader;
@@ -58,7 +58,7 @@ public class SimpleApp {
 		//The ParalleGlyph renderer is the highest performance BUT requires
 		// the glyphset to be partitionable and requires an "Aggregate Reduction" function
 		// to combine results from different glyph subsets.
-		Renderer r = new ParallelGlyphs(new AggregateReductions.Count());
+		Renderer r = new ParallelGlyphs(new AggregationStrategies.Count());
 
 		//The Aggregator is used to combine values from multiple glyphs into a value for a single
 		//aggregate bin.  The 'Count' aggregator simply counts how many glyphs fell into the bin.

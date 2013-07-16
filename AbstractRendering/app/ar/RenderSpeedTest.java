@@ -14,10 +14,10 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
+import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.renderers.SerialSpatial;
-import ar.rules.AggregateReductions;
 
 /**Tests the amount of time to render count visualizations.
  * 
@@ -42,7 +42,7 @@ public class RenderSpeedTest {
 		
 		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
 		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
-		AggregateReducer<Integer,Integer,Integer> reduction = new AggregateReductions.Count();
+		AggregateReducer<Integer,Integer,Integer> reduction = new AggregationStrategies.Count();
 	
 		ARPanel.PERF_MON = true;
 		ParallelGlyphs.THREAD_POOL_SIZE = cores;

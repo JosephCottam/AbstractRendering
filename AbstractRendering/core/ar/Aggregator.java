@@ -44,7 +44,7 @@ public interface Aggregator<IN,OUT> extends Inspectable<IN,OUT> {
 	 * @param sources Values from the base aggregates
 	 * @return Combination of the passed aggregates
 	 */
-	public OUT rollup(List<IN> sources);
+	public OUT rollup(List<OUT> sources);
 
 	
 	/**What value is an mathematical identity value for this operation?

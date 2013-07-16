@@ -12,7 +12,7 @@ import org.junit.Test;
 import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.ext.tiles.TileUtils;
-import ar.rules.AggregateReductions;
+import ar.renderers.AggregationStrategies;
 import ar.test.aggregates.AggregatesImplementationsTest;
 
 public class TileUtilsTest {
@@ -37,7 +37,7 @@ public class TileUtilsTest {
 	@Test
 	public void tileCascade() throws Exception {
 		Aggregates<Integer> aggs = AggregatesImplementationsTest.simpleAggregates(0,0,1000,1000, -1);
-		AggregateReducer<Integer,Integer,Integer> red = new AggregateReductions.Count();
+		AggregateReducer<Integer,Integer,Integer> red = new AggregationStrategies.Count();
 		File root = new File("./testResults/tileset");
 		org.apache.commons.io.FileUtils.deleteDirectory(root);
 		assertFalse("Failed to remove directory.", root.exists());

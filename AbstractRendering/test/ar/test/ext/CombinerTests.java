@@ -16,8 +16,8 @@ import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
+import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelSpatial;
-import ar.rules.AggregateReductions;
 import ar.rules.Aggregators;
 import ar.util.Util;
 
@@ -33,7 +33,7 @@ public class CombinerTests {
 	
 	@Test
 	public void startStop() throws Exception{
-		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregateReductions.Count());
+		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregationStrategies.Count());
 		c.start();
 		if (!c.running()) {Thread.yield();}
 		if (!c.running()) {Thread.sleep(1000);}
@@ -44,7 +44,7 @@ public class CombinerTests {
 
 	@Test
 	public void recieve() throws Exception{
-		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregateReductions.Count());
+		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregationStrategies.Count());
 		c.start();
 
 		Aggregates<Integer> aggs = count;

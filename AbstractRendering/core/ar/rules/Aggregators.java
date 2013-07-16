@@ -49,19 +49,6 @@ public class Aggregators {
 		public boolean equals(Object other) {return other instanceof IDColor;}
 	}
 
-	
-	/**How many items are in the given pixel**/
-	public static final class Count implements Aggregator<Object, Integer> {
-		public Integer at(Rectangle pixel, Glyphset<? extends Object> glyphs, AffineTransform v) {
-			Rectangle2D b = v.createTransformedShape(pixel).getBounds2D();
-			Collection<? extends Glyph<? extends Object>> items = glyphs.intersects(b);
-			return items.size();
-		}
-		public Integer identity() {return 0;}
-		public Class<Object> input() {return Object.class;}
-		public Class<Integer> output() {return Integer.class;}
-		public boolean equals(Object other) {return other instanceof Count;}
-	}
 
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
