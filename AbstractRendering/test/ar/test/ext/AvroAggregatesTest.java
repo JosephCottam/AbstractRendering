@@ -26,6 +26,7 @@ import ar.renderers.ParallelSpatial;
 import ar.rules.Aggregators;
 import ar.rules.Aggregators.RLE;
 
+import ar.aggregates.FlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.AggregateSerializer.FORMAT;
@@ -51,6 +52,33 @@ public class AvroAggregatesTest {
 	}
 	
 	@Test
+	public void inOrderEqOutOrder() throws Exception {
+		Aggregates<Integer> ref = new FlatAggregates<Integer>(2,2,-1);
+		ref.set(0, 0, 11);
+		ref.set(0, 1, 12);
+		ref.set(1, 0, 21);
+		ref.set(1, 1, 22);
+		
+		String filename ="./testResults/counts.avro";
+		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
+		OutputStream out = new FileOutputStream(filename);
+		AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
+		Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
+
+		assertEquals(ref.lowX(), res.lowX());
+		assertEquals(ref.lowY(), res.lowY());
+		assertEquals(ref.highX(), res.highX());
+		assertEquals(ref.highY(), res.highY());
+		assertEquals(ref.defaultValue(), res.defaultValue());
+		
+		for (int x=ref.lowX(); x<ref.highX(); x++) {
+			for (int y=ref.lowY(); y<ref.highY(); y++)
+				assertEquals(String.format("Value at (%d, %d)",x,y), ref.at(x, y), res.at(x, y));
+		}
+	}
+	
+	
+	@Test
 	public void countsRoundTrip() throws Exception {
 		Aggregates<Integer> ref = count;
 		String filename ="./testResults/counts.avro";
@@ -69,7 +97,6 @@ public class AvroAggregatesTest {
 			for (int y=ref.lowY(); y<ref.highY(); y++)
 				assertEquals(String.format("Value at (%d, %d)",x,y), ref.at(x, y), res.at(x, y));
 		}
-
 	}
 	
 	@Test
@@ -84,10 +111,10 @@ public class AvroAggregatesTest {
 		JsonNode n = mapper.readTree(p);
 		
 		
-		assertEquals(ref.lowX(), n.get("lowX").getIntValue());
-		assertEquals(ref.lowY(), n.get("lowY").getIntValue());
-		assertEquals(ref.highX(), n.get("highX").getIntValue());
-		assertEquals(ref.highY(), n.get("highY").getIntValue());
+		assertEquals(ref.lowX(), n.get("xOffset").getIntValue());
+		assertEquals(ref.lowY(), n.get("yOffset").getIntValue());
+		assertEquals(ref.highX(), n.get("xBinCount").getIntValue());
+		assertEquals(ref.highY(), n.get("yBinCount").getIntValue());
 	}
 	
 	

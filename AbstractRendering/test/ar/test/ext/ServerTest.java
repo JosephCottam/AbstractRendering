@@ -34,7 +34,7 @@ public class ServerTest {
 		server.start();
 		String r = sendMessage("circlepoints","Count","RedWhiteLinear", "localhost", 8080);
 		server.stop();
-		assertTrue(r, r.startsWith("{\"lowX"));
+		assertTrue(r, r.startsWith("{\"xOffset"));
 	}
 
 	public String sendMessage(String dataset, String aggregate, String transfer, String host, int port) throws Exception {

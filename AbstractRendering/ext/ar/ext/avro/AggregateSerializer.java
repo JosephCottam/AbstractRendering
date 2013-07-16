@@ -31,7 +31,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.Aggregators.RLE;
 
 public class AggregateSerializer {
-	public static final String AGGREGATES_SCHEMA ="ar/ext/avro/aggregates.avsc";
+	public static final String AGGREGATES_SCHEMA ="ar/ext/avro/tile.avsc";
 	public static final String COUNTS_SCHEMA="ar/ext/avro/count.avsc";
 	public static final String RLE_SCHEMA="ar/ext/avro/rle.avsc";
 	public static final String COLOR_SCHEMA="ar/ext/avro/color.avsc";
@@ -54,16 +54,16 @@ public class AggregateSerializer {
 			Schema schema, 
 			FORMAT format,
 			GenericRecord defaultVal, 
-			List<List<GenericRecord>> values) {
+			List<GenericRecord> values) {
 
 		GenericRecord aggregates = new GenericData.Record(schema);
-		aggregates.put("lowX", aggs.lowX());
-		aggregates.put("lowY", aggs.lowY());
-		aggregates.put("highX", aggs.highX());
-		aggregates.put("highY", aggs.highY());
+		aggregates.put("xOffset", aggs.lowX());
+		aggregates.put("yOffset", aggs.lowY());
+		aggregates.put("xBinCount", aggs.highX()-aggs.lowX());
+		aggregates.put("yBinCount", aggs.highY()-aggs.lowX());
 		aggregates.put("values", values);
 		aggregates.put("default", defaultVal);
-		aggregates.put("Z", 0);
+		aggregates.put("level", 0);
 		aggregates.put("meta", META);
 
 		try {
@@ -99,18 +99,16 @@ public class AggregateSerializer {
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, FORMAT format, Valuer<A, GenericRecord> converter) throws IOException {
 		Schema fullSchema = new SchemaComposer().add(itemSchema).addResource(AGGREGATES_SCHEMA).resolved();
 
-		List<List<GenericRecord>> records = new ArrayList<List<GenericRecord>>();
+		List<GenericRecord> records = new ArrayList<GenericRecord>();
 		A defVal = aggs.defaultValue();
 		GenericRecord defrec = converter.value(defVal);
 
-		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-			List<GenericRecord> row = new ArrayList<GenericRecord>();
-			records.add(row);
-			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				A val = aggs.at(x,y);
 				//if (defVal == val || (defVal != null && defVal.equals(val))) {continue;}  TODO: Investigate reinstating default-value omission by making a union type with null...(maybe)
 				GenericRecord vr = converter.value(val);
-				row.add(vr);
+				records.add(vr);
 			}
 		}
 
@@ -126,8 +124,9 @@ public class AggregateSerializer {
 	 * @param outputStream
 	 * @throws IOException
 	 */
-	@SuppressWarnings("unchecked")
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream outputStream) throws IOException {serialize(aggs, outputStream, FORMAT.BINARY);}
+
+	@SuppressWarnings("unchecked")
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream outputStream, FORMAT format) throws IOException {
 		Object v = aggs.defaultValue();
 		Schema schema;
@@ -166,24 +165,24 @@ public class AggregateSerializer {
 			DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr);
 			GenericRecord r = fr.next();
 
-			int lowX = (Integer) r.get("lowX");
-			int lowY = (Integer) r.get("lowY");
-			int highX = (Integer) r.get("highX");
-			int highY = (Integer) r.get("highY");
+			int lowX = (Integer) r.get("xOffset");
+			int lowY = (Integer) r.get("yOffset");
+			int xCount = (Integer) r.get("xBinCount");
+			int yCount = (Integer) r.get("yBinCount");
+			int highX = lowX+xCount;
+			int highY = lowY+yCount;
 			A defVal = converter.value((GenericRecord) r.get("default"));			
-			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
-					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
+			GenericData.Array<GenericRecord> entries = 
+					(GenericData.Array<GenericRecord>) r.get("values");
 
 			Aggregates<A> aggs = new FlatAggregates<A>(lowX, lowY, highX, highY, defVal);
-			for (int row=0; row<rows.size(); row++) {
-				int x = row+aggs.lowX();
-				GenericData.Array<GenericRecord> cols = rows.get(row);
-				for (int col=0; col<cols.size(); col++){
-					int y=col+aggs.lowY();
-					GenericRecord val = cols.get(col);
-					aggs.set(x, y, converter.value(val));
-				}
+			for (int i=0; i<entries.size(); i++) {
+				int x = i % xCount;
+				int y = i / xCount;
+				A val = converter.value(entries.get(i));
+				aggs.set(x+lowX, y+lowY, val);
 			}
+
 			fr.close();
 			return aggs;
 		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
