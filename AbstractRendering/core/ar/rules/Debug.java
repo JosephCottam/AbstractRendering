@@ -7,8 +7,6 @@ import java.util.List;
 
 import ar.Aggregator;
 import ar.Glyphset;
-import ar.rules.Aggregators.Gradient;
-import ar.rules.Aggregators.IDColor;
 import ar.util.Util;
 
 /**Classes used largely for debugging.

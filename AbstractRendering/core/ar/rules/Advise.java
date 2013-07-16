@@ -16,7 +16,7 @@ public class Advise {
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
-		public Class<A> input() {return ref.input();} 
+		public Class<?> input() {return ref.input();} 
 		public Class<Boolean> output() {return Boolean.class;}
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -41,7 +41,7 @@ public class Advise {
 			this.ref = reference;
 			this.comp = comp;
 		}
-		public Class<A> input() {return ref.input();} 
+		public Class<?> input() {return ref.input();} 
 		public Class<Boolean> output() {return Boolean.class;}
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {

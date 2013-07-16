@@ -1,27 +1,17 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
+import ar.Aggregates;
 import ar.Aggregator;
-import ar.Glyph;
-import ar.Glyphset;
-import ar.rules.Aggregators.First;
-import ar.rules.Aggregators.IDColor;
-import ar.rules.Aggregators.Last;
-import ar.rules.Aggregators.RLE;
+import ar.Transfer;
+import ar.aggregates.FlatAggregates;
 import ar.util.Util;
+import static ar.rules.CategoricalCounts.CoC;
+import static ar.rules.CategoricalCounts.RLE;
 
 public class Categories {
-
-
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
 		public Color combine(long x, long y, Color left, Color update) {
@@ -113,83 +103,166 @@ public class Categories {
 	}
 	
 	
-	/**Encapsulation of run-length encoding information.
-	 * A run-length encoding describes the counts of the items found
-	 * in the order they were found.  The same category may appear 
-	 * multiple times if items of the category are interspersed with
-	 * items from other categories.
-	 */
-	public static final class RLE {
-		public final List<Object> keys = new ArrayList<Object>();
-		public final List<Integer> counts = new ArrayList<Integer>();
-		public int fullSize =0;
-		public void add(Object key, int count) {
-			keys.add(key);
-			counts.add(count);
-			fullSize+=count;
+	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
+		private final Class<T> type;
+		public CountCategories(Class<T> type) {this.type = type;}
+
+		public Class<T> input() {return type;}
+		public Class<CoC<T>> output() {return (Class<CoC<T>>) identity().getClass();}
+
+		@Override
+		public CoC<T> combine(long x, long y, CoC<T> left, T update) {
+			left.add(update, 1);
+			return left;
 		}
-		public int count(int i) {return counts.get(i);}
-		public Object key(int i) {return keys.get(i);}
-		public int size() {return keys.size();}
-		public int fullSize() {return fullSize;}
-		public String toString() {return "RLE: " + Arrays.deepToString(counts.toArray());}
-		public int val(Object category) {
-			for (int i=0; i<keys.size();i++) {
-				if (keys.get(i).equals(category)) {return counts.get(i);}
+
+		@Override
+		public CoC<T> rollup(List<CoC<T>> sources) {
+			CoC<T> combined = new CoC<T>();
+			for (CoC<T> counts: sources) {
+				for (T key: counts.counts.keySet()) {
+					combined.add(key, counts.count(key));
+				}
 			}
-			return 0;
+			return combined;
+		}
+
+		@Override
+		public CoC<T> identity() {return new CoC<T>();}
+	}
+	
+	/**Pull the nth-item from a set of categories.**/
+	public static final class NthItem<T> implements Transfer<CategoricalCounts<T>, Integer> {
+		private final Integer background;
+		private final int n;
+		
+		public NthItem(Integer background, int n) {
+			this.background = background;
+			this.n = n;
 		}
 		
-		public boolean equals(Object other) {
-			if (!(other instanceof RLE)) {return false;}
-			RLE alter = (RLE) other;
-			return counts.equals(alter.counts) && keys.equals(alter.keys);
+		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
+			CategoricalCounts<T> cats = aggregates.at(x,y);
+			if (cats.size() <= n) {return background;}
+			else {return cats.count(n);}
 		}
-	}	
+		
+		public Integer emptyValue() {return background;}
+		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
+		public Class<Integer> output() {return Integer.class;}
+	}
 	
-	/**Merge per-category counts.
+
+	/**Switch between two colors depending on the percent contribution of
+	 * a specified category.
 	 * 
-	 * Because function cannot know the original source interleaving,
-	 * it cannot strictly merge run-length encodings.  Instead, it merges
-	 * items by category and produces a new summation by category.
-	 * This by-category summation is still stored in a run-length encoding
-	 * for interaction with other methods that ignore RLE order.
-	 * 
-	 * TODO: Make a CoC class and an interface that captures what is shared between CoC and RLE.
+	 * TODO: Convert from RLE to CoC based
 	 * 
 	 * **/
-	public static class MergeCOC implements AggregateReducer<RLE,RLE,RLE> {
-		public RLE combine(RLE left, RLE right) {
-			if (left == null || left.size()==0) {return right;}
-			if (right == null || left.size()==0) {return left;}
-			
-			HashSet<Object> categories = new HashSet<Object>();
-			categories.addAll(left.keys);
-			categories.addAll(right.keys);
-			
-			RLE total = new RLE();
-			
-			for (Object category: categories) {
-				int v1 = left.val(category);
-				int v2 = right.val(category);
-				total.add(category, v1+v2);
-			}
-			return total;
+	public static final class FirstPercent implements Transfer<RLE, Color> {
+		private final double ratio;
+		private final Color background, match, noMatch;
+		private final Object firstKey;
+		
+		public FirstPercent(double ratio, Object firstKey,  Color background, Color match, Color noMatch) {
+			this.ratio = ratio;
+			this.background = background;
+			this.match = match;
+			this.noMatch = noMatch;
+			this.firstKey = firstKey;
 		}
 		
-		@Override
-		public RLE rollup(List<RLE> sources) {
-			RLE acc = new RLE();
-			for (RLE entry: sources) {acc = combine(acc, entry);}
-			return acc;
+		public Color at(int x, int y, Aggregates<? extends RLE> aggregates) {
+			RLE rle = aggregates.at(x,y);
+			double size = rle.fullSize();
+			
+			if (size == 0) {return background;}
+			else if (!rle.key(0).equals(firstKey)) {return noMatch;} 
+			else if (rle.count(0)/size >= ratio) {return match;}
+			else {return noMatch;}
 		}
 		
-		
-		public RLE zero() {return new RLE();}
-		public String toString() {return "CoC (RLE x RLE -> RLE)";}
-		public Class<RLE> left() {return RLE.class;}
-		public Class<RLE> right() {return RLE.class;}
-		public Class<RLE> output() {return RLE.class;}
+		public Color emptyValue() {return Util.CLEAR;}
+		public Class<RLE> input() {return RLE.class;}
+		public Class<Color> output() {return Color.class;}
 	}
+	
+	
+	/**Performs high-definition alpha composition on a run-length encoding.
+	 * High-definition alpha composition computes color compositions in double space
+	 * with knowledge of the full range of compositions that will be required.
+	 * (See "Visual Analysis of Inter-Process Communication for Large-Scale Parallel Computing"
+	 *  by Chris Muelder, Francois Gygi, and Kwan-Liu Ma).
+	 *  
+	 * @author jcottam
+	 *
+	 */
+	public static final class HighAlpha implements Transfer<RLE, Color> {
+		private final Color background;
+		private boolean log;
+		private double omin;
+		private Aggregates<Color> colors;
+		private Aggregates<? extends RLE> cacheKey;
+		
+		public HighAlpha(Color background, double omin, boolean log) {
+			this.background = background;
+			this.log = log;
+			this.omin = omin;
+		}
+		
+		private Color fullInterpolate(RLE rle) {
+			double total = rle.fullSize();
+			double r = 0;
+			double g = 0;
+			double b = 0;
+			
+			for (int i=0; i< rle.size(); i++) {
+				Color c = (Color) rle.key(i);
+				double p = rle.count(i)/total;
+				double r2 = (c.getRed()/255.0) * p;
+				double g2 = (c.getGreen()/255.0) * p;
+				double b2 = (c.getBlue()/255.0) * p;
+
+				r += r2;
+				g += g2;
+				b += b2;
+			}
+			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
+		}
+		
+		public Color at(int x, int y, Aggregates<? extends RLE> aggregates) {
+			if (aggregates!=cacheKey) {
+				double max =0;
+				colors = new FlatAggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
+				for (RLE rle:aggregates) {max = Math.max(max,rle.fullSize());}
+				for (int xi=0; xi<aggregates.highX(); xi++) {
+					for (int yi =0; yi<aggregates.highY(); yi++) {
+						RLE rle = aggregates.at(xi, yi);
+						Color c;
+						if (rle.fullSize() == 0) {c = background;}
+						else {
+							c = fullInterpolate(rle);
+							double alpha;
+							if (log) {
+								alpha = omin + ((1-omin) * (Math.log(rle.fullSize())/Math.log(max)));
+							} else {
+								alpha = omin + ((1-omin) * (rle.fullSize()/max));
+							}
+							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
+						}
+						colors.set(xi, yi, c);
+					}
+				}
+				cacheKey = aggregates;
+			}
+			return colors.at(x, y);			
+		}
+		
+		public Color emptyValue() {return Util.CLEAR;}
+		public Class<RLE> input() {return RLE.class;}
+		public Class<Color> output() {return Color.class;}
+	}
+
+	
 
 }
