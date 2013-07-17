@@ -1,5 +1,6 @@
 package ar;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FilenameFilter;
 
@@ -23,10 +24,11 @@ public class BoundsSpeedTest {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-					Glyphset<Double> glyphs = new MemMapList(source, 
+				Glyphset<Color> glyphs = new MemMapList<Color>(
+							source, 
 							new Indexed.ToRect(.1,.1, false, 0, 1), 
-							new Valuer.Constant<Double>(),
-							Double.class);
+							new Valuer.Constant<Indexed>(),
+							Color.class);
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();

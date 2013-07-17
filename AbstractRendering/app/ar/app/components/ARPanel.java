@@ -135,6 +135,7 @@ public class ARPanel extends JPanel {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 
+			@SuppressWarnings("unchecked")
 			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();

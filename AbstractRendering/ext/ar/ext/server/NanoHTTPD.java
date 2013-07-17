@@ -55,6 +55,7 @@ import java.util.*;
  * <p/>
  * See the separate "LICENSE.md" file for the distribution license (Modified BSD licence)
  */
+@SuppressWarnings("all")
 public abstract class NanoHTTPD {
     /**
      * Common mime type for dynamic content: plain text

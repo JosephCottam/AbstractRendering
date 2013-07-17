@@ -18,7 +18,7 @@
        "doc": "The actual data for this tile.  Stored as a row-major flatened-array."},
 
       {"name": "default", "type": ["ar.avro.recordType","null"], "default":"null",
-        "doc": "Default value inside the system.  Analogous to an image's background color or null"},
+        "doc": "Default value inside the system.  Analogous to an image's background color"},
 
       {"name": "level", "type": ["int","null"], "default":"0",
        "doc": "The Z-level at which this tile lies.  Z=0 is the least-precise (zoomed-farthest-out) tile"},

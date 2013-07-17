@@ -116,7 +116,6 @@ public class ARApp implements PanelHolder {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
-				@SuppressWarnings("unchecked")
 				B i = (B) cls.getConstructor().newInstance();
 				target.addItem(i);
 			} catch (InstantiationException | IllegalAccessException
@@ -157,6 +156,7 @@ public class ARApp implements PanelHolder {
 	 * @param args
 	 * @throws Exception 
 	 */
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {
 			new ARApp();

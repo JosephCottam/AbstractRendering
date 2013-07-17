@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 
 import ar.Aggregates;
@@ -19,16 +18,14 @@ public final class SerialSpatial implements Renderer {
 	public SerialSpatial() {recorder = RenderUtils.recorder();}
 
 	
-	public <V,A> Aggregates<A> reduce(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op,   
+	public <V,A> Aggregates<A> reduce(final Glyphset<? extends V> glyphset, final Aggregator<V,A> op,   
 			final AffineTransform inverseView, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
-		Rectangle pixel = new Rectangle(0,0,1,1);
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-				pixel.setLocation(x,y);
-				A value = op.at(pixel,glyphs,inverseView);
-				aggregates.set(x,y,value);
+				A val = AggregationStrategies.pixel(aggregates, op, glyphset, inverseView, x, y);
+				aggregates.set(x, y, val);
 				recorder.update(1);
 			}
 		}
@@ -37,6 +34,8 @@ public final class SerialSpatial implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
 		Aggregates<OUT> out = new FlatAggregates<OUT>(aggregates, t.emptyValue());
+		t.specialize(aggregates);
+		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 				OUT val = t.at(x, y, aggregates);

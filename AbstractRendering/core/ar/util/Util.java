@@ -6,11 +6,11 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import ar.Aggregates;
 import ar.Glyph;
-import ar.aggregates.FlatAggregates;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {
@@ -18,7 +18,15 @@ public final class Util {
 	public static final Color CLEAR = new Color(0,0,0,0);
 
 	private Util() {}
+	
+	/**Sort a set of colors.**/
+	public static final Comparator<Color> COLOR_SORTER  = new Comparator<Color>() {
+		public int compare(Color o1, Color o2) {
+			return o1.getRGB() - o2.getRGB();
+		}
+	};
 
+	
 	/**Create an indentation string of x*2 spaces.**/
 	public static String indent(int x) {
 		char[] chars = new char[x*2];
@@ -161,19 +169,6 @@ public final class Util {
 		return new Stats(min,max,mean,stdev);
 	}
 
-	public static <T extends Number> Aggregates<Double> score(Aggregates<T> source, Stats extrema) {
-		final Aggregates<Double> results = new FlatAggregates<Double>(source.highX(), source.highY(), 0d);
-		final double mean = extrema.mean;
-		final double stdev = extrema.stdev;
-		for (int x=0;x<results.lowX();x++) {
-			for (int y=0; y<results.highX(); y++) {
-				final double v = source.at(x, y).doubleValue();
-				final double z = Math.abs((v-mean)/stdev);
-				results.set(x, y, z);
-			}
-		}
-		return results;
-	}
 
 	public static final class Stats {
 		public final double min;

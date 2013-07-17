@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
@@ -92,12 +91,10 @@ public final class ParallelSpatial implements Renderer {
 				ReduceTask<G,A> NE = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, centery, highx,   highy);
 				invokeAll(SW,NW,SE,NE);
 			} else {
-				Rectangle pixel = new Rectangle(0,0,1,1);
 				for (int x=lowx; x<highx; x++) {
 					for (int y=lowy; y<highy; y++) {
-						pixel.setLocation(x, y);
-						A value = op.at(pixel,glyphs,inverseView);
-						aggs.set(x,y,value);
+						A val = AggregationStrategies.pixel(aggs, op, glyphs, inverseView, x, y);
+						aggs.set(x, y, val);
 						recorder.update(1);
 					}
 				}

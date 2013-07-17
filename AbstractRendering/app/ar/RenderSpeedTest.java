@@ -17,7 +17,6 @@ import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.renderers.SerialSpatial;
-import ar.rules.AggregateReductions;
 
 /**Tests the amount of time to render count visualizations.
  * 
@@ -42,7 +41,6 @@ public class RenderSpeedTest {
 		
 		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
 		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
-		AggregateReducer<Integer,Integer,Integer> reduction = new AggregateReductions.Count();
 	
 		ARPanel.PERF_MON = true;
 		ParallelGlyphs.THREAD_POOL_SIZE = cores;
@@ -51,7 +49,7 @@ public class RenderSpeedTest {
 		Renderer render;
 		Glyphset<Color> glyphs;
 		if (rend.startsWith("GLYPH")) {
-			render = new ParallelGlyphs(task, reduction);
+			render = new ParallelGlyphs(task);
 			glyphs = new MemMapList<Color>(
 						new File(source), 
 						new ToRect(.005, .005, false, 0, 1), 

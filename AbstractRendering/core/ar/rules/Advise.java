@@ -16,7 +16,7 @@ public class Advise {
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
-		public Class<A> input() {return ref.input();} 
+		public Class<?> input() {return ref.input();} 
 		public Class<Boolean> output() {return Boolean.class;}
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -26,6 +26,7 @@ public class Advise {
 			B out = ref.at(x, y, aggregates);
 			return !Util.isEqual(val, def) && Util.isEqual(empty, out); 
 		}
+		public void specialize(Aggregates<? extends A> aggregates) {/*No work to perform*/}
 	}
 	
 	//TODO: Extend to reporting the magnitude of the over-saturation
@@ -33,27 +34,27 @@ public class Advise {
 	//TODO: What about "perceptual differences" vs just absolute differences
 	public static class OverSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
+		private Comparator<A> comp;
 		private A max;
 		private B top;
-		private Aggregates<? extends A> cacheKey;
-		private Comparator<A> comp;
+
 		public OverSaturate(Transfer<A,B> reference, Comparator<A> comp) {
 			this.ref = reference;
 			this.comp = comp;
 		}
-		public Class<A> input() {return ref.input();} 
+		public Class<?> input() {return ref.input();} 
 		public Class<Boolean> output() {return Boolean.class;}
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
-			if (!Util.isEqual(cacheKey, aggregates)) {
-				Point p = max(aggregates, comp);
-				max = aggregates.at(p.x, p.y);
-				top = ref.at(p.x,p.y, aggregates);
-				cacheKey = aggregates;
-			}
 			A val = aggregates.at(x, y);
 			B out = ref.at(x, y, aggregates);
 			return !Util.isEqual(val, max) && Util.isEqual(top, out); 
+		}
+		@Override
+		public void specialize(Aggregates<? extends A> aggregates) {
+			Point p = max(aggregates, comp);
+			max = aggregates.at(p.x, p.y);
+			top = ref.at(p.x,p.y, aggregates);
 		}
 	}
 	
@@ -87,6 +88,12 @@ public class Advise {
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
 		public Color emptyValue() {return base.emptyValue();}
+
+		@Override
+		public void specialize(Aggregates<? extends Number> aggregates) {
+			over.specialize(aggregates);
+			under.specialize(aggregates);
+		}
 	}
 	
 	

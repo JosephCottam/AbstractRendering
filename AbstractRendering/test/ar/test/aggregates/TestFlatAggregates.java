@@ -1,4 +1,4 @@
-package ar.test;
+package ar.test.aggregates;
 
 import ar.Aggregates;
 import ar.aggregates.FlatAggregates;

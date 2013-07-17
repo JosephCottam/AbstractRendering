@@ -9,7 +9,7 @@ import ar.Aggregates;
 import ar.Transfer;
 import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
-import ar.rules.Transfers;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public class DrawDarkControl extends JPanel {
@@ -47,33 +47,30 @@ public class DrawDarkControl extends JPanel {
 		final int distance;
 		final Transfer<Number, Color> inner;
 		Aggregates<Double> cached;
-		Aggregates<? extends Number> cacheKey;
 		
 		public DrawDark(Color low, Color high, int distance) {
 			this.distance=distance;
-			inner = new Transfers.Interpolate(low,high,high,-1);
+			inner = new Numbers.Interpolate(low,high,high,-1);
 		}
 	
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			if (cacheKey == null || cacheKey != aggregates) {
-				preproc(aggregates); cacheKey=aggregates;
-			}
 			return inner.at(x,y,cached);
 		}
-		
-		private void preproc(Aggregates<? extends Number> aggs) {
-			Aggregates<Double> out = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
-			
+
+		@Override
+		public void specialize(Aggregates<? extends Number> aggs) {
+
+			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 					if (aggs.at(x, y).doubleValue() > 0) {
-						out.set(x, y, preprocOne(x,y,aggs));
+						cached.set(x, y, preprocOne(x,y,aggs));
 					} else {
-						out.set(x,y, Double.NaN);
+						cached.set(x,y, Double.NaN);
 					}
 				}
 			}
-			this.cached = out;
+			inner.specialize(cached);
 		}
 		
 		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {
@@ -96,5 +93,8 @@ public class DrawDarkControl extends JPanel {
 		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
+
+		
+
 	}
 }
