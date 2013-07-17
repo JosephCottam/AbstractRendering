@@ -45,12 +45,12 @@ public final class Numbers {
 		public Color emptyValue() {return Color.WHITE;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
+		public void specialize(Aggregates<? extends Number> aggregates) {/**No work to perform.**/}
 	}
 	
 	public static final class Interpolate implements Transfer<Number, Color> {
 		private final Color low, high, empty;
 		private final int logBasis;
-		private Aggregates<? extends Number> cacheKey;	//Could be a weak-reference instead...
 		private Util.Stats extrema;
 		
 		public Interpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
@@ -62,11 +62,6 @@ public final class Numbers {
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			if (cacheKey == null || cacheKey != aggregates) {
-				extrema = Util.stats(aggregates, false);
-				cacheKey = aggregates;
-			}
-			
 			Number v = aggregates.at(x,y);
 			if (v.equals(aggregates.defaultValue())) {
 				return empty;
@@ -78,6 +73,11 @@ public final class Numbers {
 				return Util.logInterpolate(low,high, extrema.min, extrema.max, v.doubleValue(), logBasis);
 			}
 		}
+
+		public void specialize(Aggregates<? extends Number> aggregates) {
+			this.extrema = Util.stats(aggregates, false);
+		}
+
 		
 		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}

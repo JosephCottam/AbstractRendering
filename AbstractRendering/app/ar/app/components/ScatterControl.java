@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
@@ -17,6 +19,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.event.ChangeEvent;
@@ -34,6 +37,7 @@ public class ScatterControl extends JPanel {
 	protected ARApp source;
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
+	protected final JButton refresh = new JButton("Refresh");
 	Transfer<Number, Color> basis = new Numbers.Interpolate(new Color(255,200,200), Color.RED); 
 
 	
@@ -42,6 +46,8 @@ public class ScatterControl extends JPanel {
 		this.plot = new Plot(this);
 		distance.setValue(1);
 		
+		refresh.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {plot.reset();}});
+
 		distance.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				plot.reset();
@@ -57,13 +63,18 @@ public class ScatterControl extends JPanel {
 		
 		
 		this.add(plot, BorderLayout.CENTER);
-		this.add(distance, BorderLayout.SOUTH);
+
+		JPanel p = new JPanel();
+		p.add(refresh);
+		p.add(distance);
+		this.add(p, BorderLayout.SOUTH);
 		this.invalidate();
 		this.repaint();
 	}
 	
 	
 	public void setSource(ARApp source) {this.source=source;}
+
 	public int distance() {return (Integer) distance.getValue();}
 	
 	public Transfer<Number,Color> getTransfer() {
@@ -271,6 +282,9 @@ public class ScatterControl extends JPanel {
 		public Color emptyValue() {return Util.CLEAR;}
 		public Class<Number> input() {return Number.class;}
 		public Class<Color> output() {return Color.class;}
+
+		@Override
+		public void specialize(Aggregates<? extends Number> aggregates) {/**No useful work.**/}
 	}
 	
 }

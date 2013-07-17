@@ -35,6 +35,7 @@ public class General {
 			return emptyValue();
 		}
 		public T identity() {return emptyValue();}
+		public void specialize(Aggregates<? extends T> aggregates) {/*No work to perform*/}
 	}
 
 	/**Return the given value when presented with a non-empty value.**/
@@ -53,6 +54,8 @@ public class General {
 			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
 			return absent;
 		}
+		
+		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform*/}
 		
 		public OUT emptyValue() {return absent;}
 		public Class<Object> input() {return Object.class;}

@@ -5,9 +5,7 @@ import java.awt.Color;
 
 import javax.swing.JFrame;
 
-import ar.Aggregates;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
@@ -43,12 +41,12 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 				flyAway.getContentPane().removeAll();
 				flyAway.add(control, BorderLayout.CENTER);
 				flyAway.revalidate();
-				
-				control.setSource(app);
 			} else {
 				flyAway.setVisible(true);
 			}
+			control.setSource(app);
 		} 
+
 		public void deselected() {
 			if (flyAway != null) {flyAway.setVisible(false);}
 		}
@@ -183,47 +181,4 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		}
 		public String toString() {return "Clip Warn HDALpha log (int)";}
 	};
-	
-	
-	public class ClearCol implements WrappedTransfer<Number,Color> {
-
-		@Override
-		public Transfer<Number,Color> op() {
-			return new Transfer<Number,Color> () {
-				protected Aggregates<Color> cached;
-				protected Aggregates<? extends Number> key;
-				public Color at(int x, int y, Aggregates<? extends Number> aggs) {
-					if (key == null || key != aggs) {
-						cached = new FlatAggregates<>(aggs, Color.BLACK);
-						key =aggs;
-						for (int c=aggs.lowX(); c<aggs.highX(); c++) {
-							Color v = Color.RED;
-							for (int r=aggs.lowY(); r<aggs.highY(); r++) {
-								if (!(aggs.at(c,r).equals(aggs.defaultValue()))) {
-									v = Color.BLUE;
-									break;
-								}
-							}
-							
-							for (int r=aggs.lowY(); r<aggs.highY(); r++) {cached.set(c, r, v);}
-						}
-						
-					}
-					return cached.at(x, y);
-				}
-				public Color emptyValue() {return Util.CLEAR;}
-				public Class<Number> input() {return Number.class;}
-				public Class<Color> output() {return Color.class;}
-			};
-		}
-
-		public void deselected() {}
-		public void selected(ARApp app) {}
-		public String toString() {return "Column filled (int)";}
-
-
-	}
-	
-	
-	
 }

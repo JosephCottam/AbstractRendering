@@ -14,7 +14,6 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.renderers.SerialSpatial;

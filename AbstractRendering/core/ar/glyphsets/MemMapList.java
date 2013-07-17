@@ -64,7 +64,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	private final File source;
 	private final TYPE[] types;
-	private final Valuer<Indexed,V> painter;
+	private final Valuer<Indexed,V> valuer;
 	private final Shaper<Indexed> shaper;
 	private final Class<V> valueType;
 
@@ -78,9 +78,9 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 		this(source, null, shaper, painter, valueType);
 	}
 
-	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> painter, Class<V> valueType) {
+	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer, Class<V> valueType) {
 		this.source = source;
-		this.painter = painter;
+		this.valuer = valuer;
 		this.shaper = shaper;
 		this.valueType = valueType;
 
@@ -126,7 +126,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	@Override
 	public Glyph<V> get(long i) {
-		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry(i)), painter.value(entry(i)));
+		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry(i)), valuer.value(entry(i)));
 		return g;
 	}
 
@@ -136,7 +136,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
 
-	public Valuer<Indexed,V> valuer() {return painter;}
+	public Valuer<Indexed,V> valuer() {return valuer;}
 	public Shaper<Indexed> shaper() {return shaper;}
 	public TYPE[] types() {return types;}
 
