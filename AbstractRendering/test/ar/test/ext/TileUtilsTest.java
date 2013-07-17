@@ -12,7 +12,6 @@ import org.junit.Test;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.ext.tiles.TileUtils;
-import ar.renderers.AggregationStrategies;
 import ar.rules.Numbers;
 import ar.test.aggregates.AggregatesImplementationsTest;
 

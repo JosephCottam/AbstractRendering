@@ -16,7 +16,6 @@ import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelSpatial;
 import ar.rules.Numbers;
 import ar.util.Util;

@@ -156,6 +156,7 @@ public class ARApp implements PanelHolder {
 	 * @param args
 	 * @throws Exception 
 	 */
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {
 			new ARApp();
