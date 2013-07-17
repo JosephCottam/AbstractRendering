@@ -150,15 +150,15 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		public void deselected() {}
 	}
 	
-	public class HighAlphaLog implements WrappedTransfer<CategoricalCounts,Color> {
-		public Transfer<CategoricalCounts,Color> op() {return new Categories.HighAlpha(Color.white, .1, true);}
+	public class HighAlphaLog implements WrappedTransfer<CategoricalCounts<Color>,Color> {
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighAlpha(Color.white, .1, true);}
 		public String toString() {return "Log HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class HighAlphaLin implements WrappedTransfer<CategoricalCounts,Color> {
-		public Transfer<CategoricalCounts,Color> op() {return new Categories.HighAlpha(Color.white, .1, false);}
+	public class HighAlphaLin implements WrappedTransfer<CategoricalCounts<Color>,Color> {
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighAlpha(Color.white, .1, false);}
 		public String toString() {return "Linear HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}

@@ -78,8 +78,10 @@ public class Categories {
 		private final Class<T> type;
 		public RunLengthEncode(Class<T> type) {this.type = type;}
 
-		public Class<T> input() {return type;}
+		@SuppressWarnings("rawtypes")
 		public Class<RLE> output() {return RLE.class;}
+		public Class<T> input() {return type;}
+		
 
 		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
 			return left.extend(update, 1);
@@ -153,6 +155,8 @@ public class Categories {
 		}
 		
 		public Integer emptyValue() {return background;}
+		
+		@SuppressWarnings("rawtypes")
 		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Integer> output() {return Integer.class;}
 	}
@@ -184,6 +188,8 @@ public class Categories {
 		}
 		
 		public Color emptyValue() {return Util.CLEAR;}
+		
+		@SuppressWarnings("rawtypes")
 		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Color> output() {return Color.class;}
 	}
@@ -198,13 +204,21 @@ public class Categories {
 	 * @author jcottam
 	 *
 	 */
-	public static final class HighAlpha<T> implements Transfer<CategoricalCounts<T>, Color> {
+	public static final class HighAlpha implements Transfer<CategoricalCounts<Color>, Color> {
 		private final Color background;
-		private boolean log;
-		private double omin;
-		private Aggregates<Color> colors;
-		private Aggregates<? extends CategoricalCounts<T>> cacheKey;
+		private final boolean log;
+		private final double omin;
+
+		private Aggregates<Color> result;
+		private Aggregates<? extends CategoricalCounts<Color>> cacheKey;
 		
+		/**
+		 * @param colors Mapping from categories to colors
+		 * @param reserve Color to use for a cateogry not found in the mapping
+		 * @param background Background color
+		 * @param omin Opacity minimum
+		 * @param log Use a log scale?
+		 */
 		public HighAlpha(Color background, double omin, boolean log) {
 			this.background = background;
 			this.log = log;
@@ -232,18 +246,18 @@ public class Categories {
 			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			if (aggregates!=cacheKey) {
 				double max =0;
-				colors = new FlatAggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
-				for (CategoricalCounts<T> cats:aggregates) {max = Math.max(max,cats.fullSize());}
+				result = new FlatAggregates<Color>(aggregates.highX(), aggregates.highY(), background);
+				for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
 				for (int xi=0; xi<aggregates.highX(); xi++) {
 					for (int yi =0; yi<aggregates.highY(); yi++) {
-						CategoricalCounts<T> cats = aggregates.at(xi, yi);
+						CategoricalCounts<Color> cats = aggregates.at(xi, yi);
 						Color c;
 						if (cats.fullSize() == 0) {c = background;}
 						else {
-							c = fullInterpolate((CategoricalCounts<Color>) cats);
+							c = fullInterpolate(cats);
 							double alpha;
 							if (log) {
 								alpha = omin + ((1-omin) * (Math.log(cats.fullSize())/Math.log(max)));
@@ -252,15 +266,17 @@ public class Categories {
 							}
 							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
 						}
-						colors.set(xi, yi, c);
+						result.set(xi, yi, c);
 					}
 				}
 				cacheKey = aggregates;
 			}
-			return colors.at(x, y);			
+			return result.at(x, y);			
 		}
 		
 		public Color emptyValue() {return Util.CLEAR;}
+		
+		@SuppressWarnings("rawtypes")
 		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Color> output() {return Color.class;}
 	}
