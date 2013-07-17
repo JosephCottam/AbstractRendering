@@ -20,9 +20,9 @@ public final class Util {
 	private Util() {}
 	
 	/**Sort a set of colors.**/
-	public static final Comparator<Glyph<? extends Color>> glyphColorSorter  = new Comparator<Glyph<? extends Color>>() {
-		public int compare(Glyph<? extends Color> o1, Glyph<? extends Color> o2) {
-			return o1.value().getRGB() - o2.value().getRGB();
+	public static final Comparator<Color> COLOR_SORTER  = new Comparator<Color>() {
+		public int compare(Color o1, Color o2) {
+			return o1.getRGB() - o2.getRGB();
 		}
 	};
 

@@ -1,12 +1,9 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
 import java.util.List;
 
 import ar.Aggregator;
-import ar.Glyphset;
 import ar.util.Util;
 
 /**Classes used largely for debugging.
@@ -40,26 +37,6 @@ public class Debug {
 			}
 			int n = sources.size();
 			return new Color(r/n,g/n,b/n/a/n);
-		}
-
-	}
-
-	/**Create a solid fill.  
-	 * This class was used largely for debugging; it ignores its inputs. 
-	 */
-	public static final class IDColor implements Aggregator<Object, Color> {
-		private final Color c;
-		public IDColor(Color c) {this.c=c;}
-		public Color at(Rectangle r, Glyphset<? extends Object> glyphs, AffineTransform inverseView) {return c;}
-		public Color identity() {return Util.CLEAR;}
-		public Class<Object> input() {return Object.class;}
-		public Class<Color> output() {return Color.class;}
-		public boolean equals(Object other) {return other instanceof IDColor;}
-		@Override
-		public Color combine(long x, long y, Color left, Object update) {return c;}
-		public Color rollup(List<Color> sources) {
-			for (Color c: sources) {if (c!=identity()) {return this.c;}}
-			return identity();
 		}
 	}
 }

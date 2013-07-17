@@ -1,6 +1,7 @@
 package ar.rules;
 
 import java.awt.Color;
+import java.util.Comparator;
 import java.util.List;
 
 import ar.Aggregates;
@@ -73,14 +74,14 @@ public class Categories {
 		}
 	}
 	
-	public static class RunLengthEncode<T> implements Aggregator<T, RLE> {
+	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
 		private final Class<T> type;
 		public RunLengthEncode(Class<T> type) {this.type = type;}
 
 		public Class<T> input() {return type;}
 		public Class<RLE> output() {return RLE.class;}
 
-		public RLE combine(long x, long y, RLE left, T update) {
+		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
 			left.add(update, 1);
 			return left;
 		}
@@ -89,9 +90,9 @@ public class Categories {
 		 * of the various RLEs matches contiguous blocks.  The result is essentially
 		 * concatenating each encoding in iteration order.
 		 */
-		public RLE rollup(List<RLE> sources) {
-			RLE union = new RLE();
-			for (RLE r: sources) {
+		public RLE<T> rollup(List<RLE<T>> sources) {
+			RLE<T> union = new RLE<T>();
+			for (RLE<T> r: sources) {
 				for (int i=0; i< r.size(); i++) {
 					union.add(r.key(i), r.count(i));
 				}
@@ -99,13 +100,18 @@ public class Categories {
 			return null;
 		}
 
-		public RLE identity() {return new RLE();}
+		public RLE<T> identity() {return new RLE<T>();}
 	}
 	
 	
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
 		private final Class<T> type;
-		public CountCategories(Class<T> type) {this.type = type;}
+		private final Comparator<T> comp;
+		
+		public CountCategories(Comparator<T> comp, Class<T> type) {
+			this.comp = comp;
+			this.type = type;
+		}
 
 		public Class<T> input() {return type;}
 		public Class<CoC<T>> output() {return (Class<CoC<T>>) identity().getClass();}
@@ -128,7 +134,7 @@ public class Categories {
 		}
 
 		@Override
-		public CoC<T> identity() {return new CoC<T>();}
+		public CoC<T> identity() {return new CoC<T>(comp);}
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
@@ -151,7 +157,6 @@ public class Categories {
 		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Integer> output() {return Integer.class;}
 	}
-	
 
 	/**Switch between two colors depending on the percent contribution of
 	 * a specified category.
@@ -159,7 +164,7 @@ public class Categories {
 	 * TODO: Convert from RLE to CoC based
 	 * 
 	 * **/
-	public static final class FirstPercent implements Transfer<RLE, Color> {
+	public static final class FirstPercent<T> implements Transfer<RLE<T>, Color> {
 		private final double ratio;
 		private final Color background, match, noMatch;
 		private final Object firstKey;
@@ -172,8 +177,8 @@ public class Categories {
 			this.firstKey = firstKey;
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends RLE> aggregates) {
-			RLE rle = aggregates.at(x,y);
+		public Color at(int x, int y, Aggregates<? extends RLE<T>> aggregates) {
+			RLE<T> rle = aggregates.at(x,y);
 			double size = rle.fullSize();
 			
 			if (size == 0) {return background;}
@@ -197,12 +202,12 @@ public class Categories {
 	 * @author jcottam
 	 *
 	 */
-	public static final class HighAlpha implements Transfer<RLE, Color> {
+	public static final class HighAlpha<T> implements Transfer<CategoricalCounts<T>, Color> {
 		private final Color background;
 		private boolean log;
 		private double omin;
 		private Aggregates<Color> colors;
-		private Aggregates<? extends RLE> cacheKey;
+		private Aggregates<? extends CategoricalCounts<T>> cacheKey;
 		
 		public HighAlpha(Color background, double omin, boolean log) {
 			this.background = background;
@@ -210,15 +215,16 @@ public class Categories {
 			this.omin = omin;
 		}
 		
-		private Color fullInterpolate(RLE rle) {
-			double total = rle.fullSize();
+		//TODO: Update to use a color mapping outside of the category set
+		private Color fullInterpolate(CategoricalCounts<Color> cats) {
+			double total = cats.fullSize();
 			double r = 0;
 			double g = 0;
 			double b = 0;
 			
-			for (int i=0; i< rle.size(); i++) {
-				Color c = (Color) rle.key(i);
-				double p = rle.count(i)/total;
+			for (int i=0; i< cats.size(); i++) {
+				Color c = (Color) cats.key(i);
+				double p = cats.count(i)/total;
 				double r2 = (c.getRed()/255.0) * p;
 				double g2 = (c.getGreen()/255.0) * p;
 				double b2 = (c.getBlue()/255.0) * p;
@@ -230,23 +236,23 @@ public class Categories {
 			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends RLE> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
 			if (aggregates!=cacheKey) {
 				double max =0;
 				colors = new FlatAggregates<Color>(aggregates.highX(), aggregates.highY(), Color.WHITE);
-				for (RLE rle:aggregates) {max = Math.max(max,rle.fullSize());}
+				for (CategoricalCounts<T> cats:aggregates) {max = Math.max(max,cats.fullSize());}
 				for (int xi=0; xi<aggregates.highX(); xi++) {
 					for (int yi =0; yi<aggregates.highY(); yi++) {
-						RLE rle = aggregates.at(xi, yi);
+						CategoricalCounts<T> cats = aggregates.at(xi, yi);
 						Color c;
-						if (rle.fullSize() == 0) {c = background;}
+						if (cats.fullSize() == 0) {c = background;}
 						else {
-							c = fullInterpolate(rle);
+							c = fullInterpolate((RLE<Color>) cats);
 							double alpha;
 							if (log) {
-								alpha = omin + ((1-omin) * (Math.log(rle.fullSize())/Math.log(max)));
+								alpha = omin + ((1-omin) * (Math.log(cats.fullSize())/Math.log(max)));
 							} else {
-								alpha = omin + ((1-omin) * (rle.fullSize()/max));
+								alpha = omin + ((1-omin) * (cats.fullSize()/max));
 							}
 							c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
 						}

@@ -12,8 +12,10 @@ import ar.app.ARApp;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
 import ar.rules.Advise;
-import ar.rules.Aggregators;
-import ar.rules.Transfers;
+import ar.rules.CategoricalCounts;
+import ar.rules.Categories;
+import ar.rules.General;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
@@ -86,92 +88,77 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 
 	
 	public class RedWhiteLinear implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red);}
+		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String toString() {return "Red luminance linear (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class RedWhiteLog implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
+		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
 		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class FixedAlpha implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
 		public String toString() {return "10% Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class FixedAlphaB implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Transfers.FixedAlpha(Color.white, Color.red, 0, 255);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedAlpha(Color.white, Color.red, 0, 255);}
 		public String toString() {return "Min Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class Present implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new Transfers.Present<Integer>(Color.red, Color.white, Integer.class);}
+		public Transfer<Integer,Color> op() {return new General.Present<Integer, Color>(Color.red, Color.white, Color.class);}
 		public String toString() {return "Present (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class OutlierHighlight implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new Transfers.ZScore(Color.white, Color.red, true);}
-		public String toString() {return "Outlier Highlight (int)";}
-		public void selected(ARApp app) {}
-		public void deselected() {}
-	}
-	
-	public class OutlierHighlightB implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new Transfers.ZScore(Color.white, Color.red, false);}
-		public String toString() {return "Outlier Highlight w/0's (int)";}
-		public void selected(ARApp app) {}
-		public void deselected() {}
-	}
-
-	
-	public class Percent90 implements WrappedTransfer<Aggregators.RLE,Color> {
-		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red);}
+	public class Percent90 implements WrappedTransfer<CategoricalCounts.RLE,Color> {
+		public Transfer<CategoricalCounts.RLE,Color> op() {return new Categories.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "90% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 
-	public class Percent95 implements WrappedTransfer<Aggregators.RLE,Color> {
-		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.95, Color.blue, Color.white, Color.blue, Color.red);}
+	public class Percent95 implements WrappedTransfer<CategoricalCounts.RLE,Color> {
+		public Transfer<CategoricalCounts.RLE,Color> op() {return new Categories.FirstPercent(.95, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "95% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 
-	public class Percent25 implements WrappedTransfer<Aggregators.RLE,Color> {
-		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red);}
+	public class Percent25 implements WrappedTransfer<CategoricalCounts.RLE,Color> {
+		public Transfer<CategoricalCounts.RLE,Color> op() {return new Categories.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "25% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class EchoColor implements WrappedTransfer<Color,Color> {
-		public Transfer<Color,Color> op() {return new Transfers.IDColor();}
+		public Transfer<Color,Color> op() {return new General.Echo<Color>(Util.CLEAR, Color.class);}
 		public String toString() {return "Echo (Color)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class HighAlphaLog implements WrappedTransfer<Aggregators.RLE,Color> {
-		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.HighAlpha(Color.white, .1, true);}
+	public class HighAlphaLog implements WrappedTransfer<CategoricalCounts,Color> {
+		public Transfer<CategoricalCounts,Color> op() {return new Categories.HighAlpha(Color.white, .1, true);}
 		public String toString() {return "Log HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
-	public class HighAlphaLin implements WrappedTransfer<Aggregators.RLE,Color> {
-		public Transfer<Aggregators.RLE,Color> op() {return new Transfers.HighAlpha(Color.white, .1, false);}
+	public class HighAlphaLin implements WrappedTransfer<CategoricalCounts,Color> {
+		public Transfer<CategoricalCounts,Color> op() {return new Categories.HighAlpha(Color.white, .1, false);}
 		public String toString() {return "Linear HD Alpha (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}

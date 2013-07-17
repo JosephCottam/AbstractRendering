@@ -7,7 +7,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
-import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
@@ -32,16 +31,11 @@ public class ParallelGlyphs implements Renderer {
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
 	private final int taskSize;
-	private final AggregateReducer<?,?,?> reducer;
 	private final RenderUtils.Progress recorder;
 
-	public <A> ParallelGlyphs(AggregateReducer<A,A,A> red) {
-		this(DEFAULT_TASK_SIZE, red);
-	}
-	
-	public <A> ParallelGlyphs(int taskSize, AggregateReducer<A,A,A> red) {
+	public <A> ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
+	public <A> ParallelGlyphs(int taskSize) {
 		this.taskSize = taskSize;
-		this.reducer = red;
 		recorder = RenderUtils.recorder();
 	}
 	

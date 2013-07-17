@@ -1,18 +1,28 @@
 package ar.rules;
 
-import java.awt.Color;
+import java.util.List;
 
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.Transfer;
-import ar.util.Util;
 
 public class General {
-	/**Return the color stored in the aggregate set;
-	 * essentially a pass-through.**/
-	public static final class ID<T> implements Transfer<T,T> {
+	public static final class Const<T> implements Aggregator<Object,T> {
+		private final T val;
+		public Const(T val) {this.val = val;}
+		public Class<?> input() {return Object.class;}
+		public Class<?> output() {return Object.class;}
+		public T combine(long x, long y, T left, Object update) {return val;}
+		public T rollup(List<T> sources) {return val;}
+		public T identity() {return val;}
+	}
+
+
+	/**Return what is found at the given location.**/
+	public static final class Echo<T> implements Transfer<T,T> {
 		private final Class<T> type;
 		private final T empty;
-		public ID(T empty, Class<T> type) {this.empty = empty; this.type = type;}
+		public Echo(T empty, Class<T> type) {this.empty = empty; this.type = type;}
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.at(x, y);}
 
 		public T emptyValue() {return empty;}
@@ -20,18 +30,14 @@ public class General {
 		public Class<T> output() {return type;}
 	}
 
-	
-
 	/**Return the given value when presented with a non-empty value.**/
-	public static final class Present<IN,OUT> implements Transfer<IN,OUT> {
+	public static final class Present<IN, OUT> implements Transfer<IN,OUT> {
 		private final OUT present, absent;
-		private final Class<IN> inputType;
 		private final Class<OUT> outputType;
 		
-		public Present(OUT present, OUT absent, Class<IN> inType, Class<OUT> outType) {
+		public Present(OUT present, OUT absent, Class<OUT> outType) {
 			this.present = present; 
 			this.absent=absent;
-			inputType = inType;
 			outputType = outType;
 		}
 		
@@ -42,7 +48,7 @@ public class General {
 		}
 		
 		public OUT emptyValue() {return absent;}
-		public Class<IN> input() {return inputType;}
+		public Class<Object> input() {return Object.class;}
 		public Class<OUT> output() {return outputType;}
 	}
 	

@@ -3,14 +3,12 @@ package ar.renderers;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
-import ar.rules.Aggregators.RLE;
 import ar.util.Util;
 
 
@@ -29,11 +27,11 @@ public class AggregationStrategies {
 	 * @param red Reduction operation
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
-	public static <T> Aggregates<T> foldLeft(Aggregates<T> left, Aggregates<T> right, AggregateReducer<T,T,T> red) {
+	public static <T> Aggregates<T> foldLeft(Aggregates<T> left, Aggregates<T> right, Aggregator<T,T> red) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}
 
-		T identity = red.zero();
+		T identity = red.identity();
 
 		if ((left instanceof ConstantAggregates) && Util.isEqual(identity, left.defaultValue())) {return right;}
 		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return right;}
@@ -53,13 +51,13 @@ public class AggregationStrategies {
 		} else {
 			sources.add(right);
 			sources.add(left);
-			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.zero());
+			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
 
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
-					target.set(x,y, red.combine(target.at(x,y), source.at(x,y)));
+					target.set(x,y, red.combine(x,y, target.at(x,y), source.at(x,y)));
 				}
 			}
 		}
@@ -73,8 +71,8 @@ public class AggregationStrategies {
 	 * 
 	 * TODO: Extend to dxd rollup
 	 * **/
-	public static <T> Aggregates<T> foldUp(Aggregates<T> start, AggregateReducer<T,T,T> red) {
-		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.zero());
+	public static <T> Aggregates<T> foldUp(Aggregates<T> start, Aggregator<T,T> red) {
+		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.identity());
 
 		for (int x = start.lowX(); x < start.highX(); x=x+2) {
 			for (int y=start.lowY(); y < start.highY(); y=y+2) {
