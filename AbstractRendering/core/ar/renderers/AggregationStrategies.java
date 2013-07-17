@@ -1,23 +1,30 @@
 package ar.renderers;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Glyph;
+import ar.Glyphset;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
 
-/**Core iteration strategies for build aggregates from various source values.*/
+/**Core iteration strategies for build aggregates from various source values.
+ * These are used internally by various renderers and probably only
+ * need to be used if you are implementing a renderer.*/
 public class AggregationStrategies {
 	/**Combine two aggregate sets according to the passed reducer.
 	 * 
 	 * The resulting aggregate set will have a realized subset region sufficient to
-	 * cover the realized sbuset region of both source aggregate sets (regardless of 
+	 * cover the realized subset region of both source aggregate sets (regardless of 
 	 * the values found in those sources).  If one of the two aggregate sets provided
 	 * is already of sufficient size, it will be used as both a source and a target.
 	 * 
@@ -27,7 +34,7 @@ public class AggregationStrategies {
 	 * @param red Reduction operation
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
-	public static <T> Aggregates<T> foldLeft(Aggregates<T> left, Aggregates<T> right, Aggregator<T,T> red) {
+	public static <T> Aggregates<T> foldLeft(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}
 
@@ -57,7 +64,9 @@ public class AggregationStrategies {
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
-					target.set(x,y, red.combine(x,y, target.at(x,y), source.at(x,y)));
+					
+					//TODO: Can the list-object creation be avoided? (the "asList")
+					target.set(x,y, red.rollup(Arrays.asList(target.at(x,y), source.at(x,y)))); 
 				}
 			}
 		}
@@ -71,7 +80,7 @@ public class AggregationStrategies {
 	 * 
 	 * TODO: Extend to dxd rollup
 	 * **/
-	public static <T> Aggregates<T> foldUp(Aggregates<T> start, Aggregator<T,T> red) {
+	public static <T> Aggregates<T> foldUp(Aggregates<T> start, Aggregator<?,T> red) {
 		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.identity());
 
 		for (int x = start.lowX(); x < start.highX(); x=x+2) {
@@ -86,5 +95,27 @@ public class AggregationStrategies {
 			}
 		}
 		return end;
+	}
+	
+	public static <A,V> A pixel(
+			Aggregates<A> aggregates, 
+			Aggregator<V,A> op,
+			Glyphset<? extends V> glyphset,
+			AffineTransform inverseView, 
+			int x, int y) {
+		
+		//TODO: investigate a special-purpose rectangle transform
+		//TODO: investigate taking in a rectangle to avoid per-loop iteration allocation
+		Rectangle2D pixel = new Rectangle(x,y,1,1);
+		pixel = inverseView.createTransformedShape(pixel).getBounds2D(); 
+		
+		Collection<? extends Glyph<? extends V>> glyphs = glyphset.intersects(pixel);
+		A acc = aggregates.at(x, y);
+		for (Glyph<? extends V> g: glyphs) {
+			V val = g.value();
+			acc = op.combine(x, y, acc, val);
+		}
+		return acc;
+
 	}
 }

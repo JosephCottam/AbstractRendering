@@ -18,7 +18,7 @@ import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelSpatial;
-import ar.rules.Aggregators;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public class CombinerTests {
@@ -28,12 +28,12 @@ public class CombinerTests {
 	public static void load() throws Exception {
 		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
 		Renderer r = new ParallelSpatial();
-		count = r.reduce(glyphs, new Aggregators.Count(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
+		count = r.reduce(glyphs, new Numbers.Count(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
 	}
 	
 	@Test
 	public void startStop() throws Exception{
-		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregationStrategies.Count());
+		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new Numbers.Count());
 		c.start();
 		if (!c.running()) {Thread.yield();}
 		if (!c.running()) {Thread.sleep(1000);}
@@ -44,7 +44,7 @@ public class CombinerTests {
 
 	@Test
 	public void recieve() throws Exception{
-		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new AggregationStrategies.Count());
+		ARCombiner<Integer> c = new ARCombiner<Integer>("localhost", 8739, new ar.ext.avro.Converters.ToCount(), new Numbers.Count());
 		c.start();
 
 		Aggregates<Integer> aggs = count;

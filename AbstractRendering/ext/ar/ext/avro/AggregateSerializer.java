@@ -28,7 +28,7 @@ import org.apache.avro.io.EncoderFactory;
 import ar.Aggregates;
 import ar.aggregates.FlatAggregates;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.rules.Aggregators.RLE;
+import ar.rules.CategoricalCounts;
 
 public class AggregateSerializer {
 	public static final String AGGREGATES_SCHEMA ="ar/ext/avro/tile.avsc";
@@ -136,7 +136,7 @@ public class AggregateSerializer {
 			schema = new SchemaComposer().addResource(COUNTS_SCHEMA).resolved();
 			conv = (Valuer<A, GenericRecord>) new Converters.FromCount(schema);
 
-		} else if (v instanceof RLE) {
+		} else if (v instanceof CategoricalCounts.RLE) {
 			schema = new SchemaComposer().addResource(RLE_SCHEMA).resolved();
 			conv = (Valuer<A, GenericRecord>) new Converters.FromRLE(schema);
 		} else if (v instanceof Color) {

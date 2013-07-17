@@ -17,7 +17,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.SerialSpatial;
-import ar.rules.Aggregators;
+import ar.rules.Numbers;
 
 public class RHIPETools {
 	/**Provide a delimited string and receive a glyphset.
@@ -96,7 +96,7 @@ public class RHIPETools {
 		TraceEntry te = new TraceEntry();
 		Glyphset glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
 		Renderer r = new SerialSpatial();
-		Aggregator agg = new Aggregators.Count();
+		Aggregator agg = new Numbers.Count();
 		Aggregates aggs = r.reduce(glyphs, agg, ivt, width, height);
 		return reduceKeys(aggs);
 	}

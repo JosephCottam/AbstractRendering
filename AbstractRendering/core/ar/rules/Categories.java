@@ -108,6 +108,7 @@ public class Categories {
 		private final Class<T> type;
 		private final Comparator<T> comp;
 		
+		public CountCategories(Class<T> type) {this(null, type);}
 		public CountCategories(Comparator<T> comp, Class<T> type) {
 			this.comp = comp;
 			this.type = type;

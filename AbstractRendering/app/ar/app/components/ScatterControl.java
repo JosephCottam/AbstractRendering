@@ -25,7 +25,7 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
-import ar.rules.Transfers;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public class ScatterControl extends JPanel {
@@ -34,7 +34,7 @@ public class ScatterControl extends JPanel {
 	protected ARApp source;
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
-	Transfer<Number, Color> basis = new Transfers.Interpolate(new Color(255,200,200), Color.RED); 
+	Transfer<Number, Color> basis = new Numbers.Interpolate(new Color(255,200,200), Color.RED); 
 
 	
 	public ScatterControl() {

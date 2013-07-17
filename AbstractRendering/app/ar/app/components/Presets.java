@@ -3,14 +3,11 @@ package ar.app.components;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.util.Comparator;
 
 import javax.swing.JComboBox;
 
-import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
-import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
@@ -18,11 +15,8 @@ import ar.app.util.WrappedTransfer;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
-import ar.rules.Advise;
-import ar.rules.Transfers;
 
 public class Presets extends CompoundPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -65,14 +59,14 @@ public class Presets extends CompoundPanel {
 	public static interface Preset {
 		public WrappedAggregator<?,?> reduction();
 		public Renderer renderer();
-		public Glyphset glyphset();
+		public Glyphset<?> glyphset();
 		public WrappedTransfer<?,?> transfer();
 	}
 	
 	public static class ScatterplotAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.FixedAlpha();}
 		public String toString() {return "Scatterplot: 10% Alpha" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
@@ -80,7 +74,7 @@ public class Presets extends CompoundPanel {
 	public static class ScatterplotHDALphaLin implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLinear();}
 		public String toString() {return "Scatterplot: HiDef Alpha (Linear)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
@@ -88,7 +82,7 @@ public class Presets extends CompoundPanel {
 	public static class ScatterplotHDALpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Scatterplot: HiDef Alpha (log)" + ((glyphset() == null) ? "(FAILED)" : "");}
 	}
@@ -96,7 +90,7 @@ public class Presets extends CompoundPanel {
 	public static class BoostAlpha25 implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset glyphset() {return BOOST_MEMORY;}
+		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent25();}
 		public String toString() {return "BGL Memory: 25% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
@@ -104,7 +98,7 @@ public class Presets extends CompoundPanel {
 	public static class BoostAlpha95 implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset glyphset() {return BOOST_MEMORY;}
+		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent95();}
 		public String toString() {return "BGL Memory: 95% Cache Hit" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
@@ -112,31 +106,31 @@ public class Presets extends CompoundPanel {
 	public static class BoostAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
 		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset glyphset() {return BOOST_MEMORY;}
+		public Glyphset<?>  glyphset() {return BOOST_MEMORY;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory: HDAlpha Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregationStrategies.MergeCOC());}
-		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
+		public Renderer renderer() {return new ParallelGlyphs(100000);}
+		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregationStrategies.Count());}
-		public Glyphset glyphset() {return BOOST_MEMORY_MM;}
+		public Renderer renderer() {return new ParallelGlyphs(100000);}
+		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
 	
 	public static class CharityNet implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(100000, new AggregationStrategies.Count());}
-		public Glyphset glyphset() {return CHARITY_NET_MM;}
+		public Renderer renderer() {return new ParallelGlyphs(100000);}
+		public Glyphset<?> glyphset() {return CHARITY_NET_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "Charity Net Donations (Memory Mapped): HDAlpha (Log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
 	}
@@ -144,7 +138,7 @@ public class Presets extends CompoundPanel {
 	public static class Overplot implements Preset {
 		public WrappedAggregator<?,?> reduction() {return new WrappedAggregator.Count();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.OverUnder();}
 		public String toString() {return "Scatterplot: clipping warning (int)" + ((glyphset() == null) ? "(FAILED)" : "");}
 

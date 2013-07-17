@@ -19,7 +19,7 @@ public class General {
 
 
 	/**Return what is found at the given location.**/
-	public static final class Echo<T> implements Transfer<T,T> {
+	public static final class Echo<T> implements Transfer<T,T>, Aggregator<T,T> {
 		private final Class<T> type;
 		private final T empty;
 		public Echo(T empty, Class<T> type) {this.empty = empty; this.type = type;}
@@ -28,6 +28,13 @@ public class General {
 		public T emptyValue() {return empty;}
 		public Class<T> input() {return type;}
 		public Class<T> output() {return type;}
+		
+		public T combine(long x, long y, T left, T update) {return update;}
+		public T rollup(List<T> sources) {
+			if (sources.size() >0) {return sources.get(0);}
+			return emptyValue();
+		}
+		public T identity() {return emptyValue();}
 	}
 
 	/**Return the given value when presented with a non-empty value.**/

@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ar.AggregateReducer;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
@@ -27,9 +26,11 @@ import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
-import ar.rules.Aggregators;
-import ar.rules.Aggregators.RLE;
-import ar.rules.Transfers;
+import ar.rules.CategoricalCounts.RLE;
+import ar.rules.Categories;
+import ar.rules.Debug;
+import ar.rules.General;
+import ar.rules.Numbers;
 import ar.util.DelimitedReader;
 import ar.util.GlyphsetLoader;
 import ar.util.MemMapEncoder;
@@ -41,7 +42,6 @@ import ar.Glyphset;
 public class ARServer extends NanoHTTPD {
 	private static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
 	private static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
-	private static Map<Class<?>, AggregateReducer<?,?,?>> REDUCERS = new HashMap<Class<?>, AggregateReducer<?,?,?>>();
 	private static Map<String, Glyphset<?>> DATASETS = new HashMap<String, Glyphset<?>>();
 	
 	static {
@@ -62,29 +62,24 @@ public class ARServer extends NanoHTTPD {
 				//GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
 		
 		
-		TRANSFERS.put("RedWhiteLinear", new Transfers.Interpolate(new Color(255,0,0,38), Color.red));
-		TRANSFERS.put("RedWhiteLog", new Transfers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));
-		TRANSFERS.put("Alpha10", new Transfers.FixedAlpha(Color.white, Color.red, 0, 25.5));
-		TRANSFERS.put("AlphaMin", new Transfers.FixedAlpha(Color.white, Color.red, 0, 255));
-		TRANSFERS.put("Present", new Transfers.Present<Integer>(Color.red, Color.white, Integer.class));
-		TRANSFERS.put("90Percent", new Transfers.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("25Percent", new Transfers.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("EchoColor", new Transfers.IDColor());
-		TRANSFERS.put("HDAlpha", new Transfers.HighAlpha(Color.white, .1, false));
-		TRANSFERS.put("HDAlphaLog", new Transfers.HighAlpha(Color.white, .1, true));
-				
-				
-		REDUCERS.put(Integer.class, new AggregationStrategies.Count());
-		REDUCERS.put(RLE.class, new AggregationStrategies.MergeCOC());
-		
-		AGGREGATORS.put("Blue",new Aggregators.IDColor(Color.BLUE));
-		AGGREGATORS.put("Gradient", new Aggregators.Gradient(500, 500));
-		AGGREGATORS.put("First", new Aggregators.First());
-		AGGREGATORS.put("Last", new Aggregators.Last());
-		AGGREGATORS.put("Count", new Aggregators.Count());
-		AGGREGATORS.put("RLEColor", new Aggregators.RLEColor(true));
-		AGGREGATORS.put("RLEUnsortColor", new Aggregators.RLEColor(false));
-		AGGREGATORS.put("Delta5", new Aggregators.DeltaNeighbors(5));		
+		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate(new Color(255,0,0,38), Color.red));
+		TRANSFERS.put("RedWhiteLog", new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));
+		TRANSFERS.put("Alpha10", new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5));
+		TRANSFERS.put("AlphaMin", new Numbers.FixedAlpha(Color.white, Color.red, 0, 255));
+		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white, Color.class));
+		TRANSFERS.put("90Percent", new Categories.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("25Percent", new Categories.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("Echo", new General.Echo(Util.CLEAR, Color.class));
+		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
+		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
+						
+		AGGREGATORS.put("Blue",new General.Const(Color.BLUE));
+		AGGREGATORS.put("Gradient", new Debug.Gradient(500, 500));
+		AGGREGATORS.put("First", new Categories.First());
+		AGGREGATORS.put("Last", new Categories.Last());
+		AGGREGATORS.put("Count", new Numbers.Count());
+		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode(Color.class));
+		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<>(Color.class));
 	}
 	
 	public ARServer(String hostname) {this(hostname, 8739);}
@@ -128,9 +123,7 @@ public class ARServer extends NanoHTTPD {
 	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> trans, AffineTransform inverseView, int width, int height) {
 		Renderer r;
 		if (glyphs instanceof Glyphset.RandomAccess<?>) {
-			AggregateReducer red = REDUCERS.get(agg.output());
-			if (red == null) {throw new RuntimeException("Could not find aggregate reducer for type " + agg.output());}
-			r = new ParallelGlyphs(red);
+			r = new ParallelGlyphs();
 		} else {
 			r = new ParallelSpatial();
 		}

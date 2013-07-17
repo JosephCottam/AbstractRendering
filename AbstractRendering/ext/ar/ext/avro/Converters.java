@@ -10,7 +10,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.rules.Aggregators.RLE;
+import ar.rules.CategoricalCounts;
 
 public class Converters {
 	public static class ToCount implements Valuer<GenericRecord, Integer> {
@@ -31,11 +31,14 @@ public class Converters {
 	}
 
 	/**Generic deserialization for RLE.
-	 * Keys are kept as strings.  
+	 * Keys are kept as strings.
+	 * 
+	 * TODO: Expand to be general CategoricalCounts
+	 *   
 	 */	
-	public static class ToRLE implements Valuer<GenericRecord, RLE> {
-		public RLE value(GenericRecord from) {
-			RLE rle = new RLE();
+	public static class ToRLE implements Valuer<GenericRecord, CategoricalCounts.RLE> {
+		public CategoricalCounts.RLE value(GenericRecord from) {
+			CategoricalCounts.RLE rle = new CategoricalCounts.RLE();
 			rle.keys.addAll((List<Object>) from.get("keys"));
 			rle.counts.addAll((List<Integer>) from.get("counts"));
 			return rle;
@@ -46,12 +49,14 @@ public class Converters {
 	 * 
 	 * Can only safely handle categories that are isomorphic to their toString
 	 * since the RLE schema uses strings as keys.
+	 * 
+	 * TODO: Expand to be general CategoricalCounts
 	 *
 	 */
-	public static class FromRLE implements Valuer<RLE, GenericRecord> {
+	public static class FromRLE implements Valuer<CategoricalCounts.RLE, GenericRecord> {
 		private final Schema schema;
 		public FromRLE(Schema s) {this.schema = s;}
-		public GenericRecord value(RLE from) {
+		public GenericRecord value(CategoricalCounts.RLE from) {
 			GenericRecord r = new GenericData.Record(schema);
 			List<String> keys = new ArrayList<String>();
 			for (Object k: from.keys) {keys.add(k.toString());}

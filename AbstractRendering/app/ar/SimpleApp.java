@@ -12,10 +12,8 @@ import javax.swing.SwingUtilities;
 import ar.app.components.ARPanel;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ParallelGlyphs;
-import ar.rules.Aggregators;
-import ar.rules.Transfers;
+import ar.rules.Numbers;
 import ar.util.DelimitedReader;
 import ar.util.Util;
 
@@ -58,16 +56,16 @@ public class SimpleApp {
 		//The ParalleGlyph renderer is the highest performance BUT requires
 		// the glyphset to be partitionable and requires an "Aggregate Reduction" function
 		// to combine results from different glyph subsets.
-		Renderer r = new ParallelGlyphs(new AggregationStrategies.Count());
+		Renderer r = new ParallelGlyphs();
 
 		//The Aggregator is used to combine values from multiple glyphs into a value for a single
 		//aggregate bin.  The 'Count' aggregator simply counts how many glyphs fell into the bin.
-		Aggregator<Object,Integer> aggregator = new Aggregators.Count();
+		Aggregator<Object,Integer> aggregator = new Numbers.Count();
 		
 
 		//The transfer function is used to convert one set of aggregates into another.
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
-		Transfer<Number, Color> transfer = new Transfers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+		Transfer<Number, Color> transfer = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
 		
 		
 		//A panel is constructed from a specific configuration.

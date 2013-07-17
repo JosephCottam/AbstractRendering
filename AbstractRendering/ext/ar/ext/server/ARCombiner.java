@@ -1,6 +1,5 @@
 package ar.ext.server;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -14,10 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.avro.generic.GenericRecord;
 
-import ar.AggregateReducer;
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.AggregationStrategies;
 
 /**Receives Avro-encoded aggregates from a remote and combines them.
  *
@@ -40,12 +40,12 @@ public class ARCombiner<A> {
 	private final Listener listener;
 	private final Thread listenerThread;
 	private final Queue<Aggregates<A>> queue;
+	private final Aggregator<?,A> reducer;
 	private Aggregates<A> aggs;
 	protected AtomicInteger count = new AtomicInteger(0);
-	private AggregateReducer<A,A,A> reducer;
 	private final List<ArrivalListener> listeners = new ArrayList<ArrivalListener>();
 	
-	public ARCombiner(String hostname, int port, Valuer<GenericRecord,A> converter, AggregateReducer<A,A,A> reducer) throws IOException {
+	public ARCombiner(String hostname, int port, Valuer<GenericRecord,A> converter, Aggregator<?,A> reducer) throws IOException {
 		this.queue = new ConcurrentLinkedQueue<Aggregates<A>>();
 		this.listener = new Listener(hostname, port, converter);
 		this.reducer = reducer;
@@ -77,7 +77,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = AggregateReducer.Strategies.foldLeft(aggs, item, reducer);
+				aggs = AggregationStrategies.foldLeft(aggs, item, reducer);
 			}
 		}
 		return aggs;

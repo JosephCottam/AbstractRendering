@@ -13,7 +13,6 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
-import ar.glyphsets.GlyphSingleton;
 import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
@@ -33,8 +32,8 @@ public class ParallelGlyphs implements Renderer {
 	private final int taskSize;
 	private final RenderUtils.Progress recorder;
 
-	public <A> ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
-	public <A> ParallelGlyphs(int taskSize) {
+	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
+	public ParallelGlyphs(int taskSize) {
 		this.taskSize = taskSize;
 		recorder = RenderUtils.recorder();
 	}
@@ -50,15 +49,10 @@ public class ParallelGlyphs implements Renderer {
 		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		recorder.reset(glyphs.size());
 		
-		if (!reducer.left().isAssignableFrom(op.output())) {
-			throw new IllegalArgumentException("Reducer type does not match aggregator type.");
-		}
-		
 		ReduceTask<V,A> t = new ReduceTask<V,A>(
 				(Glyphset<V>) glyphs, 
-				view, inverseView, 
+				view, 
 				op, 
-				(AggregateReducer<A,A,A>) reducer, 
 				width, height, taskSize,
 				recorder,
 				0, glyphs.segments());
@@ -82,25 +76,22 @@ public class ParallelGlyphs implements Renderer {
 		private final long low;
 		private final long high;
 		private final Glyphset<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
-		private final AffineTransform view, inverseView;
+		private final AffineTransform view;
 		private final int width;
 		private final int height;
-		private final AggregateReducer<A,A,A> reducer;
 		private final Aggregator<G,A> op;
 		private final RenderUtils.Progress recorder;
 
 		
 		public ReduceTask(Glyphset<G> glyphs, 
-				AffineTransform view, AffineTransform inverseView,
-				Aggregator<G,A> op, AggregateReducer<A,A,A> reducer, 
+				AffineTransform view,
+				Aggregator<G,A> op, 
 				int width, int height, int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
 			this.glyphs = glyphs;
 			this.view = view;
-			this.inverseView = inverseView;
 			this.op = op;
-			this.reducer = reducer;
 			this.width = width;
 			this.height = height;
 			this.taskSize = taskSize;
@@ -117,10 +108,10 @@ public class ParallelGlyphs implements Renderer {
 		private final Aggregates<A> split() {
 			long mid = low+((high-low)/2);
 
-			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, low, mid);
-			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, inverseView, op, reducer, width,height, taskSize, recorder, mid, high);
+			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, op, width,height, taskSize, recorder, low, mid);
+			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, op, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
-			Aggregates<A> aggs = AggregateReducer.Strategies.foldLeft(top.getRawResult(), bottom.getRawResult(), reducer);
+			Aggregates<A> aggs = AggregationStrategies.foldLeft(top.getRawResult(), bottom.getRawResult(), op);
 			return aggs;
 		}
 		
@@ -159,13 +150,12 @@ public class ParallelGlyphs implements Renderer {
 				int highx = (int) Math.ceil(highP.getX());
 				int highy = (int) Math.ceil(highP.getY());
 
-				Rectangle pixel = new Rectangle(lowx, lowy, 1,1);
-				A v = op.at(pixel, new GlyphSingleton<G>(g, subset.valueType()), inverseView);
-				
+				G v = g.value();
 				
 				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
 					for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
-						aggregates.set(x, y, reducer.combine(aggregates.at(x,y), v));
+						A existing = aggregates.at(x,y);
+						aggregates.set(x, y, op.combine(x,y,existing, v));
 					}
 				}
 			}

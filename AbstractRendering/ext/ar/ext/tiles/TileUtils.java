@@ -9,11 +9,13 @@ import java.util.Arrays;
 
 import org.apache.avro.generic.GenericRecord;
 
-import ar.AggregateReducer;
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.aggregates.FlatAggregates;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.AggregationStrategies;
+import ar.rules.General;
 
 public class TileUtils {
 	/**Extend a root with the given set of subs.
@@ -83,18 +85,19 @@ public class TileUtils {
 	 * 
 	 * @param levels How many levels to make
 	 * @param aggs Aggreagte to base items off of. This will be the most-detailed level in the output (e.g. Z-value is level-1)
+	 * @param red Aggregator to use to do rollup
 	 * @param ouptutRoot Where to place output items.  This SHOULD NOT include a z-directory
 	 * @param tileWidth How wide should tiles be made
 	 * @param tileHeight How tall should tiles be made
 	 */
-	public static <A> void makeTileCascae(Aggregates<A> aggs, AggregateReducer<A,A,A> red, File outputRoot, int tileWidth, int tileHeight, int levels) throws Exception {
+	public static <A> void makeTileCascae(Aggregates<A> aggs, Aggregator<?,A> red, File outputRoot, int tileWidth, int tileHeight, int levels) throws Exception {
 		outputRoot.mkdirs();
 		Aggregates<A> running = aggs;
 		
 		for (int level=levels-1; level>=0; level--) {
 			File levelRoot = extend(outputRoot, Integer.toString(level), "");
 			makeTiles(running, levelRoot, tileWidth, tileHeight);
-			running = AggregateReducer.Strategies.foldUp(running, red);
+			running = AggregationStrategies.foldUp(running, red);
 		}
 	}
 	
@@ -103,10 +106,10 @@ public class TileUtils {
 			throws FileNotFoundException {
 		
 		Aggregates<A> acc = null;
-		AggregateReducer<A,A,A> red = new CopyReducer<A>(type);
+		Aggregator<A,A> red = new General.Echo<A>(null, type);
 		for (File file: files) {
 			Aggregates<A> aggs = AggregateSerializer.deserialize(file, converter);
-			acc = AggregateReducer.Strategies.foldLeft(acc, aggs, red);
+			acc = AggregationStrategies.foldLeft(acc, aggs, red);
 		}
 		return acc;
 	}

@@ -9,7 +9,7 @@ import ar.Aggregates;
 import ar.Transfer;
 import ar.aggregates.FlatAggregates;
 import ar.app.ARApp;
-import ar.rules.Transfers;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public class DrawDarkControl extends JPanel {
@@ -51,7 +51,7 @@ public class DrawDarkControl extends JPanel {
 		
 		public DrawDark(Color low, Color high, int distance) {
 			this.distance=distance;
-			inner = new Transfers.Interpolate(low,high,high,-1);
+			inner = new Numbers.Interpolate(low,high,high,-1);
 		}
 	
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
