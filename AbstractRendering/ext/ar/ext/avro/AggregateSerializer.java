@@ -33,7 +33,7 @@ import ar.rules.CategoricalCounts;
 public class AggregateSerializer {
 	public static final String AGGREGATES_SCHEMA ="ar/ext/avro/tile.avsc";
 	public static final String COUNTS_SCHEMA="ar/ext/avro/count.avsc";
-	public static final String RLE_SCHEMA="ar/ext/avro/rle.avsc";
+	public static final String COC_SCHEMA="ar/ext/avro/coc.avsc";
 	public static final String COLOR_SCHEMA="ar/ext/avro/color.avsc";
 
 	public static enum FORMAT{BINARY,JSON};
@@ -137,7 +137,7 @@ public class AggregateSerializer {
 			conv = (Valuer<A, GenericRecord>) new Converters.FromCount(schema);
 
 		} else if (v instanceof CategoricalCounts.RLE) {
-			schema = new SchemaComposer().addResource(RLE_SCHEMA).resolved();
+			schema = new SchemaComposer().addResource(COC_SCHEMA).resolved();
 			conv = (Valuer<A, GenericRecord>) new Converters.FromRLE(schema);
 		} else if (v instanceof Color) {
 			schema = new SchemaComposer().addResource(COLOR_SCHEMA).resolved();

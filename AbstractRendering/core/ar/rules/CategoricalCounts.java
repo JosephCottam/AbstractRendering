@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 public interface CategoricalCounts<T> {
 	
-	public void add(T key, int qty);
+	public CategoricalCounts<T> add(T key, int qty);
 	public int count(int i);
 	public T key(int i);
 	public int count(T key);
@@ -18,19 +18,26 @@ public interface CategoricalCounts<T> {
 	public int size();
 
 
-	/**Count categories.  Categoreis are stored in sorted order (so "nth" makes sense).**/
+	/**Count categories.  Categories are stored in sorted order (so "nth" makes sense).**/
 	public static final class CoC<T> implements CategoricalCounts<T> {
-		private int fullSize=0;
 		final SortedMap<T, Integer> counts;
+		private final int fullSize;
 		
-		public CoC() {counts = new TreeMap<T,Integer>();}
-		public CoC(Comparator<T> comp) {counts = new TreeMap<T,Integer>(comp);}
+		public CoC() {this(new TreeMap<T,Integer>(),0);}
+		public CoC(Comparator<T> comp) {this(new TreeMap<T,Integer>(comp),0);}
+		public CoC(SortedMap<T, Integer> counts, int fullSize) {
+			this.counts = counts;
+			this.fullSize = fullSize;
+		}
 		
-		public void add(T key, int count) {
-			if (!counts.containsKey(key)) {counts.put(key, 0);}
-			int v = counts.get(key);
-			counts.put(key, v+count);
-			fullSize+=count;
+		public CoC<T> add(T key, int count) {
+			SortedMap<T,Integer> ncounts = new TreeMap<T,Integer>(counts.comparator());
+			ncounts.putAll(counts);
+			if (!ncounts.containsKey(key)) {ncounts.put(key, 0);}
+			int v = ncounts.get(key);
+			ncounts.put(key, v+count);
+			int fullSize = this.fullSize + count;
+			return new CoC<T>(ncounts, fullSize);
 		}
 		
 		public int count(Object key) {
@@ -60,13 +67,36 @@ public interface CategoricalCounts<T> {
 	 * items from other categories.
 	 */
 	public static final class RLE<T> implements CategoricalCounts<T> {
-		public final List<T> keys = new ArrayList<T>();
-		public final List<Integer> counts = new ArrayList<Integer>();
-		public int fullSize =0;
-		public void add(T key, int count) {
-			keys.add(key);
-			counts.add(count);
-			fullSize+=count;
+		public final List<T> keys;
+		public final List<Integer> counts;
+		public final int fullSize;
+		
+		public RLE() {this(new ArrayList<T>(), new ArrayList<Integer>(), 0);}
+		
+		public RLE(List<T> keys, List<Integer> counts, int fullSize) {
+			this.keys = keys;
+			this.counts = counts;
+			this.fullSize=fullSize;
+		}
+		
+		public RLE<T> add(T key, int count) {
+			List<T> nkeys;
+			List<Integer> ncounts = new ArrayList<Integer>();
+			
+			
+			ncounts.addAll(counts);
+			
+			int last = keys.size()-1;
+			if (last >=0 && key.equals(keys.get(last))) {
+				nkeys = keys;
+				ncounts.set(last, counts.get(last)+count);
+			} else {
+				nkeys = new ArrayList<T>();
+				nkeys.addAll(keys); 
+				nkeys.add(key);
+				ncounts.add(count);
+			}
+			return new RLE<T>(nkeys, ncounts, fullSize+count);
 		}
 		
 		public int count(int i) {return counts.get(i);}

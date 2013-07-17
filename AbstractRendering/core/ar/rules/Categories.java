@@ -82,8 +82,7 @@ public class Categories {
 		public Class<RLE> output() {return RLE.class;}
 
 		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
-			left.add(update, 1);
-			return left;
+			return left.add(update, 1);
 		}
 
 		/**Combines run-length encodings.  Assumes that the presentation order
@@ -119,13 +118,12 @@ public class Categories {
 
 		@Override
 		public CoC<T> combine(long x, long y, CoC<T> left, T update) {
-			left.add(update, 1);
-			return left;
+			return left.add(update, 1);
 		}
 
 		@Override
 		public CoC<T> rollup(List<CoC<T>> sources) {
-			CoC<T> combined = new CoC<T>();
+			CoC<T> combined = new CoC<T>(comp);
 			for (CoC<T> counts: sources) {
 				for (T key: counts.counts.keySet()) {
 					combined.add(key, counts.count(key));
@@ -161,11 +159,8 @@ public class Categories {
 
 	/**Switch between two colors depending on the percent contribution of
 	 * a specified category.
-	 * 
-	 * TODO: Convert from RLE to CoC based
-	 * 
-	 * **/
-	public static final class FirstPercent<T> implements Transfer<RLE<T>, Color> {
+	 ***/
+	public static final class FirstPercent<T> implements Transfer<CategoricalCounts<T>, Color> {
 		private final double ratio;
 		private final Color background, match, noMatch;
 		private final Object firstKey;
@@ -178,18 +173,18 @@ public class Categories {
 			this.firstKey = firstKey;
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends RLE<T>> aggregates) {
-			RLE<T> rle = aggregates.at(x,y);
-			double size = rle.fullSize();
+		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
+			CategoricalCounts<T> cats = aggregates.at(x,y);
+			double size = cats.fullSize();
 			
 			if (size == 0) {return background;}
-			else if (!rle.key(0).equals(firstKey)) {return noMatch;} 
-			else if (rle.count(0)/size >= ratio) {return match;}
+			else if (!cats.key(0).equals(firstKey)) {return noMatch;} 
+			else if (cats.count(0)/size >= ratio) {return match;}
 			else {return noMatch;}
 		}
 		
 		public Color emptyValue() {return Util.CLEAR;}
-		public Class<RLE> input() {return RLE.class;}
+		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Color> output() {return Color.class;}
 	}
 	
@@ -248,7 +243,7 @@ public class Categories {
 						Color c;
 						if (cats.fullSize() == 0) {c = background;}
 						else {
-							c = fullInterpolate((RLE<Color>) cats);
+							c = fullInterpolate((CategoricalCounts<Color>) cats);
 							double alpha;
 							if (log) {
 								alpha = omin + ((1-omin) * (Math.log(cats.fullSize())/Math.log(max)));
@@ -266,7 +261,7 @@ public class Categories {
 		}
 		
 		public Color emptyValue() {return Util.CLEAR;}
-		public Class<RLE> input() {return RLE.class;}
+		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
 		public Class<Color> output() {return Color.class;}
 	}
 

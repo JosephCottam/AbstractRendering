@@ -20,9 +20,10 @@ public interface Aggregator<IN,OUT> extends Inspectable<IN,OUT> {
 	
 	/**
 	 * Compute an aggregate value from an existing aggregate value and a 
-	 * new input values.
+	 * new input values.  If the return value is not equal-to "current,"
+	 * the return value must be a distinct object from "current" to ensure correct behavior.
 	 * 
-	 * The x and y position are provided as arguments so position-senstivie
+	 * The x and y position are provided as arguments so position-sensitive
 	 * aggregation can be performed.  Any other contextual information
 	 * needs to be provided through the class in some other way.  The x and y
 	 * values should correspond to the LEFT value from the aggregate set
@@ -30,15 +31,15 @@ public interface Aggregator<IN,OUT> extends Inspectable<IN,OUT> {
 	 * 
 	 * @param x The x-position being operated on
 	 * @param y The y-position being operated on
-	 * @param left An existing aggregate value
+	 * @param current  An existing aggregate value
 	 * @param right A new input value
 	 * @return The aggregate value
 	 */
-	public OUT combine(long x, long y, OUT left, IN update);
+	public OUT combine(long x, long y, OUT current, IN update);
 	
 	
 	/**Reduce aggregate values into a single value.
-	 *   
+	 * 
 	 * This is used for reducing the resolution of a single set of aggregates (e.g., for zooming without recomputing aggregates). 
 	 * 
 	 * @param sources Values from the base aggregates

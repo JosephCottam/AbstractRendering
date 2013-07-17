@@ -21,8 +21,6 @@ import ar.Transfer;
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
- * 
- * TODO: Extend beyond aggregate reducers with same LEFT/RIGHT/OUT
  */
 public class ParallelGlyphs implements Renderer {
 	public static int DEFAULT_TASK_SIZE = 100000;
@@ -75,7 +73,7 @@ public class ParallelGlyphs implements Renderer {
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final Glyphset<G> glyphs;		//TODO: Can some hackery be done with iterators instead so generalized GlyphSet can be used?  At what cost??
+		private final Glyphset<G> glyphs;
 		private final AffineTransform view;
 		private final int width;
 		private final int height;
@@ -115,7 +113,7 @@ public class ParallelGlyphs implements Renderer {
 			return aggs;
 		}
 		
-		//TODO: Respect the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
+		//TODO: Consider the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
 			Glyphset<G> subset = glyphs.segment(low,  high);
 			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
