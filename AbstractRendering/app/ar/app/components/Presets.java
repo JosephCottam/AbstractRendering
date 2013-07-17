@@ -113,7 +113,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelGlyphs(100000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): Cache hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
@@ -121,7 +121,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(100000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String toString() {return "BGL Memory (Memory Mapped): MemActivity hits (log)" + ((glyphset() == null) ? "(FAILED)" : "");}		
