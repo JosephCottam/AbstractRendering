@@ -116,7 +116,6 @@ public class ARApp implements PanelHolder {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
-				@SuppressWarnings("unchecked")
 				B i = (B) cls.getConstructor().newInstance();
 				target.addItem(i);
 			} catch (InstantiationException | IllegalAccessException

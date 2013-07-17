@@ -119,6 +119,7 @@ public class AvroAggregatesTest {
 	}
 	
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void RLERoundTrip() throws Exception {
 		Aggregates<CategoricalCounts.RLE<Color>> ref = rles;

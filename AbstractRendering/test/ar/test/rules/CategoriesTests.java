@@ -33,7 +33,5 @@ public class CategoriesTests {
 				assertEquals(format("Unexpected aggregate value 1 at (%d, %d)", x,y), 4, aggs.at(x, y).count(1));
 			}
 		}
-		
-		
 	}
 }
