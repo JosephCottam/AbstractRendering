@@ -34,7 +34,7 @@ public class AggregationStrategies {
 	 * @param red Reduction operation
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
-	public static <T> Aggregates<T> foldLeft(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
+	public static <T> Aggregates<T> horizontalRollup(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}
 
@@ -50,23 +50,24 @@ public class AggregationStrategies {
 		Rectangle bounds = rb.union(lb);
 
 		if (lb.contains(bounds)) {
-			sources.add(right);
 			target = left;
-		} else if (rb.contains(bounds)) {
-			sources.add(left);
-			target = right;
-		} else {
 			sources.add(right);
+		} else if (rb.contains(bounds)) {
+			target = right;
 			sources.add(left);
+		} else {
+			sources.add(left);
+			sources.add(right);
 			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
 
+		//TODO: Is there a faster way to do this?  Maybe the inner-list creation can be avoided by changing rollup to take two values
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
 					
-					//TODO: Can the list-object creation be avoided? (the "asList")
-					target.set(x,y, red.rollup(Arrays.asList(target.at(x,y), source.at(x,y)))); 
+					T comb = red.rollup(Arrays.asList(target.at(x,y), source.at(x,y)));
+					target.set(x,y, comb); 
 				}
 			}
 		}

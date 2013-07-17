@@ -56,7 +56,7 @@ public class ParallelGlyphs implements Renderer {
 				0, glyphs.segments());
 		
 		Aggregates<A> a= pool.invoke(t);
-		
+
 		return a;
 	}
 	
@@ -109,7 +109,7 @@ public class ParallelGlyphs implements Renderer {
 			ReduceTask<G,A> top = new ReduceTask<G,A>(glyphs, view, op, width,height, taskSize, recorder, low, mid);
 			ReduceTask<G,A> bottom = new ReduceTask<G,A>(glyphs, view, op, width,height, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
-			Aggregates<A> aggs = AggregationStrategies.foldLeft(top.getRawResult(), bottom.getRawResult(), op);
+			Aggregates<A> aggs = AggregationStrategies.horizontalRollup(top.getRawResult(), bottom.getRawResult(), op);
 			return aggs;
 		}
 		
@@ -153,7 +153,8 @@ public class ParallelGlyphs implements Renderer {
 				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
 					for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
 						A existing = aggregates.at(x,y);
-						aggregates.set(x, y, op.combine(x,y,existing, v));
+						A update = op.combine(x,y,existing, v);
+						aggregates.set(x, y, update);
 					}
 				}
 			}

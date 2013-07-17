@@ -82,7 +82,7 @@ public class Categories {
 		public Class<RLE> output() {return RLE.class;}
 
 		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
-			return left.add(update, 1);
+			return left.extend(update, 1);
 		}
 
 		/**Combines run-length encodings.  Assumes that the presentation order
@@ -93,10 +93,10 @@ public class Categories {
 			RLE<T> union = new RLE<T>();
 			for (RLE<T> r: sources) {
 				for (int i=0; i< r.size(); i++) {
-					union.add(r.key(i), r.count(i));
+					union = union.extend(r.key(i), r.count(i));
 				}
 			}
-			return null;
+			return union;
 		}
 
 		public RLE<T> identity() {return new RLE<T>();}
@@ -118,7 +118,7 @@ public class Categories {
 
 		@Override
 		public CoC<T> combine(long x, long y, CoC<T> left, T update) {
-			return left.add(update, 1);
+			return left.extend(update, 1);
 		}
 
 		@Override
@@ -126,7 +126,7 @@ public class Categories {
 			CoC<T> combined = new CoC<T>(comp);
 			for (CoC<T> counts: sources) {
 				for (T key: counts.counts.keySet()) {
-					combined.add(key, counts.count(key));
+					combined = combined.extend(key, counts.count(key));
 				}
 			}
 			return combined;

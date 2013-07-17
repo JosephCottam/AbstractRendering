@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 public interface CategoricalCounts<T> {
 	
-	public CategoricalCounts<T> add(T key, int qty);
+	public CategoricalCounts<T> extend(T key, int qty);
 	public int count(int i);
 	public T key(int i);
 	public int count(T key);
@@ -30,7 +30,7 @@ public interface CategoricalCounts<T> {
 			this.fullSize = fullSize;
 		}
 		
-		public CoC<T> add(T key, int count) {
+		public CoC<T> extend(T key, int count) {
 			SortedMap<T,Integer> ncounts = new TreeMap<T,Integer>(counts.comparator());
 			ncounts.putAll(counts);
 			if (!ncounts.containsKey(key)) {ncounts.put(key, 0);}
@@ -47,7 +47,7 @@ public interface CategoricalCounts<T> {
 		
 		public int size() {return counts.size();}
 		public int fullSize() {return fullSize;}
-		public String toString() {return "COC: " + Arrays.deepToString(counts.keySet().toArray());}
+		public String toString() {return "COC: " + counts.toString();}
 		public T key(int i) {
 			Iterator<T> it = counts.keySet().iterator();
 			for (; i>0; i--) {it.next();}
@@ -79,7 +79,7 @@ public interface CategoricalCounts<T> {
 			this.fullSize=fullSize;
 		}
 		
-		public RLE<T> add(T key, int count) {
+		public RLE<T> extend(T key, int count) {
 			List<T> nkeys;
 			List<Integer> ncounts = new ArrayList<Integer>();
 			

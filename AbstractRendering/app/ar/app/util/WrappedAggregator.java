@@ -52,7 +52,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Aggregator<Color, CategoricalCounts.CoC<Color>> op() {
 			return new Categories.CountCategories<Color>(Util.COLOR_SORTER, Color.class);
 		}
-		public Class<CategoricalCounts.RLE> type() {return CategoricalCounts.RLE.class;}
+		public Class<CategoricalCounts.CoC> type() {return CategoricalCounts.CoC.class;}
 		public String toString() {return "Color RLE sorted (RLE)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 	}

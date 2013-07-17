@@ -58,9 +58,9 @@ public class Presets extends CompoundPanel {
 	
 	public static interface Preset {
 		public WrappedAggregator<?,?> aggregator();
+		public WrappedTransfer<?,?> transfer();
 		public Renderer renderer();
 		public Glyphset<?> glyphset();
-		public WrappedTransfer<?,?> transfer();
 	}
 	
 	public static class ScatterplotAlpha implements Preset {
@@ -143,9 +143,6 @@ public class Presets extends CompoundPanel {
 		public String toString() {return "Scatterplot: clipping warning (int)" + ((glyphset() == null) ? "(FAILED)" : "");}
 
 	}
-	
-	
-	
 	
 	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetUtils.load("Scatterplot", "../data/circlepoints.csv", .1);
 	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetUtils.load("BGL Memory", "../data/MemVisScaled.csv", .001);

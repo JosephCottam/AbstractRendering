@@ -77,7 +77,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = AggregationStrategies.foldLeft(aggs, item, reducer);
+				aggs = AggregationStrategies.horizontalRollup(aggs, item, reducer);
 			}
 		}
 		return aggs;

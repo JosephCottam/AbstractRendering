@@ -15,7 +15,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
-public class TestWrappedCollection {
+public class WrappedCollectionTests {
 	
 	@Test
 	public void toQuadTree() {

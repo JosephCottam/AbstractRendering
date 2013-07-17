@@ -109,7 +109,7 @@ public class TileUtils {
 		Aggregator<A,A> red = new General.Echo<A>(null, type);
 		for (File file: files) {
 			Aggregates<A> aggs = AggregateSerializer.deserialize(file, converter);
-			acc = AggregationStrategies.foldLeft(acc, aggs, red);
+			acc = AggregationStrategies.horizontalRollup(acc, aggs, red);
 		}
 		return acc;
 	}

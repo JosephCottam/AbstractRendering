@@ -17,7 +17,7 @@ public class CategoricalCountsTests {
 
 		for (int i=1; i<11; i++) {
 			for (int j=0; j<i; j++) {
-				CategoricalCounts<Color> ncats = cats.add(new Color(i,0,0), 1);
+				CategoricalCounts<Color> ncats = cats.extend(new Color(i,0,0), 1);
 				assertThat("Expected 'fresh' rle after edit.", ncats, not(cats));
 				full++;
 				assertThat(ncats.fullSize(), is(full));
