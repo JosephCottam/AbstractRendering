@@ -42,7 +42,7 @@ public class BatchExport {
 				int res = Integer.parseInt(rres);
 				System.out.printf("Processing %s at %d\n", source, res);
 				AffineTransform ivt = Util.zoomFit(glyphs.bounds(), res, res).createInverse();
-				Aggregates aggs = render.reduce(glyphs, aggregator, ivt, res, res);
+				Aggregates<Integer> aggs = render.reduce(glyphs, aggregator, ivt, res, res);
 				String filename = String.format("%s_%d.csv", outPrefix, res);
 				System.out.printf("\t Writing to %s\n", filename);
 				AggregatesToCSV.export(aggs, new File(filename));

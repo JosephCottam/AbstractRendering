@@ -13,7 +13,8 @@ import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
 public class ARPanel extends JPanel {
-	public static boolean PERF_MON = false;
+	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
+	public static boolean PERF_REP = false;
 	
 	private static final long serialVersionUID = 1L;
 	private final Aggregator reduction;
@@ -107,7 +108,6 @@ public class ARPanel extends JPanel {
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			Graphics2D g2 = (Graphics2D) g;
 			g2.drawRenderedImage(image,g2.getTransform());
-			if (PERF_MON) {synchronized(this) {this.notifyAll();}}
 		} else {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -124,7 +124,7 @@ public class ARPanel extends JPanel {
 			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
-			if (!PERF_MON) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			if (PERF_REP) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
 			ARPanel.this.repaint();
 		}
 	}
@@ -139,7 +139,7 @@ public class ARPanel extends JPanel {
 			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
 			image = Util.asImage(colors, width, height, Util.CLEAR);
 			long end = System.currentTimeMillis();
-			if (!PERF_MON) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			if (PERF_REP) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
 			ARPanel.this.repaint();
 		}
 	}
@@ -298,7 +298,10 @@ public class ARPanel extends JPanel {
 		try {
 			if (dataset() == null || dataset().bounds() ==null) {return;}
 			Rectangle2D content = dataset().bounds();
-
+			
+			//TODO:  start using util zoomFit;  need to fix the tight-bounds problem  
+//			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
+//			setViewTransform(vt);
 			double w = getWidth()/content.getWidth();
 			double h = getHeight()/content.getHeight();
 			double scale = Math.min(w, h);

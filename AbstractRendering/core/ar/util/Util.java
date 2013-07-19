@@ -196,11 +196,11 @@ public final class Util {
 		double ws = width/content.getWidth();
 		double hs = height/content.getHeight();
 		double scale = Math.min(ws, hs);
-		double tx = content.getCenterX();
-		double ty = content.getCenterY();
+		double tx = content.getMinX();
+		double ty = content.getMinY();
 
 		AffineTransform t = AffineTransform.getScaleInstance(scale,scale);
-		t.translate(tx,ty);
+		t.translate(-tx,-ty);
 		return t;
 	}
 	
