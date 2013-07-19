@@ -108,8 +108,8 @@ public class Advise {
 	 * @return The location of the first "smallest" value 
 	 */
 	public static <A> Point min(Aggregates<? extends A> aggs, Comparator<A> comp) {
-		A min = aggs.iterator().next();
-		Point p = new Point(-1,-1);
+		A min = aggs.at(aggs.lowX(), aggs.lowY());
+		Point p = new Point(aggs.lowX(), aggs.lowY());
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				A val = aggs.at(x,y);
@@ -131,8 +131,8 @@ public class Advise {
 	 * @return The location of the first "largest" value 
 	 */
 	public static <A> Point max(Aggregates<? extends A> aggs, Comparator<A> comp) {
-		A max = aggs.iterator().next();
-		Point p = new Point(-1,-1);
+		A max = aggs.at(aggs.lowX(), aggs.lowY());
+		Point p = new Point(aggs.lowX(), aggs.lowY());
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				A val = aggs.at(x,y);
