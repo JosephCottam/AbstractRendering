@@ -2,6 +2,7 @@ package ar;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 
 import javax.swing.JFrame;
@@ -17,6 +18,7 @@ import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.renderers.SerialSpatial;
+import ar.util.Util;
 
 /**Tests the amount of time to render count visualizations.
  * 
@@ -38,11 +40,12 @@ public class RenderSpeedTest {
 		int task = Integer.parseInt(arg(args, "-task", "100000000"));
 		String rend = arg(args, "-rend", "glyph").toUpperCase();
 		String source = arg(args, "-data", "../data/circlepoints.hbin");
+		int width = Integer.parseInt(arg(args, "-width", "500"));
+		int height = Integer.parseInt(arg(args, "-height", "500"));
 		
-		Aggregator<?,?> aggregator = new WrappedAggregator.Count().op();
-		Transfer<?,?> transfer = new WrappedTransfer.RedWhiteLinear().op();
+		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
+		//Transfer<Integer,Color> transfer = new WrappedTransfer.RedWhiteLinear().op();
 	
-		ARPanel.PERF_MON = true;
 		ParallelGlyphs.THREAD_POOL_SIZE = cores;
 		ParallelSpatial.THREAD_POOL_SIZE = cores;
 		
@@ -64,25 +67,14 @@ public class RenderSpeedTest {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
-		
-		JFrame f = new JFrame();
-		f.setLayout(new BorderLayout());
-		f.setSize(500,500);
-		f.setVisible(true);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
-		
+		AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
+				
 		System.out.println("source, elapse/avg, iter num, renderer, cores, task-size");
 		long total=0;
 		try {
 			for (int i=0; i<iterations; i++) {
-				ARPanel panel = new ARPanel(aggregator, transfer, glyphs, render);
-				f.add(panel, BorderLayout.CENTER);
 				long start = System.currentTimeMillis();
-				f.validate();
-				panel.zoomFit();
-				f.repaint();
-				synchronized(panel) {panel.wait();}
-				f.remove(panel);
+				Aggregates<Integer> aggs = render.reduce(glyphs, aggregator, ivt, width, height);
 				long end = System.currentTimeMillis();
 				System.out.printf("%s, %d, %d, %s, %d, %d\n", source, end-start, i, rend, cores, task);
 				total += (end-start);

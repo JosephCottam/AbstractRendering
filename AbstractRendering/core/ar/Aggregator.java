@@ -2,8 +2,6 @@ package ar;
 
 import java.util.List;
 
-import ar.util.Inspectable;
-
 /**An Aggregator convert glyphs into aggregate items for a specific view.
  * 
  * The aggregator is defined such that it may be used in a fold-like operation
@@ -16,7 +14,7 @@ import ar.util.Inspectable;
  * IN -- The type of the data element on the glyph
  * OUT -- The type of aggregates produced
  * **/
-public interface Aggregator<IN,OUT> extends Inspectable<IN,OUT> {
+public interface Aggregator<IN,OUT> {
 	
 	/**
 	 * Compute an aggregate value from an existing aggregate value and a 

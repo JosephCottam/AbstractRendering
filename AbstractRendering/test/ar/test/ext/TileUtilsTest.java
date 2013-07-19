@@ -13,12 +13,12 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.ext.tiles.TileUtils;
 import ar.rules.Numbers;
-import ar.test.aggregates.AggregatesImplementationsTest;
+import ar.test.aggregates.TestAggregates;
 
 public class TileUtilsTest {
 	@Test
 	public void subset() {
-		Aggregates<Integer> aggs = AggregatesImplementationsTest.simpleAggregates(10, 10, 100, 100, -1);
+		Aggregates<Integer> aggs = TestAggregates.simpleAggregates(10, 10, 100, 100, -1);
 		
 		Aggregates<Integer> subset = TileUtils.subset(aggs, 0, 0, 25, 25);
 		
@@ -36,7 +36,7 @@ public class TileUtilsTest {
 	
 	@Test
 	public void tileCascade() throws Exception {
-		Aggregates<Integer> aggs = AggregatesImplementationsTest.simpleAggregates(0,0,1000,1000, -1);
+		Aggregates<Integer> aggs = TestAggregates.simpleAggregates(0,0,1000,1000, -1);
 		Aggregator<?,Integer> red = new Numbers.Count();
 		File root = new File("./testResults/tileset");
 		org.apache.commons.io.FileUtils.deleteDirectory(root);

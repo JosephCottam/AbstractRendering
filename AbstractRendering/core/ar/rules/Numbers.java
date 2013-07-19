@@ -22,8 +22,6 @@ public final class Numbers {
 		
 		public Integer identity() {return 0;}
 		public boolean equals(Object other) {return other instanceof Count;}
-		public Class<Object> input() {return Object.class;}
-		public Class<Integer> output() {return Integer.class;}
 	}
 	
 
@@ -43,8 +41,6 @@ public final class Numbers {
 		}
 
 		public Color emptyValue() {return Color.WHITE;}
-		public Class<Number> input() {return Number.class;}
-		public Class<Color> output() {return Color.class;}
 		public void specialize(Aggregates<? extends Number> aggregates) {/**No work to perform.**/}
 	}
 	
@@ -77,11 +73,8 @@ public final class Numbers {
 		public void specialize(Aggregates<? extends Number> aggregates) {
 			this.extrema = Util.stats(aggregates, false);
 		}
-
 		
 		public Color emptyValue() {return Util.CLEAR;}
-		public Class<Number> input() {return Number.class;}
-		public Class<Color> output() {return Color.class;}
 	}
 	
 	

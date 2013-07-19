@@ -1,6 +1,7 @@
 package ar.rules;
 
 import java.util.List;
+import java.util.Map;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -62,4 +63,35 @@ public class General {
 		public Class<OUT> output() {return outputType;}
 	}
 	
+	/**Transfer function that wraps a java.util.map.**/
+	public static class MapWrapper<IN,OUT> implements Transfer<IN,OUT> {
+		private final Map<IN, OUT> mappings;
+		private final boolean nullIsValue;
+		private final OUT other; 
+		private final Class<OUT> out;
+		private final Class<IN> in;
+
+		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue, Class<IN> in, Class<OUT> out) {
+			this.mappings=mappings;
+			this.nullIsValue = nullIsValue;
+			this.other = other;
+			this.in=in;
+			this.out =out;
+		}
+
+		public Class<IN> input() {return in;}
+		public Class<OUT> output() {return out;}
+
+		@Override
+		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+			IN key = aggregates.at(x, y);
+			if (!mappings.containsKey(key)) {return other;}
+			OUT val = mappings.get(key);
+			if (val==null && !nullIsValue) {return other;}
+			return val;
+		}
+
+		public OUT emptyValue() {return other;}
+		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform.*/}
+	}
 }

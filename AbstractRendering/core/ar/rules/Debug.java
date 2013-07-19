@@ -20,8 +20,6 @@ public class Debug {
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
 
 		public Color identity() {return Util.CLEAR;}
-		public Class<Object> input() {return Object.class;}
-		public Class<Color> output() {return Color.class;}
 		public boolean equals(Object other) {return other instanceof Gradient;}
 		public Color combine(long x, long y, Color left, Object update) {
 			return new Color(x/width, y/height,.5f ,1.0f); 
