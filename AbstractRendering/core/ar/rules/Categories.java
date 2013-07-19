@@ -52,10 +52,8 @@ public class Categories {
 	 */
 	public static final class Binary<T> implements Aggregator<T,T> {
 		private final T val, def;
-		private final Class<T> type;
-		public Binary(T val, T def, Class<T> type) {
+		public Binary(T val, T def) {
 			this.val = val;
-			this.type = type;
 			this.def = def;
 		}
 
@@ -66,22 +64,12 @@ public class Categories {
 		}
 
 		public T identity() {return def;}
-		public Class<T> input() {return type;}
-		public Class<T> output() {return type;}
 		public boolean equals(Object other) {
 			return other instanceof Binary && this.val == ((Binary<?>) other).val;
 		}
 	}
 	
 	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
-		private final Class<T> type;
-		public RunLengthEncode(Class<T> type) {this.type = type;}
-
-		@SuppressWarnings("rawtypes")
-		public Class<RLE> output() {return RLE.class;}
-		public Class<T> input() {return type;}
-		
-
 		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
 			return left.extend(update, 1);
 		}
@@ -105,17 +93,10 @@ public class Categories {
 	
 	
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
-		private final Class<T> type;
 		private final Comparator<T> comp;
 		
-		public CountCategories(Class<T> type) {this(null, type);}
-		public CountCategories(Comparator<T> comp, Class<T> type) {
-			this.comp = comp;
-			this.type = type;
-		}
-
-		public Class<T> input() {return type;}
-		public Class<CoC<T>> output() {return (Class<CoC<T>>) identity().getClass();}
+		public CountCategories(Comparator<T> comp) {this.comp = comp;}
+		public CountCategories() {this(null);}
 
 		@Override
 		public CoC<T> combine(long x, long y, CoC<T> left, T update) {
@@ -155,9 +136,6 @@ public class Categories {
 		
 		public Integer emptyValue() {return background;}
 		
-		@SuppressWarnings("rawtypes")
-		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
-		public Class<Integer> output() {return Integer.class;}
 		public void specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {/*No work to perform*/}
 	}
 
@@ -190,11 +168,6 @@ public class Categories {
 		public void specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {/*No work to perform*/}
 		
 		public Color emptyValue() {return Util.CLEAR;}
-		
-		@SuppressWarnings("rawtypes")
-		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
-		public Class<Color> output() {return Color.class;}
-
 	}
 	
 	
@@ -268,12 +241,5 @@ public class Categories {
 		public void specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
 		}
-
-		@SuppressWarnings("rawtypes")
-		public Class<CategoricalCounts> input() {return CategoricalCounts.class;}
-		public Class<Color> output() {return Color.class;}
 	}
-
-	
-
 }

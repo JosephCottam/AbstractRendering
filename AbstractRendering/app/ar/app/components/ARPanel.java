@@ -26,6 +26,7 @@ public class ARPanel extends JPanel {
 	private AffineTransform inverseViewTransformRef = new AffineTransform();
 
 	private volatile boolean renderAgain = false;
+	private volatile boolean renderError = false;
 	private volatile BufferedImage image;
 	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
@@ -87,7 +88,7 @@ public class ARPanel extends JPanel {
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
 				|| transfer == null || reduction == null
-				|| !transfer.input().isAssignableFrom(reduction.output())) {
+				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else if (renderAgain || aggregates == null || differentSizes(image, ARPanel.this)) {
@@ -120,11 +121,16 @@ public class ARPanel extends JPanel {
 			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
 			AffineTransform ivt = inverseViewTransform();
-			aggregates = renderer.reduce(dataset, reduction, ivt, width, height);
-			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
-			image = Util.asImage(colors, width, height, Util.CLEAR);
-			long end = System.currentTimeMillis();
-			if (PERF_REP) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			try {
+				aggregates = renderer.reduce(dataset, reduction, ivt, width, height);
+				Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
+				image = Util.asImage(colors, width, height, Util.CLEAR);
+				long end = System.currentTimeMillis();
+				if (PERF_REP) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			} catch (ClassCastException e) {
+				renderError = true;
+			}
+			
 			ARPanel.this.repaint();
 		}
 	}
@@ -135,11 +141,16 @@ public class ARPanel extends JPanel {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 
-			@SuppressWarnings("unchecked")
-			Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
-			image = Util.asImage(colors, width, height, Util.CLEAR);
-			long end = System.currentTimeMillis();
-			if (PERF_REP) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			try {
+				@SuppressWarnings("unchecked")
+				Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
+				image = Util.asImage(colors, width, height, Util.CLEAR);
+				long end = System.currentTimeMillis();
+				if (PERF_REP) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+			} catch (ClassCastException e) {
+				renderError = true;
+			}
+			
 			ARPanel.this.repaint();
 		}
 	}

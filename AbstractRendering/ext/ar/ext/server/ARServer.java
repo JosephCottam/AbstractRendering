@@ -76,8 +76,8 @@ public class ARServer extends NanoHTTPD {
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new Categories.Last());
 		AGGREGATORS.put("Count", new Numbers.Count());
-		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode(Color.class));
-		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<>(Color.class));
+		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
+		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories());
 	}
 	
 	public ARServer(String hostname) {this(hostname, 8739);}
@@ -105,7 +105,6 @@ public class ARServer extends NanoHTTPD {
 			List<Transfer<?,?>> transfers = getTransfers(transferIDS);
 			AffineTransform vt = viewTransform(viewTransTXT, dataset, width, height);
 			
-			validate(dataset, agg, transfers);
 			Aggregates<?> aggs = execute(dataset, agg, transfers, vt, width, height);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			AggregateSerializer.serialize(aggs, baos, AggregateSerializer.FORMAT.JSON);
@@ -131,28 +130,6 @@ public class ARServer extends NanoHTTPD {
 		}
 		return aggs;
 	}
-	
-	/**Ensure that the requested information is consistent.
-	 * Essentially making sure that the input/output types all line up.
-	 * 
-	 * @param glyphs
-	 * @param aggs
-	 * @param trans
-	 */
-	public void validate(Glyphset<?> glyphs, Aggregator<?,?> aggs, List<Transfer<?,?>> trans) {
-		Class<?> root = glyphs.valueType();
-		if (!aggs.input().isAssignableFrom(root)) {
-			throw new RuntimeException(String.format("Aggregator incompatible with glyphset (%s vs %s).", aggs.input(), root));
-		}
-		Class<?> prior = aggs.output();
-		for (Transfer<?,?> t: trans) {
-			if (!t.input().isAssignableFrom(prior)) {
-				throw new RuntimeException(String.format("Transfer incompatible with prior (%s vs %s).", t.input(), prior));
-			}
-			prior = t.output();
-		}
-	}
-	
 	
 	public AffineTransform viewTransform(String vtTXT, Glyphset<?> g, int width, int height) {
 		if (vtTXT == null) {

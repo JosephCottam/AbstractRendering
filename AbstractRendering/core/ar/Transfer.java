@@ -1,9 +1,7 @@
 package ar;
 
-import ar.util.Inspectable;
-
 /**Transfer functions converts an aggregate into a pixel.**/
-public interface Transfer<IN,OUT> extends Inspectable<IN,OUT> {
+public interface Transfer<IN,OUT> {
 	
 	/**What color should be used for the pixel at location X/Y.
 	 * 

@@ -20,7 +20,6 @@ public class AggregatesToJSON {
 			w.write(content);
 			w.close();
 		} catch (IOException e) {throw new RuntimeException("Error writing JSON.", e);}
-		System.out.printf("Done exporting to (%d x %d) aggregates to %s", aggs.highX(), aggs.highY(), file.getName());
 	}
 	
 	public static String export(Aggregates<Integer> aggs) {

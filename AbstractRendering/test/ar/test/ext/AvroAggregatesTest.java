@@ -49,7 +49,7 @@ public class AvroAggregatesTest {
 				238.49100176586487, 
 				236.13546883394775).createInverse();
 		count = r.reduce(glyphs, new Numbers.Count(), ivt, 500,500);
-		rles = r.reduce(glyphs, new Categories.RunLengthEncode<Color>(Color.class), ivt, 500,500);
+		rles = r.reduce(glyphs, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
 	}
 	
 	@Test

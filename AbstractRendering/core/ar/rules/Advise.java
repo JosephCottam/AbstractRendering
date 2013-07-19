@@ -6,6 +6,7 @@ import java.util.Comparator;
 
 import ar.Aggregates;
 import ar.Transfer;
+import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
 public class Advise {
@@ -16,8 +17,6 @@ public class Advise {
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
-		public Class<?> input() {return ref.input();} 
-		public Class<Boolean> output() {return Boolean.class;}
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 			A def = aggregates.defaultValue();
@@ -42,14 +41,14 @@ public class Advise {
 			this.ref = reference;
 			this.comp = comp;
 		}
-		public Class<?> input() {return ref.input();} 
-		public Class<Boolean> output() {return Boolean.class;}
+
 		public Boolean emptyValue() {return false;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 			A val = aggregates.at(x, y);
 			B out = ref.at(x, y, aggregates);
 			return !Util.isEqual(val, max) && Util.isEqual(top, out); 
 		}
+		
 		@Override
 		public void specialize(Aggregates<? extends A> aggregates) {
 			Point p = max(aggregates, comp);
@@ -85,8 +84,6 @@ public class Advise {
 			}
 		}
 
-		public Class<Number> input() {return Number.class;}
-		public Class<Color> output() {return Color.class;}
 		public Color emptyValue() {return base.emptyValue();}
 
 		@Override
@@ -95,7 +92,59 @@ public class Advise {
 			under.specialize(aggregates);
 		}
 	}
+
 	
+	
+	
+	public static class DrawDark implements Transfer<Number, Color> {
+		public final int distance;
+		public final Transfer<Number, Color> inner;
+		Aggregates<Double> cached;
+		
+		public DrawDark(Color low, Color high, int distance) {
+			this.distance=distance;
+			inner = new Numbers.Interpolate(low,high,high,-1);
+		}
+	
+		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+			return inner.at(x,y,cached);
+		}
+
+		@Override
+		public void specialize(Aggregates<? extends Number> aggs) {
+
+			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
+			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
+				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+					if (aggs.at(x, y).doubleValue() > 0) {
+						cached.set(x, y, preprocOne(x,y,aggs));
+					} else {
+						cached.set(x,y, Double.NaN);
+					}
+				}
+			}
+			inner.specialize(cached);
+		}
+		
+		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {
+			double surroundingSum =0;
+			int cellCount = 0;
+			for (int dx=-distance; dx<=distance; dx++) {
+				for (int dy=-distance; dy<=distance; dy++) {
+					int cx=x+dx;
+					int cy=y+dy;
+					if (cx < aggregates.lowX() || cy < aggregates.lowY() 
+							|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
+					cellCount++;
+					double dv = aggregates.at(cx,cy).doubleValue();
+					if (dv != 0) {surroundingSum++;}
+				}
+			}
+			return surroundingSum/cellCount;
+		}
+
+		public Color emptyValue() {return Util.CLEAR;}
+	}
 	
 	private static class NumberComp implements Comparator<Number> {
 		public int compare(Number o1, Number o2) {return (int) (o1.doubleValue()-o2.doubleValue());}

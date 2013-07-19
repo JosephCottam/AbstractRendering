@@ -18,7 +18,7 @@ public class CategoriesTests {
 	
 	@Test
 	public void CountCategoriesLeft() {
-		Categories.CountCategories<Color> counter = new Categories.CountCategories<Color>(Util.COLOR_SORTER, Color.class);
+		Categories.CountCategories<Color> counter = new Categories.CountCategories<Color>(Util.COLOR_SORTER);
 		CoC<Color> coc = new CoC<Color>(Util.COLOR_SORTER);
 		coc = coc.extend(Color.BLUE, 1);
 		coc = coc.extend(Color.RED, 2);
