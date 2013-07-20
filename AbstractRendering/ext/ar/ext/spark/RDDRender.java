@@ -25,12 +25,11 @@ public class RDDRender {
 	 *    sc.parallelize(<collection>)
 	 *    Transform raw dataset into glyphset via map (of a glypher and a valuer)
 	 */    
-	public static <V> JavaRDD<Glyph<V>> glyphs(JavaRDD<Product> baseData, 
+	public static <V> JavaRDD<Glyph<V>> glyphs(JavaRDD<Indexed> baseData, 
 												Shaper<Indexed> shaper, 
 												Valuer<Indexed,V> valuer) {
 		
-		JavaRDD<IndexedProduct> wraped = baseData.map(new IndexedProduct.Wrapper());
-		JavaRDD<Glyph<V>> glyphs = wraped.map(new Glypher<V>(shaper,valuer));
+		JavaRDD<Glyph<V>> glyphs = baseData.map(new Glypher(shaper,valuer));
 		return glyphs;
 	}
 	

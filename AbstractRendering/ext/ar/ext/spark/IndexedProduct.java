@@ -12,9 +12,6 @@ public class IndexedProduct implements Indexed {
 	
 	public static final class Wrapper extends Function<Product, IndexedProduct> {
 		private static final long serialVersionUID = 5890076181745969708L;
-
 		public IndexedProduct call(Product arg) throws Exception {return new IndexedProduct(arg);}
-		
 	}
-
 }

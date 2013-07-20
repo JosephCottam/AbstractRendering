@@ -8,6 +8,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import spark.api.java.function.Function;
 
 
+/**Wrap a shaper and a valuer up into a sinle object that produces glyphs.**/
 public class Glypher<V> extends Function<IndexedProduct, Glyph<V>> {
 	private static final long serialVersionUID = -2010087917940244951L;
 	
