@@ -6,20 +6,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 
 import ar.*;
 import ar.app.util.ZoomPanHandler;
-import ar.util.Util;
 
 public class ARPanel extends JPanel {
 	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
 	public static boolean PERF_REP = false;
 	
 	private static final long serialVersionUID = 1L;
-	private final Aggregator reduction;
-	private final Transfer transfer;
+	private final Aggregator aggregator;
 	private final Glyphset<?> dataset;
+	private final ARDisplay display;
 	private Renderer renderer;
 	
 	private AffineTransform viewTransformRef = new AffineTransform();
@@ -27,14 +25,17 @@ public class ARPanel extends JPanel {
 
 	private volatile boolean renderAgain = false;
 	private volatile boolean renderError = false;
-	private volatile BufferedImage image;
 	private volatile Aggregates<?> aggregates;
 	private Thread renderThread;
 	
 	public ARPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
-		this.reduction = reduction;
-		this.transfer = transfer;
+		display = new ARDisplay(null, transfer);
+		ARDisplay.PERF_REP = PERF_REP;
+		this.setLayout(new BorderLayout());
+		this.add(display, BorderLayout.CENTER);
+		this.invalidate();
+		this.aggregator = reduction;
 		this.dataset = glyphs;
 		this.renderer = renderer;
 		
@@ -50,11 +51,11 @@ public class ARPanel extends JPanel {
 	
 
 	public ARPanel withDataset(Glyphset<?> data) {
-		return new ARPanel(reduction, transfer, data, renderer);
+		return new ARPanel(aggregator, display.transfer(), data, renderer);
 	}
 	
 	public  ARPanel withTransfer(Transfer<?,?> t) {
-		ARPanel p = new ARPanel(reduction, t, dataset, renderer);
+		ARPanel p = new ARPanel(aggregator, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		p.aggregates = this.aggregates;
@@ -62,40 +63,33 @@ public class ARPanel extends JPanel {
 	}
 	
 	public ARPanel withReduction(Aggregator<?,?> r) {
-		ARPanel p = new ARPanel(r, transfer, dataset, renderer);
+		ARPanel p = new ARPanel(r, display.transfer(), dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		return p;
 	}
 	
 	public ARPanel withRenderer(Renderer r) {
-		ARPanel p = new ARPanel(reduction, transfer, dataset, r);
+		ARPanel p = new ARPanel(aggregator, display.transfer(), dataset, r);
 		return p;
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
-	public Aggregator<?,?> reduction() {return reduction;}
+	public Aggregator<?,?> reduction() {return aggregator;}
 	public void aggregates(Aggregates<?> aggregates) {this.aggregates = aggregates;}
 	
-	private final boolean differentSizes(BufferedImage image, JPanel p) {
-		if (image == null) {return false;}
-		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
-	}
-	
 	@Override
-	public void paintComponent(Graphics g) {
+	public void paint(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
-				|| transfer == null || reduction == null
+				|| aggregator == null
 				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else if (renderAgain || aggregates == null || differentSizes(image, ARPanel.this)) {
+		} else if (renderAgain || aggregates == null) {
 			action = new FullRender();
-		} else if (image == null) {
-			action = new TransferRender();
-		}
+		} 
 
 		if (action != null && (renderThread == null || !renderThread.isAlive())) {
 			renderAgain =false; 
@@ -103,30 +97,25 @@ public class ARPanel extends JPanel {
 			renderThread.setDaemon(true);
 			renderThread.start();
 		}
+		super.paint(g);
 	
-		if (image != null) {
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-			Graphics2D g2 = (Graphics2D) g;
-			g2.drawRenderedImage(image,g2.getTransform());
-		} else {
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		}
 	}
 	
 	public final class FullRender implements Runnable {
+		@SuppressWarnings("unchecked")
 		public void run() {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
 			AffineTransform ivt = inverseViewTransform();
 			try {
-				aggregates = renderer.reduce(dataset, reduction, ivt, width, height);
-				Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
-				image = Util.asImage(colors, width, height, Util.CLEAR);
+				aggregates = renderer.aggregate(dataset, aggregator, ivt, width, height);
+				display.setAggregates(aggregates);
 				long end = System.currentTimeMillis();
-				if (PERF_REP) {System.out.printf("%,d ms (full on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+				if (PERF_REP) {
+					System.out.printf("%d ms (Aggregates render on %d x %d grid\n",
+							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
+				}
 			} catch (ClassCastException e) {
 				renderError = true;
 			}
@@ -135,27 +124,8 @@ public class ARPanel extends JPanel {
 		}
 	}
 	
-	public final class TransferRender implements Runnable {
-		public void run() {
-			long start = System.currentTimeMillis();
-			int width = ARPanel.this.getWidth();
-			int height = ARPanel.this.getHeight();
-
-			try {
-				@SuppressWarnings("unchecked")
-				Aggregates<Color> colors = renderer.transfer(aggregates, transfer);
-				image = Util.asImage(colors, width, height, Util.CLEAR);
-				long end = System.currentTimeMillis();
-				if (PERF_REP) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
-			} catch (ClassCastException e) {
-				renderError = true;
-			}
-			
-			ARPanel.this.repaint();
-		}
-	}
 	
-	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, transfer, reduction);}
+	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, display.transfer(), aggregator);}
 	public Renderer getRenderer() {return renderer;}
 	public Glyphset<?> dataset() {return dataset;}
 	

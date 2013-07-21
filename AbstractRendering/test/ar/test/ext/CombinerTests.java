@@ -27,7 +27,7 @@ public class CombinerTests {
 	public static void load() throws Exception {
 		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
 		Renderer r = new ParallelSpatial();
-		count = r.reduce(glyphs, new Numbers.Count(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
+		count = r.aggregate(glyphs, new Numbers.Count(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
 	}
 	
 	@Test

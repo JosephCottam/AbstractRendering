@@ -48,8 +48,8 @@ public class AvroAggregatesTest {
 				241.4615556310524,
 				238.49100176586487, 
 				236.13546883394775).createInverse();
-		count = r.reduce(glyphs, new Numbers.Count(), ivt, 500,500);
-		rles = r.reduce(glyphs, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
+		count = r.aggregate(glyphs, new Numbers.Count(), ivt, 500,500);
+		rles = r.aggregate(glyphs, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
 	}
 	
 	@Test

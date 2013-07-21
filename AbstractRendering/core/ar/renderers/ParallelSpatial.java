@@ -31,7 +31,7 @@ public final class ParallelSpatial implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public <V,A> Aggregates<A> reduce(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
+	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
 			final AffineTransform inverseView, final int width, final int height) {
 		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity()); 
 		ReduceTask<V,A> t = new ReduceTask<V,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);

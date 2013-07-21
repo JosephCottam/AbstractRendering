@@ -97,7 +97,7 @@ public class RHIPETools {
 		Glyphset glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
 		Renderer r = new SerialSpatial();
 		Aggregator agg = new Numbers.Count();
-		Aggregates aggs = r.reduce(glyphs, agg, ivt, width, height);
+		Aggregates aggs = r.aggregate(glyphs, agg, ivt, width, height);
 		return reduceKeys(aggs);
 	}
 }

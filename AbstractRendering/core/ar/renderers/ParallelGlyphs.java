@@ -39,7 +39,7 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <V,A> Aggregates<A> reduce(Glyphset<? extends V> glyphs, Aggregator<V,A> op, 
+	public <V,A> Aggregates<A> aggregate(Glyphset<? extends V> glyphs, Aggregator<V,A> op, 
 			AffineTransform inverseView, int width, int height) {
 		
 		AffineTransform view;

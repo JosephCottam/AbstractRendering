@@ -74,7 +74,7 @@ public class RenderSpeedTest {
 		try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				Aggregates<Integer> aggs = render.reduce(glyphs, aggregator, ivt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
 				long end = System.currentTimeMillis();
 				System.out.printf("%s, %d, %d, %s, %d, %d\n", source, end-start, i, rend, cores, task);
 				total += (end-start);

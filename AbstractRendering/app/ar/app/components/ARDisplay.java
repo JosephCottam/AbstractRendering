@@ -2,6 +2,8 @@ package ar.app.components;
 
 import javax.swing.JPanel;
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
 
 import ar.*;
@@ -15,12 +17,13 @@ public class ARDisplay extends JPanel {
 	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
 	public static boolean PERF_REP = false;
 
-	private final Transfer<?,?> transfer;
-	private final Aggregates<?> aggregates;
-	private final Renderer renderer = new SerialSpatial();
+	private Transfer<?,?> transfer;
+	private Aggregates<?> aggregates;
+	private Renderer renderer = new SerialSpatial();
 	private BufferedImage image;
 	private Thread renderThread;
 	private volatile boolean renderError = false;
+	private volatile boolean renderAgain = false;
 
 
 
@@ -28,7 +31,12 @@ public class ARDisplay extends JPanel {
 		super();
 		this.transfer = transfer;
 		this.aggregates = aggregates;
-		
+		this.addComponentListener(new ComponentListener(){
+			public void componentResized(ComponentEvent e) {ARDisplay.this.renderAgain = true;}
+			public void componentMoved(ComponentEvent e) {}
+			public void componentShown(ComponentEvent e) {}
+			public void componentHidden(ComponentEvent e) {}
+		});
 	}
 	
 
@@ -37,26 +45,24 @@ public class ARDisplay extends JPanel {
 		if (renderThread != null) {renderThread.stop();}
 	}
 	
-	public ARDisplay withAggregates(Aggregates<?> aggregates) {
-		return new ARDisplay(aggregates, transfer);
+	public void setAggregates(Aggregates<?> aggregates) {
+		this.aggregates = aggregates;
+		renderAgain = true;
+		renderError = false;
 	}
 	
-	public  ARDisplay withTransfer(Transfer<?,?> t) {
-		return new ARDisplay(aggregates, t);
+	public  void withTransfer(Transfer<?,?> transfer) {
+		this.transfer = transfer;
+		renderAgain = true;
+		renderError = false;
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public Transfer<?,?> transfer() {return transfer;}
 	
-	private final boolean differentSizes(BufferedImage image, JPanel p) {
-		if (image == null) {return false;}
-		else {return image.getWidth() != p.getWidth() || image.getHeight() != p.getHeight();}
-	}
-	
 	@Override
 	public void paintComponent(Graphics g) {
-		
-		boolean doRender = (image == null || differentSizes(image, ARDisplay.this)) 
+		boolean doRender = (renderAgain || image == null) 
 				&& transfer != null && aggregates != null;
 		
 		if (doRender && ! renderError) {
@@ -78,18 +84,20 @@ public class ARDisplay extends JPanel {
 	
 	public final class TransferRender implements Runnable {
 		public void run() {
-			long start = System.currentTimeMillis();
-			int width = ARDisplay.this.getWidth();
-			int height = ARDisplay.this.getHeight();
-
 			try {
+				long start = System.currentTimeMillis();
+
 				@SuppressWarnings({ "rawtypes", "unchecked" })
 				Aggregates<Color> colors = renderer.transfer((Aggregates) aggregates, (Transfer) transfer);
-				image = Util.asImage(colors, width, height, Util.CLEAR);
+				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
-				if (PERF_REP) {System.out.printf("%,d ms (transfer on %d, %d grid)\n", (end-start), image.getWidth(), image.getHeight());}
+				if (PERF_REP) {
+					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
+							(end-start), image.getWidth(), image.getHeight());}
 			} catch (ClassCastException e) {
 				renderError = true;
+			} finally {
+				renderAgain = false;
 			}
 			
 			ARDisplay.this.repaint();
