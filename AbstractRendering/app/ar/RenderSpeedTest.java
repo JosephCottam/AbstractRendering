@@ -37,7 +37,7 @@ public class RenderSpeedTest {
 		String source = arg(args, "-data", "../data/circlepoints.hbin");
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
-		
+		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
 		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
 		//Transfer<Integer,Color> transfer = new WrappedTransfer.RedWhiteLinear().op();
 	
@@ -63,8 +63,11 @@ public class RenderSpeedTest {
 		}
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
 		AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
-				
-		System.out.println("source, elapse/avg, iter num, renderer, cores, task-size");
+		
+		if (header) {
+			System.out.println("source, elapse/avg, iter num, renderer, cores, task-size");
+		}
+		
 		long total=0;
 		try {
 			for (int i=0; i<iterations; i++) {
