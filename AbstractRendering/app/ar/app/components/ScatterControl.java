@@ -280,8 +280,6 @@ public class ScatterControl extends JPanel {
 		}
 
 		public Color emptyValue() {return Util.CLEAR;}
-		public Class<Number> input() {return Number.class;}
-		public Class<Color> output() {return Color.class;}
 
 		@Override
 		public void specialize(Aggregates<? extends Number> aggregates) {/**No useful work.**/}

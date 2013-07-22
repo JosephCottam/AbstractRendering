@@ -77,7 +77,7 @@ public class AvroGlyphsTest {
 			final String[] record = reader.next();
 			if (record == null) {continue;}
 			final GenericRecord r = new GenericData.Record(schema);
-			for (int i=0; i<record.length;i++) {r.put(i, Double.parseDouble(record[i]));}
+			for (int i=0; i<record.length;i++) {r.put(i, Double.valueOf(record[i]));}
 			dataFileWriter.append(r);
 		}
 		

@@ -114,7 +114,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class Present implements WrappedTransfer<Integer,Color> {
-		public Transfer<Integer,Color> op() {return new General.Present<Integer, Color>(Color.red, Color.white, Color.class);}
+		public Transfer<Integer,Color> op() {return new General.Present<Integer, Color>(Color.red, Color.white);}
 		public String toString() {return "Present (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -142,7 +142,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class EchoColor implements WrappedTransfer<Color,Color> {
-		public Transfer<Color,Color> op() {return new General.Echo<Color>(Util.CLEAR, Color.class);}
+		public Transfer<Color,Color> op() {return new General.Echo<Color>(Util.CLEAR);}
 		public String toString() {return "Echo (Color)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}

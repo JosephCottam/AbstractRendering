@@ -64,10 +64,10 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("RedWhiteLog", new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));
 		TRANSFERS.put("Alpha10", new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5));
 		TRANSFERS.put("AlphaMin", new Numbers.FixedAlpha(Color.white, Color.red, 0, 255));
-		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white, Color.class));
+		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
 		TRANSFERS.put("90Percent", new Categories.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("25Percent", new Categories.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("Echo", new General.Echo(Util.CLEAR, Color.class));
+		TRANSFERS.put("Echo", new General.Echo(Util.CLEAR));
 		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
 		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
 						
@@ -124,7 +124,7 @@ public class ARServer extends NanoHTTPD {
 		} else {
 			r = new ParallelSpatial();
 		}
-		Aggregates aggs = r.aggregate(glyphs, agg, inverseView, width, height);
+		Aggregates<?> aggs = r.aggregate(glyphs, agg, inverseView, width, height);
 		for (Transfer t: trans) {
 			aggs = r.transfer(aggs, t);
 		}
@@ -137,10 +137,10 @@ public class ARServer extends NanoHTTPD {
 			return Util.zoomFit(bounds, width, height);
 		} else {
 			String[] parts = vtTXT.split(",");
-			Double sx = Double.parseDouble(parts[0]);
-			Double sy = Double.parseDouble(parts[1]);
-			Double tx = Double.parseDouble(parts[2]);
-			Double ty = Double.parseDouble(parts[3]);
+			double sx = Double.parseDouble(parts[0]);
+			double sy = Double.parseDouble(parts[1]);
+			double tx = Double.parseDouble(parts[2]);
+			double ty = Double.parseDouble(parts[3]);
 			AffineTransform vt = new AffineTransform(sx,0,0,sy,tx,ty);
 			return vt;
 		}

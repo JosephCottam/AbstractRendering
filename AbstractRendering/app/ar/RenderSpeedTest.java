@@ -1,16 +1,11 @@
 package ar;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 
-import javax.swing.JFrame;
-
-import ar.app.components.ARPanel;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
-import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
@@ -76,6 +71,7 @@ public class RenderSpeedTest {
 				long start = System.currentTimeMillis();
 				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
 				long end = System.currentTimeMillis();
+				aggs.at(0, 0);
 				System.out.printf("%s, %d, %d, %s, %d, %d\n", source, end-start, i, rend, cores, task);
 				total += (end-start);
 			}

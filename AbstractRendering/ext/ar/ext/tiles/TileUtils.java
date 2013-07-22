@@ -106,7 +106,7 @@ public class TileUtils {
 			throws FileNotFoundException {
 		
 		Aggregates<A> acc = null;
-		Aggregator<A,A> red = new General.Echo<A>(null, type);
+		Aggregator<A,A> red = new General.Echo<A>(null);
 		for (File file: files) {
 			Aggregates<A> aggs = AggregateSerializer.deserialize(file, converter);
 			acc = AggregationStrategies.horizontalRollup(acc, aggs, red);

@@ -19,7 +19,7 @@ public interface Valuer<I,V> {
 
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToInt<V> implements Valuer<V,Integer> {
-		public Integer value(V from) {return Integer.parseInt(from.toString());}
+		public Integer value(V from) {return Integer.valueOf(from.toString());}
 	}
 	
 	

@@ -36,10 +36,10 @@ public interface Indexed {
 		public Object get(int i) {
 			String s = values[i].toString();
 			switch (types[i]) {
-				case INT: return Integer.parseInt(s);
-				case LONG: return Long.parseLong(s);
-				case DOUBLE: return Double.parseDouble(s);
-				case FLOAT: return Float.parseFloat(s);
+				case INT: return Integer.valueOf(s);
+				case LONG: return Long.valueOf(s);
+				case DOUBLE: return Double.valueOf(s);
+				case FLOAT: return Float.valueOf(s);
 				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
 			}
 		}
