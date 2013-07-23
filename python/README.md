@@ -10,7 +10,10 @@ Build and Dependencies
 ==========
 
 Abstract Rendering relies on a c-module that can be built as:
-clang -O3 -march=native -fPIC -dynamiclib transform.cpp -o libtransform.dylib
+* clang -O3 -march=native -fPIC -dynamiclib transform.cpp -o libtransform.dylib
+
+An optional acceleration module is compiled as:
+* clang -O3 -march=native -fPIC -dynamiclib transform_libdispatch.cpp -o libtransform_libdispatch.dylib
 
 Additionally, the system works best if Numba is also installed (though it is optional).  
 

@@ -49,7 +49,7 @@ def _create_plot_component():
 #                        ivt)
       image = ar.render(glyphs, 
                         numeric.Count(), 
-                        numeric.Interpolate(blue,red,log=10),
+                        numeric.Interpolate(blue,red, empty=0),
                         screen,
                         ivt)
 

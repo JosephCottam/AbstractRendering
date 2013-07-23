@@ -4,7 +4,7 @@ import numpy as np
 from math import floor 
 import ctypes
 from fast_project import _projectRects
-
+import general
 try:
   from numba import autojit
 except ImportError:
@@ -18,32 +18,21 @@ class Glyphset(list):
   def asarray(self):
     return np.array(self, order="F")
 
+class GlyphAggregates:
+  def __init__(self, glyph, val):
+    self.glyph = glyph
+    self.array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1]), dtype=np.int32)
+    self.array.fill(val)
+    ##TODO: chane to fill with zero, then insert the glyph value where it actually touches
+    ##TODO: Mking this object may really be the job of the info function
+
+
 def _project(viewxform, glyphset):
   """Project the points found in the glyphset according tot he view transform."""
   points = glyphset[:,:4]
   out = np.empty_like(points,dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
   return out
-
-@autojit
-def _store(width, height, projected):
-  empty = []
-  outgrid = np.ndarray((width, height), dtype=object)
-  outgrid.fill(empty)
-  for i in xrange(0, projected.shape[0]):
-    x = projected[i,0]
-    y = projected[i,1]
-    x2 = projected[i,2]
-    y2 = projected[i,3]
-    for xx in xrange(x, x2):
-      for yy in xrange(y, y2):
-        ls = outgrid[xx,yy]
-        if (ls == empty): 
-          ls = []
-          outgrid[xx,yy] = ls 
-        ls.append(i)
-  return outgrid
-   
 
 class Grid(object):
     width = 2000
@@ -58,31 +47,25 @@ class Grid(object):
       self.width=w
       self.height=h
       self.viewxform=viewxform
-      self._storefun = _store
 
-    def project(self, glyphset):
+    def aggregate(self, glyphset, aggregator):
+      """ 
+      Returns ndarray of results of applying func to each element in 
+      the grid.  Creates a new ndarray of the given dtype.
+
+      Stores the results in _aggregates
       """
-      Parameters
-      ==========
-      glyphset: Numpy record array
-      should be record array with at least the following named fields:
-        x, y, width, height.
-      Stores result in _projected.
-      Stores the passed glyphset in _glyphset
-      """
+
       self._glyphset = glyphset.asarray()
-
       projected = _project(self.viewxform, self._glyphset)
-      self._projected = _store(self.width, self.height, projected)
+      self._projected = projected
 
-    def aggregate(self, aggregator):
-        """ 
-        Returns ndarray of results of applying func to each element in 
-        the grid.  Creates a new ndarray of the given dtype.
+      aggregates = aggregator.allocate(self.width, self.height, self._glyphset)
+      for glyph in projected:
+        glyph_grid = GlyphAggregates(glyph,1)  
+        aggregator.combine(aggregates, glyph_grid)
 
-        Stores the results in _aggregates
-        """
-        self._aggregates = aggregator.aggregate(self)
+      self._aggregates = aggregates 
 
     def transfer(self, transferer):
         """ Returns pixel grid of NxMxRGBA32 (for now) """
@@ -90,13 +73,19 @@ class Grid(object):
 
         
 class Aggregator(object):
-    out_type = None
+  out_type = None
+  in_type = None
+  identity=None
 
-    def aggregate(self, grid):
-        """ Returns the aggregated values from just the indicated fields and
-        indicated elements of the glyphset
-        """
-        pass
+  def combine(self, existing, update):
+    """
+    existing: outype npy array
+    update: intype np array
+    """
+    pass
+
+  def rollup(*vals):
+    pass
 
 
 class Transfer(object):
@@ -153,8 +142,7 @@ def render(glyphs, aggregator, trans, screen,ivt):
   """
 
   grid = Grid(screen[0], screen[1], ivt.inverse())
-  grid.project(glyphs)
-  grid.aggregate(aggregator)
+  grid.aggregate(glyphs, aggregator)
   return grid.transfer(trans)
 
 

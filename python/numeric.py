@@ -8,19 +8,22 @@ except ImportError:
   print "Error loading numba."
   autojit = lambda f: f
 
+
 ######## Aggregators ########
 class Count(ar.Aggregator):
   """Count the number of items that fall into a particular grid element."""
   out_type=np.int32
+  identity=0
 
-  def aggregate(self, grid): 
-    def myLen(o):
-      if o == None:
-        return 0
-      return len(o)
+  def allocate(self, width, height, glyphset):
+    return np.zeros((width, height), dtype=self.out_type)
 
-    f = np.vectorize(myLen)
-    return f(grid._projected)
+  def combine(self, existing, update):
+    glyph=update.glyph
+    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update.array
+
+  def rollup(*vals):
+    return reduce(lambda x,y: x+y,  vals)
 
 
 @autojit
@@ -97,15 +100,18 @@ class Interpolate(ar.Transfer):
   in_type=(1,np.number)
   out_type=(4,np.int32)
 
-  def __init__(self, low, high, log=False, reserve=ar.Color(255,255,255,255)):
+  def __init__(self, low, high, log=False, reserve=ar.Color(255,255,255,255), empty=np.nan):
     self.low=low
     self.high=high
     self.reserve=reserve
     self.log=log
+    self.empty=empty
 
+  
+  ##TODO: there are issues with zeros here....
   def _log(self,  grid):
     items = grid._aggregates
-    mask = (grid._aggregates == 0)
+    mask = (grid._aggregates == self.empty)
     min = items[~mask].min()
     max = items[~mask].max()
     
@@ -144,7 +150,7 @@ class Interpolate(ar.Transfer):
 
   def _linear(self, grid):
     items = grid._aggregates
-    mask = (grid._aggregates == 0)
+    mask = (grid._aggregates == self.empty)
     min = items[~mask].min()
     max = items[~mask].max()
     span = float(max-min) 
