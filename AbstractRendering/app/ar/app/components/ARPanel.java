@@ -58,7 +58,7 @@ public class ARPanel extends JPanel {
 		ARPanel p = new ARPanel(aggregator, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
-		p.aggregates = this.aggregates;
+		p.aggregates(this.aggregates);
 		return p;
 	}
 	
@@ -76,7 +76,10 @@ public class ARPanel extends JPanel {
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public Aggregator<?,?> reduction() {return aggregator;}
-	public void aggregates(Aggregates<?> aggregates) {this.aggregates = aggregates;}
+	public void aggregates(Aggregates<?> aggregates) {
+		this.aggregates = aggregates;
+		this.display.setAggregates(aggregates);
+	}
 	
 	@Override
 	public void paint(Graphics g) {
