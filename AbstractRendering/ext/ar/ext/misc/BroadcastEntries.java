@@ -26,8 +26,9 @@ public class BroadcastEntries {
 	public static Collection<Indexed> broadcast(Object key, Iterable<?> values, Collection<Indexed> acc) {
 		int i=0;
 		for (Object val: values) {
-			Indexed item = new Indexed.ArrayWrapper(new Object[]{key, i, val});
+			Indexed item = new Indexed.ArrayWrapper(new Object[]{key, val, i});
 			acc.add(item);
+			i++;
 		}
 		return acc;
 	}

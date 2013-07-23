@@ -48,7 +48,7 @@ public class AvroGlyphsTest {
 		String schema = "../data/circlepoints.avsc";
 		encode(csv, avro, schema);
 		
-		GlyphList<?> reference =(GlyphList<?>) GlyphsetUtils.load(new GlyphList(Color.class), new File(csv), 1, .1, false, 2, 3, -1, 4); 
+		GlyphList<?> reference =(GlyphList<?>) GlyphsetUtils.load(new GlyphList<>(Color.class), new File(csv), 1, .1, false, 2, 3, -1, 4); 
 		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());
