@@ -21,6 +21,8 @@ public class Debug {
 
 		public Color identity() {return Util.CLEAR;}
 		public boolean equals(Object other) {return other instanceof Gradient;}
+		public int hashCode() {return Gradient.class.hashCode();}
+
 		public Color combine(long x, long y, Color left, Object update) {
 			return new Color(x/width, y/height,.5f ,1.0f); 
 		}

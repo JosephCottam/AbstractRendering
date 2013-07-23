@@ -32,7 +32,7 @@ public class RenderSpeedTest {
 	public static void main(String[] args) throws Exception {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		int task = Integer.parseInt(arg(args, "-task", "100000000"));
+		int task = Integer.parseInt(arg(args, "-task", "100000"));
 		String rend = arg(args, "-rend", "glyph").toUpperCase();
 		String source = arg(args, "-data", "../data/circlepoints.hbin");
 		int width = Integer.parseInt(arg(args, "-width", "500"));
@@ -76,6 +76,7 @@ public class RenderSpeedTest {
 				long end = System.currentTimeMillis();
 				aggs.at(0, 0);
 				System.out.printf("%s, %d, %d, %s, %d, %d\n", source, end-start, i, rend, cores, task);
+				System.out.flush();
 				total += (end-start);
 			}
 			System.out.printf("%s (avg), %s, n/a, %s, %d, %d\n",source, total/((double) iterations), rend, cores, task);

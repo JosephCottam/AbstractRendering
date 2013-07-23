@@ -111,7 +111,7 @@ public interface CategoricalCounts<T> {
 			return counts.equals(alter.counts) && keys.equals(alter.keys);
 		}
 		
-		public int hashcode() {return counts.hashCode()+keys.hashCode();}
+		public int hashCode() {return counts.hashCode()+keys.hashCode();}
 
 		@Override
 		public int count(T key) {

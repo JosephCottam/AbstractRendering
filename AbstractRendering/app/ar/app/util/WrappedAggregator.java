@@ -18,6 +18,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Blue (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Object.class;}
 		public Class<?> output() {return Color.class;}
 	} 
@@ -27,6 +28,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Gradient 500 (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Object.class;}
 		public Class<?> output() {return Color.class;}
 	} 
@@ -36,6 +38,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Overplot First (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Color.class;}
 		public Class<?> output() {return Color.class;}
 	} 
@@ -45,6 +48,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Class<Color> type() {return Color.class;}
 		public String toString() {return "Overplot Last (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Color.class;}
 		public Class<?> output() {return Color.class;}
 	} 
@@ -54,6 +58,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Count (int)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Object.class;}
 		public Class<?> output() {return Integer.class;}
 	}
@@ -64,6 +69,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		}
 		public String toString() {return "Color RLE sorted (RLE)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Color.class;}
 		public Class<?> output() {return CategoricalCounts.CoC.class;}
 	}
@@ -74,6 +80,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		}
 		public String toString() {return "Color RLE (RLE)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
+		public int hashCode() {return this.getClass().hashCode();}
 		public Class<?> input() {return Color.class;}
 		public Class<?> output() {return CategoricalCounts.RLE.class;}
 

@@ -22,6 +22,7 @@ public final class Numbers {
 		
 		public Integer identity() {return 0;}
 		public boolean equals(Object other) {return other instanceof Count;}
+		public int hashCode() {return Count.class.hashCode();}
 	}
 	
 
