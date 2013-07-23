@@ -88,6 +88,7 @@ public class Advise {
 
 		@Override
 		public void specialize(Aggregates<? extends Number> aggregates) {
+			base.specialize(aggregates);
 			over.specialize(aggregates);
 			under.specialize(aggregates);
 		}
