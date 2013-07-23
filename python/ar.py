@@ -4,7 +4,7 @@ import numpy as np
 from math import floor 
 import ctypes
 from fast_project import _projectRects
-import general
+
 try:
   from numba import autojit
 except ImportError:
@@ -48,7 +48,7 @@ class Grid(object):
       self.height=h
       self.viewxform=viewxform
 
-    def aggregate(self, glyphset, aggregator):
+    def aggregate(self, glyphset, info, aggregator):
       """ 
       Returns ndarray of results of applying func to each element in 
       the grid.  Creates a new ndarray of the given dtype.
@@ -61,8 +61,8 @@ class Grid(object):
       self._projected = projected
 
       aggregates = aggregator.allocate(self.width, self.height, self._glyphset)
-      for glyph in projected:
-        glyph_grid = GlyphAggregates(glyph,1)  
+      for idx, glyph in enumerate(projected):
+        glyph_grid = GlyphAggregates(glyph, info(glyphset[idx]))  
         aggregator.combine(aggregates, glyph_grid)
 
       self._aggregates = aggregates 
@@ -76,6 +76,9 @@ class Aggregator(object):
   out_type = None
   in_type = None
   identity=None
+  
+  def allocate(self, width, height, glyphset):
+    pass
 
   def combine(self, existing, update):
     """
@@ -130,7 +133,7 @@ class PixelTransfer(Transfer):
     return outgrid
 
 
-def render(glyphs, aggregator, trans, screen,ivt):
+def render(glyphs, info, aggregator, trans, screen,ivt):
   """
   Render a set of glyphs under the specified condition to the described canvas.
   glyphs ---- Glyphs t render
@@ -142,7 +145,7 @@ def render(glyphs, aggregator, trans, screen,ivt):
   """
 
   grid = Grid(screen[0], screen[1], ivt.inverse())
-  grid.aggregate(glyphs, aggregator)
+  grid.aggregate(glyphs, info, aggregator)
   return grid.transfer(trans)
 
 
@@ -280,6 +283,7 @@ def main():
   ivt = zoom_fit(screen,bounds(glyphs))
 
   image = render(glyphs, 
+                 infos.id(),
                  numeric.Count(), 
                  numeric.Segment(Color(0,0,0,0), Color(255,255,255,255), .5),
                  screen, 

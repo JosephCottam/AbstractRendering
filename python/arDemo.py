@@ -48,7 +48,8 @@ def _create_plot_component():
 #                        screen,
 #                        ivt)
       image = ar.render(glyphs, 
-                        numeric.Count(), 
+                        infos.valAt(4,0),
+                        numeric.Sum(), 
                         numeric.Interpolate(blue,red, empty=0),
                         screen,
                         ivt)

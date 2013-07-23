@@ -20,38 +20,30 @@ class Count(ar.Aggregator):
 
   def combine(self, existing, update):
     glyph=update.glyph
-    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update.array
+    a = np.empty_like(update.array)
+    a.fill(1)
+    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += a
 
   def rollup(*vals):
     return reduce(lambda x,y: x+y,  vals)
 
 
-@autojit
-def _sum(projected, glyphset, validx):
-  width, height = projected.shape
-  outgrid=np.zeros((width, height), dtype=np.int32)
-  outflat = outgrid.flat
-  inflat = projected.flat
-
-  for i in xrange(0, len(outgrid.flat)):
-    glyphids = inflat[i]
-    if (glyphids == None): continue
-    for gidx in xrange(0, len(glyphids)):
-      glyphid = glyphids[gidx]
-      glyph = glyphset[glyphid]
-      outflat[i]+=glyph[validx]
-  
-  return outgrid
 
 class Sum(ar.Aggregator):
-   """Sum the items in each grid element."""
-   out_type=np.number
+  """Count the number of items that fall into a particular grid element."""
+  out_type=np.int32
+  identity=0
 
-   def __init__(self, validx=4):
-     self._validx = validx
+  def allocate(self, width, height, glyphset):
+    return np.zeros((width, height), dtype=self.out_type)
 
-   def aggregate(self, grid):
-     return _sum(grid._projected, grid._glyphset, self._validx)
+  def combine(self, existing, update):
+    glyph=update.glyph
+    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update.array
+
+  def rollup(*vals):
+    return reduce(lambda x,y: x+y,  vals)
+
 
 ######## Transfers ##########
 class FlattenCategories(ar.Transfer):
@@ -61,7 +53,6 @@ class FlattenCategories(ar.Transfer):
 
   def transfer(self, grid):
     return grid._aggregates.sum(axis=1)
-
 
 
 class AbsSegment(ar.Transfer):
