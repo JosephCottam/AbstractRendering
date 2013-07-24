@@ -54,7 +54,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		public final Rectangle2D[] quads = new Rectangle2D[4];
 		public Subs (final Rectangle2D current) {
 			double w = (current.getWidth()/2)+(2*FEATHER);
-			double h = (current.getHeight()/2)+(2*FEATHER);;
+			double h = (current.getHeight()/2)+(2*FEATHER);
 			quads[NW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getY()-FEATHER,w,h);
 			quads[NE] = new Rectangle2D.Double(current.getCenterX()-FEATHER, current.getY()-FEATHER, w,h);
 			quads[SW] = new Rectangle2D.Double(current.getX()-FEATHER,       current.getCenterY()-FEATHER, w,h);

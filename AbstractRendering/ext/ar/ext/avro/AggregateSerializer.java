@@ -36,7 +36,7 @@ public class AggregateSerializer {
 	public static final String COC_SCHEMA="ar/ext/avro/coc.avsc";
 	public static final String COLOR_SCHEMA="ar/ext/avro/color.avsc";
 
-	public static enum FORMAT{BINARY,JSON};
+	public static enum FORMAT{BINARY,JSON}
 
 	public static final Map<String,String> META;
 	static {

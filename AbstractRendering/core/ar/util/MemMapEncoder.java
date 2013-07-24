@@ -41,7 +41,7 @@ public class MemMapEncoder {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4), X(0);
 		public final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
-	};
+	}
 
 	
 
@@ -142,7 +142,7 @@ public class MemMapEncoder {
 
 			long count = 0;
 	        long size = in.size();              
-	        while((count += out.transferFrom(in, count, size-count))<size);
+	        while((count += out.transferFrom(in, count, size-count))<size) {}
 		} finally {
 			if (in != null) {in.close();}
 			if (out != null) {out.close();}
