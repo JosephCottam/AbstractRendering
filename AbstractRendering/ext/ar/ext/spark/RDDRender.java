@@ -11,7 +11,6 @@ import ar.aggregates.FlatAggregates;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import scala.Product;
 import spark.api.java.JavaRDD;
 import spark.api.java.function.Function;
 
