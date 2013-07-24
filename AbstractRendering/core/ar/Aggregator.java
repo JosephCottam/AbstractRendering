@@ -30,7 +30,7 @@ public interface Aggregator<IN,OUT> {
 	 * @param x The x-position being operated on
 	 * @param y The y-position being operated on
 	 * @param current  An existing aggregate value
-	 * @param right A new input value
+	 * @param update A new input value
 	 * @return The aggregate value
 	 */
 	public OUT combine(long x, long y, OUT current, IN update);

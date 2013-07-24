@@ -9,41 +9,26 @@ except ImportError:
   autojit = lambda f: f
 
 ##### Aggregator ##########
-@autojit
-def _search(item, items):
-  for i in xrange(0,len(items)):
-    val = items[i]
-    if (val == item): return i
-
-  return -1
-
-@autojit
-def _count(projected, glyphset, catidx):
-  width, height = projected.shape
-  categories = np.unique(glyphset[:,catidx])
-  outgrid=np.zeros((width, height, len(categories)), dtype=np.int32)
-
-  for x in xrange(0, width):
-    for y in xrange(0, height):
-      glyphids = projected[x,y]
-      if (glyphids == None) : continue
-      for gidx in xrange(0, len(glyphids)):
-        glyphid = glyphids[gidx]
-        glyph = glyphset[glyphid]
-        cat = glyph[catidx]
-        catnum = _search(cat, categories) 
-        outgrid[x,y,catnum] += 1
-  
-  return outgrid
-
 class CountCategories(ar.Aggregator):
-  """
-  Count the number of items of each category in every cell.
-  """
-  #TODO: Store the categories list somewhere
-  out_type = ("A", np.int32)
-  def aggregate(self, grid, catidx=4):
-    return _count(grid._projected, grid._glyphset, catidx)
+  """Count the number of items that fall into a particular grid element."""
+  out_type = np.int32
+  identity=np.asarray([0])
+  cats=None
+
+  def allocate(self, width, height, glyphset, infos):
+    self.cats = np.unique(infos)
+    return np.zeros((width, height, len(self.cats)), dtype=self.out_type)
+
+  def combine(self, existing, points, shapecode, val):
+    entry = np.zeros(self.cats.shape[0])
+    idx = np.nonzero(self.cats==val)[0][0]
+    entry[idx] = 1
+    update = ar.glyphAggregates(points, shapecode, entry, self.identity)  
+    existing[points[0]:points[2],points[1]:points[3]] += update
+
+  def rollup(*vals):
+    return reduce(lambda x,y: x+y,  vals)
+
 
 
 ##### Transfers ########

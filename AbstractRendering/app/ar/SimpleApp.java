@@ -3,12 +3,14 @@ package ar;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import ar.app.components.ARDisplay;
 import ar.app.components.ARPanel;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -20,13 +22,9 @@ import ar.util.Util;
 public class SimpleApp {
 	public static void main(String[] args) throws Exception {
 		//------------------------ Setup Operations -------------------
-		//The setup operations do not reflect Abstract-Rendering specific work.
-
-		JFrame frame = new JFrame();
-		frame.setLayout(new BorderLayout());
-		frame.setSize(500,500);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+		//Get a dataset loaded into a data structure.  This is not technically
+		//Abstract Rendering, but it is necessary to get anything other than 
+		//a white box out of this demo
 		ArrayList<Indexed> items = new ArrayList<>();
 		DelimitedReader reader = new DelimitedReader(new File("../data/circlepoints.csv"), 1, ",");
 		System.out.print("Loading example data...");
@@ -67,31 +65,50 @@ public class SimpleApp {
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
 		Transfer<Number, Color> transfer = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
 		
-		
-		//A panel is constructed from a specific configuration.
-		final ARPanel panel = new ARPanel(aggregator, transfer, dataset, r);
-		
-
-		//----------- A few lines to display the panel in a window --------------
-		frame.add(panel, BorderLayout.CENTER);
-		frame.setVisible(true);
-		frame.revalidate();
-		frame.validate();
-		SwingUtilities.invokeAndWait(new Runnable() {public void run() {panel.zoomFit();}});
-		//-------------------------------------------------
-		
-		//If a panel is not desired, then the renderer can be invoked directly
-		//(After all is said and done, the panel just coordinates when to invoke the renderer anyway).
-		//The next few (commented) lines walk through directly rendering
+		//Drive the rendering "by-hand"  (ie, not using any of the swing tools)
+		//We must first define a display surface's size, shape and zoom characteristics
+		//At the end, a simple buffered image is produced.
 		int width = 800;
 		int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		vt.invert();
-		Aggregates<Integer> aggregates = r.reduce(dataset, aggregator, vt, width, height);
+		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
 		Aggregates<Color> colors = r.transfer(aggregates, transfer);
-		Util.asImage(colors, width, height, Color.white);
-
-
-
+		
+		//Make a final image (if the aggregates are colors)
+		@SuppressWarnings("unused")  //Unused because its just ademo of how to do it
+		BufferedImage image = Util.asImage(colors, width, height, Color.white);
+		
+		//A simple display panel can be found in ARDisplay.
+		//It takes aggregates and a transfer function to make colors.
+		//This is largely a static display though, since all display decisions have been made.
+		//The ARDisplay includes a renderer (or it can be passed in), but it only
+		//performs the "transfer" step.  As such, we reuse the aggregates from above.
+		//Only the last line of this section is Abstract rendering specific.  The rest
+		//is swing frame boilerplate.
+		JFrame frame = new JFrame("ARDisplay");
+		frame.setLayout(new BorderLayout());
+		frame.setSize(width,height);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.setVisible(true);
+		frame.revalidate();
+		frame.validate();
+		
+		//ARPanel is more fully-featured than ARDisplay. It will run the whole render loop
+		//and includes zoom/pan listeners.  It is harder to use though, because it takes control
+		//over the process in a more robust but somewhat opaque way.
+		//Since ARPanel drives the whole rendering process, it takse the dataset, rendering strategy
+		//and related definitions in as parameters
+		JFrame frame2 = new JFrame("ARPanel");
+		frame2.setLayout(new BorderLayout());
+		frame2.setSize(width,height);
+		frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		final ARPanel panel = new ARPanel(aggregator, transfer, dataset, r);
+		frame2.add(panel, BorderLayout.CENTER);
+		frame2.setVisible(true);
+		frame2.revalidate();
+		frame2.validate();
+		SwingUtilities.invokeAndWait(new Runnable() {public void run() {panel.zoomFit();}});
 	}
 }

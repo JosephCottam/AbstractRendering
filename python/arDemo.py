@@ -37,21 +37,24 @@ def _create_plot_component():
     #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
     glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     #glyphs = ar.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
+    glyphs.shapecode = ar.ShapeCodes.LINE
     
     screen = (800,800)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
     with Timer("Abstract-Render") as arTimer:   
-#      image = ar.render(glyphs, 
-#                        categories.CountCategories(), 
-#                        categories.HDAlpha([red, blue]),
-#                        screen,
-#                        ivt)
       image = ar.render(glyphs, 
-                        numeric.Count(), 
-                        numeric.Interpolate(blue,red,log=10),
+                        infos.valAt (4,0),
+                        categories.CountCategories(), 
+                        categories.HDAlpha([red, blue]),
                         screen,
                         ivt)
+#      image = ar.render(glyphs, 
+#                        infos.valAt(4,0),
+#                        numeric.Sum(), 
+#                        numeric.Interpolate(blue,red, empty=0),
+#                        screen,
+#                        ivt)
 
     # Create a plot data object and give it this data
     pd = ArrayPlotData()

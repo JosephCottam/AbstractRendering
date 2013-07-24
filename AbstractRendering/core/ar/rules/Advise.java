@@ -17,7 +17,7 @@ public class Advise {
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
-		public Boolean emptyValue() {return false;}
+		public Boolean emptyValue() {return Boolean.FALSE;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 			A def = aggregates.defaultValue();
 			A val = aggregates.at(x, y);
@@ -42,7 +42,7 @@ public class Advise {
 			this.comp = comp;
 		}
 
-		public Boolean emptyValue() {return false;}
+		public Boolean emptyValue() {return Boolean.FALSE;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 			A val = aggregates.at(x, y);
 			B out = ref.at(x, y, aggregates);
@@ -88,6 +88,7 @@ public class Advise {
 
 		@Override
 		public void specialize(Aggregates<? extends Number> aggregates) {
+			base.specialize(aggregates);
 			over.specialize(aggregates);
 			under.specialize(aggregates);
 		}

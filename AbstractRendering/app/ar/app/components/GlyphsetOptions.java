@@ -41,7 +41,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		size.addActionListener(l);
 	}
 	
-	public double glyphSize() {return (Double) size.getSelectedItem();}
+	public double glyphSize() {return (double) size.getSelectedItem();}
 	
 	public Glyphset<?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
@@ -49,7 +49,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		} else if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList<Color>(Color.class);			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
-			double sz = (Double) size.getSelectedItem();
+			double sz = (double) size.getSelectedItem();
 			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);
 			Valuer<Indexed, Color> valuer = new Constant<Indexed>(Color.red);
 			return new MemMapList<>(null, shaper, valuer, Color.class);

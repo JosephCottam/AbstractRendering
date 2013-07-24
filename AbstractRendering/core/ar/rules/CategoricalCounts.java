@@ -110,6 +110,8 @@ public interface CategoricalCounts<T> {
 			RLE<?> alter = (RLE<?>) other;
 			return counts.equals(alter.counts) && keys.equals(alter.keys);
 		}
+		
+		public int hashCode() {return counts.hashCode()+keys.hashCode();}
 
 		@Override
 		public int count(T key) {

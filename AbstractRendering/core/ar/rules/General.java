@@ -1,11 +1,15 @@
 package ar.rules;
 
+import java.io.BufferedReader;
+import java.io.Reader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 public class General {
 	public static final class Const<T> implements Aggregator<Object,T> {
@@ -21,14 +25,11 @@ public class General {
 
 	/**Return what is found at the given location.**/
 	public static final class Echo<T> implements Transfer<T,T>, Aggregator<T,T> {
-		private final Class<T> type;
 		private final T empty;
-		public Echo(T empty, Class<T> type) {this.empty = empty; this.type = type;}
+		public Echo(T empty) {this.empty = empty;}
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.at(x, y);}
 
 		public T emptyValue() {return empty;}
-		public Class<T> input() {return type;}
-		public Class<T> output() {return type;}
 		
 		public T combine(long x, long y, T left, T update) {return update;}
 		public T rollup(List<T> sources) {
@@ -42,12 +43,10 @@ public class General {
 	/**Return the given value when presented with a non-empty value.**/
 	public static final class Present<IN, OUT> implements Transfer<IN,OUT> {
 		private final OUT present, absent;
-		private final Class<OUT> outputType;
 		
-		public Present(OUT present, OUT absent, Class<OUT> outType) {
+		public Present(OUT present, OUT absent) {
 			this.present = present; 
 			this.absent=absent;
-			outputType = outType;
 		}
 		
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -59,8 +58,6 @@ public class General {
 		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform*/}
 		
 		public OUT emptyValue() {return absent;}
-		public Class<Object> input() {return Object.class;}
-		public Class<OUT> output() {return outputType;}
 	}
 	
 	/**Transfer function that wraps a java.util.map.**/
@@ -68,19 +65,12 @@ public class General {
 		private final Map<IN, OUT> mappings;
 		private final boolean nullIsValue;
 		private final OUT other; 
-		private final Class<OUT> out;
-		private final Class<IN> in;
 
-		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue, Class<IN> in, Class<OUT> out) {
+		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue) {
 			this.mappings=mappings;
 			this.nullIsValue = nullIsValue;
 			this.other = other;
-			this.in=in;
-			this.out =out;
 		}
-
-		public Class<IN> input() {return in;}
-		public Class<OUT> output() {return out;}
 
 		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -93,5 +83,31 @@ public class General {
 
 		public OUT emptyValue() {return other;}
 		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform.*/}
+
+		/**From a reader, make a map wrapper.  
+		 * 
+		 * This is stream-based, line-oriented conversion.
+		 * Lines are read and processed one at time.
+		 **/
+		@SuppressWarnings("resource")
+		public static <K,V> MapWrapper<K,V> fromReader(
+				Reader in, Valuer<String,K> keyer, Valuer<String,V> valuer,
+				V other, boolean nullIsValue) throws Exception {
+			BufferedReader bf;
+
+			if (in instanceof BufferedReader) {
+				bf = (BufferedReader) in;
+			} else {
+				bf = new BufferedReader(in);
+			}
+			
+			Map<K,V> dict = new HashMap<K,V>();
+			String line = bf.readLine();
+			while(line != null) {
+				dict.put(keyer.value(line), valuer.value(line));
+			}
+
+			return new MapWrapper<K,V>(dict,other,nullIsValue);
+		}
 	}
 }

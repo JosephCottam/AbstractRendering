@@ -28,6 +28,7 @@ public class Categories {
 		public Class<Color> input() {return Color.class;}
 		public Class<Color> output() {return Color.class;}
 		public boolean equals(Object other) {return other instanceof First;}
+		public int hashCode() {return First.class.hashCode();}
 	}
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
@@ -42,6 +43,7 @@ public class Categories {
 		public Class<Color> input() {return Color.class;}
 		public Class<Color> output() {return Color.class;}
 		public boolean equals(Object other) {return other instanceof Last;}
+		public int hashCode() {return Last.class.hashCode();}
 	}
 
 	
@@ -64,8 +66,19 @@ public class Categories {
 		}
 
 		public T identity() {return def;}
+		
 		public boolean equals(Object other) {
-			return other instanceof Binary && this.val == ((Binary<?>) other).val;
+			return other instanceof Binary 
+					&& this.val == ((Binary<?>) other).val 
+					&& this.def ==  ((Binary<?>) other).def;
+		}
+
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((def == null) ? 0 : def.hashCode());
+			result = prime * result + ((val == null) ? 0 : val.hashCode());
+			return result;
 		}
 	}
 	
@@ -187,8 +200,6 @@ public class Categories {
 		private int max;
 
 		/**
-		 * @param colors Mapping from categories to colors
-		 * @param reserve Color to use for a cateogry not found in the mapping
 		 * @param background Background color
 		 * @param omin Opacity minimum
 		 * @param log Use a log scale?
