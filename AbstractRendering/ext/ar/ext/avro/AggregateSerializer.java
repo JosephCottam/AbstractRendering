@@ -138,7 +138,7 @@ public class AggregateSerializer {
 
 		} else if (v instanceof CategoricalCounts.RLE) {
 			schema = new SchemaComposer().addResource(COC_SCHEMA).resolved();
-			conv = (Valuer<A, GenericRecord>) new Converters.FromRLE(schema);
+			conv = (Valuer<A, GenericRecord>) new Converters.FromRLE<A>(schema);
 		} else if (v instanceof Color) {
 			schema = new SchemaComposer().addResource(COLOR_SCHEMA).resolved();
 			conv = (Valuer<A, GenericRecord>) new Converters.FromColor(schema);

@@ -55,7 +55,7 @@ public class ARApp implements PanelHolder {
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Glyphset glyphs = loadData();
+				Glyphset<?> glyphs = loadData();
 				ARPanel newImage = image.withDataset(glyphs);
 				app.changeImage(newImage);
 				newImage.zoomFit();
@@ -64,7 +64,7 @@ public class ARApp implements PanelHolder {
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Glyphset glyphs = loadData();
+				Glyphset<?> glyphs = loadData();
 				ARPanel newImage = image.withDataset(glyphs);
 				app.changeImage(newImage);
 				newImage.zoomFit();
@@ -98,8 +98,8 @@ public class ARApp implements PanelHolder {
 	
 		
 		
-		image = new ARPanel(((WrappedAggregator) reductions.getSelectedItem()).op(), 
-							((WrappedTransfer) transfers.getSelectedItem()).op(), 
+		image = new ARPanel(((WrappedAggregator<?,?>) reductions.getSelectedItem()).op(), 
+							((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
 							loadData(),
 							rendererOptions.renderer());
 		

@@ -94,9 +94,9 @@ public class RHIPETools {
 	 */
 	public static String[] render(String entries, AffineTransform ivt, int width, int height) {
 		TraceEntry te = new TraceEntry();
-		Glyphset glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
+		Glyphset<String> glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
 		Renderer r = new SerialSpatial();
-		Aggregator agg = new Numbers.Count();
+		Aggregator<Object, Integer> agg = new Numbers.Count();
 		Aggregates<?> aggs = r.aggregate(glyphs, agg, ivt, width, height);
 		return reduceKeys(aggs);
 	}
