@@ -18,9 +18,9 @@ class Count(ar.Aggregator):
   def allocate(self, width, height, glyphset, infos):
     return np.zeros((width, height), dtype=self.out_type)
 
-  def combine(self, existing, glyph, val):
-    update = ar.glyphAggregates(glyph, 1)  
-    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update
+  def combine(self, existing, points, shapecode, val):
+    update = ar.glyphAggregates(points, shapecode, 1, self.identiity)  
+    existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
     return reduce(lambda x,y: x+y,  vals)
@@ -35,9 +35,9 @@ class Sum(ar.Aggregator):
   def allocate(self, width, height, glyphset, infos):
     return np.zeros((width, height), dtype=self.out_type)
 
-  def combine(self, existing, glyph, val):
-    update = ar.glyphAggregates(glyph, val)  
-    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update
+  def combine(self, existing, points, shapecode, val):
+    update = ar.glyphAggregates(points, shapecode, val, self.identity)  
+    existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
     return reduce(lambda x,y: x+y,  vals)

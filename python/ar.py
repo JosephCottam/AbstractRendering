@@ -4,6 +4,7 @@ import numpy as np
 from math import floor 
 import ctypes
 from fast_project import _projectRects
+import geometry
 
 try:
   from numba import autojit
@@ -11,21 +12,39 @@ except ImportError:
   print "Error loading numba."
   autojit = lambda f: f
 
-############################  Core System ####################
 _lib = ctypes.CDLL('libtransform.dylib')
 
+############################  Core System ####################
+def enum(**enums): return type('Enum', (), enums)
+ShapeCodes = enum(RECT=0, LINE=1)
+
+
 class Glyphset(list):
+  shapecode=ShapeCodes.RECT
+
   def asarray(self):
     return np.array(self, order="F")
 
 ##TODO: change to fill with default value, then insert the glyph value where it actually touches
-def glyphAggregates(glyph, val):
+def glyphAggregates(points, shapeCode, val, default):
+  def scalar(array, val): array.fill(val)
+  def nparray(array,val): array[:] = val
+
   if type(val) == np.ndarray:
-    array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1])+val.shape, dtype=np.int32)
-    array[:] = val
+    fill = nparray 
+    extShape = val.shape
   else:
-    array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1]), dtype=np.int32)
-    array.fill(val)
+    fill = scalar 
+    extShape = ()
+
+  array = np.empty((points[2]-points[0], points[3]-points[1])+extShape, dtype=np.int32)
+
+  if shapeCode == ShapeCodes.RECT:
+    fill(array, val)
+  elif shapeCode == ShapeCodes.LINE:
+    fill(array, default)
+    geometry.bressenham(array, points, val)
+
   return array
 
 
@@ -45,7 +64,7 @@ class Grid(object):
     _projected = None
     _aggregates = None
     
-    def __init__(self, w,h,viewxform):
+    def __init__(self,w,h,viewxform):
       self.width=w
       self.height=h
       self.viewxform=viewxform
@@ -61,11 +80,12 @@ class Grid(object):
       self._glyphset = glyphset.asarray()
       projected = _project(self.viewxform, self._glyphset)
       self._projected = projected
+      shapecode = glyphset.shapecode
 
       infos = map(info, glyphset) #TODO: vectorize
       aggregates = aggregator.allocate(self.width, self.height, self._glyphset, infos)
-      for idx, glyph in enumerate(projected):
-        aggregator.combine(aggregates, glyph, infos[idx])
+      for idx, points in enumerate(projected):
+        aggregator.combine(aggregates, points, shapecode, infos[idx])
 
       self._aggregates = aggregates 
 
@@ -82,7 +102,7 @@ class Aggregator(object):
   def allocate(self, width, height, glyphset, infos):
     pass
 
-  def combine(self, existing, update):
+  def combine(self, existing, points, shapecode, val):
     """
     existing: outype npy array
     update: intype np array
