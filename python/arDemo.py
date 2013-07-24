@@ -42,17 +42,18 @@ def _create_plot_component():
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
 
     with Timer("Abstract-Render") as arTimer:   
-#      image = ar.render(glyphs, 
-#                        categories.CountCategories(), 
-#                        categories.HDAlpha([red, blue]),
-#                        screen,
-#                        ivt)
       image = ar.render(glyphs, 
-                        infos.valAt(4,0),
-                        numeric.Sum(), 
-                        numeric.Interpolate(blue,red, empty=0),
+                        infos.valAt (4,0),
+                        categories.CountCategories(), 
+                        categories.HDAlpha([red, blue]),
                         screen,
                         ivt)
+#      image = ar.render(glyphs, 
+#                        infos.valAt(4,0),
+#                        numeric.Sum(), 
+#                        numeric.Interpolate(blue,red, empty=0),
+#                        screen,
+#                        ivt)
 
     # Create a plot data object and give it this data
     pd = ArrayPlotData()

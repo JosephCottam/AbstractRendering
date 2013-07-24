@@ -18,13 +18,15 @@ class Glyphset(list):
   def asarray(self):
     return np.array(self, order="F")
 
-class GlyphAggregates:
-  def __init__(self, glyph, val):
-    self.glyph = glyph
-    self.array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1]), dtype=np.int32)
-    self.array.fill(val)
-    ##TODO: chane to fill with zero, then insert the glyph value where it actually touches
-    ##TODO: Mking this object may really be the job of the info function
+##TODO: change to fill with default value, then insert the glyph value where it actually touches
+def glyphAggregates(glyph, val):
+  if type(val) == np.ndarray:
+    array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1])+val.shape, dtype=np.int32)
+    array[:] = val
+  else:
+    array = np.empty((glyph[2]-glyph[0], glyph[3]-glyph[1]), dtype=np.int32)
+    array.fill(val)
+  return array
 
 
 def _project(viewxform, glyphset):
@@ -60,10 +62,10 @@ class Grid(object):
       projected = _project(self.viewxform, self._glyphset)
       self._projected = projected
 
-      aggregates = aggregator.allocate(self.width, self.height, self._glyphset)
+      infos = map(info, glyphset) #TODO: vectorize
+      aggregates = aggregator.allocate(self.width, self.height, self._glyphset, infos)
       for idx, glyph in enumerate(projected):
-        glyph_grid = GlyphAggregates(glyph, info(glyphset[idx]))  
-        aggregator.combine(aggregates, glyph_grid)
+        aggregator.combine(aggregates, glyph, infos[idx])
 
       self._aggregates = aggregates 
 
@@ -77,7 +79,7 @@ class Aggregator(object):
   in_type = None
   identity=None
   
-  def allocate(self, width, height, glyphset):
+  def allocate(self, width, height, glyphset, infos):
     pass
 
   def combine(self, existing, update):

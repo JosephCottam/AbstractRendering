@@ -15,14 +15,12 @@ class Count(ar.Aggregator):
   out_type=np.int32
   identity=0
 
-  def allocate(self, width, height, glyphset):
+  def allocate(self, width, height, glyphset, infos):
     return np.zeros((width, height), dtype=self.out_type)
 
-  def combine(self, existing, update):
-    glyph=update.glyph
-    a = np.empty_like(update.array)
-    a.fill(1)
-    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += a
+  def combine(self, existing, glyph, val):
+    update = ar.glyphAggregates(glyph, 1)  
+    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update
 
   def rollup(*vals):
     return reduce(lambda x,y: x+y,  vals)
@@ -34,12 +32,12 @@ class Sum(ar.Aggregator):
   out_type=np.int32
   identity=0
 
-  def allocate(self, width, height, glyphset):
+  def allocate(self, width, height, glyphset, infos):
     return np.zeros((width, height), dtype=self.out_type)
 
-  def combine(self, existing, update):
-    glyph=update.glyph
-    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update.array
+  def combine(self, existing, glyph, val):
+    update = ar.glyphAggregates(glyph, val)  
+    existing[glyph[0]:glyph[2],glyph[1]:glyph[3]] += update
 
   def rollup(*vals):
     return reduce(lambda x,y: x+y,  vals)
