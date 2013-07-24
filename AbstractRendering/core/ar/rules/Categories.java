@@ -218,7 +218,7 @@ public class Categories {
 			double b = 0;
 			
 			for (int i=0; i< cats.size(); i++) {
-				Color c = (Color) cats.key(i);
+				Color c = cats.key(i);
 				double p = cats.count(i)/total;
 				double r2 = (c.getRed()/255.0) * p;
 				double g2 = (c.getGreen()/255.0) * p;

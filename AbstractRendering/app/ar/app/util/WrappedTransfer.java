@@ -170,7 +170,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
 		}
 		public String toString() {return "Clip Warn 10% alpha (int)";}
-	};
+	}
 
 	public class OverUnder2 implements WrappedTransfer<Number, Color> {
 		public void deselected() {}
@@ -180,5 +180,5 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
 		}
 		public String toString() {return "Clip Warn HDALpha log (int)";}
-	};
+	}
 }

@@ -78,5 +78,5 @@ public class FlatAggregates<A> implements Aggregates<A>{
 
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
-	public synchronized Iterator<A> iterator() {return (Iterator<A>) Arrays.asList(values).iterator();}
+	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
 }
