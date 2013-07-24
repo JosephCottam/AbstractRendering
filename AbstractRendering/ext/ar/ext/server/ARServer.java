@@ -65,19 +65,19 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("Alpha10", new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5));
 		TRANSFERS.put("AlphaMin", new Numbers.FixedAlpha(Color.white, Color.red, 0, 255));
 		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
-		TRANSFERS.put("90Percent", new Categories.FirstPercent(.9, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("25Percent", new Categories.FirstPercent(.25, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("Echo", new General.Echo(Util.CLEAR));
+		TRANSFERS.put("90Percent", new Categories.FirstPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("25Percent", new Categories.FirstPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("Echo", new General.Echo<Color>(Util.CLEAR));
 		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
 		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
 						
-		AGGREGATORS.put("Blue",new General.Const(Color.BLUE));
+		AGGREGATORS.put("Blue",new General.Const<Color>(Color.BLUE));
 		AGGREGATORS.put("Gradient", new Debug.Gradient(500, 500));
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new Categories.Last());
 		AGGREGATORS.put("Count", new Numbers.Count());
 		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
-		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories());
+		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<Color>());
 	}
 	
 	public ARServer(String hostname) {this(hostname, 8739);}

@@ -91,7 +91,7 @@ public class GlyphsetUtils {
 				value = parts[valueField];
 			} else {value = Color.RED;}
 
-			Glyph<Color> g = new SimpleGlyph(rect, value);
+			Glyph<?> g = new SimpleGlyph<>(rect, value);
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
