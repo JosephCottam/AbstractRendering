@@ -1,5 +1,6 @@
 package ar;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**An Aggregator convert glyphs into aggregate items for a specific view.
@@ -14,7 +15,7 @@ import java.util.List;
  * IN -- The type of the data element on the glyph
  * OUT -- The type of aggregates produced
  * **/
-public interface Aggregator<IN,OUT> {
+public interface Aggregator<IN,OUT> extends Serializable {
 	
 	/**
 	 * Compute an aggregate value from an existing aggregate value and a 

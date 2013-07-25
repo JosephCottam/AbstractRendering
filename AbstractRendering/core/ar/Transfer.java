@@ -1,7 +1,9 @@
 package ar;
 
+import java.io.Serializable;
+
 /**Transfer functions converts an aggregate into a pixel.**/
-public interface Transfer<IN,OUT> {
+public interface Transfer<IN,OUT> extends Serializable {
 	
 	/**What color should be used for the pixel at location X/Y.
 	 * 

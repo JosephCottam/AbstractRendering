@@ -15,6 +15,7 @@ public class Advise {
 	//TODO: What if there are multiple "smallest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
+		private static final long serialVersionUID = -5898665841659861105L;
 		final Transfer<A,B> ref;
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
 		public Boolean emptyValue() {return Boolean.FALSE;}
@@ -32,6 +33,7 @@ public class Advise {
 	//TODO: What if there are multiple "largest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
 	public static class OverSaturate<A,B> implements Transfer<A, Boolean> {
+		private static final long serialVersionUID = -134839100328128893L;
 		final Transfer<A,B> ref;
 		private Comparator<A> comp;
 		private A max;
@@ -59,6 +61,7 @@ public class Advise {
 	
 	
 	public static class OverUnder implements Transfer<Number, Color> {
+		private static final long serialVersionUID = 7662347822550778810L;
 		private final Transfer<Number, Color> base;
 		private final Transfer<Number, Boolean> under;
 		private final Transfer<Number, Boolean> over;
@@ -98,6 +101,7 @@ public class Advise {
 	
 	
 	public static class DrawDark implements Transfer<Number, Color> {
+		private static final long serialVersionUID = 4417984252053517048L;
 		public final int distance;
 		public final Transfer<Number, Color> inner;
 		Aggregates<Double> cached;

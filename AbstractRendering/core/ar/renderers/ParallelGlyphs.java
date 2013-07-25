@@ -23,6 +23,7 @@ import ar.Transfer;
  * (i.e., glyph-driven iteration).
  */
 public class ParallelGlyphs implements Renderer {
+	private static final long serialVersionUID = 1103433143653202677L;
 	public static int DEFAULT_TASK_SIZE = 100000;
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);

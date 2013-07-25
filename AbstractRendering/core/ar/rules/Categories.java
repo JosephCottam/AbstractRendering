@@ -14,6 +14,7 @@ import static ar.rules.CategoricalCounts.RLE;
 public class Categories {
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
+		private static final long serialVersionUID = 5899328174090941310L;
 		public Color combine(long x, long y, Color left, Color update) {
 			if (left == Util.CLEAR) {return update;}
 			else {return left;}
@@ -33,6 +34,7 @@ public class Categories {
 
 	/**What is the last item in the given pixel (an over-plotting strategy)**/
 	public static final class Last implements Aggregator<Color, Color> {
+		private static final long serialVersionUID = -3640093539839073637L;
 		public Color combine(long x, long y, Color left, Color update) {return update;}
 		public Color rollup(List<Color> sources) {
 			if (sources.size() >0) {return sources.get(sources.size()-1);}
@@ -53,6 +55,7 @@ public class Categories {
 	 * @param <T> Type of the value that may be returned 
 	 */
 	public static final class Binary<T> implements Aggregator<T,T> {
+		private static final long serialVersionUID = 7268579911789809640L;
 		private final T val, def;
 		public Binary(T val, T def) {
 			this.val = val;
@@ -83,6 +86,8 @@ public class Categories {
 	}
 	
 	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
+		private static final long serialVersionUID = 1379800289471184022L;
+
 		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
 			return left.extend(update, 1);
 		}
@@ -106,6 +111,7 @@ public class Categories {
 	
 	
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
+		private static final long serialVersionUID = 6049570347397483699L;
 		private final Comparator<T> comp;
 		
 		public CountCategories(Comparator<T> comp) {this.comp = comp;}
@@ -133,6 +139,7 @@ public class Categories {
 	
 	/**Pull the nth-item from a set of categories.**/
 	public static final class NthItem<T> implements Transfer<CategoricalCounts<T>, Integer> {
+		private static final long serialVersionUID = -7261917422124936899L;
 		private final Integer background;
 		private final int n;
 		
@@ -156,6 +163,7 @@ public class Categories {
 	 * a specified category.
 	 ***/
 	public static final class FirstPercent<T> implements Transfer<CategoricalCounts<T>, Color> {
+		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
 		private final Object firstKey;
@@ -194,6 +202,7 @@ public class Categories {
 	 *
 	 */
 	public static final class HighAlpha implements Transfer<CategoricalCounts<Color>, Color> {
+		private static final long serialVersionUID = 2468586294425442332L;
 		private final Color background;
 		private final boolean log;
 		private final double omin;

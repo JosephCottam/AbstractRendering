@@ -1,6 +1,7 @@
 package ar;
 
 import java.awt.geom.AffineTransform;
+import java.io.Serializable;
 
 /**A renderer implements a strategy for converting glyphs (geometry+data) into images.
  * Strategies can include parallelization, different iterations orders, synch/asynch return, 
@@ -8,7 +9,7 @@ import java.awt.geom.AffineTransform;
  *   
  * @author jcottam
  */
-public interface Renderer {
+public interface Renderer extends Serializable {
 	
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 

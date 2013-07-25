@@ -11,6 +11,12 @@ public class StringToIndexed extends Function<String, Indexed> {
 
 	@Override
 	public Indexed call(String s) throws Exception {
-		return new Indexed.ArrayWrapper(s.split(splitter));
+		String[] parts = s.split(splitter);
+		float[] vals = new float[parts.length];
+		for (int i=0; i<parts.length; i++) {
+			try {vals[i] = Float.parseFloat(parts[i]);}
+			catch (Exception e) {vals[i] = Float.NaN;}
+		}
+		return new Indexed.ArrayWrapper(vals);
 	}
 }

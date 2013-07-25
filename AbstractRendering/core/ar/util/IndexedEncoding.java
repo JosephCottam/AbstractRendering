@@ -6,6 +6,8 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.util.MemMapEncoder.TYPE;
 
 public class IndexedEncoding implements Indexed {
+	private static final long serialVersionUID = 3550855955493381035L;
+	
 	private final TYPE[] types;
 	private final ByteBuffer buffer;
 	

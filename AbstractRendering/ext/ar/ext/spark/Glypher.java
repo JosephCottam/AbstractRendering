@@ -8,8 +8,8 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import spark.api.java.function.Function;
 
 
-/**Wrap a shaper and a valuer up into a sinle object that produces glyphs.**/
-public class Glypher<V> extends Function<IndexedProduct, Glyph<V>> {
+/**Wrap a shaper and a valuer up into a single object that produces glyphs.**/
+public class Glypher<V> extends Function<Indexed, Glyph<V>> {
 	private static final long serialVersionUID = -2010087917940244951L;
 	
 	final Shaper<Indexed> shaper;
@@ -19,7 +19,7 @@ public class Glypher<V> extends Function<IndexedProduct, Glyph<V>> {
 		this.valuer=valuer;
 	}
 
-	public Glyph<V> call(IndexedProduct item) throws Exception {
+	public Glyph<V> call(Indexed item) throws Exception {
 		return new SimpleGlyph<V>(shaper.shape(item), valuer.value(item));
 	}
 

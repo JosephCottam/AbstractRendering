@@ -13,6 +13,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 
 public class General {
 	public static final class Const<T> implements Aggregator<Object,T> {
+		private static final long serialVersionUID = 2274344808417248367L;
 		private final T val;
 		public Const(T val) {this.val = val;}
 		public Class<?> input() {return Object.class;}
@@ -25,6 +26,7 @@ public class General {
 
 	/**Return what is found at the given location.**/
 	public static final class Echo<T> implements Transfer<T,T>, Aggregator<T,T> {
+		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		public Echo(T empty) {this.empty = empty;}
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.at(x, y);}
@@ -42,6 +44,7 @@ public class General {
 
 	/**Return the given value when presented with a non-empty value.**/
 	public static final class Present<IN, OUT> implements Transfer<IN,OUT> {
+		private static final long serialVersionUID = -7511305102790657835L;
 		private final OUT present, absent;
 		
 		public Present(OUT present, OUT absent) {
@@ -62,6 +65,7 @@ public class General {
 	
 	/**Transfer function that wraps a java.util.map.**/
 	public static class MapWrapper<IN,OUT> implements Transfer<IN,OUT> {
+		private static final long serialVersionUID = -4326656735271228944L;
 		private final Map<IN, OUT> mappings;
 		private final boolean nullIsValue;
 		private final OUT other; 

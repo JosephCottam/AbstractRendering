@@ -1,17 +1,22 @@
 package ar.ext.spark;
 
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 
 import spark.api.java.JavaRDD;
 import spark.api.java.JavaSparkContext;
 import ar.Aggregates;
-import ar.app.util.AggregatesToCSV;
+import ar.Glyph;
+import ar.app.components.ARDisplay;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.rules.Numbers;
+import ar.util.AggregatesToCSV;
+import ar.util.Util;
 
 /**Main class for driving an ARSpark application.**/
 public class Driver {
@@ -22,41 +27,38 @@ public class Driver {
 		}
 		return def;
 	}
-	
-	/* Get an RDD
-	 * 
-	 * Aggregates: FlatAggregates, probably wrapped up in something
-	 * 
 
-	 * Transfer aggregates back with
-	 *   <<Aggregates list RDD>>.reduce(<aggregator>.Rollup)
-	 * 
-	 * Do transfer locally (in an ARPanel)
-	 **/
 	public static void main(String[] args){
 		if (args.length == 0) {
 			System.err.println("Usage: JavaTC -host <host> -in <data> -out <out> -sh <spark-home> -jars <jars>");
 			System.exit(1);
 		}
 		
+		int width = Integer.parseInt(arg(args, "-width", "500"));
+		int height = Integer.parseInt(arg(args, "-height", "500"));
 		String host = arg(args, "-host", "localhost");
-		String path = arg(args, "-in", null);
+		String inFile = arg(args, "-in", null);
 		String outFile= arg(args, "-out", null);
-		String sh= arg(args, "-sh", System.getenv("SPARK_HOME"));
-		String jars[] = arg(args, "-out", "").split(":");
-
-		JavaSparkContext sc = new JavaSparkContext(host, "SparkAbstractRendering",sh, jars);
-		JavaRDD<Indexed> base = sc.textFile(path).map(new StringToIndexed("\\s*,\\s*"));
-		Shaper<Indexed> shaper = new ToRect(.01, .01, false, 0, 1);
-		Valuer<Indexed,?> valuer = new ToValue(2);
-
-		JavaRDD glyphs = RDDRender.glyphs(base, shaper, valuer);
+		String sparkhome = arg(args, "-spark", System.getenv("SPARK_HOME"));
+		String jars[] = arg(args, "-jars", "").split(":");
 		
-		//TODO: get glyphset bounds, calc zoom-fit and share it out.  Mark the realized glyphs as needing to be retained
-		AffineTransform vt = new AffineTransform();
+		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
+		JavaRDD<String> source = ctx.textFile(inFile);
+		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
+		Shaper<Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
+		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
+
+ 		JavaRDD<Glyph<Integer>> glyphs = RDDRender.glyphs(base, shaper, valuer).cache();
+ 		Rectangle2D contentBounds = RDDRender.bounds(glyphs);
+
+		AffineTransform vt = Util.zoomFit(contentBounds, width, height);
 		JavaRDD aggset = RDDRender.renderAll(vt, glyphs);
-		Aggregates aggs = RDDRender.collect(aggset, new Numbers.Count());
+		Aggregates aggregates = RDDRender.collect(aggset, new Numbers.Count());
 		
-		AggregatesToCSV.export(aggs, new File(outFile));
+		if (outFile == null) {
+			ARDisplay.show(width, height, aggregates, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
+		} else {
+			AggregatesToCSV.export(aggregates, new File(outFile));
+		}
 	}
 }

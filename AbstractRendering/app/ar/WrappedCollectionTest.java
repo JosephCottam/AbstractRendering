@@ -20,6 +20,8 @@ public class WrappedCollectionTest {
 
 	/**Demo geometry creator.**/
 	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Integer> {
+		private static final long serialVersionUID = 2114709599706433845L;
+		
 		private static final Color[] COLORS = new Color[]{Color.RED, Color.BLUE, Color.GREEN,Color.PINK,Color.ORANGE};
 		private final int columns;
 		private final double size;

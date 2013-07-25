@@ -240,6 +240,7 @@ public class ScatterControl extends JPanel {
 		
 	//TODO: Extend to do additional transfer if it is 'in' instead of just return given color...possibly take in Aggregates+Image and set image to tansparent if out...
 	private static final class DeltaTransfer implements Transfer<Number,Color> {
+		private static final long serialVersionUID = 2903644806615515638L;
 		private final double minV, maxV, minDV, maxDV;
 		private final int distance;
 		private final Color out;
