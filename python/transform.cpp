@@ -27,6 +27,7 @@ template <typename INPUT_TYPE, typename OUTPUT_TYPE>
 inline void transform(INPUT_TYPE* xtransform, 
                       INPUT_TYPE** in_arrays, 
                       OUTPUT_TYPE * RESTRICT * out_arrays,
+                      size_t offset,
                       size_t count)
 {
     INPUT_TYPE tx = xtransform[0];
@@ -34,10 +35,10 @@ inline void transform(INPUT_TYPE* xtransform,
     INPUT_TYPE sx = xtransform[2];
     INPUT_TYPE sy = xtransform[3];
 
-    INPUT_TYPE *x = in_arrays[0];
-    INPUT_TYPE *y = in_arrays[1];
-    INPUT_TYPE *w = in_arrays[2];
-    INPUT_TYPE *h = in_arrays[3];
+    INPUT_TYPE *x = in_arrays[0] + offset;
+    INPUT_TYPE *y = in_arrays[1] + offset;
+    INPUT_TYPE *w = in_arrays[2] + offset;
+    INPUT_TYPE *h = in_arrays[3] + offset;
 
     OUTPUT_TYPE * RESTRICT x0 = out_arrays[0];
     OUTPUT_TYPE * RESTRICT y0 = out_arrays[1];
@@ -54,13 +55,21 @@ inline void transform(INPUT_TYPE* xtransform,
 }
 
 extern "C" void 
-transform_f(float* xtr, float** in, int32_t *RESTRICT* out, size_t count)
+transform_f(float* xtr, 
+            float** in, 
+            int32_t *RESTRICT* out, 
+            size_t offset, 
+            size_t count)
 {
-    transform<float, int32_t>(xtr, in, out, count);
+    transform<float, int32_t>(xtr, in, out, offset, count);
 }
 
 extern "C" void 
-transform_d(double* xtr, double** in, int32_t * RESTRICT * out, size_t count)
+transform_d(double* xtr, 
+            double** in, 
+            int32_t * RESTRICT * out, 
+            size_t offset, 
+            size_t count)
 {
-    transform<double, int32_t>(xtr, in, out, count);
+    transform<double, int32_t>(xtr, in, out, offset, count);
 }
