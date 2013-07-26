@@ -100,7 +100,7 @@ def _projectRectsGenerator(viewxform,
                  offset,
                  curr_size)
             offset += curr_size
-            yield curr_size, outputs
+            yield outputs[0:curr_size]
     else:
         outputs_a = np.empty((chunk_size, 4), dtype=np.int32)
         outputs_b = np.empty((chunk_size, 4), dtype=np.int32)
@@ -124,14 +124,14 @@ def _projectRectsGenerator(viewxform,
             params[4] = min(result_size-params[3], chunk_size)
             afunc(*params)
             params[3] += params[4]
-            yield prev_count, outputs_a
+            yield outputs_a[0:prev_count]
             outputs_a, outputs_b = outputs_b, outputs_a
 
         #finish... with count == 0 it means "just sync"
         prev_count = params[4]
         params[4] = 0
         afunc(params)
-        yield prev_count, outputs_a
+        yield outputs_a[0:prev_count]
 
 
 # testing code starts here
@@ -166,16 +166,16 @@ def simple_test():
 
     t = time()
     check_sum = 0
-    for n, arr in _projectRectsGenerator(xform, mock_in, chunksize):
-        check_sum += n
+    for arr in _projectRectsGenerator(xform, mock_in, chunksize):
+        check_sum += len(arr)
     t = time() - t
     print("checksum (_projectRectsGenerator) took %f ms" % (t*1000))
     chk1 = check_sum
 
     t = time()
     check_sum = 0
-    for n, arr in _projectRectsGenerator(xform, mock_in, chunksize, use_dispatch = True):
-        check_sum += n
+    for arr in _projectRectsGenerator(xform, mock_in, chunksize, use_dispatch = True):
+        check_sum += len(arr)
     t = time() - t
     print("checksum (_projectRectsGenerator libdispatch) took %f ms" % (t*1000))
     chk2 = check_sum
