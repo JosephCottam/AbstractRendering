@@ -16,6 +16,7 @@ public class Debug {
 	 * This class was used largely for debugging; it ignores its inputs. 
 	 */
 	public static final class Gradient implements Aggregator<Object, Color> {
+		private static final long serialVersionUID = 2620947228987431184L;
 		private final float width,height;
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
 

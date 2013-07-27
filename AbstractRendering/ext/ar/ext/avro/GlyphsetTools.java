@@ -22,6 +22,7 @@ public class GlyphsetTools {
 	 * with other implicit geometry tools using Indexed.
 	 */
 	public static class IndexedRecord implements Indexed {
+		private static final long serialVersionUID = -3579436222005581302L;
 		private final GenericRecord r;
 		public IndexedRecord(GenericRecord r) {this.r=r;}
 		public Object get(int f) {return r.get(f);}

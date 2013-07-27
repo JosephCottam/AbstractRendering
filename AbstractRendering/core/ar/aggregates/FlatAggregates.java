@@ -9,6 +9,7 @@ import ar.Aggregates;
  * This class efficiently supports subset regions.
  */
 public class FlatAggregates<A> implements Aggregates<A>{
+	private static final long serialVersionUID = 7143994707761884518L;
 	private final A[] values;
 	private final int lowX, lowY;
 	private final int highX,highY;

@@ -50,6 +50,7 @@ public class RHIPETools {
 	/**Shaper/Valuer to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
 	 */
 	public static final class TraceEntry implements Shaper<Indexed>, Valuer<Indexed, String> {
+		private static final long serialVersionUID = 8559592969089399368L;
 		private final int xField, yField, catField;
 		private final double size;
 		public TraceEntry(){this(0,1,2, .1);}

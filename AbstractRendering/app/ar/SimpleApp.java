@@ -89,7 +89,7 @@ public class SimpleApp {
 		JFrame frame = new JFrame("ARDisplay");
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
@@ -103,7 +103,7 @@ public class SimpleApp {
 		JFrame frame2 = new JFrame("ARPanel");
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);
-		frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		final ARPanel panel = new ARPanel(aggregator, transfer, dataset, r);
 		frame2.add(panel, BorderLayout.CENTER);
 		frame2.setVisible(true);

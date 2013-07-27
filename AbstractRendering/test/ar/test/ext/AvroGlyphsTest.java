@@ -27,6 +27,7 @@ import ar.util.DelimitedReader;
 public class AvroGlyphsTest {
 
 	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
+		private static final long serialVersionUID = 1897764346439188788L;
 		Shaper<Indexed> shaper;
 		Valuer<Indexed, V> valuer;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {

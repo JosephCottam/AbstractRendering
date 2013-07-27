@@ -14,6 +14,7 @@
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-core-asl-1.8.8.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.8.8.jar"/>
+	<classpathentry kind="lib" path="lib/spark-core-assembly-0.7.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

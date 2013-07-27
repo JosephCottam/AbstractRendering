@@ -13,6 +13,7 @@ import ar.aggregates.FlatAggregates;
  * This class is largely for reference.  In most caes, a parallel renderer is better.
  * **/
 public final class SerialSpatial implements Renderer {
+	private static final long serialVersionUID = -377145195943991994L;
 	private final RenderUtils.Progress recorder;
 	
 	public SerialSpatial() {recorder = RenderUtils.recorder();}

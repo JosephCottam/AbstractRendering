@@ -16,6 +16,7 @@ import ar.aggregates.FlatAggregates;
  * (i.e., bin-driven iteration).
  * **/
 public final class ParallelSpatial implements Renderer {
+	private static final long serialVersionUID = -2626889612664504698L;
 	public static final int DEFAULT_TASK_SIZE = 100000;
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);

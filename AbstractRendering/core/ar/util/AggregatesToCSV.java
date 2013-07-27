@@ -1,4 +1,4 @@
-package ar.app.util;
+package ar.util;
 
 import java.io.File; 
 import java.io.FileWriter;

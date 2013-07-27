@@ -51,7 +51,7 @@ public class RenderSpeedTest {
 			glyphs = new MemMapList<Color>(
 						new File(source), 
 						new ToRect(.005, .005, false, 0, 1), 
-						new Constant<Indexed>(Color.red), Color.class);
+						new Constant<Indexed,Color>(Color.red), Color.class);
 		} else if (rend.startsWith("PIXEL")) {
 			render = new ParallelSpatial(task);
 			glyphs = GlyphsetUtils.load(null, source, .005);

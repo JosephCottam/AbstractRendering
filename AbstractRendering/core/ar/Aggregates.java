@@ -1,5 +1,7 @@
 package ar;
 
+import java.io.Serializable;
+
 
 /**Store of aggregate values.
  * Aggregate implementations are required to report the upper and lower end
@@ -12,7 +14,7 @@ package ar;
  *
  * @param <A>  Type of the values to be stored in the aggregate set.
  */
-public interface Aggregates<A> extends Iterable<A> {
+public interface Aggregates<A> extends Iterable<A>, Serializable {
 	public A at(int x, int y);
 	public void set(int x, int y, A val);
 	public A defaultValue();

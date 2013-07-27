@@ -1,6 +1,7 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 
 import ar.util.MemMapEncoder;
@@ -12,10 +13,11 @@ import ar.util.MemMapEncoder;
  * The subclasses are common ways of working with indexed records.
  * 
  * **/
-public interface Indexed {
+public interface Indexed extends Serializable {
 	public Object get(int i);
 	
 	public static class ArrayWrapper implements Indexed {
+		private static final long serialVersionUID = -7081805779069559306L;
 		private final Object array;
 		public ArrayWrapper(Object parts) {this.array = parts;}
 		public Object get(int i) {return Array.get(array, i);}
@@ -25,6 +27,7 @@ public interface Indexed {
 	 * Uses toString and primitive parsers.
 	 */
 	public static class Converter implements Indexed {
+		private static final long serialVersionUID = 9142589107863879237L;
 		private final MemMapEncoder.TYPE[] types;
 		private final Object[] values;
 		public Converter(Object[] values, MemMapEncoder.TYPE... types) {
@@ -51,7 +54,8 @@ public interface Indexed {
 	/**Apply the passed valuer to the value at the indicated index.
 	 * The default value is the "IdentityValuer" found in the valuer class.
 	 * **/
-	public static class ToValue<I,V> implements Valuer<Indexed,V> {
+	public static class ToValue<I,V> implements Valuer<Indexed,V>, Serializable {
+		private static final long serialVersionUID = -3420649810382539859L;
 		private final int vIdx;
 		private final Valuer<I,V> basis;
 		
@@ -70,7 +74,8 @@ public interface Indexed {
 	
 
 	
-	public static class ToRect implements Shaper<Indexed> {
+	public static class ToRect implements Shaper<Indexed>, Serializable {
+		private static final long serialVersionUID = 2509334944102906705L;
 		private final double width,height;
 		private final boolean flipY;
 		private final int xIdx, yIdx;

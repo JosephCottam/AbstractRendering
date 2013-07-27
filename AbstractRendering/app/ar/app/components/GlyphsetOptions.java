@@ -51,7 +51,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (double) size.getSelectedItem();
 			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);
-			Valuer<Indexed, Color> valuer = new Constant<Indexed>(Color.red);
+			Valuer<Indexed, Color> valuer = new Constant<Indexed,Color>(Color.red);
 			return new MemMapList<>(null, shaper, valuer, Color.class);
 		} else {
 			throw new RuntimeException("Unknown glyphset type selected.");

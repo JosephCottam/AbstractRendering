@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 
-import ar.app.util.AggregatesToCSV;
 import ar.app.util.WrappedAggregator;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
+import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
 public class BatchExport {
@@ -34,7 +34,7 @@ public class BatchExport {
 		Glyphset<Color> glyphs = new MemMapList<Color>(
 					new File(source), 
 					new ToRect(size, size, false, 0, 1), 
-					new Constant<Indexed>(Color.red), Color.class);
+					new Constant<Indexed,Color>(Color.red), Color.class);
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
 
 		try {

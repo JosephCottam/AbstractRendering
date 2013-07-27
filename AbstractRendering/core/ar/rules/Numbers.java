@@ -11,9 +11,16 @@ import ar.util.Util;
 public final class Numbers {
 	private Numbers() {/*Prevent instantiation*/}
 	
-	/**How many items present?**/
-	public static final class Count implements Aggregator<Object, Integer> {
-		public Integer combine(long x, long y, Integer left, Object update) {return left+1;}
+	/**How many items present?
+	 * 
+	 * Input type does not matter, always produces integer outputs.
+	 *
+	 * @param V Expected input type
+	 * 
+	 ***/
+	public static final class Count<V> implements Aggregator<V, Integer> {
+		private static final long serialVersionUID = 5984959309743633510L;
+		public Integer combine(long x, long y, Integer left, V update) {return left+1;}
 		public Integer rollup(List<Integer> integers) {
 			int acc=0;
 			for (Integer v: integers) {acc+=v;}
@@ -27,6 +34,7 @@ public final class Numbers {
 	
 
 	public static final class FixedAlpha implements Transfer<Number,Color> {
+		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high;
 		final double lowv, highv;
 
@@ -46,6 +54,7 @@ public final class Numbers {
 	}
 	
 	public static final class Interpolate implements Transfer<Number, Color> {
+		private static final long serialVersionUID = 2878901447280244237L;
 		private final Color low, high, empty;
 		private final int logBasis;
 		private Util.Stats extrema;

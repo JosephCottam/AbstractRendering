@@ -1,6 +1,6 @@
 package ar.glyphsets.implicitgeometry;
 
-import java.awt.Color;
+import java.io.Serializable;
 
 /**Converts values from one type to another.
  * The common scenario is to select a single field from a
@@ -11,24 +11,31 @@ import java.awt.Color;
  * <I> Input value type
  * <V> Output value type
  * **/
-public interface Valuer<I,V> {
+public interface Valuer<I,V> extends Serializable {
 	public V value(I from);
 	
 	/**Pass-through valuer.  Value-in=value-out.*/
-	public static class IdentityValuer<I> implements Valuer<I,I> {public I value(I v) {return v;}}
+	public static class IdentityValuer<I> implements Valuer<I,I> {
+		private static final long serialVersionUID = 6961888682185387204L;
+
+		public I value(I v) {return v;}
+	}
 
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToInt<V> implements Valuer<V,Integer> {
+		private static final long serialVersionUID = 2540867051146887184L;
+
 		public Integer value(V from) {return Integer.valueOf(from.toString());}
 	}
 	
 	
 	/**Give everything the same value (default value is the color red).*/
-	public final class Constant<T> implements Valuer<T,Color> {
-		private final Color c;
-		public Constant() {this.c = Color.red;}
-		public Constant(Color c) {this.c = c;}
-		public Color value(T item) {return c;}
+	public final class Constant<T,V> implements Valuer<T,V> {
+		private static final long serialVersionUID = -8933986990047616101L;
+		private final V c;
+		
+		public Constant(V c) {this.c = c;}
+		public V value(T item) {return c;}
 	}
 	
 	/**Binary valuation scheme.  
@@ -36,9 +43,11 @@ public interface Valuer<I,V> {
 	 * Otherwise return value 'b'.
 	 */
 	public final class Binary<T,V> implements Valuer<T,V> {
+		private static final long serialVersionUID = -3348263722682722360L;
 		private final V a;
 		private final V b;
 		private final T v;
+		
 		public Binary(T v, V a, V b) {this.v = v; this.a = a; this.b=b;}
 		public V value(T item) {
 			if (item == v || (v != null && v.equals(item))) {return a;}

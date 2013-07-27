@@ -9,6 +9,8 @@ import ar.Aggregates;
  * Still tracks the low/high bounds, but the in-bounds and out-of-bounds values are the same.
  */
 public final class ConstantAggregates<A> implements Aggregates<A> {
+	private static final long serialVersionUID = -6013315833630311053L;
+	
 	private final A val;
 	private final int lowX, lowY, highX, highY;
 	public ConstantAggregates(A value) {this(0,0,0,0, value);}

@@ -1,5 +1,6 @@
 package ar.app.components;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
@@ -105,4 +106,15 @@ public class ARDisplay extends JPanel {
 	}
 	
 	public Renderer getRenderer() {return renderer;}
+	
+	public static <A> void show(int width, int height, Aggregates<A> aggregates, Transfer<A,Color> transfer) {
+		JFrame frame = new JFrame("ARDisplay");
+		frame.setLayout(new BorderLayout());
+		frame.setSize(width,height);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.setVisible(true);
+		frame.revalidate();
+		frame.validate();
+	}
 }
