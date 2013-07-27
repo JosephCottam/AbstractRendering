@@ -36,6 +36,8 @@ public class RDDRender {
 		return glyphs;
 	}
 	
+	
+	/**Given a glyphset, calculate its bounds.**/
 	public static <T> Rectangle2D bounds(JavaRDD<Glyph<T>> glyphs) {
 		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<T>,Rectangle2D>() {
 			private static final long serialVersionUID = 7387911686369652132L;
