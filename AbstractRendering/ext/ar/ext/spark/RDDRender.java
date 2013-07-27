@@ -4,40 +4,62 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.util.List;
+import java.io.Serializable;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
+import ar.Transfer;
 import ar.aggregates.FlatAggregates;
-import ar.glyphsets.implicitgeometry.Indexed;
-import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.AggregationStrategies;
+import ar.renderers.SerialSpatial;
 import ar.util.Util;
 import spark.api.java.JavaRDD;
 import spark.api.java.function.Function;
 import spark.api.java.function.Function2;
 
+/**Near drop-in for the standard render using spark.
+ * Also provides utility methods for working with RDDs.
+ * 
+ * Due to a few type restrictions, the implementation doesn't (yet) match the main renderer definition.
+ * TODO: provide a a glyphset type that wraps an RDD
+ */
+public class RDDRender implements Serializable {
+	private static final long serialVersionUID = 4036940240319014563L;
 
-//TODO: Implement the Renderer interface...probably will require some construction params to do it right
-public class RDDRender {
-	/* Glyphset:  (DONE) 
-	 *    Node-local object.  
-	 *    Can be a "parallelizedCollection" for now, 
-	 *    Keep an idea on "Hadoop dataset" for actual usage with shark/hive tables
-	 *    sc.parallelize(<collection>)
-	 *    Transform raw dataset into glyphset via map (of a glypher and a valuer)
-	 */    
-	public static <V> JavaRDD<Glyph<V>> glyphs(JavaRDD<Indexed> baseData, 
-												Shaper<Indexed> shaper, 
-												Valuer<Indexed,V> valuer) {
-		
-		JavaRDD<Glyph<V>> glyphs = baseData.map(new Glypher(shaper,valuer));
-		return glyphs;
+	/**Near drop-in for the standard render.aggregate.
+	 * Due to the requirements of spark's reduce, the info-type must match
+	 * the aggregate type.
+	 * 
+	 *  TODO: Add proper info support so the function signature can be from glyphs of arbitrary type to aggregates of arbitrary type
+	 * 
+	 * @param glyphs
+	 * @param op
+	 * @param inverseView
+	 * @param width
+	 * @param height
+	 * @return
+	 */
+	public <A> Aggregates<A> aggregate(JavaRDD<Glyph<A>> glyphs,
+			Aggregator<A, A> op, 
+			AffineTransform inverseView, 
+			int width,
+			int height) {
+		JavaRDD<Aggregates<A>> aggset = glyphs.map(new GlyphToAggregates<A>(inverseView));
+		return aggset.reduce(new Rollup<A>(op));
 	}
 	
-	
-	/**Given a glyphset, calculate its bounds.**/
+
+	public <IN, OUT> Aggregates<OUT> transfer(
+			Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t) {
+		return new SerialSpatial().transfer(aggregates, t);
+	}
+
+	public double progress() {return -1;}
+
+
+	/**Utility method for calculating the bounds on an RDD glyphset.
+	 ***/
 	public static <T> Rectangle2D bounds(JavaRDD<Glyph<T>> glyphs) {
 		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<T>,Rectangle2D>() {
 			private static final long serialVersionUID = 7387911686369652132L;
@@ -55,7 +77,23 @@ public class RDDRender {
 			}
 		});
 	}
+	
+	
+	/**Utility class to wrap an aggregator's rollup function.
+	 * 
+	 * This class enables rollup to be called in a distributed environment.
+	 * **/
+	public class Rollup<V> extends Function2<Aggregates<V>,Aggregates<V>,Aggregates<V>> {
+		private static final long serialVersionUID = -1121892395315765974L;
+		
+		final Aggregator<?,V> aggregator;
+		public Rollup(Aggregator<?,V> aggregator) {this.aggregator = aggregator;}
 
+		public Aggregates<V> call(Aggregates<V> left, Aggregates<V> right)
+				throws Exception {
+			return AggregationStrategies.horizontalRollup(left, right, aggregator);
+		}
+	}
 	
 	/**Render a single glyph.
 	 * 
@@ -63,13 +101,14 @@ public class RDDRender {
 	 * splats the value into the bounding box.
 	 * 
 	 * TODO: Put value into just cells the bounding box touches
+	 * TODO: Extend with info function so it will convert Glyph<V> to Aggregates<A>
 	 * 
 	 * **/
-	public static class RenderOne<V> extends Function<Glyph<V>, Aggregates<V>> {
+	public class GlyphToAggregates<V> extends Function<Glyph<V>, Aggregates<V>> {
 		private static final long serialVersionUID = 7666400467739718445L;
 		
 		private final AffineTransform vt;
-		public RenderOne(AffineTransform vt) {this.vt = vt;}
+		public GlyphToAggregates(AffineTransform vt) {this.vt = vt;}
 		
 		public Aggregates<V> call(Glyph<V> glyph) throws Exception {
 			Shape s = vt.createTransformedShape(glyph.shape());
@@ -80,19 +119,4 @@ public class RDDRender {
 		}
 	}
 	
-	
-	/**Render a collection of glyphs into aggregates
-	 * 
-	 * TODO: Consider changing to a flat map that creates an RDD of (x,y,Value)  
-	 *       May lead to simpler phrasing but more communication
-	 * ***/
-	public static <V> JavaRDD<Aggregates<V>> renderAll(AffineTransform vt, JavaRDD<Glyph<V>> glyphs) {
-		return glyphs.map(new RenderOne<V>(vt));
-	}
-	
-	public static <V> Aggregates<V> collect(JavaRDD<Aggregates<V>> aggs, Aggregator<?,V> aggregator) {
-		return aggs.reduce(new Rollup<V>(aggregator));
-	}
-
-		
 }

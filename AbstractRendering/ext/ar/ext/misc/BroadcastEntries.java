@@ -19,9 +19,9 @@ public class BroadcastEntries {
 	 * that reflects the iteration order.
 	 * 
 	 * @param key Item to associate with all other items
-	 * @param values Values to asssociate with the key
+	 * @param values Values to associate with the key
 	 * @param acc place to put each result
-	 * @return The acc passed in, with new entries in the form (key, cal, idx)
+	 * @return The acc passed in, with new entries in the form (key, val, idx)
 	 */
 	public static Collection<Indexed> broadcast(Object key, Iterable<?> values, Collection<Indexed> acc) {
 		int i=0;

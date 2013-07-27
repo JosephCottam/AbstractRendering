@@ -3,7 +3,8 @@ package ar.ext.spark;
 import spark.api.java.function.Function;
 import ar.glyphsets.implicitgeometry.Indexed;
 
-/**Take a string, make an indexed entity from it.**/
+/**Take a string, make an indexed entity from it by splitting on the passed pattern
+ * ...basically a cheap CSV parser.**/
 public class StringToIndexed extends Function<String, Indexed> {
 	private static final long serialVersionUID = 127417360167125319L;
 	private final String splitter;

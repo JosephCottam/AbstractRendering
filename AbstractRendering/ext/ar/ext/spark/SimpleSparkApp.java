@@ -19,7 +19,7 @@ import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
 /**Main class for driving an ARSpark application.**/
-public class Driver {
+public class SimpleSparkApp {
 	private static String arg(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();
 		for (int i=0; i<args.length; i++) {
@@ -48,17 +48,19 @@ public class Driver {
 		Shaper<Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
 		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
 
- 		JavaRDD<Glyph<Integer>> glyphs = RDDRender.glyphs(base, shaper, valuer).cache();
+		JavaRDD<Glyph<Integer>> glyphs = base.map(new Glypher(shaper,valuer)).cache();
  		Rectangle2D contentBounds = RDDRender.bounds(glyphs);
+		AffineTransform ivt = Util.zoomFit(contentBounds, width, height);
 
-		AffineTransform vt = Util.zoomFit(contentBounds, width, height);
-		JavaRDD aggset = RDDRender.renderAll(vt, glyphs);
-		Aggregates aggregates = RDDRender.collect(aggset, new Numbers.Count());
+ 		
+ 		RDDRender render = new RDDRender();
+ 		Aggregates aggs = render.aggregate(glyphs, new Numbers.Count(), ivt, width, height);
+
 		
 		if (outFile == null) {
-			ARDisplay.show(width, height, aggregates, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
+			ARDisplay.show(width, height, aggs, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
 		} else {
-			AggregatesToCSV.export(aggregates, new File(outFile));
+			AggregatesToCSV.export(aggs, new File(outFile));
 		}
 	}
 }
