@@ -13,13 +13,36 @@ from math import floor
 import ctypes
 import numpy as np
 
-_lib = ctypes.CDLL('libtransform.dylib')
+def _type_lib(lib):
+    from ctypes import c_void_p, c_size_t
 
+    lib.transform_f.argtypes = [c_void_p, c_void_p, c_void_p, c_size_t, c_size_t]
+    lib.transform_d.argtypes = [c_void_p, c_void_p, c_void_p, c_size_t, c_size_t]
+
+    if hasattr(lib, "async_transform_f_start"):
+        #assume all the async interface
+        lib.async_transform_f_start.argtypes = [c_void_p, c_void_p, 
+                                                c_size_t, c_size_t]
+        lib.async_transform_f_start.restype = c_void_p
+        lib.async_transform_f_end.argtypes = [c_void_p]
+        lib.async_transform_f_next.argtypes = [c_void_p, c_void_p, c_void_p]
+        lib.async_transform_d_start.argtypes = [c_void_p, c_void_p, 
+                                                c_size_t, c_size_t]
+        lib.async_transform_d_start.restype = c_void_p
+        lib.async_transform_d_end.argtypes = [c_void_p]
+        lib.async_transform_d_next.argtypes = [c_void_p, c_void_p, c_void_p]
+
+_lib = ctypes.CDLL('libtransform.dylib')
+_type_lib(_lib)
 try:
     _lib_dispatch = ctypes.CDLL('libtransform_libdispatch.dylib')
+    _type_lib(_lib_dispatch)
 except OSError:
     print ("no libdispatch version found")
     _lib_dispatch = _lib
+
+mk_buff = ctypes.pythonapi.PyBuffer_FromMemory
+mk_buff.restype = ctypes.py_object
 
 def _projectRects(viewxform, inputs, outputs, use_dispatch = False):
     if (inputs.flags.f_contiguous): 
@@ -72,11 +95,11 @@ def _projectRectsGenerator(viewxform,
     if inputs.dtype == np.float64:
         inputtype = ctypes.c_double
         func = use_lib.transform_d
-        afunc = use_lib.async_transform_d if hasattr(use_lib, "async_transform_d") else None
+        has_async = hasattr(use_lib, "async_transform_d_start")
     elif inputs.dtype == np.float32:
         inputtype = ctypes.c_float
         func = use_lib.transform_f
-        afunc = use_lib.async_transform_f if hasattr(use_lib, "async_transform_f") else None
+        has_async = hasattr(use_lib, "async_transform_f_start")
     else:
         raise TypeError("ProjectRects only works for np.float32 and np.float64 inputs")
 
@@ -86,9 +109,10 @@ def _projectRectsGenerator(viewxform,
     c_inputs = (t*4)(*(cast(inputs[i].ctypes.data, t)
                        for i in range(0,4)))
 
-    if afunc is None:
+    if not has_async:
+        print("no async")
         # simple case: no need to pipeline
-        outputs = np.empty((chunk_size, 4), dtype=np.int32)
+        outputs = np.empty((4, chunk_size), dtype=np.int32)
         c_outputs = (t*4)(*(cast(outputs[i].ctypes.data, t)
                             for i in range(0, 4)))
         offset = 0
@@ -102,37 +126,34 @@ def _projectRectsGenerator(viewxform,
             offset += curr_size
             yield outputs[0:curr_size]
     else:
-        outputs_a = np.empty((chunk_size, 4), dtype=np.int32)
-        outputs_b = np.empty((chunk_size, 4), dtype=np.int32)
-        c_outputs_a = (t*4)(*(cast(outputs_a[i].ctypes.data, t)
-                              for i in range(0,4)))
-        c_outputs_b = (t*4)(*(cast(outputs_b[i].ctypes.data, t)
-                              for i in range(0,4)))
-        params = [ctypes.byref(c_xforms),
-                  ctypes.byref(c_inputs),
-                  ctypes.byref(c_outputs_a),
-                  0,
-                  min(result_size, chunk_size)]
-        # warm_up...
-        afunc(*params)
-        params[3] = params[4]
+        print("async")
+        if inputs.dtype == np.float64:
+            start_function = use_lib.async_transform_d_start
+            end_function  = use_lib.async_transform_d_end
+            next_function  = use_lib.async_transform_d_next
+        elif inputs.dtype == np.float32:
+            start_function = use_lib.async_transform_f_start
+            end_function  = use_lib.async_transform_f_end
+            next_function  = use_lib.async_transform_f_next
+        else:
+            raise TypeError("ProjectRects only works for np.float32 and np.float64 inputs")
 
-        while params[3] != result_size: # params[3] == offset
-            prev_count = params[4]
-            c_outputs_a, c_outputs_b = c_outputs_b, c_outputs_a
-            params[2] = ctypes.byref(c_outputs_a)
-            params[4] = min(result_size-params[3], chunk_size)
-            afunc(*params)
-            params[3] += params[4]
-            yield outputs_a[0:prev_count]
-            outputs_a, outputs_b = outputs_b, outputs_a
+        buff = ctypes.c_void_p(0)
+        count = ctypes.c_size_t(0)
+        total_size = chunk_size * 4 * 4
+        token = start_function(ctypes.byref(c_xforms), ctypes.byref(c_inputs),
+                               ctypes.c_size_t(result_size),
+                               ctypes.c_size_t(chunk_size))
 
-        #finish... with count == 0 it means "just sync"
-        prev_count = params[4]
-        params[4] = 0
-        afunc(params)
-        yield outputs_a[0:prev_count]
+        while True:
+            next_function(token, ctypes.byref(buff), ctypes.byref(count))
+            if count.value == 0:
+                break
 
+            yield np.frombuffer(mk_buff(buff, total_size),
+                                dtype='i4').reshape((4,chunk_size))[:,0:count.value]
+
+        end_function(token)
 
 # testing code starts here
 
@@ -159,7 +180,7 @@ def report_diffs(a, b, name):
 def simple_test():
     from time import time
 
-    use_shape = (4, 10**6)
+    use_shape = (4, 10**8)
     chunksize = 10**4
     mock_in = np.random.random(use_shape)
     xform = [3.0, 4.0, 2.0, 2.0]
@@ -167,7 +188,8 @@ def simple_test():
     t = time()
     check_sum = 0
     for arr in _projectRectsGenerator(xform, mock_in, chunksize):
-        check_sum += len(arr)
+        check_sum += arr.shape[1]
+        np.random.random(1000)
     t = time() - t
     print("checksum (_projectRectsGenerator) took %f ms" % (t*1000))
     chk1 = check_sum
@@ -175,7 +197,9 @@ def simple_test():
     t = time()
     check_sum = 0
     for arr in _projectRectsGenerator(xform, mock_in, chunksize, use_dispatch = True):
-        check_sum += len(arr)
+        check_sum += arr.shape[1]
+        np.random.random(1000)
+
     t = time() - t
     print("checksum (_projectRectsGenerator libdispatch) took %f ms" % (t*1000))
     chk2 = check_sum
