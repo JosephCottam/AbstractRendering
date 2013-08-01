@@ -9,14 +9,8 @@ Tools for working with numerical aggregates are found in numeric.py.
 Build and Dependencies
 ==========
 
-Abstract Rendering relies on a c-module that can be built as:
-* clang -O3 -march=native -fPIC -dynamiclib transform.cpp -o libtransform.dylib
-
-An optional acceleration module is compiled as:
-* clang -O3 -march=native -fPIC -dynamiclib transform_libdispatch.cpp -o libtransform_libdispatch.dylib
-
-Additionally, the system works best if Numba is also installed (though it is optional).  
-
+Abstract Rendering relies on a c-module that can be built via the included
+makefile.  This makefile depends on clang and needs c++11 support.
 
 Examples Applications
 ---------------------
@@ -25,13 +19,4 @@ GUI: python.app arDemo.py
 text checkerboard: python ar.py ../data/checkerboard.csv 2 0 1 3 1
 text circlepoints: python ar.py ../data/circlepoints.csv 1 2 3 4 .1
 
-
-
-Future Work
-------------
-
-Implicit geometry using ColumnDataSource and a few functions
-* One functions for location
-* One function for color
-* Works better with the aggregate-reducers and glyph-based iteration (as opposed to pixel-based)
 
