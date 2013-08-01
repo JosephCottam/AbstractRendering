@@ -13,7 +13,7 @@ public class AggregatesToCSV {
 	public static void export(Aggregates<?> aggs, File file) {
 		String content;
 		if (aggs == null) {content = "Empty aggregate set.";}
-		else if (!(aggs.at(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
+		else if (!(aggs.get(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
 		else {content = asCSV((Aggregates<Integer>)aggs);}
 	
 		try {
@@ -30,7 +30,7 @@ public class AggregatesToCSV {
 		b.append(format("%%%% highX/Y:(%d,%d)\n", aggs.highX(), aggs.highY()));
 		for (int y=aggs.lowY(); y<aggs.highY();y++) {
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-				b.append(aggs.at(x, y));
+				b.append(aggs.get(x, y));
 				b.append(",");
 			}
 			b.deleteCharAt(b.length()-1);

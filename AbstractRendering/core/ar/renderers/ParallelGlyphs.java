@@ -153,7 +153,7 @@ public class ParallelGlyphs implements Renderer {
 				
 				for (int x=Math.max(0,lowx); x<highx && x<width; x++){
 					for (int y=Math.max(0, lowy); y<highy && y<height; y++) {
-						A existing = aggregates.at(x,y);
+						A existing = aggregates.get(x,y);
 						A update = op.combine(x,y,existing, v);
 						aggregates.set(x, y, update);
 					}

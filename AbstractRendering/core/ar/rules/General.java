@@ -29,7 +29,7 @@ public class General {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		public Echo(T empty) {this.empty = empty;}
-		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.at(x, y);}
+		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 
 		public T emptyValue() {return empty;}
 		
@@ -53,7 +53,7 @@ public class General {
 		}
 		
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-			Object v = aggregates.at(x, y);
+			Object v = aggregates.get(x, y);
 			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
 			return absent;
 		}
@@ -78,7 +78,7 @@ public class General {
 
 		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-			IN key = aggregates.at(x, y);
+			IN key = aggregates.get(x, y);
 			if (!mappings.containsKey(key)) {return other;}
 			OUT val = mappings.get(key);
 			if (val==null && !nullIsValue) {return other;}

@@ -28,9 +28,9 @@ public class CategoriesTests {
 		
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-				assertEquals(format("Incorrect number of categories found at (%d, %d)", x,y), 2, aggs.at(x,y).size());
-				assertEquals(format("Unexpected aggregate value 0 at (%d, %d)", x,y), 2, aggs.at(x, y).count(0));
-				assertEquals(format("Unexpected aggregate value 1 at (%d, %d)", x,y), 4, aggs.at(x, y).count(1));
+				assertEquals(format("Incorrect number of categories found at (%d, %d)", x,y), 2, aggs.get(x,y).size());
+				assertEquals(format("Unexpected aggregate value 0 at (%d, %d)", x,y), 2, aggs.get(x, y).count(0));
+				assertEquals(format("Unexpected aggregate value 1 at (%d, %d)", x,y), 4, aggs.get(x, y).count(1));
 			}
 		}
 	}

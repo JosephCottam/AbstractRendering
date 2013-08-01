@@ -38,7 +38,7 @@ public class RDDRender implements Serializable {
 	 * @param inverseView
 	 * @param width
 	 * @param height
-	 * @return
+	 * @return Aggregate set that results from collecting all items
 	 */
 	public <A> Aggregates<A> aggregate(JavaRDD<Glyph<A>> glyphs,
 			Aggregator<A, A> op, 

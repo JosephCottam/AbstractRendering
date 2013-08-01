@@ -33,7 +33,7 @@ public class TestAggregates {
 		
 		for (int x=0; x<aggs.highX()*2; x++) {
 			for (int y=0; y<aggs.highY()*2; y++) {
-				assertThat(String.format("In-range range mismatch at %s, %s", x, y),aggs.at(x, y), is(value));
+				assertThat(String.format("In-range range mismatch at %s, %s", x, y),aggs.get(x, y), is(value));
 			}
 		}
 	}

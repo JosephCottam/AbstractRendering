@@ -21,16 +21,13 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	protected Collection<I> values;
 	protected Shaper<I> shaper;
 	protected Valuer<I,V> valuer;
-	protected Class<V> valueType;
 	
 	public WrappedCollection(Collection<I> values, 
 							Shaper<I> shaper, 
-							Valuer<I,V> valuer,
-							Class<V> valueType) {
+							Valuer<I,V> valuer) {
 		this.values = values;
 		this.shaper = shaper;
 		this.valuer = valuer;
-		this.valueType = valueType;
 	}
 	
 	public Collection<ar.Glyph<V>> intersects(Rectangle2D r) {
@@ -58,11 +55,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	
 	public void add(ar.Glyph<V> g) {
 		throw new UnsupportedOperationException("Cannot add directly to wrapped list.  Must add to backing collection.");
-	}
-	
-	public Class<V> valueType() {return valueType;}
-
-	
+	}	
 
 	@Override
 	public long segments() {return values.size();}
@@ -76,7 +69,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 		Iterator<I> it = values.iterator();
 		for (long i=0; i<bottom; i++) {it.next();}
 		for (int i=0; i<size; i++) {vals[i]=it.next();}
-		return new WrappedCollection.List<I,V>(Arrays.asList(vals), shaper, valuer, valueType);
+		return new WrappedCollection.List<I,V>(Arrays.asList(vals), shaper, valuer);
 	}
 
 	
@@ -86,9 +79,8 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 		
 		public List(java.util.List<I> values,
 				Shaper<I> shaper, 
-				Valuer<I,V> valuer,
-				Class<V> valueType) {
-			super(values, shaper, valuer, valueType);
+				Valuer<I,V> valuer) {
+			super(values, shaper, valuer);
 			this.values=values;
 		}
 		
@@ -122,9 +114,9 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 				Class<V> valueType) {
 		
 		if (basis instanceof java.util.List) {
-			return new List<I,V>((java.util.List<I>) basis, shaper, valuer, valueType);
+			return new List<I,V>((java.util.List<I>) basis, shaper, valuer);
 		} else {
-			return new WrappedCollection<I,V>(basis, shaper, valuer, valueType);
+			return new WrappedCollection<I,V>(basis, shaper, valuer);
 		}
 	}	
 	

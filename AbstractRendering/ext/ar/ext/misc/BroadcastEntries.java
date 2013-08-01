@@ -33,11 +33,7 @@ public class BroadcastEntries {
 		return acc;
 	}
 	
-	/**Broadcast each key in the map to the values of associated with it in the map.
-	 * 
-	 * @param values
-	 * @return
-	 */
+	/**Broadcast each key in the map to the values of associated with it in the map.*/
 	public static Collection<Indexed> broadcastAll(Map<Object, Iterable<?>> values) {
 		List<Indexed> acc = new ArrayList<Indexed>();
 		for(Object key: values.keySet()) {

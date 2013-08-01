@@ -149,7 +149,7 @@ public class Categories {
 		}
 		
 		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
-			CategoricalCounts<T> cats = aggregates.at(x,y);
+			CategoricalCounts<T> cats = aggregates.get(x,y);
 			if (cats.size() <= n) {return background;}
 			else {return cats.count(n);}
 		}
@@ -177,7 +177,7 @@ public class Categories {
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
-			CategoricalCounts<T> cats = aggregates.at(x,y);
+			CategoricalCounts<T> cats = aggregates.get(x,y);
 			double size = cats.fullSize();
 			
 			if (size == 0) {return background;}
@@ -241,7 +241,7 @@ public class Categories {
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			CategoricalCounts<Color> cats = aggregates.at(x, y);
+			CategoricalCounts<Color> cats = aggregates.get(x, y);
 			Color c;
 			if (cats.fullSize() == 0) {c = background;}
 			else {

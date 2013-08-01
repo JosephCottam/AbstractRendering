@@ -129,7 +129,7 @@ public class ScatterControl extends JPanel {
 		private void configure() {
 			Aggregates<?> src = parent.source == null ? null : parent.source.getPanel().aggregates(); 
 
-			if (src == null || !(src.at(src.lowX(), src.lowY()) instanceof Number)) {return;}
+			if (src == null || !(src.get(src.lowX(), src.lowY()) instanceof Number)) {return;}
 			
 			points=new ArrayList<Point2D>();
 			
@@ -143,7 +143,7 @@ public class ScatterControl extends JPanel {
 			
 			for (int x=source.lowX(); x<source.highX(); x++) {
 				for (int y=source.lowY(); y<source.highY(); y++) {
-					double common = source.at(x, y).doubleValue();
+					double common = source.get(x, y).doubleValue();
 					max = Math.max(common, max);
 					
 					for (int dx=-parent.distance(); dx<=parent.distance(); dx++) {
@@ -151,7 +151,7 @@ public class ScatterControl extends JPanel {
 							int cx=x+dx;
 							int cy=y+dy;
 							if (cx < source.lowX() || cy < source.lowY() || cx>source.highX() || cy> source.highY()) {continue;}
-							double specific = source.at(cx,cy).doubleValue();
+							double specific = source.get(cx,cy).doubleValue();
 							points.add(new Point2D.Double(common, specific));
 						}
 					}
@@ -258,7 +258,7 @@ public class ScatterControl extends JPanel {
 		
 		@Override
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			double v = aggregates.at(x, y).doubleValue();
+			double v = aggregates.get(x, y).doubleValue();
 			
 			if (v==aggregates.defaultValue().doubleValue()) {return basis.emptyValue();}
 			
@@ -269,7 +269,7 @@ public class ScatterControl extends JPanel {
 							int cx=x+dx;
 							int cy=y+dy;
 							if (cx < aggregates.lowX() || cy < aggregates.lowY() || cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-							double dv = aggregates.at(cx,cy).doubleValue();
+							double dv = aggregates.get(cx,cy).doubleValue();
 							if (dv >= minDV && dv < maxDV) {
 								return basis.at(x, y, aggregates);
 							}

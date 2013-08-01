@@ -58,7 +58,7 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	
 	
 	/**Get the value at the given (x,y).**/
-	public synchronized A at(int x, int y) {
+	public synchronized A get(int x, int y) {
 		int idx = idx(x,y);
 		if (idx<0||idx>=values.length) {return defaultVal;}
 		return values[idx];

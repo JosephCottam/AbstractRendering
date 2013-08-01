@@ -73,7 +73,7 @@ public class TileUtils {
 		Aggregates<A> target = new FlatAggregates<A>(lowX, lowY, highX, highY, source.defaultValue());
 		for (int x=lowX; x<highX; x++) {
 			for (int y=lowY; y<highY; y++) {
-				target.set(x, y, source.at(x, y));
+				target.set(x, y, source.get(x, y));
 			}
 		}
 		return target;

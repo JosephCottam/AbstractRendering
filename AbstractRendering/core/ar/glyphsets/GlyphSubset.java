@@ -26,7 +26,6 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	public boolean isEmpty() {return low >= high;}
 	public long size() {return high - low;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
-	public Class<G> valueType() {return glyphs.valueType();}
 	public long segments() {return high - low;}
 	public Glyphset<G> segment(long bottom, long top)
 			throws IllegalArgumentException {

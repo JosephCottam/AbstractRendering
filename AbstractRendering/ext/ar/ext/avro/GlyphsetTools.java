@@ -66,12 +66,11 @@ public class GlyphsetTools {
 			String sourceFile, 
 			Valuer<GenericRecord,INNER> realizer,
 			Shaper<INNER> shaper, 
-			Valuer<INNER, V> valuer,
-			Class<V> valueType) throws IOException {
+			Valuer<INNER, V> valuer) throws IOException {
 		
 		DataFileReader<GenericRecord> reader = reader(sourceFile); 
 		ArrayList<INNER> l = new ArrayList<INNER>();
 		for (GenericRecord r: reader) {l.add(realizer.value(r));}
-		return new WrappedCollection.List<INNER, V>(l, shaper, valuer, valueType);
+		return new WrappedCollection.List<INNER, V>(l, shaper, valuer);
 	}
 }

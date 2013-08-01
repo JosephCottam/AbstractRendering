@@ -57,7 +57,7 @@ public class GlyphsetUtils {
 			}
 			
 			if (glyphs instanceof MemMapList) {
-				MemMapList<T> list = new MemMapList<T>(source, ((MemMapList<T>) glyphs).shaper(), ((MemMapList<T>) glyphs).valuer(), glyphs.valueType());
+				MemMapList<T> list = new MemMapList<T>(source, ((MemMapList<T>) glyphs).shaper(), ((MemMapList<T>) glyphs).valuer());
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {
@@ -127,7 +127,7 @@ public class GlyphsetUtils {
 
 		try {
 			long start = System.currentTimeMillis();
-			Glyphset<Color> g = new MemMapList<Color>(f, shaper, valuer, Color.class);
+			Glyphset<Color> g = new MemMapList<Color>(f, shaper, valuer);
 			long end = System.currentTimeMillis();
 			if (label != null) {System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);}
 			return g;
@@ -137,7 +137,7 @@ public class GlyphsetUtils {
 					System.out.println("Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return new MemMapList<Color>(f, shaper, valuer, Color.class);
+					return new MemMapList<Color>(f, shaper, valuer);
 				} else {throw e;}
 			} catch (Exception ex) {
 				System.out.println("Faield to load data.");

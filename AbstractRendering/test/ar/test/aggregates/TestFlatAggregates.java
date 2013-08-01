@@ -21,7 +21,7 @@ public class TestFlatAggregates {
 		
 		for(int x=aggs.lowX();x<aggs.highX(); x++) {
 			for (int y=aggs.lowY();y<aggs.lowY(); y++) {
-				assertEquals(String.format("Error at %d,%s", x,y), new Integer(x*y), aggs.at(x,y));
+				assertEquals(String.format("Error at %d,%s", x,y), new Integer(x*y), aggs.get(x,y));
 			}
 		}
 	}
@@ -41,9 +41,9 @@ public class TestFlatAggregates {
 			for (int y=0; y<aggs.highY()*2; y++) {
 				if (x <aggs.lowX() || x>= aggs.highX()
 						|| y < aggs.lowY() || y >= aggs.lowY()) {
-					assertThat(String.format("Out-of-range range mismatch at %s, %s", x, y), aggs.at(x,y), is(defVal));
+					assertThat(String.format("Out-of-range range mismatch at %s, %s", x, y), aggs.get(x,y), is(defVal));
 				} else {
-					assertThat(String.format("In-range range mismatch at %s, %s", x, y),aggs.at(x, y), is(TestAggregates.valFor(x,y)));
+					assertThat(String.format("In-range range mismatch at %s, %s", x, y),aggs.get(x, y), is(TestAggregates.valFor(x,y)));
 				}
 			}
 		}

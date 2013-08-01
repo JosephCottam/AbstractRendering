@@ -66,7 +66,6 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final TYPE[] types;
 	private final Valuer<Indexed,V> valuer;
 	private final Shaper<Indexed> shaper;
-	private final Class<V> valueType;
 
 	private final int recordEntries;
 	private final int recordSize;
@@ -74,15 +73,14 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter, Class<V> valueType) {
-		this(source, null, shaper, painter, valueType);
+	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
+		this(source, null, shaper, painter);
 	}
 
-	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer, Class<V> valueType) {
+	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
 		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
-		this.valueType = valueType;
 
 		if (source != null && types == null) {
 			recordEntries = buffer.get().getInt();
@@ -115,7 +113,6 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	}
 
 	protected void finalize() {pool.shutdownNow();}
-	public Class<V> valueType() {return valueType;}
 
 	@Override
 	public Collection<Glyph<V>> intersects(Rectangle2D r) {

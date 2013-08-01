@@ -55,7 +55,7 @@ public class CombinerTests {
 			assertNotNull("Nothing received.", recvd);
 			for (int x=aggs.lowX();x<aggs.highX();x++) {
 				for (int y=aggs.lowY(); y<aggs.highY();y++) {
-					assertEquals(String.format("Unexpected accumulated value at (%d,%d) in round %d",x,y,i), aggs.at(x, y)*i, (int)  recvd.at(x, y));
+					assertEquals(String.format("Unexpected accumulated value at (%d,%d) in round %d",x,y,i), aggs.get(x, y)*i, (int)  recvd.get(x, y));
 				}
 			}
 		}

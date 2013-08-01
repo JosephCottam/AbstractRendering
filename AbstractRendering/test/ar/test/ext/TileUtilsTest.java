@@ -25,9 +25,9 @@ public class TileUtilsTest {
 		for (int x=subset.lowX(); x<subset.highX(); x++) {
 			for (int y=subset.lowY(); y<subset.highY(); y++) {
 				if (x < aggs.lowX() || y < aggs.lowX()) {
-					assertThat(subset.at(x,y), is(-1));
+					assertThat(subset.get(x,y), is(-1));
 				} else {
-					assertThat(subset.at(x,y), is(aggs.at(x,y))); 
+					assertThat(subset.get(x,y), is(aggs.get(x,y))); 
 				}
 			}			
 		}
@@ -57,7 +57,7 @@ public class TileUtilsTest {
 		Aggregates<Integer> output = TileUtils.loadTiles(new ar.ext.avro.Converters.ToCount(), Integer.class, files.toArray(new File[0]));
 		for (int x=output.lowX(); x<output.highX(); x++) {
 			for (int y=output.lowY(); y<output.lowY(); y++) {
-				assertThat(String.format("Error at %d, %d.", x,y), output.at(x,y), is(aggs.at(x, y)));
+				assertThat(String.format("Error at %d, %d.", x,y), output.get(x,y), is(aggs.get(x, y)));
 			}
 		}
 		

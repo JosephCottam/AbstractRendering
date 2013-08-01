@@ -53,7 +53,7 @@ public class WrappedCollectionTest {
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
 		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
-		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g, Color.class);
+		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g);
 		
 		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst().op(), 
 								new WrappedTransfer.EchoColor().op(), 

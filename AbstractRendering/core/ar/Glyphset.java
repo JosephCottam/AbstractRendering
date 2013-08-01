@@ -58,15 +58,13 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 ***/
 	public void add(Glyph<T> g);
 	
-	/**Return type type of values held by the glyphs. 
-	 * This is used for configuration validation.
-	 * **/
-	public Class<T> valueType();
-	
 	/**Glyphsets that support random access.
 	 * This interface is largely to support parallel execution.
 	 */
-	public static interface RandomAccess<T> extends Glyphset<T> {public Glyph<T> get(long l);}
+	public static interface RandomAccess<T> extends Glyphset<T> {
+		/**Return the item at the specified index.**/
+		public Glyph<T> get(long l);
+	}
 		
 	
 	/**One greater than the highest value for "top" in "segment".

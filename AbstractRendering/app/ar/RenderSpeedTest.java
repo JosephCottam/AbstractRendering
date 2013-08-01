@@ -51,7 +51,7 @@ public class RenderSpeedTest {
 			glyphs = new MemMapList<Color>(
 						new File(source), 
 						new ToRect(.005, .005, false, 0, 1), 
-						new Constant<Indexed,Color>(Color.red), Color.class);
+						new Constant<Indexed,Color>(Color.red));
 		} else if (rend.startsWith("PIXEL")) {
 			render = new ParallelSpatial(task);
 			glyphs = GlyphsetUtils.load(null, source, .005);
@@ -74,7 +74,7 @@ public class RenderSpeedTest {
 				long start = System.currentTimeMillis();
 				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
 				long end = System.currentTimeMillis();
-				aggs.at(0, 0);
+				aggs.get(0, 0);
 				System.out.printf("%s, %d, %d, %s, %d, %d\n", source, end-start, i, rend, cores, task);
 				System.out.flush();
 				total += (end-start);

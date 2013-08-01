@@ -55,8 +55,7 @@ public class ARServer extends NanoHTTPD {
 						new File("../data/MemVisScaledB.hbin"),
 						new MemMapEncoder.TYPE[]{TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT},
 						new Indexed.ToRect(.001, .001, true, 0, 1), 
-						new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
-						Color.class));
+						new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED))));
 				//GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
 		
 		

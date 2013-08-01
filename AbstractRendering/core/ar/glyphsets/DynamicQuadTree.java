@@ -39,15 +39,31 @@ import ar.util.Util;
  * **/
 
 public abstract class DynamicQuadTree<V> implements Glyphset<V> {
+	/**Smallest quad that will be created.**/
 	public static double MIN_DIM = .001d;
+	
+	/**Percentage of items that need to be uniquely assigned to a sub-quad for a split to occur.
+	 * 
+	 * Without a load-factor, a quad will split once it hits capacity.
+	 * However, if all items touch all sub-quads, then the split may become an infinite loop.
+	 * This load-factor addresses how many items are uniquely into one sub-quad before 
+	 * the split is done.  
+	 */
 	public static double CROSS_LOAD_FACTOR = .25;
+	
+	/**How many items before splitting is considered.**/
 	public static int LOADING = 10;
+	
+	/**Feather-factor for sub-quads.  Each sub-quad
+	 * overlaps with its neighbors slightly.  This prevents 
+	 * items from falling between quads.
+	 */
 	public static double FEATHER = MIN_DIM/4.0d;
 	
-	public static int NW = 0;
-	public static int NE = 1;
-	public static int SW = 2;
-	public static int SE = 3;
+	private static int NW = 0;
+	private static int NE = 1;
+	private static int SW = 2;
+	private static int SE = 3;
 
 	/**Structure to represent the bounds of the sub-quardants of a node**/
 	private static final class Subs {

@@ -21,7 +21,7 @@ public class Advise {
 		public Boolean emptyValue() {return Boolean.FALSE;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 			A def = aggregates.defaultValue();
-			A val = aggregates.at(x, y);
+			A val = aggregates.get(x, y);
 			B empty = ref.emptyValue();
 			B out = ref.at(x, y, aggregates);
 			return !Util.isEqual(val, def) && Util.isEqual(empty, out); 
@@ -46,7 +46,7 @@ public class Advise {
 
 		public Boolean emptyValue() {return Boolean.FALSE;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
-			A val = aggregates.at(x, y);
+			A val = aggregates.get(x, y);
 			B out = ref.at(x, y, aggregates);
 			return !Util.isEqual(val, max) && Util.isEqual(top, out); 
 		}
@@ -54,7 +54,7 @@ public class Advise {
 		@Override
 		public void specialize(Aggregates<? extends A> aggregates) {
 			Point p = max(aggregates, comp);
-			max = aggregates.at(p.x, p.y);
+			max = aggregates.get(p.x, p.y);
 			top = ref.at(p.x,p.y, aggregates);
 		}
 	}
@@ -121,7 +121,7 @@ public class Advise {
 			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-					if (aggs.at(x, y).doubleValue() > 0) {
+					if (aggs.get(x, y).doubleValue() > 0) {
 						cached.set(x, y, preprocOne(x,y,aggs));
 					} else {
 						cached.set(x,y, Double.NaN);
@@ -141,7 +141,7 @@ public class Advise {
 					if (cx < aggregates.lowX() || cy < aggregates.lowY() 
 							|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
 					cellCount++;
-					double dv = aggregates.at(cx,cy).doubleValue();
+					double dv = aggregates.get(cx,cy).doubleValue();
 					if (dv != 0) {surroundingSum++;}
 				}
 			}
@@ -162,11 +162,11 @@ public class Advise {
 	 * @return The location of the first "smallest" value 
 	 */
 	public static <A> Point min(Aggregates<? extends A> aggs, Comparator<A> comp) {
-		A min = aggs.at(aggs.lowX(), aggs.lowY());
+		A min = aggs.get(aggs.lowX(), aggs.lowY());
 		Point p = new Point(aggs.lowX(), aggs.lowY());
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-				A val = aggs.at(x,y);
+				A val = aggs.get(x,y);
 				int v = comp.compare(val, min);
 				if (v < 0) {
 					min = val;
@@ -185,11 +185,11 @@ public class Advise {
 	 * @return The location of the first "largest" value 
 	 */
 	public static <A> Point max(Aggregates<? extends A> aggs, Comparator<A> comp) {
-		A max = aggs.at(aggs.lowX(), aggs.lowY());
+		A max = aggs.get(aggs.lowX(), aggs.lowY());
 		Point p = new Point(aggs.lowX(), aggs.lowY());
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-				A val = aggs.at(x,y);
+				A val = aggs.get(x,y);
 				int v = comp.compare(val, max);
 				if (v > 0) {
 					max = val;

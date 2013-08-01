@@ -74,7 +74,7 @@ public class AvroAggregatesTest {
 		
 		for (int x=ref.lowX(); x<ref.highX(); x++) {
 			for (int y=ref.lowY(); y<ref.highY(); y++)
-				assertEquals(String.format("Value at (%d, %d)",x,y), ref.at(x, y), res.at(x, y));
+				assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
 		}
 	}
 	
@@ -96,7 +96,7 @@ public class AvroAggregatesTest {
 		
 		for (int x=ref.lowX(); x<ref.highX(); x++) {
 			for (int y=ref.lowY(); y<ref.highY(); y++)
-				assertEquals(String.format("Value at (%d, %d)",x,y), ref.at(x, y), res.at(x, y));
+				assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
 		}
 	}
 	
@@ -139,8 +139,8 @@ public class AvroAggregatesTest {
 		
 		for (int x=ref.lowX(); x<ref.highX(); x++) {
 			for (int y=ref.lowY(); y<ref.highY(); y++) {
-				CategoricalCounts.RLE<Color> rref = ref.at(x,y);
-				CategoricalCounts.RLE<Color> rres = res.at(x,y);
+				CategoricalCounts.RLE<Color> rref = ref.get(x,y);
+				CategoricalCounts.RLE<Color> rres = res.get(x,y);
 				assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rres.size(), rref.size());
 				assertEquals("Unequal counts.", rref.counts,  rres.counts);
 				

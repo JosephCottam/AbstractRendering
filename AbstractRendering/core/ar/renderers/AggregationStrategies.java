@@ -66,7 +66,7 @@ public class AggregationStrategies {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
 					
-					T comb = red.rollup(Arrays.asList(target.at(x,y), source.at(x,y)));
+					T comb = red.rollup(Arrays.asList(target.get(x,y), source.get(x,y)));
 					target.set(x,y, comb); 
 				}
 			}
@@ -86,10 +86,10 @@ public class AggregationStrategies {
 
 		for (int x = start.lowX(); x < start.highX(); x=x+2) {
 			for (int y=start.lowY(); y < start.highY(); y=y+2) {
-				T one = start.at(x,y);
-				T two = start.at(x+1,y);
-				T three = start.at(x,y+1);
-				T four = start.at(x+1,y+1);
+				T one = start.get(x,y);
+				T two = start.get(x+1,y);
+				T three = start.get(x,y+1);
+				T four = start.get(x+1,y+1);
 
 				T value = red.rollup(Arrays.asList(one, two, three, four));
 				end.set(x/2, y/2, value);
@@ -111,7 +111,7 @@ public class AggregationStrategies {
 		pixel = inverseView.createTransformedShape(pixel).getBounds2D(); 
 		
 		Collection<? extends Glyph<? extends V>> glyphs = glyphset.intersects(pixel);
-		A acc = aggregates.at(x, y);
+		A acc = aggregates.get(x, y);
 		for (Glyph<? extends V> g: glyphs) {
 			V val = g.value();
 			acc = op.combine(x, y, acc, val);

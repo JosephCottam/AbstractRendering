@@ -12,7 +12,7 @@ public class AggregatesToJSON {
 	public static void export(Aggregates<?> aggs, File file) {
 		String content;
 		if (aggs == null) {content = "Empty aggregate set.";}
-		else if (!(aggs.at(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
+		else if (!(aggs.get(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
 		else {content = export((Aggregates<Integer>)aggs);}
 	
 		try {
@@ -30,7 +30,7 @@ public class AggregatesToJSON {
 		b.append("[");
 		for (int y=0; y<aggs.highY();y++) {
 			for (int x=0; x<aggs.highX(); x++) {
-				b.append(aggs.at(x, y));
+				b.append(aggs.get(x, y));
 				b.append(",");
 			}
 			b.append("\n");

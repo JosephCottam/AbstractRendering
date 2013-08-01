@@ -10,8 +10,8 @@ import ar.Glyph;
  */
 public class SimpleGlyph<V> implements Glyph<V>, Serializable {
 	private static final long serialVersionUID = -7121921034999419091L;
-	public final Shape shape;
-	public final V value;
+	private final Shape shape;
+	private final V value;
 	
 	/**Create a glyph with the given shape (value is null).**/
 	public SimpleGlyph(Shape shape) {this(shape, null);}

@@ -213,7 +213,7 @@ public final class Util {
 		g.dispose();
 		for (int x=Math.max(0, aggs.lowX()); x<Math.min(width, aggs.highX()); x++) {
 			for (int y=Math.max(0, aggs.lowY()); y<Math.min(height, aggs.highY()); y++) {
-				Color c = aggs.at(x, y);
+				Color c = aggs.get(x, y);
 				if (c != null) {i.setRGB(x, y, c.getRGB());}			
 			}			
 		}

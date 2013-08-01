@@ -34,7 +34,7 @@ public class BatchExport {
 		Glyphset<Color> glyphs = new MemMapList<Color>(
 					new File(source), 
 					new ToRect(size, size, false, 0, 1), 
-					new Constant<Indexed,Color>(Color.red), Color.class);
+					new Constant<Indexed,Color>(Color.red));
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
 
 		try {

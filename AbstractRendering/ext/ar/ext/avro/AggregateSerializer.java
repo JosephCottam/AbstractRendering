@@ -105,7 +105,7 @@ public class AggregateSerializer {
 
 		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-				A val = aggs.at(x,y);
+				A val = aggs.get(x,y);
 				//if (defVal == val || (defVal != null && defVal.equals(val))) {continue;}  TODO: Investigate reinstating default-value omission by making a union type with null...(maybe)
 				GenericRecord vr = converter.value(val);
 				records.add(vr);

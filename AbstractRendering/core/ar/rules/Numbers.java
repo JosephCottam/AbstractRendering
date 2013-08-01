@@ -46,7 +46,7 @@ public final class Numbers {
 		}
 
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			return Util.interpolate(low, high, lowv, highv, aggregates.at(x, y).doubleValue());
+			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
 
 		public Color emptyValue() {return Color.WHITE;}
@@ -68,7 +68,7 @@ public final class Numbers {
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			Number v = aggregates.at(x,y);
+			Number v = aggregates.get(x,y);
 			if (v.equals(aggregates.defaultValue())) {
 				return empty;
 			}

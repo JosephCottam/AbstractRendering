@@ -40,7 +40,7 @@ public class RHIPETools {
 			Indexed item = new Indexed.ArrayWrapper(raw);
 			items.add(item);
 		}
-		return new WrappedCollection.List<Indexed,String>(items, glypher, glypher, String.class);
+		return new WrappedCollection.List<Indexed,String>(items, glypher, glypher);
 	}
 	
 
@@ -79,7 +79,7 @@ public class RHIPETools {
 		ArrayList<String> entries = new ArrayList<String>();
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-				entries.add(String.format("%d,%d,%d",x,y,aggs.at(x, y)));
+				entries.add(String.format("%d,%d,%d",x,y,aggs.get(x, y)));
 			}
 		}
 		return entries.toArray(new String[entries.size()]);

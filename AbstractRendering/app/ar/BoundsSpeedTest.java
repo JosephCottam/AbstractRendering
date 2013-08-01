@@ -27,8 +27,7 @@ public class BoundsSpeedTest {
 				Glyphset<Color> glyphs = new MemMapList<Color>(
 							source, 
 							new Indexed.ToRect(.1,.1, false, 0, 1), 
-							new Valuer.Constant<Indexed,Color>(Color.red),
-							Color.class);
+							new Valuer.Constant<Indexed,Color>(Color.red));
 				long start = System.currentTimeMillis();
 				glyphs.bounds();
 				long end = System.currentTimeMillis();

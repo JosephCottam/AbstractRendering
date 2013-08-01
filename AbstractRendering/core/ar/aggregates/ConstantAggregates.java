@@ -37,7 +37,7 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 		};
 	}
 
-	public A at(int x, int y) {return val;}
+	public A get(int x, int y) {return val;}
 	public void set(int x, int y, A val) {throw new UnsupportedOperationException();}
 	public A defaultValue() {return val;}
 	public int lowX() {return lowX;}
