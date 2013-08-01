@@ -80,21 +80,17 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	
 	/**How many items before exploring subdivisions.**/
 	protected final Rectangle2D concernBounds;
-	protected final Class<V> valueType;
 
 	/**Construct a dynamic quad tree for the given value type.*/
-	public static <V> DynamicQuadTree<V> make(Class<V> valueType) {return new DynamicQuadTree.RootHolder<V>(valueType);}
+	public static <V> DynamicQuadTree<V> make() {return new DynamicQuadTree.RootHolder<V>();}
 
-	protected DynamicQuadTree(Rectangle2D concernBounds, Class<V> valueType) {
+	protected DynamicQuadTree(Rectangle2D concernBounds) {
 		this.concernBounds = concernBounds;
-		this.valueType = valueType;
 	}
 
 	/**What space is this node responsible for?**/
 	public Rectangle2D concernBounds() {return concernBounds;}
 
-	public Class<V> valueType() {return valueType;}
-	
 	/**Tight bounding of the items contained under this node.
 	 * Will always be equal to or smaller than concernBounds.
 	 * Where concernBounds is a statement of what may be, 
@@ -136,14 +132,14 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 
 
 	protected static <V> DynamicQuadTree<V> addTo(DynamicQuadTree<V> target, final Glyph<V> item) {
-		if (target.doSplit()) {target = new InnerNode<V>((LeafNode<V>) target, target.valueType);}
+		if (target.doSplit()) {target = new InnerNode<V>((LeafNode<V>) target);}
  		target.add(item);
 		return target;
 	}
 
-	private static <G> Glyphset<G> subset(DynamicQuadTree<G>[] glyphs, int bottom, int top, Class<G> valueType) {
+	private static <G> Glyphset<G> subset(DynamicQuadTree<G>[] glyphs, int bottom, int top) {
 		DynamicQuadTree<G>[] subset = Arrays.copyOfRange(glyphs, bottom, top);
-		return new InnerNode<G>(subset, valueType);
+		return new InnerNode<G>(subset);
 	}
 	
 	@SuppressWarnings({ "unused", "rawtypes" })
@@ -171,9 +167,9 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	private static final class RootHolder<V> extends DynamicQuadTree<V> {
 		private DynamicQuadTree<V> child;
 		
-		public RootHolder(Class<V> valueType) {
-			super(null, valueType);
-			child = new LeafNode<V>(new Rectangle2D.Double(0,0,0,0), valueType);
+		public RootHolder() {
+			super(null);
+			child = new LeafNode<V>(new Rectangle2D.Double(0,0,0,0));
 		}
 
 		public void add(Glyph<V> glyph) {
@@ -232,30 +228,30 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 				//The following checks prevent empty nodes from proliferating as you split up.  
 				//Leaf nodes in the old tree are rebounded for the new tree.  
 				//Non-leaf nodes are replaced with a quad of nodes
-				InnerNode<V> newChild = new InnerNode<V>(newBounds, current.valueType);
+				InnerNode<V> newChild = new InnerNode<V>(newBounds);
 				if (current.quads[NE] instanceof InnerNode) {
-					newChild.quads[NE] =new InnerNode<V>(newChild.quads[NE].concernBounds(), current.valueType);
+					newChild.quads[NE] =new InnerNode<V>(newChild.quads[NE].concernBounds());
 					((InnerNode<V>) newChild.quads[NE]).quads[SW] = current.quads[NE];
 				} else if (!current.quads[NE].isEmpty()) {
 					newChild.quads[NE] = new LeafNode<V>(newChild.quads[NE].concernBounds(), (LeafNode<V>) current.quads[NE]);
 				}
 	
 				if (current.quads[NW] instanceof InnerNode) {
-					newChild.quads[NW] = new InnerNode<V>(newChild.quads[NW].concernBounds(), current.valueType);
+					newChild.quads[NW] = new InnerNode<V>(newChild.quads[NW].concernBounds());
 					((InnerNode<V>) newChild.quads[NW]).quads[SE] = current.quads[NW];
 				} else if (!current.quads[NW].isEmpty()) {
 					newChild.quads[NW] = new LeafNode<V>(newChild.quads[NW].concernBounds(), (LeafNode<V>) current.quads[NW]);
 				}
 	
 				if (current.quads[SW] instanceof InnerNode) {
-					newChild.quads[SW] = new InnerNode<V>(newChild.quads[SW].concernBounds(), current.valueType);
+					newChild.quads[SW] = new InnerNode<V>(newChild.quads[SW].concernBounds());
 					((InnerNode<V>) newChild.quads[SW]).quads[NE] = current.quads[SW];
 				} else if (!current.quads[SW].isEmpty()) {
 					newChild.quads[SW] = new LeafNode<V>(newChild.quads[SW].concernBounds(), (LeafNode<V>) current.quads[SW]);
 				}
 	
 				if (current.quads[SE] instanceof InnerNode) {
-					newChild.quads[SE] = new InnerNode<V>(newChild.quads[SE].concernBounds(), current.valueType);
+					newChild.quads[SE] = new InnerNode<V>(newChild.quads[SE].concernBounds());
 					((InnerNode<V>) newChild.quads[SE]).quads[NW] = current.quads[SE];
 				} else if (!current.quads[SE].isEmpty()) {
 					newChild.quads[SE] = new LeafNode<V>(newChild.quads[SE].concernBounds(), (LeafNode<V>) current.quads[SE]);
@@ -282,7 +278,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 				} else {throw new RuntimeException("Growing up encountered unexpected out-code:" + outCode);}
 
 				Rectangle2D newBounds =new Rectangle2D.Double(x,y,currentBounds.getWidth()*2.0d,currentBounds.getHeight()*2.0d);
-				InnerNode<V> newChild = new InnerNode<V>(newBounds, current.valueType);
+				InnerNode<V> newChild = new InnerNode<V>(newBounds);
 				newChild.quads[replace] = current;
 				return newChild;
 			}
@@ -306,8 +302,8 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		 * The quads of the leaf can be copied directly to the children of this node.
 		 * Only the spanning items of the leaf need to go through the regular add procedure.
 		 */
-		private InnerNode(LeafNode<V> source, Class<V> valueType) {
-			this(source.concernBounds, valueType);
+		private InnerNode(LeafNode<V> source) {
+			this(source.concernBounds);
 			for (int i=0; i<quads.length;i++) {
 				for (Glyph<V> g: source.quads[i].items) {quads[i].add(g);}
 			}
@@ -315,16 +311,16 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		}
 		
 		@SuppressWarnings("unchecked")
-		private InnerNode(Rectangle2D concernBounds, Class<V> valueType) {
-			super(concernBounds, valueType);
+		private InnerNode(Rectangle2D concernBounds) {
+			super(concernBounds);
 			quads = new DynamicQuadTree[4];
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new DynamicQuadTree.LeafNode<V>(subs.quads[i], valueType);
+				quads[i] = new DynamicQuadTree.LeafNode<V>(subs.quads[i]);
 			}
 		}
-		private InnerNode(DynamicQuadTree<V>[] parts, Class<V> valueType) {
-			super(null, valueType);
+		private InnerNode(DynamicQuadTree<V>[] parts) {
+			super(null);
 			this.quads = parts;
 		}
 
@@ -375,7 +371,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		}
 		public long segments() {return quads.length;}
 		public Glyphset<V> segment(long bottom, long top) {
-			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
+			return DynamicQuadTree.subset(quads, (int) bottom, (int) top);
 		}
 		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 	}
@@ -386,23 +382,23 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		private final List<Glyph<V>> spanningItems;
 		private int size=0;
 
-		private LeafNode(Rectangle2D concernBounds, Class<V> valueType) {
-			this(concernBounds, new ArrayList<Glyph<V>>(), valueType);
+		private LeafNode(Rectangle2D concernBounds) {
+			this(concernBounds, new ArrayList<Glyph<V>>());
 			
 		}
 
 		//Re-bounding version.
 		//WARNING: This introduces data sharing and should only be done if old will immediately be destroyed
 		private LeafNode(Rectangle2D concernBounds, LeafNode<V> old) {
-			this(concernBounds, old.items(), old.valueType);
+			this(concernBounds, old.items());
 		}
 
-		private LeafNode(Rectangle2D concernBounds, Collection<Glyph<V>> glyphs, Class<V> valueType) {
-			super(concernBounds, valueType);
+		private LeafNode(Rectangle2D concernBounds, Collection<Glyph<V>> glyphs) {
+			super(concernBounds);
 			spanningItems = new ArrayList<Glyph<V>>(LOADING);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
-				quads[i] = new DynamicQuadTree.LeafQuad<V>(subs.quads[i], valueType);
+				quads[i] = new DynamicQuadTree.LeafQuad<V>(subs.quads[i]);
 			}
 			for (Glyph<V> g: glyphs) {add(g);}
 		}
@@ -472,7 +468,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		
 		public long segments() {return quads.length;}
 		public Glyphset<V> segment(long bottom, long top) {
-			return DynamicQuadTree.subset(quads, (int) bottom, (int) top, valueType);
+			return DynamicQuadTree.subset(quads, (int) bottom, (int) top);
 		}
 		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 
@@ -485,8 +481,8 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	private static final class LeafQuad<V> extends DynamicQuadTree<V> implements Glyphset.RandomAccess<V> {
 		private final List<Glyph<V>> items;
 		
-		protected LeafQuad(Rectangle2D concernBounds, Class<V> valueType) {
-			super (concernBounds, valueType);
+		protected LeafQuad(Rectangle2D concernBounds) {
+			super (concernBounds);
 			items = new ArrayList<Glyph<V>>(LOADING);
 		}
 

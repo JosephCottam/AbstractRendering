@@ -8,15 +8,13 @@ import ar.Aggregator;
 import ar.Transfer;
 import ar.util.Util;
 
+/**Aggregators and Transfers that work with scalar numbers.**/
 public final class Numbers {
 	private Numbers() {/*Prevent instantiation*/}
 	
 	/**How many items present?
 	 * 
 	 * Input type does not matter, always produces integer outputs.
-	 *
-	 * @param V Expected input type
-	 * 
 	 ***/
 	public static final class Count<V> implements Aggregator<V, Integer> {
 		private static final long serialVersionUID = 5984959309743633510L;
@@ -32,7 +30,11 @@ public final class Numbers {
 		public int hashCode() {return Count.class.hashCode();}
 	}
 	
-
+	/**Multiply the input value to determine the alpha value.  Equivalent
+	 * of having each number apply a certain amount of alpha.
+	 * 
+	 * @author jcottam
+	 */
 	public static final class FixedAlpha implements Transfer<Number,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high;
@@ -53,6 +55,7 @@ public final class Numbers {
 		public void specialize(Aggregates<? extends Number> aggregates) {/**No work to perform.**/}
 	}
 	
+	/**HD interpolation between two colors.**/
 	public static final class Interpolate implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 2878901447280244237L;
 		private final Color low, high, empty;

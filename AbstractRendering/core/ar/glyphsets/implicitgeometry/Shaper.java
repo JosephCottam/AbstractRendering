@@ -7,5 +7,6 @@ import java.io.Serializable;
  * <I> Input value type
  * **/
 public interface Shaper<I> extends Serializable {
+	/**Create a shape from the passed item.**/
 	public Shape shape (I from);
 }

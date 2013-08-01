@@ -13,14 +13,12 @@ import ar.Glyphset;
 public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 	private final List<Glyph<G>> glyphs;
 	private final Glyph<G> glyph;
-	private final Class<G> valueType;
 	private final Rectangle2D bounds;
 	
-	public GlyphSingleton(Glyph<G> g, Class<G> valueType) {
+	public GlyphSingleton(Glyph<G> g) {
 		glyphs = Collections.singletonList(g);
 		glyph = g;
 		bounds = g.shape().getBounds2D();
-		this.valueType = valueType;
 	}
 	
 	public Iterator<Glyph<G>> iterator() {return glyphs.iterator();}
@@ -29,7 +27,6 @@ public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 	public void add(Glyph<G> g) {throw new UnsupportedOperationException();}
 	public long size() {return glyphs.size();}
 	public Rectangle2D bounds() {return bounds;}
-	public Class<G> valueType() {return valueType;}
 
 	public Collection<Glyph<G>> intersects(Rectangle2D r) {
 		if (glyph.shape().intersects(r)) {return glyphs;}

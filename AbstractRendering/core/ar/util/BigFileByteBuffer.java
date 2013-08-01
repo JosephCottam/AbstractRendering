@@ -29,6 +29,8 @@ import java.nio.channels.FileChannel;
  * 
  * 
  * THIS CLASS IS NOT THREAD SAFE. It uses a stateful cursor and no synchronization...
+ * 
+ * THIS CLASS ASSUMES THE FILE SIZE DOES NOT CHANGE. 
  *   
  * **/
 public class BigFileByteBuffer {
@@ -63,6 +65,7 @@ public class BigFileByteBuffer {
 		catch (IOException e) {}
 	}
 	
+	/**Number of bytes in the file.**/
 	public long fileSize() {return fileSize;}
 	
 	public byte get() {return ensure(1).get();}

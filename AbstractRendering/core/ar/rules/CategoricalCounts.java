@@ -8,13 +8,31 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+/**Tools for working with associations between categories and counts.
+ * @param <T> The type of the categories
+ */
 public interface CategoricalCounts<T> {
 	
+	/**Add a new value at the given key.**/
 	public CategoricalCounts<T> extend(T key, int qty);
+	
+	/**What are the counts in the i-th category?**/
 	public int count(int i);
+	
+	/**What is the the i-th category?**/
 	public T key(int i);
+	
+	/**What is the count for the given category?**/
 	public int count(T key);
+	
+	/**What is the total of all counts?**/
 	public int fullSize();
+	
+	/**How many category entries are there?
+	 * 
+	 * In classes that tolerate multiple associations with the same key,
+	 * each association should be counted. 
+	 */
 	public int size();
 
 
@@ -67,13 +85,30 @@ public interface CategoricalCounts<T> {
 	 * items from other categories.
 	 */
 	public static final class RLE<T> implements CategoricalCounts<T> {
-		public final List<T> keys;
-		public final List<Integer> counts;
-		public final int fullSize;
+		private final List<T> keys;
+		private final List<Integer> counts;
+		private final int fullSize;
 		
+		/**Empty run-length encoding.**/
 		public RLE() {this(new ArrayList<T>(), new ArrayList<Integer>(), 0);}
 		
-		public RLE(List<T> keys, List<Integer> counts, int fullSize) {
+		/**Create a new RLE with the given keys and counts.
+		 * The two lists must be of the same length.
+		 * @param keys
+		 * @param counts
+		 */
+		public RLE(List<T> keys, List<Integer> counts) {
+			this(keys, counts, sum(counts));
+		}
+		
+		private static int sum(Iterable<Integer> vals) {
+			int acc=0;
+			for (Integer v: vals) {acc+=v;}
+			return acc;
+		}
+		
+		private RLE(List<T> keys, List<Integer> counts, int fullSize) {
+			assert keys.size() == counts.size() : "keys vs. counts size mismatch";
 			this.keys = keys;
 			this.counts = counts;
 			this.fullSize=fullSize;

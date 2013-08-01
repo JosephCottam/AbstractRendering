@@ -128,9 +128,8 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	public static <I,V> Glyphset<V> toList(
 			Collection<I> basis, 
 			Shaper<I> shaper, 
-			Valuer<I,V> valuer, 
-			Class<V> valueType) {
-		GlyphList<V> glyphs = new GlyphList<V>(valueType);
+			Valuer<I,V> valuer) {
+		GlyphList<V> glyphs = new GlyphList<V>();
 		for (I val: basis) {
 			Glyph<V> g = new SimpleGlyph<V>(shaper.shape(val), valuer.value(val));
 			glyphs.add(g);
@@ -146,9 +145,8 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	public static <I,V> Glyphset<V> toQuadTree(
 			Collection<I> basis, 
 			Shaper<I> shaper, 
-			Valuer<I,V> valuer, 
-			Class<V> valueType) {
-		DynamicQuadTree<V> glyphs = DynamicQuadTree.make(valueType);
+			Valuer<I,V> valuer) {
+		DynamicQuadTree<V> glyphs = DynamicQuadTree.make();
 		for (I val: basis) {
 			Glyph<V> g = new SimpleGlyph<V>(shaper.shape(val), valuer.value(val));
 			glyphs.add(g);

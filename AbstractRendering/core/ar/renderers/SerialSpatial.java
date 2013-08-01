@@ -14,10 +14,7 @@ import ar.aggregates.FlatAggregates;
  * **/
 public final class SerialSpatial implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
-	private final RenderUtils.Progress recorder;
-	
-	public SerialSpatial() {recorder = RenderUtils.recorder();}
-
+	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 	
 	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphset, final Aggregator<V,A> op,   
 			final AffineTransform inverseView, final int width, final int height) {

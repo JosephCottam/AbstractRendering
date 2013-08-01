@@ -37,8 +37,11 @@ public class MemMapEncoder {
 	/**Types the encoder understands.
 	 * The "X" type is used to indicate that the field is being skipped.
 	 */
+	@SuppressWarnings("javadoc")
 	public enum TYPE {
 		INT(4), DOUBLE(8), LONG(8), SHORT(2), BYTE(1), CHAR(2), FLOAT(4), X(0);
+		
+		/**How many bytes is this type encoded with?**/
 		public final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
 	}
@@ -104,6 +107,7 @@ public class MemMapEncoder {
 	}
 
 
+	/**Write from source text to indicated binary files.**/ 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
 		FileOutputStream file = new FileOutputStream(target);
@@ -157,6 +161,7 @@ public class MemMapEncoder {
 		return defVal;
 	}
 	
+	/**Utility for converting CSVs to header-carrying binary encodings.**/
 	public static void main(String[] args) throws Exception {
 		System.out.println("Usage: MemMapEncoder -in <file> -out <file> -skip <int> -types <string>");
 		System.out.println("Type string is a string made up of s/i/l/f/d/c for short/int/long/float/double/char.");

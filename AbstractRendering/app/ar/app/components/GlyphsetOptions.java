@@ -45,9 +45,9 @@ public class GlyphsetOptions extends CompoundPanel  {
 	
 	public Glyphset<?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
-			return DynamicQuadTree.make(Color.class);
+			return DynamicQuadTree.make();
 		} else if (glyphsType.getSelectedItem().equals("List")) {
-			return new GlyphList<Color>(Color.class);			
+			return new GlyphList<Color>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (double) size.getSelectedItem();
 			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);

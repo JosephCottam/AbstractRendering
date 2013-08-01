@@ -19,7 +19,7 @@ public class WrappedCollectionTests {
 	@Test
 	public void toQuadTree() {
 		Collection<Indexed> data = data();
-		Glyphset<Object> g = WrappedCollection.toQuadTree(data, shaper(), valuer(), Object.class);
+		Glyphset<Object> g = WrappedCollection.toQuadTree(data, shaper(), valuer());
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());

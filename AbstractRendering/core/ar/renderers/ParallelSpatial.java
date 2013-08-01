@@ -17,17 +17,20 @@ import ar.aggregates.FlatAggregates;
  * **/
 public final class ParallelSpatial implements Renderer {
 	private static final long serialVersionUID = -2626889612664504698L;
+	
+	/**Default task size for parallel operations.**/ 
 	public static final int DEFAULT_TASK_SIZE = 100000;
+	
+	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
 	private final int taskSize;
-	private final RenderUtils.Progress recorder;
+	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
 	public ParallelSpatial() {this(DEFAULT_TASK_SIZE);}
 	public ParallelSpatial(int taskSize) {
 		this.taskSize = taskSize;
-		recorder = RenderUtils.recorder();
 	}
 	protected void finalize() {pool.shutdownNow();}
 	

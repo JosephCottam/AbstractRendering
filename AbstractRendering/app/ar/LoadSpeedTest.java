@@ -19,7 +19,7 @@ public class LoadSpeedTest {
 			try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				GlyphsetUtils.autoLoad(source, .005, DynamicQuadTree.make(Object.class));
+				GlyphsetUtils.autoLoad(source, .005, DynamicQuadTree.make());
 				long end = System.currentTimeMillis();
 				System.out.printf("%s, %d, %d\n", source.getName(), end-start, i);
 				total += (end-start);

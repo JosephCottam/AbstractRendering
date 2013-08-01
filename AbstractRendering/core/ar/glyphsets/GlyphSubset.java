@@ -81,7 +81,8 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 		public Glyph<G> get(long l) {return glyphs.get(low+l);}
 	}
 
-	public static <G> GlyphSubset<G> make(Glyphset.RandomAccess<G> source, long  low, long  high, boolean cache) {
+	/**Subset a random-access glyphset; caching optional.*/
+	public static <G> GlyphSubset<G> make(Glyphset.RandomAccess<G> source, long low, long  high, boolean cache) {
 		if (cache) {
 			return new GlyphSubset.Cached<G>(source, low, high);
 		} else {

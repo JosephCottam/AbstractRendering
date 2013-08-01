@@ -40,7 +40,7 @@ public class AvroAggregatesTest {
 	
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset<Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make(Color.class));
+		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make());
 		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
@@ -128,7 +128,7 @@ public class AvroAggregatesTest {
 		OutputStream out = new FileOutputStream(filename);
 		Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
 		AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
-		Aggregates<CategoricalCounts.RLE<Color>> res 
+		Aggregates<CategoricalCounts.RLE<String>> res 
 			= AggregateSerializer.deserialize(filename, new Converters.ToRLE());
 
 		assertEquals(ref.lowX(), res.lowX());
@@ -140,12 +140,14 @@ public class AvroAggregatesTest {
 		for (int x=ref.lowX(); x<ref.highX(); x++) {
 			for (int y=ref.lowY(); y<ref.highY(); y++) {
 				CategoricalCounts.RLE<Color> rref = ref.get(x,y);
-				CategoricalCounts.RLE<Color> rres = res.get(x,y);
-				assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rres.size(), rref.size());
-				assertEquals("Unequal counts.", rref.counts,  rres.counts);
+				CategoricalCounts.RLE<String> rres = res.get(x,y);
+				assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), rres.size());
 				
-				//HACK: Must test string-equality because generic serialization is based on string category key
-				assertEquals(Arrays.deepToString(rres.keys.toArray()), Arrays.deepToString(rref.keys.toArray()));
+				for (int i=0; i<rres.size();i++) {
+					//HACK: Must test string-equality because generic serialization is based on string category key
+					assertEquals(String.format("Unequal key at %d",i), rref.key(i).toString(), rres.key(i));					
+					assertEquals(String.format("Unequal count at %d",i), rref.count(i), rres.count(i));					
+				}				
 			}
 		}
 	}

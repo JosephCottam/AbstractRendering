@@ -7,13 +7,25 @@ import ar.Aggregates;
 
 /**An aggregate set that all cells have the same value.
  * Still tracks the low/high bounds, but the in-bounds and out-of-bounds values are the same.
+ * 
+ * This class is often used to present a specific region as having a particular value
+ * (thus the region is tracked, even though it does not represent a value).
+ * 
+ * TODO: Evaluate if this should be a bi-modal region where in-range is represented
+ * in one value and out-of-range as another.  May simplify some operations elsewhere... 
  */
 public final class ConstantAggregates<A> implements Aggregates<A> {
 	private static final long serialVersionUID = -6013315833630311053L;
 	
 	private final A val;
 	private final int lowX, lowY, highX, highY;
+	
+	/**Create a constant aggregates with zero-extent, but a default value.**/
 	public ConstantAggregates(A value) {this(0,0,0,0, value);}
+	
+	/**Create an aggregate set with the given value at all locations
+	 * (i.e., default value IS the held value).
+	 */
 	public ConstantAggregates(int lowX, int lowY, int highX, int highY, A value) {
 		if (lowX > highX) {
 			throw new IllegalArgumentException(String.format("Inverted bounds: lowX (%d) must be lower than highX (%d)", lowX, highX));}

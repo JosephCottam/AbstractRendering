@@ -46,7 +46,7 @@ public class GlyphsetTools {
 	 */
 	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher, Class<V> valueType) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(sourceName); 
-		GlyphList<V> l = new GlyphList<V>(valueType);
+		GlyphList<V> l = new GlyphList<V>();
 		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;
 	}

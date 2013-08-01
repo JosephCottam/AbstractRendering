@@ -6,7 +6,7 @@ import java.lang.reflect.Array;
 
 import ar.util.MemMapEncoder;
 
-/**Interface designating something has an int-valued "get" function.
+/**Interface designating something has an integer-valued "get" function.
  * This interface is the basis for array-based and file-record conversions
  * where the only reliable field accessor is the index.
  * 
@@ -14,8 +14,10 @@ import ar.util.MemMapEncoder;
  * 
  * **/
 public interface Indexed extends Serializable {
+	/**What value is at index i? */
 	public Object get(int i);
 	
+	/**Wrap an array as an Indexed item.**/
 	public static class ArrayWrapper implements Indexed {
 		private static final long serialVersionUID = -7081805779069559306L;
 		private final Object array;
@@ -47,7 +49,8 @@ public interface Indexed extends Serializable {
 			}
 		}
 		
-		public Converter makeFor(Object[] values) {return new Converter(values, types);}
+		/**Get the type array associated with this converter.**/
+		public MemMapEncoder.TYPE[] types() {return types;}
 	}
 	
 	
@@ -74,6 +77,10 @@ public interface Indexed extends Serializable {
 	
 
 	
+	/**Convert an item to a fixed-sized rectangle at a variable
+	 * position.  The passed value determines the position, but the size
+	 * is set by the ToRect constructor. 
+	 */
 	public static class ToRect implements Shaper<Indexed>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final double width,height;

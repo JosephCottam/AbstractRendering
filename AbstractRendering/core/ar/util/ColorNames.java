@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.util.Map;
 import java.util.HashMap;
 
+/**Tools for getting color entries from color names.**/
 public abstract class ColorNames {
 	private static Map<String, Color> NAMES = new HashMap<String, Color>();
 	static {
@@ -19,6 +20,11 @@ public abstract class ColorNames {
 		}
 	}
 	
+	/**
+	 * @param name Name of a color
+	 * @param onError Color to return if the name isn't really a color
+	 * @return Color named, or onError 
+	 */
 	public static Color byName(String name, Color onError) {
 		name = name.toUpperCase();
 		if (NAMES.containsKey(name)) {return NAMES.get(name);}

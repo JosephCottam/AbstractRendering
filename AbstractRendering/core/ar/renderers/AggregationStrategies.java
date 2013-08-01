@@ -98,6 +98,8 @@ public class AggregationStrategies {
 		return end;
 	}
 	
+	
+	/**Perform aggregation for a single pixel.**/
 	public static <A,V> A pixel(
 			Aggregates<A> aggregates, 
 			Aggregator<V,A> op,

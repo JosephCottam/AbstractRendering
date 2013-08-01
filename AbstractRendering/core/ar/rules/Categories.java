@@ -11,6 +11,7 @@ import ar.util.Util;
 import static ar.rules.CategoricalCounts.CoC;
 import static ar.rules.CategoricalCounts.RLE;
 
+/**Tools for working with categorical entries.**/
 public class Categories {
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
@@ -26,8 +27,6 @@ public class Categories {
 		}
 		
 		public Color identity() {return Util.CLEAR;}
-		public Class<Color> input() {return Color.class;}
-		public Class<Color> output() {return Color.class;}
 		public boolean equals(Object other) {return other instanceof First;}
 		public int hashCode() {return First.class.hashCode();}
 	}
@@ -42,8 +41,6 @@ public class Categories {
 		}
 		
 		public Color identity() {return Util.CLEAR;}
-		public Class<Color> input() {return Color.class;}
-		public Class<Color> output() {return Color.class;}
 		public boolean equals(Object other) {return other instanceof Last;}
 		public int hashCode() {return Last.class.hashCode();}
 	}

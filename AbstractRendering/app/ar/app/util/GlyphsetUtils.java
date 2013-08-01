@@ -110,10 +110,10 @@ public class GlyphsetUtils {
 		System.out.printf("Loading %s...", label);
 		try {
 			final long start = System.currentTimeMillis();
-			Glyphset<Color> g = autoLoad(new File(file), size, DynamicQuadTree.make(Color.class));
+			Glyphset<?> g = autoLoad(new File(file), size, DynamicQuadTree.make());
 			final long end = System.currentTimeMillis();
 			if (label != null) {System.out.printf("\tLoad time (%s ms)\n ", (end-start));}
-			return g;
+			return (Glyphset<Color>) g;
 		} catch (Exception e) {
 			System.out.println("Failed to load data.");
 			return null;

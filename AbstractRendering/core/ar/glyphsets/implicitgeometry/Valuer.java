@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**Converts values from one type to another.
  * The common scenario is to select a single field from a
- *  complex, heterogenous object (such as selecting the "name" field from a user-class).
+ *  complex, heterogeneous object (such as selecting the "name" field from a user-class).
  * However, this class can also be used to do general-purpose
  *  conversions during data load.
  *  
@@ -12,6 +12,7 @@ import java.io.Serializable;
  * <V> Output value type
  * **/
 public interface Valuer<I,V> extends Serializable {
+	/**Create a value from the passed item.**/
 	public V value(I from);
 	
 	/**Pass-through valuer.  Value-in=value-out.*/

@@ -10,7 +10,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 
-
+/**Tools for loading glyphs from various locations into glyphsets.**/
 public class GlyphsetLoader {
 	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.
 	 * 
@@ -28,7 +28,8 @@ public class GlyphsetLoader {
 		while (reader.hasNext()) {
 			String[] parts = reader.next();
 			if (parts == null) {continue;}
-			Converter item = c.makeFor(parts);
+			
+			Converter item = new Converter(parts, c.types());
 			V value = valuer.value(item);
 			Shape shape = shaper.shape(item);
 

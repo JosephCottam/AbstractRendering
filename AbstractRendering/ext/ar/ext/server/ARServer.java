@@ -45,7 +45,7 @@ public class ARServer extends NanoHTTPD {
 	static {
 		DATASETS.put("CIRCLEPOINTS",
 				GlyphsetLoader.load(
-						DynamicQuadTree.make(Integer.class),
+						DynamicQuadTree.make(),
 						new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 						new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 						new Indexed.ToRect(1, 2, 3),

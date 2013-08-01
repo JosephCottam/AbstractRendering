@@ -39,14 +39,17 @@ public class Converters {
 	 * TODO: Expand to be general CategoricalCounts
 	 *   
 	 */	
-	public static class ToRLE<T> implements Valuer<GenericRecord, CategoricalCounts.RLE<T>> {
+	public static class ToRLE implements Valuer<GenericRecord, CategoricalCounts.RLE<String>> {
 		private static final long serialVersionUID = 2979290290172689482L;
 
-		public CategoricalCounts.RLE<T> value(GenericRecord from) {
-			CategoricalCounts.RLE<T> rle = new CategoricalCounts.RLE<T>();
-			rle.keys.addAll((List<T>) from.get("keys"));
-			rle.counts.addAll((List<Integer>) from.get("counts"));
-			return rle;
+		public CategoricalCounts.RLE<String> value(GenericRecord from) {
+			List<?> ks = (List<?>) from.get("keys");
+			List<Integer> vs = (List<Integer>) from.get("counts");
+			List<String> keys = new ArrayList<String>();
+			for (int i=0; i < ks.size(); i++) {
+				keys.add(ks.get(i).toString());
+			}
+			return new CategoricalCounts.RLE<String>(keys, vs);
 		}
 	}
 	
@@ -65,9 +68,13 @@ public class Converters {
 		public GenericRecord value(CategoricalCounts.RLE<T> from) {
 			GenericRecord r = new GenericData.Record(schema);
 			List<String> keys = new ArrayList<String>();
-			for (Object k: from.keys) {keys.add(k.toString());}
+			List<Integer> counts = new ArrayList<Integer>();
+			for (int i=0; i<from.size();i++) {
+				keys.add(from.key(i).toString());
+				counts.add(from.count(i));
+			}
 			r.put("keys", keys);
-			r.put("counts", from.counts);
+			r.put("counts", counts);
 			return r;
 		}
 	}

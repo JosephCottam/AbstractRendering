@@ -11,13 +11,14 @@ import ar.Aggregator;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
 
+/**Tools that don't apply to a particular data type.**/
 public class General {
+	
+	/**Aggregator that always returns the same value.**/
 	public static final class Const<T> implements Aggregator<Object,T> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final T val;
 		public Const(T val) {this.val = val;}
-		public Class<?> input() {return Object.class;}
-		public Class<?> output() {return Object.class;}
 		public T combine(long x, long y, T left, Object update) {return val;}
 		public T rollup(List<T> sources) {return val;}
 		public T identity() {return val;}

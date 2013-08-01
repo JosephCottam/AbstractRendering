@@ -49,7 +49,10 @@ import ar.util.IndexedEncoding;
  *
  */
 public class MemMapList<V> implements Glyphset.RandomAccess<V> {
-	public static int BUFFER_BYTES = 30000;//Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	/**How large should backing read buffer be?**/
+	public static int BUFFER_BYTES = 30000; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	
+	/**Thread-pool size for parallel operations.**/
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
@@ -73,10 +76,18 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
+	/**Create a new mem-mapped list, detect the types from the source.**/
 	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
 		this(source, null, shaper, painter);
 	}
 
+	/**Create a new mem-mapped list.
+	 * 
+	 * @param source File to memory map
+	 * @param types Types to use for conversion. Null to auto-detect
+	 * @param shaper
+	 * @param valuer
+	 */
 	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
 		this.source = source;
 		this.valuer = valuer;
@@ -133,8 +144,13 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
 
+	/**Valuer being used to establish a value for each entry.**/
 	public Valuer<Indexed,V> valuer() {return valuer;}
+	
+	/**Shaper being used to provide geometry for each entry.**/ 
 	public Shaper<Indexed> shaper() {return shaper;}
+	
+	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}

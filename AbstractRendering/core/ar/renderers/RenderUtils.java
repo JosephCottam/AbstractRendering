@@ -2,6 +2,12 @@ package ar.renderers;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+/**Utilities specific to the renderer implementations.  In general,
+ * the contents of this class should be considered "unstable" and
+ * used with care.  (The class is public to enable monitoring.)
+ * @author jcottam
+ *
+ */
 public class RenderUtils {
 	/**Common location for controlling render progress reporting.
 	 * Renderers are NOT required to respect this setting, but will
@@ -17,9 +23,16 @@ public class RenderUtils {
 	
 	/**Utility class for recording percent progress through a known task size.**/
 	public static interface Progress {
+		/**How many steps have been logged?*/
 		public long count();
+		
+		/**Indicate a certain number of expected steps have been taken.**/
 		public void update(long delta);
+		
+		/**Percentage of expected steps that have been seen.**/
 		public double percent();
+		
+		/**Set how many steps are expected; also clears the count.**/
 		public void reset(long expected);
 		
 		

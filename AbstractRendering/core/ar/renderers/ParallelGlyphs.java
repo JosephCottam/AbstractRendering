@@ -24,17 +24,21 @@ import ar.Transfer;
  */
 public class ParallelGlyphs implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
+	
+	/**Default task size for parallel operations.**/ 
 	public static int DEFAULT_TASK_SIZE = 100000;
+
+	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
 	private final int taskSize;
-	private final RenderUtils.Progress recorder;
+	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
 	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
+	
 	public ParallelGlyphs(int taskSize) {
 		this.taskSize = taskSize;
-		recorder = RenderUtils.recorder();
 	}
 	
 	protected void finalize() {pool.shutdownNow();}
