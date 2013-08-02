@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 
 import org.junit.Test;
 
@@ -38,8 +39,7 @@ public class Utils {
 		assertThat(s2.max, is((double) aggs.highX()-1));
 		assertThat(s1.min, is((double) 0));
 		assertThat(s2.min, is((double) 1));
-		
-		
 	}
+	
 }
 

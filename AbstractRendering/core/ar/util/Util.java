@@ -5,9 +5,12 @@ import java.awt.Graphics;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+
+import javax.imageio.ImageIO;
 
 import ar.Aggregates;
 import ar.Glyph;
@@ -219,5 +222,13 @@ public final class Util {
 		}
 		return i;
 	}
-
+	
+	/**Write a buffered image to a file.**/
+	public static void writeImage(BufferedImage img, File f) {
+		try {
+			ImageIO.write(img, "png", f);
+		}catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
