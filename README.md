@@ -102,6 +102,5 @@ the transfer function.  It is a proof-of-concept for one form of distributed
 rendering supported by the Abstract Rendering system.  The readme in that directory
 also describes how to use this demonstration application.
 
-The "python" directory contains an implementation of Abstract Rendering using numpy 
-and Blaze (optional).  README.md in that directory provides details on the python
-implementation.
+The "python" directory contains an implementation of Abstract Rendering using numpy .  
+README.md in that directory provides details on the python implementation.
