@@ -9,7 +9,12 @@
   <property name="coreJar" value="AR.jar" />
   <property name="docs" value="docs" />
   <property name="lib" value="./lib"/>
-  
+
+
+  <!--Will exclude spark extensions if the spark jar is not found-->
+  <available property="spark.absent" file="./lib/spark-core-assembly-0.7.2.jar"  value="false"/>
+  <property name="spark.absent" value="true"/>
+
   <target name="build" depends="clean,depends,core,app" />
 
   <target name="clean">
@@ -19,13 +24,13 @@
     <delete file="ARApp.jar"/>
   </target>
 
-  <target name="core" depends="depends">
-    <antcall target="compile">
-      <param name="src" value="${coreSrc}"/>
-      <param name="target" value="${coreBin}"/>
-      <param name="jars" value=""/>
-      <param name="ver" value="1.7"/>
-    </antcall>
+
+  <target name="core">
+    <mkdir dir="${coreBin}"/>
+    <javac destdir="${coreBin}" target="1.7" includeantruntime="false"
+      sourcepath="" srcdir="${coreSrc}">
+    </javac>
+    
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
@@ -37,6 +42,7 @@
     </antcall>
   </target>
 
+
   <target name="docs">
     <antcall target="_docs">
       <param name="src" value="${coreSrc}"/>
@@ -44,7 +50,8 @@
     </antcall>
   </target>
 
-  <target name="onesix" depends="clean,depends">
+
+  <target name="onesix" depends="clean">
     <!--Variant of the core libraries that does not include
          any java 1.7 items...hopefully.-->
     <mkdir dir="${coreBin}"/>
@@ -67,32 +74,51 @@
     </antcall>
   </target>
 
-  <target name="ext" depends="depends">
-    <!--Include all extensions with the core library.-->
-    <antcall target="compile">
-      <param name="src" value="${coreSrc}:${extSrc}"/>
-      <param name="target" value="${coreBin}"/>
-      <param name="jars" value="${lib}"/>
-      <param name="ver" value="1.7"/>
-    </antcall>
+
+  <target name="ext" >
+    <!--Include extensions with the core library.-->
+
+    <mkdir dir="${coreBin}"/>
+    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" 
+      includeantruntime="false">
+      <exclude name="**/spark/**" if="spark.absent"/>
+      <classpath>
+        <fileset dir="${lib}" includes="*.jar"/>
+      </classpath>
+    </javac>
+
+    <javadoc destdir="${docs}" verbose="false">
+      <doclet name="com.visural.doclets.markdown.standard.Standard" 
+        path="${lib}/MarkdownDoclet.jar"/>
+      <fileset dir="${coreSrc}"/>
+      <fileset dir="${appSrc}" />
+      <fileset dir="${extSrc}">
+        <exclude name="**/spark/**" if="spark.absent"/>
+        <exclude name="**/*.md" />
+        <exclude name="**/*.avsc" />
+      </fileset>
+      <classpath>
+        <fileset dir="${lib}" includes="*.jar"/>
+      </classpath>
+    </javadoc>
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
-    <antcall target="_docs">
-      <param name="src" value="${coreSrc}:${appSrc}:${extSrc}"/>
-      <param name="jars" value="${lib}"/>
-    </antcall>
+    
   </target>
 
+
   <target name="app" depends="core">
-    <antcall target="compile">
-      <param name="src" value="${appSrc}"/>
-      <param name="target" value="${appBin}"/>
-      <param name="jars" value="."/>
-      <param name="ver" value="1.7"/>
-    </antcall>
+    <mkdir dir="${appBin}"/>
+    <javac destdir="${appBin}" sourcepath="" srcdir="${appSrc}"
+      includeantruntime="false">
+      <classpath>
+        <fileset dir="." includes="*.jar"/>
+      </classpath>
+    </javac>
+  
     <antcall target="package">
       <param name="file" value="${appJar}"/>
       <param name="bin" value="${appBin}"/>
@@ -101,26 +127,20 @@
     </antcall>
   </target>
 
-  <target name="compile">
-    <mkdir dir="${target}"/>
-    <javac destdir="${target}" source="${ver}" target="${ver}" includeantruntime="false"
-      sourcepath="" srcdir="${src}">
-      <classpath>
-        <fileset dir="${jars}" includes="*.jar"/>
-      </classpath>
-    </javac>
-  </target>
-
-  <target name="_docs" depends="depends">
-    <javadoc sourcepath="${src}" destdir="${docs}">
-      <doclet name="com.visural.doclets.markdown.standard.Standard" path="${lib}/MarkdownDoclet.jar"/>
+  <target name="_docs" >
+    <javadoc destdir="${docs}">
+      <doclet name="com.visural.doclets.markdown.standard.Standard" 
+        path="${lib}/MarkdownDoclet.jar"/>
+      <sourcepath>
+        <pathelement path="${src}"/>
+      </sourcepath>
       <classpath>
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>
     </javadoc>
   </target>
 
-  <target name="package" depends="depends">
+  <target name="package" >
     <jar jarfile="${file}" includes="*.class" basedir=".">
       <fileset dir="${bin}"/>
       <manifest>
