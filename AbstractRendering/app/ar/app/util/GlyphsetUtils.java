@@ -6,7 +6,6 @@ import java.io.File;
 
 import ar.Glyph;
 import ar.Glyphset;
-import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -70,7 +69,24 @@ public class GlyphsetUtils {
 	}
 
 
-	public static Glyphset load(final Glyphset glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField, int valueField) {
+	/**Load values from the given file.  
+	 * Does not guarantee that the glyphset comes back "pure", heap pollution is possible.
+	 * However, all items in the final glyphset will be of the same type.
+	 * That type will be Color if colorindex >= 0 or if both colorIndex and valueIndex are less than 0.
+	 * Otherwise it will be String
+	 *  
+	 * @param glyphs
+	 * @param file
+	 * @param skip
+	 * @param size
+	 * @param flipy
+	 * @param xField
+	 * @param yField
+	 * @param colorField
+	 * @param valueField
+	 */
+	@SuppressWarnings("unchecked")
+	public static <V> Glyphset<V> load(final Glyphset<V> glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField, int valueField) {
 		DelimitedReader loader = new DelimitedReader(file, skip, DelimitedReader.CSV);
 		final int yflip = flipy?-1:1;
 		int count =0;
@@ -81,7 +97,7 @@ public class GlyphsetUtils {
 
 			double x = Double.parseDouble(parts[xField]);
 			double y = Double.parseDouble(parts[yField]) * yflip;
-			Rectangle2D rect = new Rectangle2D	.Double(x,y,size,size);
+			Rectangle2D rect = new Rectangle2D.Double(x,y,size,size);
 			Object value;
 			if (colorField >=0) {
 				try {
@@ -91,9 +107,11 @@ public class GlyphsetUtils {
 				value = parts[valueField];
 			} else {value = Color.RED;}
 
-			Glyph<?> g = new SimpleGlyph<>(rect, value);
+			Glyph<V> g = new SimpleGlyph<V>(rect, (V) value);
+			
 			try {glyphs.add(g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
+			
 			count++;
 			//if (count % 100000 == 0) {System.out.println(System.currentTimeMillis() + " -- Loaded: " + count);}
 		}
@@ -105,21 +123,6 @@ public class GlyphsetUtils {
 		return glyphs;
 	}
 
-
-	public static final Glyphset<Color> load(String label, String file, double size) {
-		System.out.printf("Loading %s...", label);
-		try {
-			final long start = System.currentTimeMillis();
-			Glyphset<?> g = autoLoad(new File(file), size, DynamicQuadTree.make());
-			final long end = System.currentTimeMillis();
-			if (label != null) {System.out.printf("\tLoad time (%s ms)\n ", (end-start));}
-			return (Glyphset<Color>) g;
-		} catch (Exception e) {
-			System.out.println("Failed to load data.");
-			return null;
-		}
-	}
-	
 	public static final Glyphset<Color> memMap(String label, String file, double width, double height, boolean flipY, Valuer<Indexed, Color> valuer, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);

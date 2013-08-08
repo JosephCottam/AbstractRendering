@@ -37,26 +37,30 @@ import ar.util.Util;
 import ar.Glyphset;
 
 
+
 public class ARServer extends NanoHTTPD {
 	private static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
 	private static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
 	private static Map<String, Glyphset<?>> DATASETS = new HashMap<String, Glyphset<?>>();
 	
 	static {
-		DATASETS.put("CIRCLEPOINTS",
-				GlyphsetLoader.load(
-						DynamicQuadTree.make(),
-						new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
-						new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
-						new Indexed.ToRect(1, 2, 3),
-						new Indexed.ToValue(4, new Valuer.ToInt<Object>())));
-		DATASETS.put("BOOST",
-				new MemMapList<Color>(
-						new File("../data/MemVisScaledB.hbin"),
-						new MemMapEncoder.TYPE[]{TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT},
-						new Indexed.ToRect(.001, .001, true, 0, 1), 
-						new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED))));
-				//GlyphsetLoader.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"));
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Glyphset circlepoints = GlyphsetLoader.load(
+				DynamicQuadTree.make(),
+				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
+				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
+				new Indexed.ToRect(1, 2, 3),
+				new Indexed.ToValue(4, new Valuer.ToInt<Object>()));
+		
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		Glyphset boost = new MemMapList<Color>(
+				new File("../data/MemVisScaledB.hbin"),
+				new MemMapEncoder.TYPE[]{TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT},
+				new Indexed.ToRect(.001, .001, true, 0, 1), 
+				new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
+		
+		DATASETS.put("CIRCLEPOINTS", circlepoints);
+		DATASETS.put("BOOST", boost);
 		
 		
 		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate(new Color(255,0,0,38), Color.red));
@@ -74,7 +78,7 @@ public class ARServer extends NanoHTTPD {
 		AGGREGATORS.put("Gradient", new Debug.Gradient(500, 500));
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new Categories.Last());
-		AGGREGATORS.put("Count", new Numbers.Count());
+		AGGREGATORS.put("Count", new Numbers.Count<Object>());
 		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
 		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<Color>());
 	}
@@ -116,6 +120,17 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	
+	/**Execute the passed aggregator and list of transfers.
+	 * This is inherently not statically type-safe, so it may produce type errors at runtime.  
+	 * @param glyphs
+	 * @param agg
+	 * @param trans
+	 * @param inverseView
+	 * @param width
+	 * @param height
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> trans, AffineTransform inverseView, int width, int height) {
 		Renderer r;
 		if (glyphs instanceof Glyphset.RandomAccess<?>) {
@@ -123,6 +138,7 @@ public class ARServer extends NanoHTTPD {
 		} else {
 			r = new ParallelSpatial();
 		}
+		
 		Aggregates<?> aggs = r.aggregate(glyphs, agg, inverseView, width, height);
 		for (Transfer t: trans) {
 			aggs = r.transfer(aggs, t);

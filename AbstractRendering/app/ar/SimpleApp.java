@@ -58,7 +58,7 @@ public class SimpleApp {
 
 		//The Aggregator is used to combine values from multiple glyphs into a value for a single
 		//aggregate bin.  The 'Count' aggregator simply counts how many glyphs fell into the bin.
-		Aggregator<Object,Integer> aggregator = new Numbers.Count();
+		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		
 
 		//The transfer function is used to convert one set of aggregates into another.

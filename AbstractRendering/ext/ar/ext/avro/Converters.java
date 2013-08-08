@@ -44,6 +44,7 @@ public class Converters {
 
 		public CategoricalCounts.RLE<String> value(GenericRecord from) {
 			List<?> ks = (List<?>) from.get("keys");
+			@SuppressWarnings("unchecked")
 			List<Integer> vs = (List<Integer>) from.get("counts");
 			List<String> keys = new ArrayList<String>();
 			for (int i=0; i < ks.size(); i++) {
@@ -83,6 +84,7 @@ public class Converters {
 		private static final long serialVersionUID = -5984313789299890307L;
 
 		public Color value(GenericRecord from) {
+			@SuppressWarnings("unchecked")
 			List<Integer> vals = (List<Integer>) from.get("RGBA");
 			return new Color(vals.get(0), vals.get(1),vals.get(2), vals.get(3));
 		}

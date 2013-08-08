@@ -3,6 +3,7 @@ package ar.app.components;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.io.File;
 
 import javax.swing.JComboBox;
 
@@ -14,6 +15,7 @@ import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
+import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
@@ -144,8 +146,8 @@ public class Presets extends CompoundPanel {
 
 	}
 	
-	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetUtils.load("Scatterplot", "../data/circlepoints.csv", .1);
-	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetUtils.load("BGL Memory", "../data/MemVisScaled.csv", .001);
+	private static final Glyphset<Color> CIRCLE_SCATTER = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Color>make());
+	private static final Glyphset<Color> BOOST_MEMORY = GlyphsetUtils.autoLoad(new File("../data/MemVisScaled.csv"), .1, DynamicQuadTree.<Color>make());
 	private static final Glyphset<Color> BOOST_MEMORY_MM = GlyphsetUtils.memMap("BGL Memory", "../data/MemVisScaledB.hbin", .001, .001, true, new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 1, "ddi"); 
 	private static final Glyphset<Color> CHARITY_NET_MM =GlyphsetUtils.memMap("Charity Net", "../data/dateStateXY.hbin", .5, .1, false, new Constant<Indexed,Color>(Color.BLUE), 1, "ii");
 //	private static final GlyphSet WIKIPEDIA_MM = memMap("Wikipedia Edits", "./data/dateStateXY.hbin", .01, false, new Painter.Constant<>(Color.BLUE));

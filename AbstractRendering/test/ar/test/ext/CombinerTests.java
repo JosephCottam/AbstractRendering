@@ -2,7 +2,6 @@ package ar.test.ext;
 
 import static org.junit.Assert.*;
 
-import java.awt.Color;
 import java.io.File;
 import java.net.Socket;
 

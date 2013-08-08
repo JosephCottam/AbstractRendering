@@ -54,7 +54,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	} 
 
 	public class Count implements WrappedAggregator<Object, Integer> {
-		public Aggregator<Object, Integer> op() {return new Numbers.Count();}
+		public Aggregator<Object, Integer> op() {return new Numbers.Count<Object>();}
 		public Class<Integer> type() {return Integer.class;}
 		public String toString() {return "Count (int)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}

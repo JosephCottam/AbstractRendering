@@ -217,7 +217,7 @@ public class Categories {
 		}
 		
 		//TODO: Update to use a color mapping outside of the category set
-		private Color fullInterpolate(CategoricalCounts<Color> cats) {
+		private static Color fullInterpolate(CategoricalCounts<Color> cats) {
 			double total = cats.fullSize();
 			double r = 0;
 			double g = 0;

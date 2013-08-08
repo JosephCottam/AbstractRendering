@@ -151,7 +151,10 @@ public class Advise {
 		public Color emptyValue() {return Util.CLEAR;}
 	}
 	
-	private static class NumberComp implements Comparator<Number> {
+	/**Implementation of number comparator.  
+	 * Mimics behavior of Java 1.7 Number.compare.
+	 */
+	public static class NumberComp implements Comparator<Number> {
 		public int compare(Number o1, Number o2) {return (int) (o1.doubleValue()-o2.doubleValue());}
 	}
 

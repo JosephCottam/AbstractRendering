@@ -10,9 +10,7 @@ import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public class CategoricalCountsTests {
-
-	
-	private void testItems(CategoricalCounts<Color> cats) {
+	private static void testItems(CategoricalCounts<Color> cats) {
 		int full=0;
 
 		for (int i=1; i<11; i++) {

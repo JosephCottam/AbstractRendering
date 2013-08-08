@@ -54,10 +54,10 @@ public class RenderSpeedTest {
 						new Constant<Indexed,Color>(Color.red));
 		} else if (rend.startsWith("PIXEL")) {
 			render = new ParallelSpatial(task);
-			glyphs = GlyphsetUtils.load(null, source, .005);
+			glyphs = GlyphsetUtils.autoLoad(new File(source), .005, DynamicQuadTree.<Color>make()); 
 		} else if (rend.startsWith("SPIXEL")) {
 			render = new SerialSpatial();
-			glyphs = GlyphsetUtils.load(null, source, .005);
+			glyphs = GlyphsetUtils.autoLoad(new File(source), .005, DynamicQuadTree.<Color>make()); 
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}

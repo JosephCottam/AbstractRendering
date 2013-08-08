@@ -79,7 +79,7 @@ public final class ParallelSpatial implements Renderer {
 			if (highy> aggs.highY()) {throw new RuntimeException(String.format("%d > height of %d",  highy, aggs.highY()));}
 		}
 
-		private int center(int low, int high) {return low+((high-low)/2);}
+		private static final int center(int low, int high) {return low+((high-low)/2);}
 		
 		@Override
 		protected void compute() {

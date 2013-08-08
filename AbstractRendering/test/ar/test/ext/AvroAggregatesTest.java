@@ -8,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonFactory;

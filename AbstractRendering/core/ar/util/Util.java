@@ -226,6 +226,9 @@ public final class Util {
 	/**Write a buffered image to a file.**/
 	public static void writeImage(BufferedImage img, File f) {
 		try {
+			if (!f.getParentFile().exists()) {
+				f.getParentFile().mkdirs();
+			}
 			ImageIO.write(img, "png", f);
 		}catch (Exception e) {
 			throw new RuntimeException(e);

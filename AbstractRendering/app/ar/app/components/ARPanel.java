@@ -15,7 +15,7 @@ public class ARPanel extends JPanel {
 	public static boolean PERF_REP = false;
 	
 	private static final long serialVersionUID = 1L;
-	private final Aggregator aggregator;
+	private final Aggregator<?,?> aggregator;
 	private final Glyphset<?> dataset;
 	private final ARDisplay display;
 	private Renderer renderer;
@@ -105,14 +105,14 @@ public class ARPanel extends JPanel {
 	}
 	
 	public final class FullRender implements Runnable {
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
 			int width = ARPanel.this.getWidth();
 			int height = ARPanel.this.getHeight();
 			long start = System.currentTimeMillis();
 			AffineTransform ivt = inverseViewTransform();
 			try {
-				aggregates = renderer.aggregate(dataset, aggregator, ivt, width, height);
+				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, ivt, width, height);
 				display.setAggregates(aggregates);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {

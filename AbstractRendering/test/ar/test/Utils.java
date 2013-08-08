@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 
 import org.junit.Test;
 

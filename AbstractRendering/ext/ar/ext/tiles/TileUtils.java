@@ -86,7 +86,7 @@ public class TileUtils {
 	 * @param levels How many levels to make
 	 * @param aggs Aggreagte to base items off of. This will be the most-detailed level in the output (e.g. Z-value is level-1)
 	 * @param red Aggregator to use to do rollup
-	 * @param ouptutRoot Where to place output items.  This SHOULD NOT include a z-directory
+	 * @param outputRoot Where to place output items.  This SHOULD NOT include a z-directory
 	 * @param tileWidth How wide should tiles be made
 	 * @param tileHeight How tall should tiles be made
 	 */

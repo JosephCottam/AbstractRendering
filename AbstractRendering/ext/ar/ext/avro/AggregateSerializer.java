@@ -172,6 +172,8 @@ public class AggregateSerializer {
 			int highX = lowX+xCount;
 			int highY = lowY+yCount;
 			A defVal = converter.value((GenericRecord) r.get("default"));			
+			
+			@SuppressWarnings("unchecked")
 			GenericData.Array<GenericRecord> entries = 
 					(GenericData.Array<GenericRecord>) r.get("values");
 
@@ -192,6 +194,7 @@ public class AggregateSerializer {
 	 * 
 	 * TODO: Remove when tiles include bounds metadata  (also remove dependency fetcher from download)
 	 * **/
+	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> deserializeTile(
 			String filename, Valuer<GenericRecord, A> converter, 
 			int lowX, int lowY, int highX, int highY) {
