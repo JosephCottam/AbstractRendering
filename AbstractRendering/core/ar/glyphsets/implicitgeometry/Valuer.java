@@ -30,13 +30,16 @@ public interface Valuer<I,V> extends Serializable {
 	}
 	
 	
-	/**Give everything the same value (default value is the color red).*/
-	public final class Constant<T,V> implements Valuer<T,V> {
+	/**Give everything the same value (default value is the color red).
+	 * @param <I> Input type
+	 * @param <V> Value return type
+	 */
+	public final class Constant<I,V> implements Valuer<I,V> {
 		private static final long serialVersionUID = -8933986990047616101L;
 		private final V c;
 		
 		public Constant(V c) {this.c = c;}
-		public V value(T item) {return c;}
+		public V value(I item) {return c;}
 	}
 	
 	/**Binary valuation scheme.  

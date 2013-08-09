@@ -45,12 +45,16 @@ public class AvroGlyphsTest {
 	@Test
 	public void circlepointsRoundTrip() throws Exception {
 		String csv = "../data/circlepoints.csv";
-		String avro = "../data/circlepoints.avro";
+		String output = "../testResults/circlepoints.avro";
 		String schema = "../data/circlepoints.avsc";
-		encode(csv, avro, schema);
+		
+		assertTrue("Input file not found.", new File(csv).exists());
+		assertTrue("Schema file not found.", new File(schema).exists());
+
+		encode(csv, output, schema);
 		
 		GlyphList<?> reference =(GlyphList<?>) GlyphsetUtils.load(new GlyphList<>(), new File(csv), 1, .1, false, 2, 3, -1, 4); 
-		Glyphset.RandomAccess<?> result = GlyphsetTools.fullLoad(avro, new AvroRect(.1, 2, 3, 4), Color.class);
+		Glyphset.RandomAccess<Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {
@@ -67,6 +71,7 @@ public class AvroGlyphsTest {
 
 	}
 	
+	/**Utility to write items to an avro file.**/
 	public void encode(String sourceFile, String targetFile, String schemaFile) throws Exception {
 		Schema schema = new Schema.Parser().parse(new File(schemaFile));
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);

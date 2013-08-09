@@ -16,7 +16,7 @@ public class TestAggregationStrategies {
 	public void rollupSimpleIntegers() {
 		int width=10;
 		int height=12;
-		Aggregator<Object,Integer> red = new Numbers.Count();
+		Aggregator<Object,Integer> red = new Numbers.Count<>();
 		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
 		Aggregates<Integer> end = AggregationStrategies.foldUp(start, red);
 		

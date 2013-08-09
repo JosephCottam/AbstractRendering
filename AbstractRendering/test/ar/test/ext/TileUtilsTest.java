@@ -37,7 +37,7 @@ public class TileUtilsTest {
 	@Test
 	public void tileCascade() throws Exception {
 		Aggregates<Integer> aggs = TestAggregates.simpleAggregates(0,0,1000,1000, -1);
-		Aggregator<?,Integer> red = new Numbers.Count();
+		Aggregator<?,Integer> red = new Numbers.Count<>();
 		File root = new File("./testResults/tileset");
 		org.apache.commons.io.FileUtils.deleteDirectory(root);
 		assertFalse("Failed to remove directory.", root.exists());

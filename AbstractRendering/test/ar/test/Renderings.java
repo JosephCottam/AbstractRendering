@@ -45,15 +45,15 @@ public class Renderings {
 		}
 	}
 	
-	public BufferedImage image(Renderer r, Glyphset g, Aggregator agg, Transfer t) throws Exception {
+	public <V,A> BufferedImage image(Renderer r, Glyphset<V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
 		AffineTransform ivt = Util.zoomFit(g.bounds(), width, height);
-		Aggregates ser_aggs = r.aggregate(g, agg, ivt.createInverse(), width, height);
-		Aggregates ser_trans = r.transfer(ser_aggs, t);
+		Aggregates<A> ser_aggs = r.aggregate(g, agg, ivt.createInverse(), width, height);
+		Aggregates<Color> ser_trans = r.transfer(ser_aggs, t);
 		BufferedImage img = Util.asImage(ser_trans, width, height, Color.white);
 		return img;
 	}
 	
-	public void testWith(Glyphset glyphs, Aggregator agg, Transfer t)  throws Exception {
+	public <V,A> void testWith(Glyphset<V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
 		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
 		Util.writeImage(ref_img, new File("./testResults/ref.png"));
 		
@@ -69,35 +69,42 @@ public class Renderings {
 
 	@Test
 	public void CheckerboardQuad() throws Exception {
-		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
-		Aggregator agg = new Numbers.Count<>();
-		Transfer t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
 		testWith(glyphs, agg, t);
 	}
 
 
 	@Test
 	public void CirclepointsQuad() throws Exception {
-		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.make());
-		Aggregator agg = new Numbers.Count<>();
-		Transfer t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.make());
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
 		testWith(glyphs, agg, t);
 	}
 
 	
 	@Test
 	public void CirclepointsMemMap() throws Exception {
-		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.hbin"), .001, new MemMapList(null, new Indexed.ToRect(.01, 0, 1), new Valuer.Constant(1)));
-		Aggregator agg = new Numbers.Count<>();
-		Transfer t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(
+				new File("../data/circlepoints.hbin"), 
+				.001, 
+				new MemMapList<Object>(
+						null, 
+						new Indexed.ToRect(.01, 0, 1), 
+						new Valuer.Constant<Indexed, Object>(1)));
+		
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
 		testWith(glyphs, agg, t);
 	}
 
 	@Test 
 	public void KnownFailing() throws Exception {
-		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
-		Aggregator agg = new Numbers.Count<>();
-		Transfer t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
 		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
 
 		BufferedImage pp_img = image(new ParallelGlyphs(), glyphs, agg, t);

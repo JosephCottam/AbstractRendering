@@ -48,13 +48,13 @@ public class SimpleSparkApp {
 		Shaper<Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
 		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
 
-		JavaRDD<Glyph<Integer>> glyphs = base.map(new Glypher(shaper,valuer)).cache();
+		JavaRDD<Glyph<Integer>> glyphs = base.map(new Glypher<>(shaper,valuer)).cache();
  		Rectangle2D contentBounds = RDDRender.bounds(glyphs);
 		AffineTransform ivt = Util.zoomFit(contentBounds, width, height);
 
  		
  		RDDRender render = new RDDRender();
- 		Aggregates aggs = render.aggregate(glyphs, new Numbers.Count(), ivt, width, height);
+ 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<>(), ivt, width, height);
 
 		
 		if (outFile == null) {

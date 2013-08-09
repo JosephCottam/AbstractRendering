@@ -39,7 +39,7 @@ public class AvroAggregatesTest {
 	
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		Glyphset<Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Color>make());
 		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
@@ -47,7 +47,7 @@ public class AvroAggregatesTest {
 				241.4615556310524,
 				238.49100176586487, 
 				236.13546883394775).createInverse();
-		count = r.aggregate(glyphs, new Numbers.Count(), ivt, 500,500);
+		count = r.aggregate(glyphs, new Numbers.Count<Object>(), ivt, 500,500);
 		rles = r.aggregate(glyphs, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
 	}
 	
@@ -154,6 +154,8 @@ public class AvroAggregatesTest {
 	@Test
 	public void readOcculusTile() throws Exception {
 		String filename = "../data/avroTiles/0/0/0.avro";
+		assertTrue("Input file not found.", new File(filename).exists());
+		
 		Aggregates<Integer> res = AggregateSerializer.deserializeTile(filename, new Converters.ToCount(),0,0,255,255);
 		
 		assertEquals(0, res.lowX());
