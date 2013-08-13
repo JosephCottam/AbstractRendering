@@ -65,9 +65,14 @@ If the AR.jar file was built with extensions, the server can be executed with
 to format the return result.
 
 ### Spark
-Abstract Rendering implementation to run in the AMP Spark (Berkly) framework.
+Abstract Rendering implementation to run in the [AMP Spark](http://spark-project.org/) framework.
 This uses many of the standard tools, but different driver (e.g., not true "Renderer" class)
 to do aggregation in a distributed memory environment.  Transfer is still done locally.
+
+Unlike other extensions, the Spark extension requires the Spark jar to be provided "by hand."
+If the a jar named spark-core-assembly-0.7.2.jar is not found in the lib directory, the spark
+extensions will not be included in the resulting jar file.  This is a restriction is because
+the spark jar file needs to be compiled differently depending on the runtime environment.
  
 ### Tiles
 Tools for manipulating aggregates for use with a tile-server.
