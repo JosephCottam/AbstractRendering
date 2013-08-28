@@ -28,7 +28,10 @@ public final class ParallelSpatial implements Renderer {
 	private final int taskSize;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
+	/**Render with task-size determined by DEFAULT_TASK_SIZE.**/
 	public ParallelSpatial() {this(DEFAULT_TASK_SIZE);}
+
+	/**Render with task-size determined by the passed paramter.**/
 	public ParallelSpatial(int taskSize) {
 		this.taskSize = taskSize;
 	}
@@ -45,7 +48,9 @@ public final class ParallelSpatial implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
 		Aggregates<OUT> result = new FlatAggregates<OUT>(aggregates, t.emptyValue());
-		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY(), taskSize);
+		t.specialize(aggregates);
+		
+		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;
 	}
