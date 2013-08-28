@@ -58,6 +58,12 @@ public class ARDisplay extends JPanel {
 		renderError = false;
 	}
 	
+	public void withRenderer(Renderer renderer) {
+		this.renderer = renderer;
+		renderAgain = true;
+		renderError = false;
+	}
+	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public Transfer<?,?> transfer() {return transfer;}
 	

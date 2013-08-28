@@ -44,11 +44,64 @@ public final class ParallelSpatial implements Renderer {
 	}
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
-		return new SerialSpatial().transfer(aggregates, t);
+		Aggregates<OUT> result = new FlatAggregates<OUT>(aggregates, t.emptyValue());
+		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY(), taskSize);
+		pool.invoke(task);
+		return result;
 	}
 
 
 	public double progress() {return recorder.percent();}
+
+	private static final int center(int low, int high) {return low+((high-low)/2);}
+
+	private static final class TransferTask<IN, OUT> extends RecursiveAction {
+		private static final long serialVersionUID = 7512448648194530526L;
+		
+		private final int lowx, lowy, highx, highy;
+		private final Aggregates<OUT> out;
+		private final Aggregates<? extends IN> in;
+		private final Transfer<IN, OUT> t;
+		private final int taskSize;
+		
+		public TransferTask(
+				Aggregates<? extends IN> input, Aggregates<OUT> result, 
+				Transfer<IN, OUT> t,
+				int taskSize,
+				int lowX, int lowY, int highX, int highY
+				) {
+			
+			this.lowx=lowX;
+			this.lowy=lowY;
+			this.highx=highX;
+			this.highy=highY;
+			this.out = result;
+			this.in = input;
+			this.t = t;
+			this.taskSize = taskSize;
+		}
+
+		protected void compute() {
+			int width = highx-lowx;
+			int height = highy-lowy;
+			if (width * height > taskSize) {
+				int centerx = center(lowx, highx);
+				int centery = center(lowy, highy);
+				TransferTask<IN, OUT> SW = new TransferTask<>(in, out, t, taskSize, lowx,    lowy,    centerx, centery);
+				TransferTask<IN, OUT> NW = new TransferTask<>(in, out, t, taskSize, lowx,    centery, centerx, highy);
+				TransferTask<IN, OUT> SE = new TransferTask<>(in, out, t, taskSize, centerx, lowy,    highx,   centery);
+				TransferTask<IN, OUT> NE = new TransferTask<>(in, out, t, taskSize, centerx, centery, highx,   highy);
+				invokeAll(SW,NW,SE,NE);
+			} else {
+				for (int x=lowx; x<highx; x++) {
+					for (int y=lowy; y<highy; y++) {
+						OUT val = t.at(x, y, in);
+						out.set(x, y, val);
+					}
+				}				
+			}
+		}
+	}
 	
 	private static final class ReduceTask<G,A> extends RecursiveAction {
 		private static final long serialVersionUID = -6471136218098505342L;
@@ -79,8 +132,6 @@ public final class ParallelSpatial implements Renderer {
 			if (highy> aggs.highY()) {throw new RuntimeException(String.format("%d > height of %d",  highy, aggs.highY()));}
 		}
 
-		private static final int center(int low, int high) {return low+((high-low)/2);}
-		
 		@Override
 		protected void compute() {
 			int width = highx-lowx;

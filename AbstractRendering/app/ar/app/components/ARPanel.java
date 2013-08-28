@@ -39,6 +39,8 @@ public class ARPanel extends JPanel {
 		this.dataset = glyphs;
 		this.renderer = renderer;
 		
+		display.withRenderer(renderer);
+		
 		ZoomPanHandler h = new ZoomPanHandler();
 		super.addMouseListener(h);
 		super.addMouseMotionListener(h);
