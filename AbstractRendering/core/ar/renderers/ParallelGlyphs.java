@@ -35,8 +35,11 @@ public class ParallelGlyphs implements Renderer {
 	private final int taskSize;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
+	/**Render with task-size determined by DEFAULT_TASK_SIZE.**/
 	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
 	
+	
+	/**Render with task-size determined by the passed parameter.**/
 	public ParallelGlyphs(int taskSize) {
 		this.taskSize = taskSize;
 	}
@@ -139,6 +142,7 @@ public class ParallelGlyphs implements Renderer {
 			Point2D lowP = new Point2D.Double();
 			Point2D highP = new Point2D.Double();
 			
+			int count=0;
 			for (Glyph<? extends V> g: subset) {
 				//Discretize the glyph into the aggregates array
 				Rectangle2D b = g.shape().getBounds2D();
@@ -162,9 +166,10 @@ public class ParallelGlyphs implements Renderer {
 						aggregates.set(x, y, update);
 					}
 				}
+				count++;
 			}
 			
-			recorder.update(high-low);
+			recorder.update(count);
 			return aggregates;
 		}
 	}
