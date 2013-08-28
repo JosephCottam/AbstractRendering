@@ -373,13 +373,16 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 		public Glyphset<V> segment(long bottom, long top) {
 			return DynamicQuadTree.subset(quads, (int) bottom, (int) top);
 		}
-		public Iterator<Glyph<V>> iterator() {return items().iterator();}
+		public Iterator<Glyph<V>> iterator() {
+			return items().iterator();
+		}
 	}
 	
 	private static final class LeafNode<V> extends DynamicQuadTree<V> {
 		@SuppressWarnings("unchecked")
+		private final LeafQuad<V>[] parts = new LeafQuad[5];
 		private final LeafQuad<V>[] quads = new LeafQuad[4];
-		private final List<Glyph<V>> spanningItems;
+		private final LeafQuad<V> spanningItems;
 		private int size=0;
 
 		private LeafNode(Rectangle2D concernBounds) {
@@ -395,11 +398,13 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 
 		private LeafNode(Rectangle2D concernBounds, Collection<Glyph<V>> glyphs) {
 			super(concernBounds);
-			spanningItems = new ArrayList<Glyph<V>>(LOADING);
+			spanningItems = new LeafQuad<V>(this.concernBounds);
 			Subs subs = new Subs(concernBounds);
 			for (int i=0; i< subs.quads.length; i++) {
 				quads[i] = new DynamicQuadTree.LeafQuad<V>(subs.quads[i]);
+				parts[i] = quads[i];
 			}
+			parts[parts.length-1] = spanningItems;
 			for (Glyph<V> g: glyphs) {add(g);}
 		}
 
@@ -462,13 +467,13 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 
 		//Copy
 		public void items(Collection<Glyph<V>> collector) {
-			collector.addAll(spanningItems);
+			collector.addAll(spanningItems.items);
 			for (DynamicQuadTree<V> q: quads) {q.items(collector);}
 		}
 		
-		public long segments() {return quads.length;}
+		public long segments() {return parts.length;}
 		public Glyphset<V> segment(long bottom, long top) {
-			return DynamicQuadTree.subset(quads, (int) bottom, (int) top);
+			return DynamicQuadTree.subset(parts, (int) bottom, (int) top);
 		}
 		public Iterator<Glyph<V>> iterator() {return items().iterator();}
 
