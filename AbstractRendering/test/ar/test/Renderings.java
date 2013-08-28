@@ -53,17 +53,21 @@ public class Renderings {
 		return img;
 	}
 	
-	public <V,A> void testWith(Glyphset<V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
+	public <V,A> void testWith(String test, Glyphset<V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
 		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
-		Util.writeImage(ref_img, new File("./testResults/ref.png"));
+		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));
 		
 		BufferedImage ser_img = image(new SerialSpatial(), glyphs, agg, t);
-		Util.writeImage(ser_img, new File("./testResults/ser.png"));
+		Util.writeImage(ser_img, new File(String.format("./testResults/%s/ser.png", test)));
 		assertImageEquals("Serial", ref_img, ser_img);
 		
 		BufferedImage ps_img = image(new ParallelSpatial(), glyphs, agg, t);
-		Util.writeImage(ps_img, new File("./testResults/pg.png"));
+		Util.writeImage(ps_img, new File(String.format("./testResults/%s/ps.png", test)));
 		assertImageEquals("Parallel spatial", ref_img, ps_img);
+		
+		BufferedImage pg_img = image(new ParallelGlyphs(), glyphs, agg, t);
+		Util.writeImage(pg_img, new File(String.format("./testResults/%s/pg.png", test)));
+		assertImageEquals("Parallel glyphs", ref_img, ps_img);
 	}
 	
 
@@ -72,7 +76,7 @@ public class Renderings {
 		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
-		testWith(glyphs, agg, t);
+		testWith("checker_quad", glyphs, agg, t);
 	}
 
 
@@ -81,7 +85,7 @@ public class Renderings {
 		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
-		testWith(glyphs, agg, t);
+		testWith("circle_quad", glyphs, agg, t);
 	}
 
 	
@@ -97,24 +101,8 @@ public class Renderings {
 		
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
-		testWith(glyphs, agg, t);
+		testWith("checker_mem", glyphs, agg, t);
 	}
 
-	@Test 
-	public void KnownFailing() throws Exception {
-		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
-		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
-		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
-
-		BufferedImage pp_img = image(new ParallelGlyphs(), glyphs, agg, t);
-		Util.writeImage(pp_img, new File("./testResults/pp.png"));
-		assertImageEquals("Known-bad configuration: Parallel glyph", ref_img, pp_img);
-		
-		
-//		BufferedImage pp_img = image(new ParallelGlyphs(), glyphs, agg, t);
-//		Util.writeImage(pp_img, new File("./testResults/pp.png"));
-//		assertImageEquals("Parallel glyph", ref_img, pp_img);
-
-	}
+	
 }
