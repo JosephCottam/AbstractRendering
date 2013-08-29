@@ -11,22 +11,23 @@ import ar.*;
 import ar.app.util.ZoomPanHandler;
 
 public class ARPanel extends JPanel {
+	protected static final long serialVersionUID = 1L;
+
 	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
 	public static boolean PERF_REP = false;
 	
-	private static final long serialVersionUID = 1L;
-	private final Aggregator<?,?> aggregator;
-	private final Glyphset<?> dataset;
-	private final ARDisplay display;
-	private Renderer renderer;
+	protected final Aggregator<?,?> aggregator;
+	protected final Glyphset<?> dataset;
+	protected final ARDisplay display;
+	protected Renderer renderer;
 	
-	private AffineTransform viewTransformRef = new AffineTransform();
-	private AffineTransform inverseViewTransformRef = new AffineTransform();
+	protected AffineTransform viewTransformRef = new AffineTransform();
+	protected AffineTransform inverseViewTransformRef = new AffineTransform();
 
-	private volatile boolean renderAgain = false;
-	private volatile boolean renderError = false;
-	private volatile Aggregates<?> aggregates;
-	private Thread renderThread;
+	protected volatile boolean renderAgain = false;
+	protected volatile boolean renderError = false;
+	protected volatile Aggregates<?> aggregates;
+	protected Thread renderThread;
 	
 	public ARPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();

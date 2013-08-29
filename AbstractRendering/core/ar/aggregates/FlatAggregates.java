@@ -82,4 +82,19 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
 	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
+
+	/**Produce an independent aggregate set that covers the passed region and contains any values from 
+	 * any overlap in the two regions.
+	 * 
+	 * TODO: Move to the Aggregates interface when Java 1.8 comes out...
+	 * **/
+	public static <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
+		Aggregates<A> aggs= new FlatAggregates<>(lowX, lowY, highX, highY, source.defaultValue());
+		for (int x=lowX; x<highX; x++) {
+			for (int y=lowY; y<highY; y++) {
+				aggs.set(x, y, source.get(x,y));
+			}
+		}
+		return aggs;
+	}
 }

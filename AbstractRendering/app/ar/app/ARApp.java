@@ -98,7 +98,7 @@ public class ARApp implements PanelHolder {
 	
 		
 		
-		image = new ARPanel(((WrappedAggregator<?,?>) reductions.getSelectedItem()).op(), 
+		image = new ARCascadePanel(((WrappedAggregator<?,?>) reductions.getSelectedItem()).op(), 
 							((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
 							loadData(),
 							rendererOptions.renderer());
