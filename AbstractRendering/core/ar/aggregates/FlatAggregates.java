@@ -53,16 +53,16 @@ public class FlatAggregates<A> implements Aggregates<A>{
 
 	/**Set the value at the given (x,y).**/
 	public synchronized void set(int x, int y, A v) {
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return;}
 		int idx = idx(x,y);
-		if (idx<0||idx>=values.length) {return;}
 		values[idx] = v;
 	}
 	
 	
 	/**Get the value at the given (x,y).**/
 	public synchronized A get(int x, int y) {
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return defaultVal;}
 		int idx = idx(x,y);
-		if (idx<0||idx>=values.length) {return defaultVal;}
 		return values[idx];
 	}
 	
@@ -82,4 +82,27 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
 	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
+
+	/**Produce an independent aggregate set that has a lowX/Y value of 0,0 and contains
+	 * values from the source as determined by the passed low/high values.
+	 * 
+	 * On null, returns null.
+	 * 
+	 * TODO: Move to the Aggregates interface when Java 1.8 comes out...
+	 * **/
+	public static <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
+		if (source == null) {return null;}
+		
+		int width = highX-lowX;
+		int height = highY-lowY;
+		
+		Aggregates<A> aggs= new FlatAggregates<>(0, 0, width, height, source.defaultValue());
+		for (int x=0; x<width; x++) {
+			for (int y=0; y<height; y++) {
+				A val = source.get(x+lowX,y+lowY);
+				aggs.set(x, y, val);
+			}
+		}
+		return aggs;
+	}
 }
