@@ -11,9 +11,11 @@ import ar.util.Util;
 public class ARCascadePanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private final int baseWidth = 1000;
-	private final int baseHeight = 1000;
+	private final int baseWidth = 10;
+	private final int baseHeight = 10;
 	private final AffineTransform renderTransform;
+	
+	private volatile Aggregates baseAggregates;
 	
 	public ARCascadePanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
@@ -23,7 +25,15 @@ public class ARCascadePanel extends ARPanel {
 			renderTransform = null;
 		}
 	}
-
+	
+	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+		return new ARCascadePanel(aggregator, transfer, glyphs, renderer);
+	}
+	
+	public void baseAggregates(Aggregates<?> aggregates) {
+		this.baseAggregates = aggregates;
+		super.aggregates(null);
+	}
 	
 	@Override
 	public void paint(Graphics g) {
@@ -34,8 +44,10 @@ public class ARCascadePanel extends ARPanel {
 				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		} else if (baseAggregates == null) {
+			action = new AggregateRender();
 		} else if (renderAgain || aggregates == null) {
-			action = new FullRender();
+			action = new CascadeRender();
 		} 
 
 		if (action != null && (renderThread == null || !renderThread.isAlive())) {
@@ -48,29 +60,50 @@ public class ARCascadePanel extends ARPanel {
 	
 	}
 	
-	public final class FullRender implements Runnable {
+	private final class CascadeRender implements Runnable {
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform, baseWidth, baseHeight);
+				AffineTransform vt = inverseViewTransform();
+				AffineTransform translate = AffineTransform.getTranslateInstance(vt.getTranslateX(), vt.getTranslateY());
+				AffineTransform zoom = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY());
+				//TODO: Handle zoom!
 				
-				//Aggregates zoomed = AggregationStrategies.foldUp(aggregates, (Aggregator) aggregator);
-				//PREVENT RE-RENDER ON ZOOM CHANGE OR PAN...
-				
-				Rectangle viewBounds = ARCascadePanel.this.getBounds();
-				AffineTransform ivt = inverseViewTransform();
-				viewBounds = ivt.createTransformedShape(viewBounds).getBounds();
+				Rectangle viewportBounds = ARCascadePanel.this.getBounds();
+				Rectangle viewBounds = translate.createTransformedShape(viewportBounds).getBounds();
 
-				Aggregates subset = FlatAggregates.subset(aggregates, viewBounds.x, viewBounds.y, viewBounds.x+viewBounds.width, viewBounds.y+viewBounds.height);
+				Aggregates subset = FlatAggregates.subset(
+						baseAggregates, 
+						viewBounds.x, viewBounds.y, 
+						viewBounds.x+viewBounds.width, viewBounds.y+viewBounds.height);
 				
-				display.setAggregates(subset);
+				ARCascadePanel.this.aggregates(subset);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-					System.out.printf("%d ms (Aggregates render on %d x %d grid\n",
+					System.out.printf("%d ms (Cascade render)\n",
 							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
 				}
 			} catch (ClassCastException e) {
+				renderError = true;
+			}
+			
+			ARCascadePanel.this.repaint();
+		}	
+	}
+
+	private final class AggregateRender implements Runnable {
+		@SuppressWarnings({"unchecked","rawtypes"})
+		public void run() {
+			long start = System.currentTimeMillis();
+			try {
+				ARCascadePanel.this.baseAggregates(renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), baseWidth, baseHeight));
+				long end = System.currentTimeMillis();
+				if (PERF_REP) {
+					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
+							(end-start), baseAggregates.highX()-baseAggregates.lowX(), baseAggregates.highY()-baseAggregates.lowY());
+				}
+			} catch (Exception e) {
 				renderError = true;
 			}
 			

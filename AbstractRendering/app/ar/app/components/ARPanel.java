@@ -29,14 +29,14 @@ public class ARPanel extends JPanel {
 	protected volatile Aggregates<?> aggregates;
 	protected Thread renderThread;
 	
-	public ARPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
 		display = new ARDisplay(null, transfer);
 		ARDisplay.PERF_REP = PERF_REP;
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
 		this.invalidate();
-		this.aggregator = reduction;
+		this.aggregator = aggregator;
 		this.dataset = glyphs;
 		this.renderer = renderer;
 		
@@ -52,13 +52,16 @@ public class ARPanel extends JPanel {
 		if (renderThread != null) {renderThread.stop();}
 	}
 	
+	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+		return new ARPanel(aggregator, transfer, glyphs, renderer);
+	}
 
 	public ARPanel withDataset(Glyphset<?> data) {
-		return new ARPanel(aggregator, display.transfer(), data, renderer);
+		return build(aggregator, display.transfer(), data, renderer);
 	}
 	
 	public  ARPanel withTransfer(Transfer<?,?> t) {
-		ARPanel p = new ARPanel(aggregator, t, dataset, renderer);
+		ARPanel p = build(aggregator, t, dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		p.aggregates(this.aggregates);
@@ -66,14 +69,14 @@ public class ARPanel extends JPanel {
 	}
 	
 	public ARPanel withReduction(Aggregator<?,?> r) {
-		ARPanel p = new ARPanel(r, display.transfer(), dataset, renderer);
+		ARPanel p = build(r, display.transfer(), dataset, renderer);
 		p.viewTransformRef = this.viewTransformRef;
 		p.inverseViewTransformRef = this.inverseViewTransformRef;
 		return p;
 	}
 	
 	public ARPanel withRenderer(Renderer r) {
-		ARPanel p = new ARPanel(aggregator, display.transfer(), dataset, r);
+		ARPanel p = build(aggregator, display.transfer(), dataset, r);
 		return p;
 	}
 	
@@ -107,7 +110,7 @@ public class ARPanel extends JPanel {
 	
 	}
 	
-	public final class FullRender implements Runnable {
+	private final class FullRender implements Runnable {
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
 			int width = ARPanel.this.getWidth();
@@ -119,7 +122,7 @@ public class ARPanel extends JPanel {
 				display.setAggregates(aggregates);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-					System.out.printf("%d ms (Aggregates render on %d x %d grid\n",
+					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
 							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
 				}
 			} catch (ClassCastException e) {
