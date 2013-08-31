@@ -45,9 +45,13 @@ public class FlatAggregates<A> implements Aggregates<A>{
 		this.highX = highX;
 		this.highY = highY;
 		this.defaultVal=defaultVal;
-		int size = (highX-lowX)*(highY-lowY);
+		long size = ((long) highX-lowX)*(highY-lowY);
+		if (size > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException(String.format("Aggregates of size %dx%d exceeds the implementation capacity.", (highX-lowX), (highY-lowY)));
+		}
+		
 		size = Math.max(0, size);
-		values = (A[]) new Object[size];
+		values = (A[]) new Object[(int)size];
 		Arrays.fill(values, defaultVal);
 	}
 

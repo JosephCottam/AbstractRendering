@@ -79,9 +79,9 @@ public class AggregationStrategies {
 	 * <p> The incoming aggregates are tessellated with a 2x2 grid 
 	 * (odd lengths are handled by padding with start's default value.). 
 	 * 
-	 * TODO: Extend to dxd rollup
+	 * TODO: Extend to dxd rollup (currently it is 2x2 rollup)
 	 * **/
-	public static <T> Aggregates<T> foldUp(Aggregates<T> start, Aggregator<?,T> red) {
+	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red) {
 		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.identity());
 
 		for (int x = start.lowX(); x < start.highX(); x=x+2) {
@@ -97,6 +97,32 @@ public class AggregationStrategies {
 		}
 		return end;
 	}
+	
+	/**Rollup until the aggregates are close to the requested width and height, then subset.
+	 * 
+	 * "Close" is a width or height where halving them again would make the size below the requested width/height.
+	 * 
+	 * @param start Initial set of aggregates
+	 * @param red Aggregator operation to use for rollup
+	 * @param targetWidth Width to target
+	 * @param targetHeight Height to target
+	 * @return Aggregates of the requested width/height
+	 */
+	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, int targetWidth, int targetHeight) {
+		final int startWidth = start.highX()-start.lowX();
+		final int startHeight = start.highY()-start.lowY();		
+		final int wsteps = (int) Math.max(0, startWidth/(double) targetWidth);
+		final int hsteps = (int) Math.max(0, startHeight/(double) targetHeight);
+		int steps = Math.min(wsteps, hsteps);
+		
+		Aggregates<T> end = start;
+		for (int i=steps; i>=0; i--) {
+			end = verticalRollup(end, red);
+		}
+		
+		return FlatAggregates.subset(end, end.lowX(), end.lowY(), end.lowX()+targetWidth, end.lowY()+targetHeight);
+	}
+
 	
 	
 	/**Perform aggregation for a single pixel.**/

@@ -70,19 +70,16 @@ public class ARCascadePanel extends ARPanel {
 				AffineTransform vt = viewTransform();
 				int shiftX = (int) -vt.getTranslateX();
 				int shiftY = (int) -vt.getTranslateY();
-				double scaleX = vt.getScaleX()/renderTransform.getScaleX();
-				double scaleY = vt.getScaleY()/renderTransform.getScaleY();
-//				int width = (int) (viewportBounds.width * scaleX);
-//				int height = (int) (viewportBounds.height * scaleY);
-				int width = (int) (viewportBounds.width);
-				int height = (int) (viewportBounds.height);
+				double scale = renderTransform.getScaleX()/vt.getScaleX();
+				int width = (int) (viewportBounds.width * scale);
+				int height = (int) (viewportBounds.height * scale);
 				
 				Aggregates subset = FlatAggregates.subset(
 						baseAggregates, 
 						shiftX, shiftY, 
 						shiftX+width, shiftY+height);
 				
-				//subset = AggregationStrategies.verticalRollup(subset, aggregator, viewportBounds.width, viewportBounds.height);
+				subset = AggregationStrategies.verticalRollup(subset, aggregator, viewportBounds.width, viewportBounds.height);
 				
 				ARCascadePanel.this.aggregates(subset);
 				long end = System.currentTimeMillis();

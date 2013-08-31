@@ -18,7 +18,7 @@ public class TestAggregationStrategies {
 		int height=12;
 		Aggregator<Object,Integer> red = new Numbers.Count<>();
 		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
-		Aggregates<Integer> end = AggregationStrategies.foldUp(start, red);
+		Aggregates<Integer> end = AggregationStrategies.verticalRollup(start, red);
 		
 		assertEquals(0, end.lowX());
 		assertEquals(0, end.lowY());

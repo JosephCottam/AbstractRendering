@@ -97,7 +97,7 @@ public class TileUtils {
 		for (int level=levels-1; level>=0; level--) {
 			File levelRoot = extend(outputRoot, Integer.toString(level), "");
 			makeTiles(running, levelRoot, tileWidth, tileHeight);
-			running = AggregationStrategies.foldUp(running, red);
+			running = AggregationStrategies.verticalRollup(running, red);
 		}
 	}
 	
