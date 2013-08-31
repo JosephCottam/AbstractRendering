@@ -5,17 +5,18 @@ import java.awt.geom.AffineTransform;
 
 import ar.*;
 import ar.aggregates.FlatAggregates;
+import ar.renderers.AggregationStrategies;
 import ar.util.Util;
 
 /**Panel that builds aggregates at a "base resolution" instead of the screen's native resolution.*/
 public class ARCascadePanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private final int baseWidth = 10;
-	private final int baseHeight = 10;
+	private final int baseWidth = 500;
+	private final int baseHeight = 500;
 	private final AffineTransform renderTransform;
 	
-	private volatile Aggregates baseAggregates;
+	private volatile Aggregates<?> baseAggregates;
 	
 	public ARCascadePanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
@@ -65,18 +66,23 @@ public class ARCascadePanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				AffineTransform vt = inverseViewTransform();
-				AffineTransform translate = AffineTransform.getTranslateInstance(vt.getTranslateX(), vt.getTranslateY());
-				AffineTransform zoom = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY());
-				//TODO: Handle zoom!
-				
 				Rectangle viewportBounds = ARCascadePanel.this.getBounds();
-				Rectangle viewBounds = translate.createTransformedShape(viewportBounds).getBounds();
-
+				AffineTransform vt = viewTransform();
+				int shiftX = (int) -vt.getTranslateX();
+				int shiftY = (int) -vt.getTranslateY();
+				double scaleX = vt.getScaleX()/renderTransform.getScaleX();
+				double scaleY = vt.getScaleY()/renderTransform.getScaleY();
+//				int width = (int) (viewportBounds.width * scaleX);
+//				int height = (int) (viewportBounds.height * scaleY);
+				int width = (int) (viewportBounds.width);
+				int height = (int) (viewportBounds.height);
+				
 				Aggregates subset = FlatAggregates.subset(
 						baseAggregates, 
-						viewBounds.x, viewBounds.y, 
-						viewBounds.x+viewBounds.width, viewBounds.y+viewBounds.height);
+						shiftX, shiftY, 
+						shiftX+width, shiftY+height);
+				
+				//subset = AggregationStrategies.verticalRollup(subset, aggregator, viewportBounds.width, viewportBounds.height);
 				
 				ARCascadePanel.this.aggregates(subset);
 				long end = System.currentTimeMillis();
