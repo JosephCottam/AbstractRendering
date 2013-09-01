@@ -94,6 +94,11 @@
       </classpath>
     </javac>
 
+    <!--Copy additional resources over...-->
+    <copy todir="${coreBin}">
+      <fileset dir="${extSrc}" includes="**/*.avsc"/>
+    </copy>
+
     <javadoc destdir="${docs}" verbose="false">
       <doclet name="com.visural.doclets.markdown.standard.Standard" 
         path="${lib}/MarkdownDoclet.jar"/>
@@ -182,7 +187,7 @@
       <formatter type="plain"/>
       
       <batchtest todir="${results}">
-        <fileset dir="${testBin}">
+        <fileset dir="${testSrc}">
           <include name="**/*Test*"/>
         </fileset>
       </batchtest>
