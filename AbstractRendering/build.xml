@@ -3,10 +3,16 @@
   <property name="appSrc" value="app"/>
   <property name="appBin" value="${bin}/appBin" />
   <property name="appJar" value="ARApp.jar" />
+  
+  <property name="testSrc" value="test"/>
+  <property name="testBin" value="${bin}/test"/>
+  <property name="results" value="testResults"/>
+
   <property name="extSrc" value="ext"/>
   <property name="coreSrc" value="core"/>
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
+  
   <property name="docs" value="docs" />
   <property name="lib" value="./lib"/>
 
@@ -15,9 +21,9 @@
   <available property="spark.absent" file="./lib/spark-core-assembly-0.7.2.jar"  value="false"/>
   <property name="spark.absent" value="true"/>
 
-  <target name="build" depends="clean,depends,core,app" />
+  <target name="build" description="Main build target." depends="clean,depends,core,app" />
 
-  <target name="clean">
+  <target name="clean" description="Cleanup build artifacts.">
     <delete dir="${bin}"/>
     <delete dir="${docs}"/>
     <delete file="AR.jar"/>
@@ -25,7 +31,7 @@
   </target>
 
 
-  <target name="core">
+  <target name="core" description="Build core system.">
     <mkdir dir="${coreBin}"/>
     <javac destdir="${coreBin}" target="1.7" includeantruntime="false"
       sourcepath="" srcdir="${coreSrc}">
@@ -43,7 +49,7 @@
   </target>
 
 
-  <target name="docs">
+  <target name="docs" description="Produce documents for most-recently-built configuration.">
     <antcall target="_docs">
       <param name="src" value="${coreSrc}"/>
       <param name="jars" value=""/>
@@ -51,7 +57,7 @@
   </target>
 
 
-  <target name="onesix" depends="clean">
+  <target name="onesix" depends="clean" description="Build for java 1.6">
     <!--Variant of the core libraries that does not include
          any java 1.7 items...hopefully.-->
     <mkdir dir="${coreBin}"/>
@@ -75,7 +81,8 @@
   </target>
 
 
-  <target name="ext" >
+  <target name="ext" 
+    description="Build the extensions libraries with the core system; this is core-plus.">
     <!--Include extensions with the core library.-->
 
     <mkdir dir="${coreBin}"/>
@@ -101,6 +108,7 @@
         <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javadoc>
+
     <antcall target="package">
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
@@ -110,7 +118,7 @@
   </target>
 
 
-  <target name="app" depends="core">
+  <target name="app" depends="core" description="Build the demo app.  Parallel to core (or ext).">
     <mkdir dir="${appBin}"/>
     <javac destdir="${appBin}" sourcepath="" srcdir="${appSrc}"
       includeantruntime="false">
@@ -149,6 +157,36 @@
         <attribute name="Class-Path" value="${classpath}"/>
       </manifest>
     </jar>
+  </target>
+
+  <target name="test" description="Unit tests; must build full system (ext and app).">
+    <mkdir dir="${results}"/>
+    <mkdir dir="${testBin}"/>
+    
+    <javac destdir="${testBin}" target="1.7" includeantruntime="false"
+      sourcepath="" srcdir="${testSrc}">
+      <classpath>
+        <fileset dir="." includes="*.jar"/>
+        <fileset dir="${lib}" includes="**/*.jar"/>
+      </classpath>
+    </javac>
+
+    <junit haltonfailure="no" fork="true" showoutput="true">
+      <classpath>
+        <pathelement location="${testBin}"/>
+        <fileset dir="${lib}" includes="**/*.jar"/>
+        <fileset dir="." includes="**/*.jar"/>
+      </classpath>
+
+      <formatter type="brief" usefile="false"/>
+      <formatter type="plain"/>
+      
+      <batchtest todir="${results}">
+        <fileset dir="${testBin}">
+          <include name="**/*Test*"/>
+        </fileset>
+      </batchtest>
+    </junit>
   </target>
 
   <include file="ivy-ant.xml" as="ivy"/> 
