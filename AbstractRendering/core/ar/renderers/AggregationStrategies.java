@@ -74,29 +74,35 @@ public class AggregationStrategies {
 		return target;
 	}
 
-	/**Performs a 2x2 fold-up of the passed aggregate set.
+	/**Performs a nxn fold-up of the passed aggregate set.
 	 * 
-	 * <p> The incoming aggregates are tessellated with a 2x2 grid 
-	 * (odd lengths are handled by padding with start's default value.). 
+	 * The incoming aggregates are tessellated with a nxn grid.
+	 * Over-the-edge-values for the tesselation are taken as  
 	 * 
-	 * TODO: Extend to dxd rollup (currently it is 2x2 rollup)
+	 * TODO: Add fractional value support (signature becomes <IN, OUT> Aggregates<OUT> vr(Aggregates<IN>, Aggregator<?, IN>, Fractioner<IN,OUT>)"; Default fractioner is "majority"
 	 * **/
-	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red) {
-		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/2, start.lowY()/2, start.highX()/2, start.highY()/2, red.identity());
+	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, int size) {
+		if (size < 1) {return start;}
+		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
 
-		for (int x = start.lowX(); x < start.highX(); x=x+2) {
-			for (int y=start.lowY(); y < start.highY(); y=y+2) {
-				T one = start.get(x,y);
-				T two = start.get(x+1,y);
-				T three = start.get(x,y+1);
-				T four = start.get(x+1,y+1);
+		ArrayList<T> l = new ArrayList<>();
+		for (int x = start.lowX(); x < start.highX(); x=x+size) {
+			for (int y=start.lowY(); y < start.highY(); y=y+size) {
 
-				T value = red.rollup(Arrays.asList(one, two, three, four));
-				end.set(x/2, y/2, value);
+				l.clear();
+				for (int xx=0; xx<size; xx++) {
+					for (int yy=0; yy<size; yy++) {
+						l.add(start.get(x+xx,y+yy));
+					}
+				}
+
+				T value = red.rollup(l);
+				end.set(x/size, y/size, value);
 			}
 		}
 		return end;
 	}
+
 	
 	/**Rollup until the aggregates are close to the requested width and height, then subset.
 	 * 
@@ -111,16 +117,11 @@ public class AggregationStrategies {
 	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, int targetWidth, int targetHeight) {
 		final int startWidth = start.highX()-start.lowX();
 		final int startHeight = start.highY()-start.lowY();		
-		final int wsteps = (int) Math.max(0, startWidth/(double) targetWidth);
-		final int hsteps = (int) Math.max(0, startHeight/(double) targetHeight);
-		int steps = Math.min(wsteps, hsteps);
-		
-		Aggregates<T> end = start;
-		for (int i=steps; i>=0; i--) {
-			end = verticalRollup(end, red);
-		}
-		
-		return FlatAggregates.subset(end, end.lowX(), end.lowY(), end.lowX()+targetWidth, end.lowY()+targetHeight);
+		final double wspan = startWidth/(double) targetWidth;
+		final double hspan = startHeight/(double) targetHeight;
+		int span = (int) Math.ceil(Math.max(wspan, hspan));
+		System.out.println(span);
+		return verticalRollup(start, red, span);
 	}
 
 	

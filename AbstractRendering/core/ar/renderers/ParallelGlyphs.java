@@ -70,7 +70,7 @@ public class ParallelGlyphs implements Renderer {
 	
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
-		return new ParallelSpatial().transfer(aggregates, t);
+		return ParallelSpatial.transfer(aggregates, t, taskSize, pool);
 	}
 	
 	public double progress() {return recorder.percent();}

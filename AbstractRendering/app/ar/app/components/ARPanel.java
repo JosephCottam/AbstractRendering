@@ -6,6 +6,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ar.*;
 import ar.app.util.ZoomPanHandler;
@@ -27,11 +29,11 @@ public class ARPanel extends JPanel {
 	protected volatile boolean renderAgain = false;
 	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
-	protected Thread renderThread;
+	protected ExecutorService renderPool = Executors.newFixedThreadPool(1);  //TODO: Redoing painting to use futures... 
 	
 	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
-		display = new ARDisplay(null, transfer);
+		display = new ARDisplay(null, transfer, renderPool);
 		ARDisplay.PERF_REP = PERF_REP;
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
@@ -47,10 +49,7 @@ public class ARPanel extends JPanel {
 		super.addMouseMotionListener(h);
 	}
 	
-	@SuppressWarnings("deprecation")
-	protected void finalize() {
-		if (renderThread != null) {renderThread.stop();}
-	}
+	protected void finalize() {renderPool.shutdown();}
 	
 	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		return new ARPanel(aggregator, transfer, glyphs, renderer);
@@ -100,12 +99,10 @@ public class ARPanel extends JPanel {
 			action = new FullRender();
 		} 
 
-		if (action != null && (renderThread == null || !renderThread.isAlive())) {
+		if (action != null) {
+			renderPool.execute(action);
 			renderAgain =false; 
-			renderThread = new Thread(action, "Render Thread");
-			renderThread.setDaemon(true);
-			renderThread.start();
-		}
+		} 
 		super.paint(g);
 	
 	}

@@ -12,13 +12,12 @@ import ar.rules.Numbers;
 
 public class TestAggregationStrategies {
 
-	@Test
-	public void rollupSimpleIntegers() {
-		int width=10;
-		int height=12;
+	private static void testUniformRollup(int size) {
+		int width=100;
+		int height=121;
 		Aggregator<Object,Integer> red = new Numbers.Count<>();
 		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
-		Aggregates<Integer> end = AggregationStrategies.verticalRollup(start, red);
+		Aggregates<Integer> end = AggregationStrategies.verticalRollup(start, red,size);
 		
 		assertEquals(0, end.lowX());
 		assertEquals(0, end.lowY());
@@ -27,10 +26,13 @@ public class TestAggregationStrategies {
 		
 		for (int x=0;x<width/2;x++) {
 			for (int y=0;y<height/2;y++) {
-				assertEquals(String.format("Rollup incorrect at %d, %d",x,y), (Integer) 4, end.get(x,y));
+				assertEquals(String.format("Rollup incorrect at %d, %d",x,y), (Integer) (size*size), end.get(x,y));
 			}
-		}
-		
+		}		
 	}
-
+		
+	@Test
+	public void rollup_2x2_UniformIntegers() {testUniformRollup(2);}
+	public void rollup_3x3_UniformIntegers() {testUniformRollup(3);}
+	public void rollup_10x10_UniformIntegers() {testUniformRollup(10);}
 }

@@ -90,7 +90,7 @@ public class SimpleApp {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new ARDisplay(aggregates, transfer, null), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

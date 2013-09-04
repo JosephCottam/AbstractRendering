@@ -6,6 +6,8 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ar.*;
 import ar.renderers.SerialSpatial;
@@ -22,13 +24,14 @@ public class ARDisplay extends JPanel {
 	private Aggregates<?> aggregates;
 	private Renderer renderer = new SerialSpatial();
 	private BufferedImage image;
-	private Thread renderThread;
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
+	protected final ExecutorService renderPool; 
+	protected final boolean ownedPool; //TODO: Perhaps remove and use a render pool filled with daemon threads
+	
 
 
-
-	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
+	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, ExecutorService pool) {
 		super();
 		this.transfer = transfer;
 		this.aggregates = aggregates;
@@ -38,12 +41,19 @@ public class ARDisplay extends JPanel {
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
 		});
+		if (pool == null) {
+			renderPool = Executors.newFixedThreadPool(1);
+			ownedPool = true;
+		}
+		else {
+			renderPool = pool;
+			ownedPool = false;
+		} //TODO: Redoing painting to use futures...
 	}
 	
 
-	@SuppressWarnings("deprecation")
 	protected void finalize() {
-		if (renderThread != null) {renderThread.stop();}
+		if (ownedPool) {renderPool.shutdown();}
 	}
 	
 	public void setAggregates(Aggregates<?> aggregates) {
@@ -73,9 +83,7 @@ public class ARDisplay extends JPanel {
 				&& transfer != null && aggregates != null;
 		
 		if (doRender && ! renderError) {
-			renderThread = new Thread(new TransferRender(), "Render Thread");
-			renderThread.setDaemon(true);
-			renderThread.start();
+			renderPool.execute(new TransferRender());
 		}
 	
 		if (image != null) {
@@ -99,8 +107,9 @@ public class ARDisplay extends JPanel {
 				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
-							(end-start), image.getWidth(), image.getHeight());}
+//					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
+//							(end-start), image.getWidth(), image.getHeight());
+				}
 			} catch (ClassCastException e) {
 				renderError = true;
 			} finally {
@@ -118,7 +127,7 @@ public class ARDisplay extends JPanel {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new ARDisplay(aggregates, transfer, null), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

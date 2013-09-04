@@ -51,11 +51,9 @@ public class ARCascadePanel extends ARPanel {
 			action = new CascadeRender();
 		} 
 
-		if (action != null && (renderThread == null || !renderThread.isAlive())) {
+		if (action != null) {
+			renderPool.execute(action);
 			renderAgain =false; 
-			renderThread = new Thread(action, "Render Thread");
-			renderThread.setDaemon(true);
-			renderThread.start();
 		}
 		super.paint(g);
 	
@@ -66,20 +64,19 @@ public class ARCascadePanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle viewportBounds = ARCascadePanel.this.getBounds();
+				Rectangle viewport = ARCascadePanel.this.getBounds();
 				AffineTransform vt = viewTransform();
 				int shiftX = (int) -vt.getTranslateX();
 				int shiftY = (int) -vt.getTranslateY();
 				double scale = renderTransform.getScaleX()/vt.getScaleX();
-				int width = (int) (viewportBounds.width * scale);
-				int height = (int) (viewportBounds.height * scale);
+				int width = (int) (viewport.width * scale);
+				int height = (int) (viewport.height * scale);
 				
-				Aggregates subset = FlatAggregates.subset(
-						baseAggregates, 
+				Aggregates subset = AggregationStrategies.verticalRollup((Aggregates) baseAggregates, aggregator, width, height);
+				subset = FlatAggregates.subset(
+						subset, 
 						shiftX, shiftY, 
-						shiftX+width, shiftY+height);
-				
-				subset = AggregationStrategies.verticalRollup(subset, aggregator, viewportBounds.width, viewportBounds.height);
+						shiftX+viewport.width, shiftY+viewport.height);
 				
 				ARCascadePanel.this.aggregates(subset);
 				long end = System.currentTimeMillis();

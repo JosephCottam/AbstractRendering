@@ -46,7 +46,6 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 */
 	public OUT rollup(List<OUT> sources);
 
-	
 	/**What value is an mathematical identity value for this operation?
 	 * Value V is an identity is op(V, x) = x for all V.
 	 * 
