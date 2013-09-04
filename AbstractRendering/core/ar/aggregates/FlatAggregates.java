@@ -57,7 +57,7 @@ public class FlatAggregates<A> implements Aggregates<A>{
 
 	/**Set the value at the given (x,y).**/
 	public synchronized void set(int x, int y, A v) {
-		if (x<lowX || x>=highX || y<lowY || y>=highY) {return;}
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return;} //TODO: Move to asserts?  Push down into idx?
 		int idx = idx(x,y);
 		values[idx] = v;
 	}
@@ -65,7 +65,7 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	
 	/**Get the value at the given (x,y).**/
 	public synchronized A get(int x, int y) {
-		if (x<lowX || x>=highX || y<lowY || y>=highY) {return defaultVal;}
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return defaultVal;} //TODO: Move to asserts? Push down into idx?
 		int idx = idx(x,y);
 		return values[idx];
 	}

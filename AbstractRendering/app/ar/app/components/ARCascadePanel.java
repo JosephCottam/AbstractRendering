@@ -12,8 +12,8 @@ import ar.util.Util;
 public class ARCascadePanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private final int baseWidth = 500;
-	private final int baseHeight = 500;
+	private final int baseWidth = 10000;
+	private final int baseHeight = 10000;
 	private final AffineTransform renderTransform;
 	
 	private volatile Aggregates<?> baseAggregates;

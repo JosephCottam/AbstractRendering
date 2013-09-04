@@ -379,9 +379,14 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	}
 	
 	private static final class LeafNode<V> extends DynamicQuadTree<V> {
+		
 		@SuppressWarnings("unchecked")
+		//Used to iterate over all items (quads and spanning items) uniformly; useful in segmentation
 		private final LeafQuad<V>[] parts = new LeafQuad[5];
+		
+		@SuppressWarnings("unchecked")
 		private final LeafQuad<V>[] quads = new LeafQuad[4];
+
 		private final LeafQuad<V> spanningItems;
 		private int size=0;
 

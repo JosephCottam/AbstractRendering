@@ -120,7 +120,6 @@ public class AggregationStrategies {
 		final double wspan = startWidth/(double) targetWidth;
 		final double hspan = startHeight/(double) targetHeight;
 		int span = (int) Math.ceil(Math.max(wspan, hspan));
-		System.out.println(span);
 		return verticalRollup(start, red, span);
 	}
 

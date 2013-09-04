@@ -107,8 +107,8 @@ public class ARDisplay extends JPanel {
 				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-//					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
-//							(end-start), image.getWidth(), image.getHeight());
+					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
+							(end-start), image.getWidth(), image.getHeight());
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
