@@ -80,8 +80,11 @@ public class AggregationStrategies {
 	 * Over-the-edge-values for the tesselation are taken as  
 	 * 
 	 * TODO: Add fractional value support (signature becomes <IN, OUT> Aggregates<OUT> vr(Aggregates<IN>, Aggregator<?, IN>, Fractioner<IN,OUT>)"; Default fractioner is "majority"
+	 * 
+	 * @param factor Requested roll-up factor.  
 	 * **/
-	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, int size) {
+	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, double factor) {
+		int size = (int) Math.round(factor);
 		if (size < 1) {return start;}
 		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
 
@@ -120,7 +123,7 @@ public class AggregationStrategies {
 		final double wspan = startWidth/(double) targetWidth;
 		final double hspan = startHeight/(double) targetHeight;
 		int span = (int) Math.ceil(Math.max(wspan, hspan));
-		return verticalRollup(start, red, span);
+ 		return verticalRollup(start, red, span);
 	}
 
 	

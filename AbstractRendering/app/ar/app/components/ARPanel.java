@@ -7,9 +7,9 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import ar.*;
+import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 
 public class ARPanel extends JPanel {
@@ -29,8 +29,8 @@ public class ARPanel extends JPanel {
 	protected volatile boolean renderAgain = false;
 	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
-	protected ExecutorService renderPool = Executors.newFixedThreadPool(1);  //TODO: Redoing painting to use futures... 
-	
+	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1);//TODO: Redoing painting to use futures...
+		
 	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
 		display = new ARDisplay(null, transfer, renderPool);
@@ -88,6 +88,12 @@ public class ARPanel extends JPanel {
 	
 	@Override
 	public void paint(Graphics g) {
+		panelPaint(g);
+		super.paint(g);
+	}
+	
+	//Override this method in subclasses to make custom painting
+	protected void panelPaint(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
@@ -103,8 +109,6 @@ public class ARPanel extends JPanel {
 			renderPool.execute(action);
 			renderAgain =false; 
 		} 
-		super.paint(g);
-	
 	}
 	
 	private final class FullRender implements Runnable {

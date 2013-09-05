@@ -2,6 +2,7 @@ package ar.app.components;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ar.*;
 import ar.aggregates.FlatAggregates;
@@ -12,8 +13,8 @@ import ar.util.Util;
 public class ARCascadePanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private final int baseWidth = 10000;
-	private final int baseHeight = 10000;
+	private final int baseWidth = 1000;
+	private final int baseHeight = 1000;
 	private final AffineTransform renderTransform;
 	
 	private volatile Aggregates<?> baseAggregates;
@@ -37,7 +38,7 @@ public class ARCascadePanel extends ARPanel {
 	}
 	
 	@Override
-	public void paint(Graphics g) {
+	protected void panelPaint(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
@@ -55,8 +56,6 @@ public class ARCascadePanel extends ARPanel {
 			renderPool.execute(action);
 			renderAgain =false; 
 		}
-		super.paint(g);
-	
 	}
 	
 	private final class CascadeRender implements Runnable {
@@ -66,13 +65,11 @@ public class ARCascadePanel extends ARPanel {
 			try {
 				Rectangle viewport = ARCascadePanel.this.getBounds();
 				AffineTransform vt = viewTransform();
-				int shiftX = (int) -vt.getTranslateX();
-				int shiftY = (int) -vt.getTranslateY();
 				double scale = renderTransform.getScaleX()/vt.getScaleX();
-				int width = (int) (viewport.width * scale);
-				int height = (int) (viewport.height * scale);
+				int shiftX = (int) -(vt.getTranslateX()-(renderTransform.getTranslateX()/scale));
+				int shiftY = (int) -(vt.getTranslateY()-(renderTransform.getTranslateY()/scale));
 				
-				Aggregates subset = AggregationStrategies.verticalRollup((Aggregates) baseAggregates, aggregator, width, height);
+				Aggregates subset = AggregationStrategies.verticalRollup((Aggregates) baseAggregates, aggregator, Math.ceil(scale));
 				subset = FlatAggregates.subset(
 						subset, 
 						shiftX, shiftY, 

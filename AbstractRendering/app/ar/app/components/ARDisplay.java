@@ -7,9 +7,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import ar.*;
+import ar.app.util.MostRecentOnlyExecutor;
 import ar.renderers.SerialSpatial;
 import ar.util.Util;
 
@@ -26,9 +26,8 @@ public class ARDisplay extends JPanel {
 	private BufferedImage image;
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
-	protected final ExecutorService renderPool; 
+	protected final ExecutorService renderPool;//TODO: Redoing painting to use futures... 
 	protected final boolean ownedPool; //TODO: Perhaps remove and use a render pool filled with daemon threads
-	
 
 
 	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, ExecutorService pool) {
@@ -42,16 +41,15 @@ public class ARDisplay extends JPanel {
 			public void componentHidden(ComponentEvent e) {}
 		});
 		if (pool == null) {
-			renderPool = Executors.newFixedThreadPool(1);
+			renderPool = new MostRecentOnlyExecutor(1);
 			ownedPool = true;
 		}
 		else {
 			renderPool = pool;
 			ownedPool = false;
-		} //TODO: Redoing painting to use futures...
+		} 
 	}
 	
-
 	protected void finalize() {
 		if (ownedPool) {renderPool.shutdown();}
 	}
