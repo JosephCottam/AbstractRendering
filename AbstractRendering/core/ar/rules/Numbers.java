@@ -30,17 +30,25 @@ public final class Numbers {
 		public int hashCode() {return Count.class.hashCode();}
 	}
 	
-	/**Multiply the input value to determine the alpha value.  Equivalent
-	 * of having each number apply a certain amount of alpha.
+	/**Interpolate between two colors with fixed upper and lower bounds.
+	 * 
+	 * If both colors are the same EXCEPT their alpha values, this is equivalent
+	 * to a fixed alpha application.
 	 * 
 	 * @author jcottam
 	 */
-	public static final class FixedAlpha implements Transfer<Number,Color> {
+	public static final class FixedInterpolate implements Transfer<Number,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high;
 		final double lowv, highv;
 
-		public FixedAlpha(Color low, Color high, double lowV, double highV) {
+		/**
+		 * @param low Color to associated with lowV
+		 * @param high Color to associate with highV
+		 * @param lowV Expected lowest input value
+		 * @param highV Expected highest input value
+		 */
+		public FixedInterpolate(Color low, Color high, double lowV, double highV) {
 			this.low = low;
 			this.high = high;
 			this.lowv = lowV;
@@ -62,7 +70,18 @@ public final class Numbers {
 		private final int logBasis;
 		private Util.Stats extrema;
 		
+		/**
+		 * @param low Color to associate with lowest input value
+		 * @param high Color to associate with highest input value
+		 */
 		public Interpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
+		
+		/**
+		 * @param low Color to associate with lowest input value
+		 * @param high Color to associate with highest input value
+		 * @param empty Color to return when the default aggregate value is encountered
+		 * @param logBasis Log basis to use; Value less than 1 signals linear interpolation
+		 */
 		public Interpolate(Color low, Color high, Color empty, int logBasis) {
 			this.low = low;
 			this.high = high;

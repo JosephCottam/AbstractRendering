@@ -18,6 +18,7 @@ public class General {
 	public static final class Const<T> implements Aggregator<Object,T> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final T val;
+		/**@param val Value to return**/
 		public Const(T val) {this.val = val;}
 		public T combine(long x, long y, T left, Object update) {return val;}
 		public T rollup(List<T> sources) {return val;}
@@ -29,6 +30,8 @@ public class General {
 	public static final class Echo<T> implements Transfer<T,T>, Aggregator<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
+		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
+		 *               but some methods need an empty value independent of the aggregates set.**/
 		public Echo(T empty) {this.empty = empty;}
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 
@@ -48,6 +51,10 @@ public class General {
 		private static final long serialVersionUID = -7511305102790657835L;
 		private final OUT present, absent;
 		
+		/**
+		 * @param present Value to return on not-null
+		 * @param absent Value to return on null
+		 */
 		public Present(OUT present, OUT absent) {
 			this.present = present; 
 			this.absent=absent;
@@ -71,6 +78,11 @@ public class General {
 		private final boolean nullIsValue;
 		private final OUT other; 
 
+		/**
+		 * @param mappings Backing map
+		 * @param other Value to return if the backing map does not include a requested key
+		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
+		 */
 		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue) {
 			this.mappings=mappings;
 			this.nullIsValue = nullIsValue;

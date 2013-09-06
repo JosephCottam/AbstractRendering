@@ -10,6 +10,7 @@ import ar.util.Util;
  * May be instructive for reference though.
  * 
  */
+@SuppressWarnings("javadoc")
 public class Debug {
 
 	/**Compute a gradient across the 2D space.  
@@ -18,6 +19,7 @@ public class Debug {
 	public static final class Gradient implements Aggregator<Object, Color> {
 		private static final long serialVersionUID = 2620947228987431184L;
 		private final float width,height;
+
 		public Gradient(int width, int height) {this.width=width; this.height=height;}
 
 		public Color identity() {return Util.CLEAR;}

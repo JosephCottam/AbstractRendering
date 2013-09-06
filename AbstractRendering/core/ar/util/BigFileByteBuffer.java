@@ -30,14 +30,17 @@ import java.nio.channels.FileChannel;
  * 
  * THIS CLASS IS NOT THREAD SAFE. It uses a stateful cursor and no synchronization...
  * 
- * THIS CLASS ASSUMES THE FILE SIZE DOES NOT CHANGE. 
+ * THIS CLASS ASSUMES THE FILE SIZE DOES NOT CHANGE.  To compensate for files
+ * that change size, the checkCapacity method should be called periodically
+ * (which updates the internal measure of the file size). 
  *   
  * **/
+@SuppressWarnings("javadoc")
 public class BigFileByteBuffer {
 	private final FileInputStream inputStream;
-	private final long fileSize;
 	private final int margin;
 	private final int bufferSize;
+	private long fileSize;
 	
 	private ByteBuffer buffer;
 	private long filePos=0;
@@ -51,8 +54,8 @@ public class BigFileByteBuffer {
 	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
 		inputStream = new FileInputStream(source);
 		FileChannel channel =  inputStream.getChannel();
+		fileSize = checkCapacity();
 		
-		fileSize = channel.size();
 		filePos = 0;
 		buffer = channel.map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, fileSize));
 		
@@ -69,7 +72,7 @@ public class BigFileByteBuffer {
 	public long fileSize() {return fileSize;}
 	
 	public byte get() {return ensure(1).get();}
-	public short getShort() {return ensure(2).getShort();}
+	public short getShort() {return ensure(2).getShort();}	
 	public int getInt() {return ensure(4).getInt();}
 	public long getLong() {return ensure(8).getLong();}
 	public char getChar() {return ensure(2).getChar();}
@@ -82,8 +85,29 @@ public class BigFileByteBuffer {
 		buffer.get(target);
 	}
 	
-	
+	/**How large is the backing file?
+	 * 
+	 * Capacity is measured at the time that the BigFileBytBuffer is created.  
+	 * To cause capacity to be calculated, invoke the checkCapacity method.
+	 * @return Capacity in bytes
+	 */
 	public long capacity() {return fileSize;}
+
+	
+	/**Re-examine the backing file and update the stored capacity measure
+	 * to reflect the file size at this time.  This update is not invoked 
+	 * internally except at construction, so dynamically changing files
+	 * need to have this method periodically invoked externally. 
+	 *   
+	 * @return The new file size (e.g., buffer "capacity").
+	 * @throws IOException
+	 */
+	public long checkCapacity() throws IOException {
+		fileSize = inputStream.getChannel().size();
+		return fileSize;
+	}
+	
+	/**Move the current access cursor to the indicated position.**/
 	public void position(long at) {
 		try {ensure(at, margin).position((int) (at-filePos));}
 		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}

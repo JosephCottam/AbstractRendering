@@ -65,11 +65,11 @@ public class ARServer extends NanoHTTPD {
 		
 		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate(new Color(255,0,0,38), Color.red));
 		TRANSFERS.put("RedWhiteLog", new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10));
-		TRANSFERS.put("Alpha10", new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5));
-		TRANSFERS.put("AlphaMin", new Numbers.FixedAlpha(Color.white, Color.red, 0, 255));
+		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5));
+		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
-		TRANSFERS.put("90Percent", new Categories.FirstPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
-		TRANSFERS.put("25Percent", new Categories.FirstPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("90Percent", new Categories.KeyPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
+		TRANSFERS.put("25Percent", new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("Echo", new General.Echo<Color>(Util.CLEAR));
 		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
 		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));

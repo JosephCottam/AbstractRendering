@@ -12,6 +12,7 @@ public class IndexedEncoding implements Indexed {
 	private final TYPE[] types;
 	private final ByteBuffer buffer;
 	
+	/**Create a new indexed encoding wrapper for a record in a BigFileByteBuffer**/
 	public IndexedEncoding(TYPE[] types, long offset, int recordSize, BigFileByteBuffer buffer) {
 		this.types = types;
 		

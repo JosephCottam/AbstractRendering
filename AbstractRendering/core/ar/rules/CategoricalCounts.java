@@ -41,8 +41,15 @@ public interface CategoricalCounts<T> {
 		final SortedMap<T, Integer> counts;
 		private final int fullSize;
 		
+		/**Create a new CoC with "natural" ordering.**/
 		public CoC() {this(new TreeMap<T,Integer>(),0);}
+		
+		/**@param comp Comparator used to order categories.**/
 		public CoC(Comparator<T> comp) {this(new TreeMap<T,Integer>(comp),0);}
+		
+		/**@param counts Map backing this set of counts
+		 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
+		 ***/
 		public CoC(SortedMap<T, Integer> counts, int fullSize) {
 			this.counts = counts;
 			this.fullSize = fullSize;

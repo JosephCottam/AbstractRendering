@@ -46,42 +46,50 @@ public class Categories {
 	}
 
 	
-	/**Return a specific value if an item is present, 
-	 * otherwise return another specific value. 
-	 *
-	 * @param <T> Type of the value that may be returned 
+	/**Return one value if a key value is found,
+	 * return another value if the key value is not found.
+	 * 
+	 * The class is biased towards the key value, so if
+	 * multiple values are presented and ANY of them are
+	 * not the expected value, then it is treated as the unexpected value.
 	 */
-	public static final class Binary<T> implements Aggregator<T,T> {
+	public static final class Binary<IN,OUT> implements Transfer<IN,OUT> {
 		private static final long serialVersionUID = 7268579911789809640L;
-		private final T val, def;
-		public Binary(T val, T def) {
-			this.val = val;
-			this.def = def;
-		}
-
-		public T combine(long x, long y, T left, T update) {return val;}
-		public T rollup(List<T> sources) {
-			for (T s: sources) {if (s != def) {return val;}}
-			return def;
-		}
-
-		public T identity() {return def;}
+		private final IN key;
+		private final OUT match, noMatch;
+		private final Comparator<IN> comp;
 		
-		public boolean equals(Object other) {
-			return other instanceof Binary 
-					&& this.val == ((Binary<?>) other).val 
-					&& this.def ==  ((Binary<?>) other).def;
+		/**
+		 * @param key Value to check for 
+		 * @param match Value to return if the key is found
+		 * @param noMatch Value to return if the key is not found
+		 * @param comp Comparator to use to determine match; if null then object identity (==) is used.
+		 */
+		public Binary(IN key, OUT match, OUT noMatch, Comparator<IN> comp) {
+			this.key = key;
+			this.match = match;
+			this.noMatch = noMatch;
+			this.comp = comp;
 		}
 
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((def == null) ? 0 : def.hashCode());
-			result = prime * result + ((val == null) ? 0 : val.hashCode());
-			return result;
+		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+			IN v = aggregates.get(x, y);
+			if ((comp != null && comp.compare(v, key) == 0) || v == key) {return match;}
+			return noMatch;
 		}
+
+		public OUT emptyValue() {return noMatch;}
+
+		@Override
+		public void specialize(Aggregates<? extends IN> aggregates) {}
+		
 	}
 	
+	/**Create run-length-encodings (RLE objects) for each aggregate value.
+	 * 
+	 * See the class description for {@link ar.rules.CategoricalCounts.RLE} 
+	 * @param <T> Type of the categories
+	 */
 	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
 		private static final long serialVersionUID = 1379800289471184022L;
 
@@ -106,12 +114,24 @@ public class Categories {
 		public RLE<T> identity() {return new RLE<T>();}
 	}
 	
-	
+	/**Create categorical counts for each aggregate.
+	 * 
+	 * @param <T> The type of the categories
+	 */
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
 		private static final long serialVersionUID = 6049570347397483699L;
 		private final Comparator<T> comp;
 		
+		/**Create categories based on the passed comparator.
+		 *   
+		 * Relative order is ignored, but equality according to the Comparator will yield the same category.
+		 * The first instance of a category will be label used. 
+		 * 
+		 * @param comp
+		 */
 		public CountCategories(Comparator<T> comp) {this.comp = comp;}
+		
+		/**Create categories based on the default definition of equality.**/
 		public CountCategories() {this(null);}
 
 		@Override
@@ -140,6 +160,10 @@ public class Categories {
 		private final Integer background;
 		private final int n;
 		
+		/**
+		 * @param background Value to use if the nth category does not exist
+		 * @param n Category to select
+		 */
 		public NthItem(Integer background, int n) {
 			this.background = background;
 			this.n = n;
@@ -158,19 +182,31 @@ public class Categories {
 
 	/**Switch between two colors depending on the percent contribution of
 	 * a specified category.
+	 * 
+	 * A particular category is distinguished as the key-category.  If the
+	 * key-category constitutes more than X percent of the total then 
+	 * return one value.  Otherwise return another.  If category X is not present, return a third.
+	 * 
 	 ***/
-	public static final class FirstPercent<T> implements Transfer<CategoricalCounts<T>, Color> {
+	public static final class KeyPercent<T> implements Transfer<CategoricalCounts<T>, Color> {
 		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
 		private final Object firstKey;
 		
-		public FirstPercent(double ratio, Object firstKey,  Color background, Color match, Color noMatch) {
+		/**
+		 * @param ratio Target ratio
+		 * @param keyCategory Category to consider 
+		 * @param background Color to return if the key-category is not present
+		 * @param match Color to return if key-category constitutes at least ratio percent of the total
+		 * @param noMatch Color to return if the key-category does not constitute at least ratio percent of the total
+		 */
+		public KeyPercent(double ratio, Object keyCategory,  Color background, Color match, Color noMatch) {
 			this.ratio = ratio;
 			this.background = background;
 			this.match = match;
 			this.noMatch = noMatch;
-			this.firstKey = firstKey;
+			this.firstKey = keyCategory;
 		}
 		
 		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {

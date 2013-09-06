@@ -105,6 +105,15 @@ public final class Util {
 		return new java.awt.Color(r,g,b,a);
 	}
 
+	/**Log weight average v between min and max, then do a linear interpolation between low and high.
+	 * @param low The color to associate with the minimum value
+	 * @param high The color to associate with the maximum value
+	 * @param min The lowest value to expect
+	 * @param max The highest value to expect
+	 * @param v The current value under consideration
+	 * @param basis The basis for the log
+	 * @return A color between low and high proportional to the log-distance of v between min and max
+	 * **/
 	public static Color logInterpolate(Color low, Color high, double min, double max, double v, double basis) {
 		if (v>max) {v=max;}
 		if (v<min) {v=min;}
@@ -135,8 +144,15 @@ public final class Util {
 		return weightedAverage(rmin, rmax, p);
 	}
 	
-	public static double weightedAverage(double v1, double v2, double weight) {
-		return (v1 -v2) * weight + v2;
+	/**Weighted average between two values
+	 * 
+	 * @param min The lowest value to expect
+	 * @param max The highest value to expect
+	 * @param p The desired percentage offset between max and min 
+	 * @return The resulting value
+	 */
+	public static double weightedAverage(double min, double max, double p) {
+		return (min-max) * p + min;
 	}
 
 
@@ -173,6 +189,8 @@ public final class Util {
 	}
 
 
+	/**Wrapper class for statistical values derived from a common source.**/
+	@SuppressWarnings("javadoc")
 	public static final class Stats {
 		public final double min;
 		public final double max;

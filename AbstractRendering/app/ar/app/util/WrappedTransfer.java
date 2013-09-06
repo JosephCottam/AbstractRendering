@@ -100,14 +100,14 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class FixedAlpha implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String toString() {return "10% Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 	
 	public class FixedAlphaB implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.FixedAlpha(Color.white, Color.red, 0, 255);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);}
 		public String toString() {return "Min Alpha (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -121,21 +121,21 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class Percent90 implements WrappedTransfer<CategoricalCounts<Color>,Color> {
-		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.FirstPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red);}
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.KeyPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "90% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 
 	public class Percent95 implements WrappedTransfer<CategoricalCounts<Color>,Color> {
-		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.FirstPercent<Color>(.95, Color.blue, Color.white, Color.blue, Color.red);}
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.KeyPercent<Color>(.95, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "95% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
 	}
 
 	public class Percent25 implements WrappedTransfer<CategoricalCounts<Color>,Color> {
-		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.FirstPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red);}
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "25% Percent (RLE)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}

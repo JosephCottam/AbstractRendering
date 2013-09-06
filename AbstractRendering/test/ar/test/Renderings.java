@@ -75,7 +75,7 @@ public class Renderings {
 	public void CheckerboardQuad() throws Exception {
 		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("checker_quad", glyphs, agg, t);
 	}
 
@@ -84,7 +84,7 @@ public class Renderings {
 	public void CirclepointsQuad() throws Exception {
 		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("circle_quad", glyphs, agg, t);
 	}
 
@@ -100,7 +100,7 @@ public class Renderings {
 						new Valuer.Constant<Indexed, Object>(1)));
 		
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-		Transfer<Number, Color> t = new Numbers.FixedAlpha(Color.white, Color.red, 0, 25.5);
+		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("checker_mem", glyphs, agg, t);
 	}
 

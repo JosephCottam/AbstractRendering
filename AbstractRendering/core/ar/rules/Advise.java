@@ -9,14 +9,23 @@ import ar.Transfer;
 import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
+/**Advise methods provide information about where to look in a visualization.
+ * 
+ * These are experimental methods of unproven value, use at your own risk.
+ *  
+ * @author jcottam
+ */
 public class Advise {
 	//TODO: Extend to reporting the magnitude of the under-saturation
 	//TODO: Should this look at mins instead-of/in-addition-to empty?
 	//TODO: What if there are multiple "smallest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
+	/** Mark regions where multiple values are represented in the same way as the minimum value.*/
 	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
 		private static final long serialVersionUID = -5898665841659861105L;
 		final Transfer<A,B> ref;
+		
+		/**@param reference Transfer function that determines representation**/
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
 		public Boolean emptyValue() {return Boolean.FALSE;}
 		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -32,6 +41,7 @@ public class Advise {
 	//TODO: Extend to reporting the magnitude of the over-saturation
 	//TODO: What if there are multiple "largest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
+	/** Mark regions where multiple values are represented in the same way as the maximum value.*/
 	public static class OverSaturate<A,B> implements Transfer<A, Boolean> {
 		private static final long serialVersionUID = -134839100328128893L;
 		final Transfer<A,B> ref;
@@ -39,6 +49,8 @@ public class Advise {
 		private A max;
 		private B top;
 
+		/**@param reference Transfer function that determines representation
+		 * @param comp Comparator used to determine "sameness"**/
 		public OverSaturate(Transfer<A,B> reference, Comparator<A> comp) {
 			this.ref = reference;
 			this.comp = comp;
@@ -59,7 +71,7 @@ public class Advise {
 		}
 	}
 	
-	
+	/** Mark regions where multiple values are represented in the same way as the minimum or maximum values.*/
 	public static class OverUnder implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 7662347822550778810L;
 		private final Transfer<Number, Color> base;
@@ -67,6 +79,11 @@ public class Advise {
 		private final Transfer<Number, Boolean> over;
 		private final Color overColor, underColor;
 		
+		/**
+		 * @param overColor Color to mark over saturation
+		 * @param underColor Color to mark under saturation
+		 * @param base Transformation that determines all colors and to find over/under saturation
+		 */
 		public OverUnder(Color overColor, Color underColor, Transfer<Number, Color> base) {
 			this.overColor = overColor;
 			this.underColor = underColor;
@@ -99,13 +116,27 @@ public class Advise {
 
 	
 	
-	
+	/**Highlight aggregates that carry an unusually high amount of value in their neighborhood.
+	 * 
+	 * Only pixels with a value will be colored.
+	 * 
+	 * Neighborhood is generally square of size 2*distance+1 and the aggregate set under consideration as its center.
+	 * However, no items beyond the bounding box of the data are considered.  
+	 * This edge effect is factored out by weighting all measures based on the number aggregates
+	 * examined. 
+	 * 
+	 * **/
 	public static class DrawDark implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 4417984252053517048L;
-		public final int distance;
-		public final Transfer<Number, Color> inner;
+		private final int distance;
+		private final Transfer<Number, Color> inner;
 		Aggregates<Double> cached;
 		
+		/**
+		 * @param low Color to represent average or low value in the neighborhood
+		 * @param high Color to represent high value for the neighborhood
+		 * @param distance Distance that defines the neighborhood.
+		 */
 		public DrawDark(Color low, Color high, int distance) {
 			this.distance=distance;
 			inner = new Numbers.Interpolate(low,high,high,-1);
