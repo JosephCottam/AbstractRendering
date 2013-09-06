@@ -128,8 +128,12 @@ public class Advise {
 	 * **/
 	public static class DrawDark implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 4417984252053517048L;
-		private final int distance;
-		private final Transfer<Number, Color> inner;
+		
+		/**How large is the neighborhood?**/
+		public final int distance;
+		
+		/**Transfer function used to determine the colors after the ratios have been determined.**/
+		public final Transfer<Number, Color> inner;
 		Aggregates<Double> cached;
 		
 		/**
