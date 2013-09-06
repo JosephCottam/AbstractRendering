@@ -18,6 +18,8 @@ public class ARSubsetPanel extends ARPanel {
 	private boolean fullRender;
 	private boolean subsetRender;
 	
+	private boolean viewRelativeTransfer = true; 
+	
 	private volatile Aggregates<?> baseAggregates;
 	
 	public ARSubsetPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
@@ -31,7 +33,9 @@ public class ARSubsetPanel extends ARPanel {
 	
 	public void baseAggregates(Aggregates<?> aggregates) {
 		this.baseAggregates = aggregates;
-		super.aggregates(null);
+		if (!viewRelativeTransfer) {display.setRefAggregates(aggregates);}
+		else {display.setRefAggregates(null);}
+		aggregates(null);
 	}
 	
 	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {

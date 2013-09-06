@@ -48,6 +48,7 @@ public class Renderings {
 	public <V,A> BufferedImage image(Renderer r, Glyphset<V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
 		AffineTransform ivt = Util.zoomFit(g.bounds(), width, height);
 		Aggregates<A> ser_aggs = r.aggregate(g, agg, ivt.createInverse(), width, height);
+		t.specialize(ser_aggs);
 		Aggregates<Color> ser_trans = r.transfer(ser_aggs, t);
 		BufferedImage img = Util.asImage(ser_trans, width, height, Color.white);
 		return img;

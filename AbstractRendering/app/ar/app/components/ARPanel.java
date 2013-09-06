@@ -33,7 +33,7 @@ public class ARPanel extends JPanel {
 		
 	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
-		display = new ARDisplay(null, transfer, renderPool);
+		display = new ARDisplay(null, transfer);
 		ARDisplay.PERF_REP = PERF_REP;
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);

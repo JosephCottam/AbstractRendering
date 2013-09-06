@@ -52,6 +52,7 @@ public class RDDRender implements Serializable {
 
 	public <IN, OUT> Aggregates<OUT> transfer(
 			Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t) {
+		t.specialize(aggregates);
 		return new SerialSpatial().transfer(aggregates, t);
 	}
 

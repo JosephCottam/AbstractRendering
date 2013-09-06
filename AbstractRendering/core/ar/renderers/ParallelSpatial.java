@@ -54,15 +54,13 @@ public final class ParallelSpatial implements Renderer {
 	 * transfer implementation without instantiating a ParallelSpatial renderer.
 	 * 
 	 * @param aggregates Aggregates to perform transfer on
-	 * @param t Transfer operation
+	 * @param t Transfer operation; Must be "specialized" before being passed in. 
 	 * @param taskSize Maximum transfer task size (in number of aggregates) 
 	 * @param pool Thread pool to use for parallelization
 	 * @return Resulting aggregates
 	 */
 	public static <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t, int taskSize, ForkJoinPool pool) {
 		Aggregates<OUT> result = new FlatAggregates<OUT>(aggregates, t.emptyValue());
-		t.specialize(aggregates);
-		
 		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;

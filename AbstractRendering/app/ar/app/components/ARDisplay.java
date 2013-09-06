@@ -20,17 +20,27 @@ public class ARDisplay extends JPanel {
 	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
 	public static boolean PERF_REP = false;
 
+	/**Transfer function to use in rendering*/
 	private Transfer<?,?> transfer;
+	
+	/**Aggregates to render*/
 	private Aggregates<?> aggregates;
+	
+	/**Aggregates to use for specialization of the transfer function.
+	 * 
+	 * If null, the regular aggregates will be used for transfer specialization.
+	 * If non-null, this set of aggregates is used.*/
+	private Aggregates<?> refAggregates;
+
 	private Renderer renderer = new SerialSpatial();
 	private BufferedImage image;
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
-	protected final ExecutorService renderPool;//TODO: Redoing painting to use futures... 
-	protected final boolean ownedPool; //TODO: Perhaps remove and use a render pool filled with daemon threads
+
+	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
 
 
-	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, ExecutorService pool) {
+	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
 		super();
 		this.transfer = transfer;
 		this.aggregates = aggregates;
@@ -40,24 +50,22 @@ public class ARDisplay extends JPanel {
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
 		});
-		if (pool == null) {
-			renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
-			ownedPool = true;
-		}
-		else {
-			renderPool = pool;
-			ownedPool = false;
-		} 
 	}
 	
-	protected void finalize() {
-		if (ownedPool) {renderPool.shutdown();}
-	}
+	protected void finalize() {renderPool.shutdown();}
 	
 	public void setAggregates(Aggregates<?> aggregates) {
 		this.aggregates = aggregates;
 		renderAgain = true;
 		renderError = false;
+	}
+	
+	public void setRefAggregates(Aggregates<?> aggs) {
+		if (this.refAggregates != aggs) {
+			this.refAggregates = aggs;
+			renderAgain = true;
+			renderError = false;
+		}
 	}
 	
 	public  void withTransfer(Transfer<?,?> transfer) {
@@ -96,15 +104,19 @@ public class ARDisplay extends JPanel {
 	}
 	
 	public final class TransferRender implements Runnable {
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void run() {
 			try {
 				Aggregates<?> aggs = aggregates;
 				if (aggs == null) {return;}
 				
 				long start = System.currentTimeMillis();
-
-				@SuppressWarnings({ "rawtypes", "unchecked" })
+				
+				Aggregates specAggs = refAggregates == null ? aggs : refAggregates;
+				transfer.specialize(specAggs);
+				
 				Aggregates<Color> colors = renderer.transfer(aggs, (Transfer) transfer);
+				
 				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
@@ -128,7 +140,7 @@ public class ARDisplay extends JPanel {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer, null), BorderLayout.CENTER);
+		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

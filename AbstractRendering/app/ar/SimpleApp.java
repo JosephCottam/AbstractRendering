@@ -73,6 +73,7 @@ public class SimpleApp {
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		vt.invert();
 		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
+		transfer.specialize(aggregates);
 		Aggregates<Color> colors = r.transfer(aggregates, transfer);
 		
 		//Make a final image (if the aggregates are colors)
@@ -90,7 +91,7 @@ public class SimpleApp {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer, null), BorderLayout.CENTER);
+		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

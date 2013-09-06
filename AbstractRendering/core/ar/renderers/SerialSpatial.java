@@ -10,7 +10,7 @@ import ar.Transfer;
 import ar.aggregates.FlatAggregates;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.
- * This class is largely for reference.  In most caes, a parallel renderer is better.
+ * This class is largely for reference.  In most cases, a parallel renderer is better.
  * **/
 public final class SerialSpatial implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
@@ -32,7 +32,6 @@ public final class SerialSpatial implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
 		Aggregates<OUT> out = new FlatAggregates<OUT>(aggregates, t.emptyValue());
-		t.specialize(aggregates);
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {

@@ -141,6 +141,7 @@ public class ARServer extends NanoHTTPD {
 		
 		Aggregates<?> aggs = r.aggregate(glyphs, agg, inverseView, width, height);
 		for (Transfer t: trans) {
+			t.specialize(aggs);
 			aggs = r.transfer(aggs, t);
 		}
 		return aggs;
