@@ -105,27 +105,6 @@ public class AggregationStrategies {
 		}
 		return end;
 	}
-
-	
-	/**Rollup until the aggregates are close to the requested width and height, then subset.
-	 * 
-	 * "Close" is a width or height where halving them again would make the size below the requested width/height.
-	 * 
-	 * @param start Initial set of aggregates
-	 * @param red Aggregator operation to use for rollup
-	 * @param targetWidth Width to target
-	 * @param targetHeight Height to target
-	 * @return Aggregates of the requested width/height
-	 */
-	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, int targetWidth, int targetHeight) {
-		final int startWidth = start.highX()-start.lowX();
-		final int startHeight = start.highY()-start.lowY();		
-		final double wspan = startWidth/(double) targetWidth;
-		final double hspan = startHeight/(double) targetHeight;
-		int span = (int) Math.ceil(Math.max(wspan, hspan));
- 		return verticalRollup(start, red, span);
-	}
-
 	
 	
 	/**Perform aggregation for a single pixel.**/
