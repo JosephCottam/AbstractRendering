@@ -18,7 +18,9 @@ public class ARSubsetPanel extends ARPanel {
 	private boolean fullRender;
 	private boolean subsetRender;
 	
-	private boolean viewRelativeTransfer = true; 
+	/**Should transfer specialization be done view-relative or always based on full-zoom?
+	 * Default is to be based on full-zoom.**/
+	private boolean viewRelativeTransfer = false; 
 	
 	private volatile Aggregates<?> baseAggregates;
 	
@@ -28,8 +30,10 @@ public class ARSubsetPanel extends ARPanel {
 	
 	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		return new ARSubsetPanel(aggregator, transfer, glyphs, renderer);
-
 	}
+	
+	public void viewRelativeTransfer(boolean viewRelativeTransfer) {this.viewRelativeTransfer =viewRelativeTransfer;}
+	public boolean viewRelativeTransfer() {return viewRelativeTransfer;}
 	
 	public void baseAggregates(Aggregates<?> aggregates) {
 		this.baseAggregates = aggregates;
