@@ -41,7 +41,7 @@ public class ARDisplay extends JPanel {
 			public void componentHidden(ComponentEvent e) {}
 		});
 		if (pool == null) {
-			renderPool = new MostRecentOnlyExecutor(1);
+			renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
 			ownedPool = true;
 		}
 		else {
@@ -98,10 +98,13 @@ public class ARDisplay extends JPanel {
 	public final class TransferRender implements Runnable {
 		public void run() {
 			try {
+				Aggregates<?> aggs = aggregates;
+				if (aggs == null) {return;}
+				
 				long start = System.currentTimeMillis();
 
 				@SuppressWarnings({ "rawtypes", "unchecked" })
-				Aggregates<Color> colors = renderer.transfer((Aggregates) aggregates, (Transfer) transfer);
+				Aggregates<Color> colors = renderer.transfer(aggs, (Transfer) transfer);
 				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {

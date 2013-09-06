@@ -29,7 +29,7 @@ public class ARPanel extends JPanel {
 	protected volatile boolean renderAgain = false;
 	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
-	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1);//TODO: Redoing painting to use futures...
+	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"ARPanel Render Thread");//TODO: Redoing painting to use futures...
 		
 	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
@@ -102,7 +102,7 @@ public class ARPanel extends JPanel {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else if (renderAgain || aggregates == null) {
-			action = new FullRender();
+			action = new RenderAggregates();
 		} 
 
 		if (action != null) {
@@ -111,7 +111,8 @@ public class ARPanel extends JPanel {
 		} 
 	}
 	
-	private final class FullRender implements Runnable {
+	/**Calculate aggregates for a given region.**/
+	protected final class RenderAggregates implements Runnable {
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
 			int width = ARPanel.this.getWidth();

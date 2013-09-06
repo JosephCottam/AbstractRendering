@@ -2,42 +2,57 @@ package ar.app.components;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 
 import ar.*;
 import ar.aggregates.FlatAggregates;
-import ar.renderers.AggregationStrategies;
-import ar.util.Util;
 
-/**Panel that builds aggregates at a "base resolution" instead of the screen's native resolution.
- * 
- * NOTE: This panel is not fit for consumption yet due to issues surrounding zoom.
+/**Panel that renders more than just what's visible on the screen so pan can happen quickly.
  * */
-public class ARCascadePanel extends ARPanel {
+public class ARSubsetPanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
 	private final int baseWidth = 1000;
 	private final int baseHeight = 1000;
-	private final AffineTransform renderTransform;
+	private AffineTransform renderTransform;
+	
+	private boolean fullRender;
+	private boolean subsetRender;
 	
 	private volatile Aggregates<?> baseAggregates;
 	
-	public ARCascadePanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public ARSubsetPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
-		if (glyphs != null) {
-			renderTransform = Util.zoomFit(glyphs.bounds(), baseWidth, baseHeight);
-		} else {
-			renderTransform = null;
-		}
 	}
 	
 	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new ARCascadePanel(aggregator, transfer, glyphs, renderer);
+		return new ARSubsetPanel(aggregator, transfer, glyphs, renderer);
+
 	}
 	
 	public void baseAggregates(Aggregates<?> aggregates) {
 		this.baseAggregates = aggregates;
 		super.aggregates(null);
 	}
+	
+	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+		//Only force full re-render if the zoom factor changed
+		if (renderTransform == null 
+				|| vt.getScaleX() != viewTransformRef.getScaleX()
+				|| vt.getScaleY() != viewTransformRef.getScaleY()) {
+			fullRender = true;
+			subsetRender = true;
+		} 
+		
+		if (renderTransform == null
+				|| vt.getTranslateX() != viewTransformRef.getTranslateX()
+				|| vt.getTranslateY() != viewTransformRef.getTranslateY()) {
+			subsetRender=true;
+		}
+		
+		transferViewTransform(vt);
+	}
+
 	
 	@Override
 	protected void panelPaint(Graphics g) {
@@ -48,46 +63,44 @@ public class ARCascadePanel extends ARPanel {
 				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else if (baseAggregates == null) {
+		} else if (fullRender || baseAggregates == null || renderTransform == null) {
 			action = new AggregateRender();
-		} else if (renderAgain || aggregates == null) {
-			action = new CascadeRender();
+			fullRender = false;
+		} else if (subsetRender || aggregates == null) {
+			action = new SubsetRender();
+			subsetRender = false;
 		} 
 
 		if (action != null) {
 			renderPool.execute(action);
-			renderAgain =false; 
 		}
 	}
 	
-	private final class CascadeRender implements Runnable {
-		@SuppressWarnings({"unchecked","rawtypes"})
+	private final class SubsetRender implements Runnable {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle viewport = ARCascadePanel.this.getBounds();
+				Rectangle viewport = ARSubsetPanel.this.getBounds();
 				AffineTransform vt = viewTransform();
-				double scale = renderTransform.getScaleX()/vt.getScaleX();
-				int shiftX = (int) -(vt.getTranslateX()-(renderTransform.getTranslateX()/scale));
-				int shiftY = (int) -(vt.getTranslateY()-(renderTransform.getTranslateY()/scale));
+				int shiftX = (int) -(vt.getTranslateX()-(renderTransform.getTranslateX()));
+				int shiftY = (int) -(vt.getTranslateY()-(renderTransform.getTranslateY()));
 				
-				Aggregates subset = AggregationStrategies.verticalRollup((Aggregates) baseAggregates, aggregator, Math.ceil(scale));
-				subset = FlatAggregates.subset(
-						subset, 
+				Aggregates<?> subset = FlatAggregates.subset(
+						baseAggregates, 
 						shiftX, shiftY, 
 						shiftX+viewport.width, shiftY+viewport.height);
 				
-				ARCascadePanel.this.aggregates(subset);
+				ARSubsetPanel.this.aggregates(subset);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-					System.out.printf("%d ms (Cascade render)\n",
+					System.out.printf("%d ms (Subset render)\n",
 							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
 			}
 			
-			ARCascadePanel.this.repaint();
+			ARSubsetPanel.this.repaint();
 		}	
 	}
 
@@ -96,17 +109,21 @@ public class ARCascadePanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				ARCascadePanel.this.baseAggregates(renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), baseWidth, baseHeight));
+				renderTransform = viewTransform();
+
+				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, inverseViewTransformRef, baseWidth, baseHeight);
+				ARSubsetPanel.this.baseAggregates(a);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
-					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
+					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
 							(end-start), baseAggregates.highX()-baseAggregates.lowX(), baseAggregates.highY()-baseAggregates.lowY());
 				}
+				
 			} catch (Exception e) {
 				renderError = true;
 			}
 			
-			ARCascadePanel.this.repaint();
+			ARSubsetPanel.this.repaint();
 		}
 	}
 	

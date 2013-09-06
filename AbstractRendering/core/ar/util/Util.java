@@ -152,7 +152,7 @@ public final class Util {
 	 * @return The resulting value
 	 */
 	public static double weightedAverage(double min, double max, double p) {
-		return (min-max) * p + min;
+		return (min-max) * p + max;
 	}
 
 
