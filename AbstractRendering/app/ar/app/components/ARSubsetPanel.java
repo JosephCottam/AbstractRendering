@@ -6,14 +6,13 @@ import java.awt.geom.NoninvertibleTransformException;
 
 import ar.*;
 import ar.aggregates.FlatAggregates;
+import ar.util.Util;
 
 /**Panel that renders more than just what's visible on the screen so pan can happen quickly.
  * */
 public class ARSubsetPanel extends ARPanel {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private final int baseWidth = 1000;
-	private final int baseHeight = 1000;
 	private AffineTransform renderTransform;
 	
 	private boolean fullRender;
@@ -80,10 +79,10 @@ public class ARSubsetPanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle viewport = ARSubsetPanel.this.getBounds();
+				Rectangle viewport = ARSubsetPanel.this.getBounds();				
 				AffineTransform vt = viewTransform();
-				int shiftX = (int) -(vt.getTranslateX()-(renderTransform.getTranslateX()));
-				int shiftY = (int) -(vt.getTranslateY()-(renderTransform.getTranslateY()));
+				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
+				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
 				
 				Aggregates<?> subset = FlatAggregates.subset(
 						baseAggregates, 
@@ -105,13 +104,15 @@ public class ARSubsetPanel extends ARPanel {
 	}
 
 	private final class AggregateRender implements Runnable {
-		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				renderTransform = viewTransform();
+				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
+				renderTransform = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
 
-				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, inverseViewTransformRef, baseWidth, baseHeight);
+				@SuppressWarnings({"unchecked","rawtypes"})
+				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), databounds.width, databounds.height);
+				
 				ARSubsetPanel.this.baseAggregates(a);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
