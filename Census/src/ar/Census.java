@@ -6,6 +6,7 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ import org.opengis.feature.Feature;
 import org.opengis.feature.GeometryAttribute;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.awt.PolygonShape;
 
 import ar.app.components.ARDisplay;
@@ -95,8 +95,8 @@ public class Census {
 			for (int i=0; i< val.size(); i++) {
 				if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
 			}
-			if (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > .25) {
-				return Color.RED;
+			if (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > .1) {
+				return Color.BLACK;
 			} else {
 				return baseline.at(x, y, aggregates);
 			}
@@ -113,9 +113,15 @@ public class Census {
 
 	
 	static class Weave implements Transfer<CoC<Color>, Color> {
+		private static final long serialVersionUID = -6006747974949256518L;
 
-		@Override
-		public Color at(int x, int y,
+		public Color at(int x, int y, Aggregates<? extends CoC<Color>> aggregates) {
+			CoC<Color> counts = aggregates.get(x, y);
+			if (counts.size()>0) {return counts.key(1);}
+			return Color.cyan;
+		}
+
+		public Color at2(int x, int y,
 				Aggregates<? extends CoC<Color>> aggregates) {
 			CoC<Color> counts = aggregates.get(x, y);
 			int top = counts.fullSize();
@@ -140,9 +146,13 @@ public class Census {
 		private static final long serialVersionUID = 4664592034128237981L;
 		final List<Shape> regions;
 		final AffineTransform ivt;
-		RegionSpread(List<Shape> regions, AffineTransform vt) throws Exception {
-			this.regions = regions;
-			this.ivt = vt.createInverse();
+		RegionSpread(List<Shape> reg, AffineTransform ivt) throws Exception {
+			this.ivt = ivt;
+			AffineTransform vt = ivt.createInverse();
+			this.regions = new ArrayList<>();
+			for (Shape s: reg) {
+				regions.add(vt.createTransformedShape(s));
+			}
 		}
 
 		
@@ -150,38 +160,45 @@ public class Census {
 		public CoC<Color> at(int x, int y, Aggregates<? extends CoC<Color>> aggregates) {
 			Shape region = touches(x,y);
 			if (region == null) {return emptyValue();}
-			
-			CoC v = gather(region, aggregates);
+			CoC<Color> v = gather(region, aggregates);
 			return v;
 		}
 
 		@Override
-		public CoC<Color> emptyValue() {return new CoC(Util.COLOR_SORTER);}
+		public CoC<Color> emptyValue() {return new CoC<Color>(Util.COLOR_SORTER);}
 
 		@Override
 		public void specialize(Aggregates<? extends CoC<Color>> aggregates) {/**No work.**/}
 		
 		public Shape touches(int x, int y) {
-			Point2D p = new Point2D.Double(x,y);
-			ivt.transform(p, p);
+			Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
 			for (Shape s: regions) {
-				if (s.contains(p)) {return s;}
+				if (s.intersects(r)) {
+					System.out.println(s);
+					return s;
+				}
 			}
 			return null;
 		}
-		
+
+		static CoC<Color> ref=new CoC(); 
 		public CoC<Color> gather(Shape region, Aggregates<? extends CoC<Color>> aggs) {
-			Point2D p = new Point2D.Double();
+			Rectangle2D r = new Rectangle2D.Double(0,0,1,1);
 			CoC<Color> acc = emptyValue();
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
-					p.setLocation(x, y);
-					ivt.transform(p, p);
-					if (region.contains(p)) {
+					r.setRect(x, y, 1,1);
+					if (region.contains(r)) {
 						acc = CoC.rollup(Util.COLOR_SORTER, Arrays.asList(acc, aggs.get(x, y)));
 					}
 				}
 			}
+			if (!acc.equals(ref)) {
+				ref =acc;
+				System.out.println("Switched: " + ref.toString());
+			}
+			
+//			System.out.println(acc);
 			return acc;
 		}
 		
@@ -204,6 +221,7 @@ public class Census {
 	}
 	
 	//From :http://stackoverflow.com/questions/2044876/does-anyone-know-of-a-library-in-java-that-can-parse-esri-shapefiles
+	@SuppressWarnings("all")
 	public static List<Shape> loadShapes(String filename) throws Exception {
 		File file = new File(filename);
 		List<Shape> polys = new ArrayList<>();
@@ -215,12 +233,9 @@ public class Census {
 		  String[] typeNames = dataStore.getTypeNames();
 		  String typeName = typeNames[0];
 		
-		  System.out.println("Reading content " + typeName);
-		
 		  FeatureSource featureSource = dataStore.getFeatureSource(typeName);
 		  FeatureCollection collection = featureSource.getFeatures();
 		  FeatureIterator iterator = collection.features();
-		
 		
 		  try {
 		    while (iterator.hasNext()) {
@@ -239,6 +254,7 @@ public class Census {
 	}
 	
 
+	@SuppressWarnings("all")
 	public static void show(String label, int width, int height, Aggregates<?> aggs, Transfer<?,?> t) {
 
 		JFrame frame2 = new JFrame(label);
@@ -263,30 +279,31 @@ public class Census {
 		Glyphset<Pair> race = GlyphsetUtils.memMap(
 				"US Census", 
 				"../data/Race_LatLongDenorm.hbin",
-				new FakeMapProject(new Indexed.ToRect(.1, .1, true, 3, 2)),
+				//new FakeMapProject(new Indexed.ToRect(.1, .1, true, 3, 2)),
+				new Indexed.ToRect(.1, .1, true, 3, 2),
 				new Pairer(4,1),
 				1, null);
 
 		Renderer r = new ParallelGlyphs();
 		int width = 800;
 		int height = 435;
-		AffineTransform vt = Util.zoomFit(race.bounds(), width, height);
-		vt.invert();
+		AffineTransform ivt = Util.zoomFit(race.bounds(), width, height);
+		ivt.invert();
 		Aggregator<Pair,CoC<Object>> raceAggregator = new AggregatePairs();
-		Aggregates<CoC<Object>> raceAggs = r.aggregate(race, raceAggregator, vt, width, height);
+		Aggregates<CoC<Object>> raceAggs = r.aggregate(race, raceAggregator, ivt, width, height);
 
 
 		//Homo alpha
 		Aggregates<Integer> counts = r.transfer(raceAggs, new Categories.ToCount<>());
 		//Transfer<Number, Color> homoAlpha = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255), Util.CLEAR, 10);
-		Transfer<Number, Color> homoAlpha = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+		Transfer<Number, Color> homoAlpha = new  Numbers.Interpolate(new Color(255,0,0,100), new Color(255,0,0,255));
 		show("Total_Homo_Alpha", width, height, counts, homoAlpha);
 				
 		//Stratified Alpha  		
 		Map<Object, Color> colors = new HashMap<>();
-		colors.put(2, Color.BLUE);	//White
-		colors.put(3, Color.GREEN);	//African American
-		colors.put(4, Color.RED);	//Native American
+		colors.put(2, new Color(0,0,200));	//White
+		colors.put(3, new Color(0,200,0));	//African American
+		colors.put(4, new Color(220,0,0));	//Native American
 		colors.put(5, Color.GRAY);	//Asian
 		colors.put(6, Color.GRAY);	//Others
 
@@ -303,10 +320,11 @@ public class Census {
 
 		//Color Weave
 		List<Shape> shapes = loadShapes("../data/tl_2010_us_state10.shp");
-		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, vt);
+		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
 		Transfer<CoC<Color>, Color> weave = new Weave();
 		
 		Aggregates<CoC<Color>> spreadAggs = r.transfer((Aggregates) colorAggs, spread);
 		show("Weave", width, height, spreadAggs, weave);
+		System.out.println("Done");
 	}
 }

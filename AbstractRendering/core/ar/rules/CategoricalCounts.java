@@ -81,6 +81,18 @@ public interface CategoricalCounts<T> {
 			for (; i>0; i--) {it.next();}
 			return it.next();			
 		}
+		
+		public boolean equals(Object other) {
+			if (!(other instanceof CoC)) {return false;}
+			CoC<?> alter = (CoC<?>) other;
+			if (alter.size() != size()) {return false;}
+			for (int i=0; i<size(); i++) {
+				if (!alter.key(i).equals(key(i))) {return false;}
+				if (alter.count(i) != count(i)) {return false;}
+			}
+			return true;
+		}
+		
 		public int count(int i) {
 			Iterator<Integer> it = counts.values().iterator();
 			for (; i>0; i--) {it.next();}
