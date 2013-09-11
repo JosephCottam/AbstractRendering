@@ -164,7 +164,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class Census implements Preset {
 		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(10);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String name() {return "US Census";}
@@ -184,13 +184,13 @@ public class Presets extends CompoundPanel {
 	private static final Glyphset<Color> KIVA_ADJ; 
 	private static final Glyphset<Color> BOOST_MEMORY; 
 	private static final Glyphset<Color> BOOST_MEMORY_MM; 
-	private static final Glyphset<Color> CENSUS_MM; 
+	private static final Glyphset<Color> CENSUS_MM;
 	
 	private static String MEM_VIS_CSV = "../data/MemVisScaled.csv";
 	private static String MEM_VIS_BIN = "../data/MemVisScaledB.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kivaAdj.hbin";
-	private static String CENSUS = "../data/Total_LatLong.hbin";
+	private static String CENSUS = "../data/census/Total_LatLong.hbin";
 	
 	static {
 		if (!(new File(MEM_VIS_CSV)).exists()) {MEM_VIS_CSV = MEM_VIS_CSV + "_subset";}
@@ -224,6 +224,7 @@ public class Presets extends CompoundPanel {
 		} catch (Exception e) {e.printStackTrace();}
 		CENSUS_MM = set;
 
+		
 		set = null;
 		try {set = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Color>make());}
 		catch (Exception e) {e.printStackTrace();}

@@ -159,8 +159,6 @@ public class ARPanel extends JPanel {
 		zoomAbs(p, scaleX/viewTransform().getScaleX(), scaleY/viewTransform().getScaleY());
 	}
 
-
-
 	
 	/**Zoom anchored on the given screen point by the given scale.*/
 	public void zoom(final Point2D p, double scale) {

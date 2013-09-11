@@ -40,8 +40,7 @@ import ar.util.IndexedEncoding;
  *   +   d -- Double (eight bytes)
  *   +   c -- Char (two bytes)
  *   +   b -- Byte (one byte)
- * 
- * TODO: Add skip parameter to skip a certain number of bytes at the start of the file 
+ *   
  * @author jcottam
  *
  */
@@ -206,7 +205,8 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	@Override
 	public Glyphset<V> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		return GlyphSubset.make(this, bottom, top, true);
+		Glyphset<V> subset = GlyphSubset.make(this, bottom, top, true);
+		return subset;
 	}
 
 }
