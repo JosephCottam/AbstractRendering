@@ -65,8 +65,6 @@ public class ParallelGlyphs implements Renderer {
 				recorder,
 				0, glyphs.segments());
 		
-		//System.out.println("-------------------------------------------");
-		
 		Aggregates<A> a= pool.invoke(t);
 
 		return a;
