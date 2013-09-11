@@ -41,7 +41,7 @@ public class AggregationStrategies {
 		T identity = red.identity();
 
 		if ((left instanceof ConstantAggregates) && Util.isEqual(identity, left.defaultValue())) {return right;}
-		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return right;}
+		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return left;}
 
 		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
 		Aggregates<T> target;
