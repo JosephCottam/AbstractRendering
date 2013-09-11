@@ -3,12 +3,13 @@ package ar.rules;
 import java.awt.Color;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
+import ar.rules.CategoricalCounts.CoC;
 import ar.util.Util;
-import static ar.rules.CategoricalCounts.CoC;
 import static ar.rules.CategoricalCounts.RLE;
 
 /**Tools for working with categorical entries.**/
@@ -44,6 +45,63 @@ public class Categories {
 		public boolean equals(Object other) {return other instanceof Last;}
 		public int hashCode() {return Last.class.hashCode();}
 	}
+	
+	/**Convert a set of categorical counts to its total.**/ 
+	public static final class ToCount<IN> implements Transfer<CategoricalCounts<IN>, Integer> {
+		private static final long serialVersionUID = -8842454931082209229L;
+
+		@Override
+		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			return aggregates.get(x,y).fullSize();
+		}
+
+		@Override
+		public Integer emptyValue() {return 0;}
+
+		@Override
+		public void specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {/*No action.*/}
+	}
+	
+	/**Replace categories with other categories.
+	 * 
+	 * Useful for (for example) assigning categories to colors.
+	 * **/ 
+	public static final class ReKey<IN,OUT> implements Transfer<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+		private static final long serialVersionUID = -1547309163997797688L;
+		
+		final CategoricalCounts<OUT> like;
+		final Map<IN,OUT> rekey;
+		final OUT missing;
+		public ReKey(CategoricalCounts<OUT> like, Map<IN,OUT> rekey, OUT missing) {
+			this.like = like;
+			this.rekey = rekey;
+			this.missing= missing;
+		}
+
+		@Override
+		public CategoricalCounts<OUT> at(int x, int y,
+				Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			CategoricalCounts<IN> v = aggregates.get(x, y);
+			CategoricalCounts<OUT> acc = emptyValue();
+			
+			for (int i=0; i<v.size();i++) {
+				IN cat = v.key(i);
+				int count = v.count(i);
+				OUT cat2;
+				if (rekey.containsKey(cat)) {cat2 = rekey.get(cat);}
+				else {cat2 = missing;}
+				acc = acc.extend(cat2, count);
+			}
+			return acc;
+		}
+
+		@Override
+		public CategoricalCounts<OUT> emptyValue() {return like.empty();}
+
+		@Override
+		public void specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {/**No work.**/}		
+	}
+	
 
 	
 	/**Return one value if a key value is found,
@@ -141,13 +199,7 @@ public class Categories {
 
 		@Override
 		public CoC<T> rollup(List<CoC<T>> sources) {
-			CoC<T> combined = new CoC<T>(comp);
-			for (CoC<T> counts: sources) {
-				for (T key: counts.counts.keySet()) {
-					combined = combined.extend(key, counts.count(key));
-				}
-			}
-			return combined;
+			return CategoricalCounts.CoC.rollup(comp, sources);
 		}
 
 		@Override
@@ -243,7 +295,7 @@ public class Categories {
 
 		/**
 		 * @param background Background color
-		 * @param omin Opacity minimum
+		 * @param omin Opacity minimum (range 0-1)
 		 * @param log Use a log scale?
 		 */
 		public HighAlpha(Color background, double omin, boolean log) {

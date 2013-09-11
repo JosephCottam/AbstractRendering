@@ -16,9 +16,6 @@ import ar.renderers.SerialSpatial;
 import ar.util.Util;
 
 /**Tests the amount of time to render count visualizations.
- * 
- * MUST ENABLE THE SIGNAL IN ARPanel FOR THIS TEST TO WORK CORRECTLY 
- * 
  * **/
 public class RenderSpeedTest {
 	private static String arg(String[] args, String flag, String def) {

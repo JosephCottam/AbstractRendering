@@ -139,6 +139,7 @@ public class ARServer extends NanoHTTPD {
 			r = new ParallelSpatial();
 		}
 		
+		//TODO: Generalize to use a chained transfer function instead
 		Aggregates<?> aggs = r.aggregate(glyphs, agg, inverseView, width, height);
 		for (Transfer t: trans) {
 			t.specialize(aggs);

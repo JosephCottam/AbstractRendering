@@ -13,7 +13,6 @@ import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Tools that don't apply to a particular data type.**/
 public class General {
-	
 	/**Aggregator that always returns the same value.**/
 	public static final class Const<T> implements Aggregator<Object,T> {
 		private static final long serialVersionUID = 2274344808417248367L;

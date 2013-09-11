@@ -99,7 +99,7 @@ public class SimpleApp {
 		//ARPanel is more fully-featured than ARDisplay. It will run the whole render loop
 		//and includes zoom/pan listeners.  It is harder to use though, because it takes control
 		//over the process in a more robust but somewhat opaque way.
-		//Since ARPanel drives the whole rendering process, it takse the dataset, rendering strategy
+		//Since ARPanel drives the whole rendering process, it takes the dataset, rendering strategy
 		//and related definitions in as parameters
 		JFrame frame2 = new JFrame("ARPanel");
 		frame2.setLayout(new BorderLayout());

@@ -41,10 +41,7 @@ import ar.util.IndexedEncoding;
  *   +   c -- Char (two bytes)
  *   +   b -- Byte (one byte)
  * 
- * TODO: Add skip parameter to skip a certain number of bytes at the start of the file
- * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Table file stores offsets into string-table for string values
- * TODO: Add support for non-color glyphs (generalize Painter...)
- * 
+ * TODO: Add skip parameter to skip a certain number of bytes at the start of the file 
  * @author jcottam
  *
  */

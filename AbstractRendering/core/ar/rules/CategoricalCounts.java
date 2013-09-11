@@ -34,6 +34,9 @@ public interface CategoricalCounts<T> {
 	 * each association should be counted. 
 	 */
 	public int size();
+	
+	/**Return a new categorical counts object of the same type, but empty.**/
+	public CategoricalCounts<T> empty();
 
 
 	/**Count categories.  Categories are stored in sorted order (so "nth" makes sense).**/
@@ -83,6 +86,21 @@ public interface CategoricalCounts<T> {
 			for (; i>0; i--) {it.next();}
 			return it.next();
 		}
+
+		@SuppressWarnings("unchecked")
+		public CoC<T> empty() {return new CoC<>((Comparator<T>) counts.comparator());} 
+
+		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
+			CoC<T> combined = new CoC<T>(comp);
+			for (CoC<T> counts: sources) {
+				for (T key: counts.counts.keySet()) {
+					combined = combined.extend(key, counts.count(key));
+				}
+			}
+			return combined;
+		}
+		
+
 	}
 	
 	/**Encapsulation of run-length encoding information.
@@ -90,6 +108,9 @@ public interface CategoricalCounts<T> {
 	 * in the order they were found.  The same category may appear 
 	 * multiple times if items of the category are interspersed with
 	 * items from other categories.
+	 * 
+	 * TODO: Add comparator support
+	 * 
 	 */
 	public static final class RLE<T> implements CategoricalCounts<T> {
 		private final List<T> keys;
@@ -162,5 +183,7 @@ public interface CategoricalCounts<T> {
 			}
 			return 0;
 		}
+		
+		public CategoricalCounts<T> empty() {return new RLE<>();}
 	}
 }

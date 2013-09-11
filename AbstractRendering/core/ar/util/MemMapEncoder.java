@@ -112,11 +112,11 @@ public class MemMapEncoder {
 		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
 		FileOutputStream file = new FileOutputStream(target);
 		
+		int entriesRead = 0;
 		try {
 			byte[] header = makeHeader(types); 
 			file.write(header);
 
-			int entriesRead = 0;
 			while(source.hasNext()) {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
@@ -130,7 +130,8 @@ public class MemMapEncoder {
 			}
 			
 			System.out.printf("Processed %,d entries.\n", entriesRead);
-			
+		}catch (Exception e) {
+			throw new RuntimeException(String.format("Error on or near entry %,d", entriesRead), e);
 		} finally {file.close();}
 	}
 
