@@ -121,16 +121,19 @@ public interface CategoricalCounts<T> {
 	 * multiple times if items of the category are interspersed with
 	 * items from other categories.
 	 * 
-	 * TODO: Add comparator support
-	 * 
+	 * A comparator may (optionally) be supplied through some constructors.
+	 * If supplied, equality of keys is determined to the comparator.
+	 * Otherwise (e.g., if the comparator is null), equality is determined
+	 * by the equals-method of the earlier added key. 
 	 */
 	public static final class RLE<T> implements CategoricalCounts<T> {
 		private final List<T> keys;
 		private final List<Integer> counts;
-		private final int fullSize;
+		private final Comparator<T> comp;
+		private int fullSize = -1;
 		
 		/**Empty run-length encoding.**/
-		public RLE() {this(new ArrayList<T>(), new ArrayList<Integer>(), 0);}
+		public RLE() {this(null, new ArrayList<T>(), new ArrayList<Integer>());}
 		
 		/**Create a new RLE with the given keys and counts.
 		 * The two lists must be of the same length.
@@ -138,20 +141,20 @@ public interface CategoricalCounts<T> {
 		 * @param counts
 		 */
 		public RLE(List<T> keys, List<Integer> counts) {
-			this(keys, counts, sum(counts));
+			this(null, keys, counts);
 		}
 		
-		private static int sum(Iterable<Integer> vals) {
-			int acc=0;
-			for (Integer v: vals) {acc+=v;}
-			return acc;
-		}
-		
-		private RLE(List<T> keys, List<Integer> counts, int fullSize) {
+		/**New RLE object with.
+		 * 
+		 * @param comp Comparitor to use to determine equality (may be null)
+		 * @param keys Keyset to associate with counts
+		 * @param counts Counts to associate with keyset
+		 */
+		public RLE(Comparator<T> comp, List<T> keys, List<Integer> counts) {
 			assert keys.size() == counts.size() : "keys vs. counts size mismatch";
 			this.keys = keys;
 			this.counts = counts;
-			this.fullSize=fullSize;
+			this.comp = comp;
 		}
 		
 		public RLE<T> extend(T key, int count) {
@@ -162,7 +165,7 @@ public interface CategoricalCounts<T> {
 			ncounts.addAll(counts);
 			
 			int last = keys.size()-1;
-			if (last >=0 && key.equals(keys.get(last))) {
+			if (last >=0 && equal(keys.get(last), key)) {
 				nkeys = keys;
 				ncounts.set(last, counts.get(last)+count);
 			} else {
@@ -171,13 +174,26 @@ public interface CategoricalCounts<T> {
 				nkeys.add(key);
 				ncounts.add(count);
 			}
-			return new RLE<T>(nkeys, ncounts, fullSize+count);
+			return new RLE<T>(comp, nkeys, ncounts);
+		}
+
+		private final boolean equal(T existingKey, T newKey) {
+			if (comp == null) {return existingKey.equals(newKey);}
+			else {return comp.compare(existingKey, newKey) == 0;}
 		}
 		
 		public int count(int i) {return counts.get(i);}
 		public T key(int i) {return keys.get(i);}
 		public int size() {return keys.size();}
-		public int fullSize() {return fullSize;}
+		public int fullSize() {
+			if (fullSize == -1) {
+				int acc=0;
+				for (Integer v: counts) {acc+=v;}
+				fullSize = acc;
+			}
+			return fullSize;
+		}
+
 		public String toString() {return "RLE: " + Arrays.deepToString(counts.toArray());}
 		
 		public boolean equals(Object other) {
