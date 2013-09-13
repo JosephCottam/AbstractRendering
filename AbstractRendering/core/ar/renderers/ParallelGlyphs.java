@@ -174,7 +174,7 @@ public class ParallelGlyphs implements Renderer {
 				}
 			}
 
-			recorder.update(high-low);
+			recorder.update(subset.size());
 			return aggregates;
 		}
 	}
