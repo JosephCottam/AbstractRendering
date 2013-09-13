@@ -1,4 +1,4 @@
-package ar.test;
+package ar.test.renderers;
 
 import static org.junit.Assert.*;
 
