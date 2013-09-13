@@ -278,7 +278,7 @@ public class Census {
 	public static void main(String[] args) throws Exception {
 		Glyphset<Pair> race = GlyphsetUtils.memMap(
 				"US Census", 
-				"../data/Race_LatLongDenorm.hbin",
+				"../data/census/Race_LatLongDenorm.hbin",
 				//new FakeMapProject(new Indexed.ToRect(.1, .1, true, 3, 2)),
 				new Indexed.ToRect(.1, .1, true, 3, 2),
 				new Pairer(4,1),
