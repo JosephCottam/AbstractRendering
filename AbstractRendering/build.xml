@@ -21,7 +21,7 @@
   <available property="spark.absent" file="./lib/spark-core-assembly-0.7.2.jar"  value="false"/>
   <property name="spark.absent" value="true"/>
 
-  <target name="build" description="Main build target." depends="clean,depends,core,app" />
+  <target name="build" description="Main build target." depends="clean,depends,core,app,docs" />
 
   <target name="clean" description="Cleanup build artifacts.">
     <delete dir="${bin}"/>
@@ -41,10 +41,6 @@
       <param name="file" value="${coreJar}"/>
       <param name="bin" value="${coreBin}"/>
       <param name="main" value=""/>
-    </antcall>
-    <antcall target="_docs">
-      <param name="src" value="${coreSrc}"/>
-      <param name="jars" value=""/>
     </antcall>
   </target>
 
