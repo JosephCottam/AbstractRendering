@@ -77,7 +77,7 @@ public class SimpleApp {
 		Aggregates<Color> colors = r.transfer(aggregates, transfer);
 		
 		//Make a final image (if the aggregates are colors)
-		@SuppressWarnings("unused")  //Unused because its just ademo of how to do it
+		@SuppressWarnings("unused")  //Unused because its just a demo of how to do it
 		BufferedImage image = Util.asImage(colors, width, height, Color.white);
 		
 		//A simple display panel can be found in ARDisplay.
