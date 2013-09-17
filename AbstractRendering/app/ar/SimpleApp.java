@@ -73,8 +73,8 @@ public class SimpleApp {
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		vt.invert();
 		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
-		transfer.specialize(aggregates);
-		Aggregates<Color> colors = r.transfer(aggregates, transfer);
+		Transfer.Specialized<Number,Color> specializedTransfer = transfer.specialize(aggregates);
+		Aggregates<Color> colors = r.transfer(aggregates, specializedTransfer);
 		
 		//Make a final image (if the aggregates are colors)
 		@SuppressWarnings("unused")  //Unused because its just ademo of how to do it

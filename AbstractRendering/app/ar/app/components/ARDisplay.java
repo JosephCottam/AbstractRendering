@@ -113,9 +113,9 @@ public class ARDisplay extends JPanel {
 				long start = System.currentTimeMillis();
 				
 				Aggregates specAggs = refAggregates == null ? aggs : refAggregates;
-				transfer.specialize(specAggs);
+				Transfer.Specialized ts = transfer.specialize(specAggs);
 				
-				Aggregates<Color> colors = renderer.transfer(aggs, (Transfer) transfer);
+				Aggregates<Color> colors = renderer.transfer(aggs, ts);
 				
 				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();

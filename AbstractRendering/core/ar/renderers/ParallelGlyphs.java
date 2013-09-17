@@ -71,7 +71,7 @@ public class ParallelGlyphs implements Renderer {
 	}
 	
 	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		return ParallelSpatial.transfer(aggregates, t, taskSize, pool);
 	}
 	

@@ -47,7 +47,7 @@ public class Categories {
 	}
 	
 	/**Convert a set of categorical counts to its total.**/ 
-	public static final class ToCount<IN> implements Transfer<CategoricalCounts<IN>, Integer> {
+	public static final class ToCount<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
 
 		@Override
@@ -59,14 +59,14 @@ public class Categories {
 		public Integer emptyValue() {return 0;}
 
 		@Override
-		public void specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {/*No action.*/}
+		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 	}
 	
 	/**Replace categories with other categories.
 	 * 
 	 * Useful for (for example) assigning categories to colors.
 	 * **/ 
-	public static final class ReKey<IN,OUT> implements Transfer<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+	public static final class ReKey<IN,OUT> implements Transfer.Specialized<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
 		private static final long serialVersionUID = -1547309163997797688L;
 		
 		final CategoricalCounts<OUT> like;
@@ -99,7 +99,7 @@ public class Categories {
 		public CategoricalCounts<OUT> emptyValue() {return like.empty();}
 
 		@Override
-		public void specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {/**No work.**/}		
+		public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 	}
 	
 
@@ -111,7 +111,7 @@ public class Categories {
 	 * multiple values are presented and ANY of them are
 	 * not the expected value, then it is treated as the unexpected value.
 	 */
-	public static final class Binary<IN,OUT> implements Transfer<IN,OUT> {
+	public static final class Binary<IN,OUT> implements Transfer.Specialized<IN,OUT> {
 		private static final long serialVersionUID = 7268579911789809640L;
 		private final IN key;
 		private final OUT match, noMatch;
@@ -139,7 +139,7 @@ public class Categories {
 		public OUT emptyValue() {return noMatch;}
 
 		@Override
-		public void specialize(Aggregates<? extends IN> aggregates) {}
+		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
 	}
 	
@@ -207,7 +207,7 @@ public class Categories {
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
-	public static final class NthItem<T> implements Transfer<CategoricalCounts<T>, Integer> {
+	public static final class NthItem<T> implements Transfer.Specialized<CategoricalCounts<T>, Integer> {
 		private static final long serialVersionUID = -7261917422124936899L;
 		private final Integer background;
 		private final int n;
@@ -229,7 +229,7 @@ public class Categories {
 		
 		public Integer emptyValue() {return background;}
 		
-		public void specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {/*No work to perform*/}
+		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 	}
 
 	/**Switch between two colors depending on the percent contribution of
@@ -240,7 +240,7 @@ public class Categories {
 	 * return one value.  Otherwise return another.  If category X is not present, return a third.
 	 * 
 	 ***/
-	public static final class KeyPercent<T> implements Transfer<CategoricalCounts<T>, Color> {
+	public static final class KeyPercent<T> implements Transfer.Specialized<CategoricalCounts<T>, Color> {
 		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
@@ -271,7 +271,7 @@ public class Categories {
 			else {return noMatch;}
 		}
 
-		public void specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {/*No work to perform*/}
+		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 		
 		public Color emptyValue() {return Util.CLEAR;}
 	}
@@ -286,12 +286,11 @@ public class Categories {
 	 * @author jcottam
 	 *
 	 */
-	public static final class HighAlpha implements Transfer<CategoricalCounts<Color>, Color> {
+	public static class HighAlpha implements Transfer<CategoricalCounts<Color>, Color> {
 		private static final long serialVersionUID = 2468586294425442332L;
-		private final Color background;
-		private final boolean log;
-		private final double omin;
-		private int max;
+		protected final Color background;
+		protected final boolean log;
+		protected final double omin;
 
 		/**
 		 * @param background Background color
@@ -304,47 +303,62 @@ public class Categories {
 			this.omin = omin;
 		}
 		
-		//TODO: Update to use a color mapping outside of the category set
-		private static Color fullInterpolate(CategoricalCounts<Color> cats) {
-			double total = cats.fullSize();
-			double r = 0;
-			double g = 0;
-			double b = 0;
-			
-			for (int i=0; i< cats.size(); i++) {
-				Color c = cats.key(i);
-				double p = cats.count(i)/total;
-				double r2 = (c.getRed()/255.0) * p;
-				double g2 = (c.getGreen()/255.0) * p;
-				double b2 = (c.getBlue()/255.0) * p;
 
-				r += r2;
-				g += g2;
-				b += b2;
-			}
-			return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
-		}
-		
-		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			CategoricalCounts<Color> cats = aggregates.get(x, y);
-			Color c;
-			if (cats.fullSize() == 0) {c = background;}
-			else {
-				c = fullInterpolate(cats);
-				double alpha;
-				if (log) {
-					alpha = omin + ((1-omin) * (Math.log(cats.fullSize())/Math.log(max)));
-				} else {
-					alpha = omin + ((1-omin) * (cats.fullSize()/max));
-				}
-				c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
-			}
-			return c;			
-		}
-		
 		public Color emptyValue() {return Util.CLEAR;}
-		public void specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+		public HighAlpha.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+			int max=Integer.MIN_VALUE;
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
+			return new Specialized(max, background, omin, log);
+		}
+		
+		public static final class Specialized extends HighAlpha implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
+			private static final long serialVersionUID = 4453971577170705122L;
+			private final int max;
+			
+			public Specialized(int max, Color background, double omin, boolean log) {
+				super(background, omin, log);
+				this.max = max;
+			}
+
+			public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+				CategoricalCounts<Color> cats = aggregates.get(x, y);
+				Color c;
+				if (cats.fullSize() == 0) {c = background;}
+				else {
+					c = fullInterpolate(cats);
+					double alpha;
+					if (log) {
+						alpha = omin + ((1-omin) * (Math.log(cats.fullSize())/Math.log(max)));
+					} else {
+						alpha = omin + ((1-omin) * (cats.fullSize()/max));
+					}
+					c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
+				}
+				return c;			
+			}
+			
+			//TODO: Update to use a color mapping outside of the category set
+			private static Color fullInterpolate(CategoricalCounts<Color> cats) {
+				double total = cats.fullSize();
+				double r = 0;
+				double g = 0;
+				double b = 0;
+				
+				for (int i=0; i< cats.size(); i++) {
+					Color c = cats.key(i);
+					double p = cats.count(i)/total;
+					double r2 = (c.getRed()/255.0) * p;
+					double g2 = (c.getGreen()/255.0) * p;
+					double b2 = (c.getBlue()/255.0) * p;
+
+					r += r2;
+					g += g2;
+					b += b2;
+				}
+				return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
+			}
+			
+			
 		}
 	}
 }

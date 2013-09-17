@@ -43,7 +43,7 @@ public interface Renderer extends Serializable {
 	 * @param t Transfer function to apply
 	 * @return A resulting set of aggregates
 	 */
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t);
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN, OUT> t);
 	
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.
@@ -54,6 +54,4 @@ public interface Renderer extends Serializable {
 	 * @return The percent of predicted work that has been completed.
 	 */
 	public double progress();
-	
-	
 }
