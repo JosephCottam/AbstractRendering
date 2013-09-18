@@ -6,13 +6,6 @@ import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
 
@@ -45,8 +38,6 @@ public class ARDisplay extends JPanel {
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
 	
-	private Rectangle2D selected;
-
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
 	
 	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
@@ -59,11 +50,6 @@ public class ARDisplay extends JPanel {
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
 		});
-		
-		AdjustRange r = new AdjustRange();
-		this.addMouseListener(r);
-		this.addMouseMotionListener(r);
-		this.addKeyListener(r);
 	}
 	
 	protected void finalize() {renderPool.shutdown();}
@@ -115,14 +101,6 @@ public class ARDisplay extends JPanel {
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
-		
-		if (selected != null) {
-			System.out.println("Drawing...");
-			g.setColor(Color.black);
-			((Graphics2D) g).draw(selected);
-		} else {
-			System.out.println("Not Drawing...");
-		}
 	}
 	
 	public final class TransferRender implements Runnable {
@@ -166,50 +144,5 @@ public class ARDisplay extends JPanel {
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();
-	}
-	
-	
-	public void setSelection(Rectangle2D r) {
-		this.selected = r;
-	}
-	
-
-	public final class AdjustRange implements MouseListener, MouseMotionListener, KeyListener {
-		Point2D start;
-		
-		public void mousePressed(MouseEvent e) {start = e.getPoint();}
-		public void mouseReleased(MouseEvent e) {
-			if (start != null) {
-				Rectangle2D bounds =bounds(e);
-				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
-				ARDisplay.this.setSelection(bounds);
-				ARDisplay.this.repaint();
-			}
-			start = null;
-		}
-		
-		public void mouseMoved(MouseEvent e) {}
-
-		public void mouseClicked(MouseEvent e) {}
-		public void mouseEntered(MouseEvent e) {}
-		public void mouseExited(MouseEvent e) {}
-		public void mouseDragged(MouseEvent e) {
-		}
-		
-		private Rectangle2D bounds(MouseEvent e) {
-			double w = Math.abs(start.getX()-e.getX());
-			double h = Math.abs(start.getY()-e.getY());
-			double x = Math.min(start.getX(), e.getX());
-			double y = Math.min(start.getY(), e.getY());
-					
-			return new Rectangle2D.Double(x,y,w,h);
-		}
-	
-		public void keyTyped(KeyEvent e) {
-			if (e.getKeyChar() == 'c') {ARDisplay.this.setSelection(null);}
- 		}
-
-		public void keyPressed(KeyEvent e) {}
-		public void keyReleased(KeyEvent e) {}
 	}
 }
