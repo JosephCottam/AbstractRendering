@@ -116,7 +116,13 @@ public class ARDisplay extends JPanel {
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
 		
-		if (selected != null) {((Graphics2D) g).draw(selected);}
+		if (selected != null) {
+			System.out.println("Drawing...");
+			g.setColor(Color.black);
+			((Graphics2D) g).draw(selected);
+		} else {
+			System.out.println("Not Drawing...");
+		}
 	}
 	
 	public final class TransferRender implements Runnable {
