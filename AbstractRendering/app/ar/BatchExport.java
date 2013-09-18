@@ -17,6 +17,7 @@ import ar.rules.Numbers;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
+@SuppressWarnings("unused")
 public class BatchExport {
 	private static String arg(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();
@@ -68,8 +69,8 @@ public class BatchExport {
 					//Transfer<Number, Color> t = new WrappedTransfer.DrawDarkVar().op();
 					//Transfer<Number, Color> t = new WrappedTransfer.RedWhiteLinear().op();
 					Transfer<Number, Color> t = new WrappedTransfer.OverUnder().op();
-					t.specialize(aggs);
-					Aggregates<Color> colors = render.transfer(aggs, t);
+					Transfer.Specialized<Number, Color> ts = t.specialize(aggs);
+					Aggregates<Color> colors = render.transfer(aggs, ts);
 					BufferedImage img = Util.asImage(colors, width, height, Color.white);
 					Util.writeImage(img, new File(filename));
 				}

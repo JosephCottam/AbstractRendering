@@ -21,6 +21,7 @@ import ar.util.Util;
 
 /**Tests the amount of time to render count visualizations.
  * **/
+@SuppressWarnings("unused")
 public class RenderSpeedTest {
 	private static String arg(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();
@@ -82,8 +83,8 @@ public class RenderSpeedTest {
 				long aggTime = end-start;
 
 				start = System.currentTimeMillis();
-				transfer.specialize(aggs);
-				Aggregates<Color> colors = render.transfer(aggs, transfer);
+				Transfer.Specialized<Number,Color> ts = transfer.specialize(aggs);
+				Aggregates<Color> colors = render.transfer(aggs, ts);
 				end = System.currentTimeMillis();
 				long transTime = end-start;
 
@@ -100,7 +101,7 @@ public class RenderSpeedTest {
 	}
 	
 	/**HD interpolation between two colors EXCEPT re-calculate the extrema at each pixel.**/
-	public static final class CachelessInterpolate implements Transfer<Number, Color> {
+	public static final class CachelessInterpolate implements Transfer.Specialized<Number, Color> {
 		private static final long serialVersionUID = 2878901447280244237L;
 		private final Color low, high, empty;
 		private final int logBasis;
@@ -138,14 +139,12 @@ public class RenderSpeedTest {
 			}
 		}
 
-		public void specialize(Aggregates<? extends Number> aggregates) {
-			
-		}
+		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggregates) {return this;}
 		
 		public Color emptyValue() {return Util.CLEAR;}
 	}
 	
-	public static class CachelessDrawDark implements Transfer<Number, Color> {
+	public static class CachelessDrawDark implements Transfer.Specialized<Number, Color> {
 		private static final long serialVersionUID = 4417984252053517048L;
 		
 		/**How large is the neighborhood?**/
@@ -166,14 +165,13 @@ public class RenderSpeedTest {
 		}
 	
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			specializeTo(aggregates);
-			return inner.at(x,y,cached);
+			Transfer.Specialized<Number,Color> innerS = specializeTo(aggregates);
+			return innerS.at(x,y,cached);
 		}
 
-		public void specialize(Aggregates<? extends Number> aggs) {}
+		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggs) {return this;}
 
-		public void specializeTo(Aggregates<? extends Number> aggs) {
-
+		public Specialized<Number,Color> specializeTo(Aggregates<? extends Number> aggs) {
 			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
@@ -184,7 +182,7 @@ public class RenderSpeedTest {
 					}
 				}
 			}
-			inner.specialize(cached);
+			return inner.specialize(cached);
 		}
 		
 		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {

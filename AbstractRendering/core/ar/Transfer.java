@@ -2,7 +2,18 @@ package ar;
 
 import java.io.Serializable;
 
-/**Transfer functions converts an aggregate into a pixel.**/
+/**Transfer functions converts an aggregate into a pixel.
+ * 
+ * Transfer functions have a two-phase life cycle: generic and specialized.
+ * Often a transfer function needs information about the data it is about
+ * to process before it can process the first pixel (such as the bounds on the values).
+ * Generic transfers don't know this information yet, specialized ones do.
+ * The "Specialize" method converts a generic function into a specialized one
+ * OR a specialized one into another one (specialized transfer functions retain the capabilities of generic ones).  
+ * The Transfer.Specialized interface
+ * indicates that a transfer function is ready for use.
+ *   
+ * **/
 public interface Transfer<IN,OUT> extends Serializable {
 	
 	/**What value that represents "empty" from this transfer function?*/
@@ -20,12 +31,13 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * 
 	 * For example, high-definition alpha composition needs to know the maximum
 	 * and minimum value in the dataset.  "Specialize" will compute 
-	 * those max/min values.
+	 * those maximum/minimum values.
 	 * 
 	 * @param aggregates Aggregates to determine the parameters for.
 	 * **/
 	public Specialized<IN,OUT> specialize(Aggregates<? extends IN> aggregates);
 
+	
 	/**Indicate that a transfer function is "ready to run".**/
 	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> { 
 		/**What color should be used for the pixel at location X/Y.
