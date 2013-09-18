@@ -2,14 +2,18 @@ package ar;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 import ar.app.util.WrappedAggregator;
+import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelGlyphs;
+import ar.rules.General;
+import ar.rules.Numbers;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
@@ -23,10 +27,20 @@ public class BatchExport {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		String[] rawRes = arg(args, "-res", "400").split(",");
+		String[] widths = arg(args, "-width", "400").split(",");
+		String[] heights = arg(args, "-height", "400").split(",");
 		String source = arg(args, "-data", "../data/circlepoints.hbin");
-		String outPrefix = arg(args, "-out", "./result");
+		String outPattern = arg(args, "-out", "./result%s.csv");
 		double size = Double.parseDouble(arg(args, "-size", ".1"));
+		
+		if (widths.length != heights.length) {
+			System.err.println("Must provide same number of widths as heights\n"); 
+			System.exit(-1);
+		}
+		if (outPattern.split("%").length !=2) {
+			System.err.println("Output must be a format pattern with exactly one format variable.");
+			System.exit(-2);
+		}
 		
 		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
 			
@@ -38,14 +52,27 @@ public class BatchExport {
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
 
 		try {
-			for (String rres: rawRes) {
-				int res = Integer.parseInt(rres);
-				System.out.printf("Processing %s at %d\n", source, res);
-				AffineTransform ivt = Util.zoomFit(glyphs.bounds(), res, res).createInverse();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, res, res);
-				String filename = String.format("%s_%d.csv", outPrefix, res);
+			for (int i=0; i< widths.length; i++) {
+				int width = Integer.parseInt(widths[i]);
+				int height = Integer.parseInt(heights[i]);
+				System.out.printf("Processing %s at %dx%d\n", source, width, height);
+				AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
+				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
+				String filepart = String.format("%dx%d", width, height);
+				String filename = String.format(outPattern, filepart);
 				System.out.printf("\t Writing to %s\n", filename);
-				AggregatesToCSV.export(aggs, new File(filename));
+				if (filename.endsWith("csv")) {
+					AggregatesToCSV.export(aggs, new File(filename));
+				} else {
+					//Transfer<Number, Color> t = new WrappedTransfer.FixedAlpha().op();
+					//Transfer<Number, Color> t = new WrappedTransfer.DrawDarkVar().op();
+					//Transfer<Number, Color> t = new WrappedTransfer.RedWhiteLinear().op();
+					Transfer<Number, Color> t = new WrappedTransfer.OverUnder().op();
+					t.specialize(aggs);
+					Aggregates<Color> colors = render.transfer(aggs, t);
+					BufferedImage img = Util.asImage(colors, width, height, Color.white);
+					Util.writeImage(img, new File(filename));
+				}
 				System.out.printf("\t Done!\n", filename);
 			}
 		} catch (Exception e) {
