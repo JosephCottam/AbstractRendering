@@ -1,4 +1,4 @@
-package ar.app.components;
+package ar.app.display;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -12,7 +12,7 @@ import ar.util.Util;
  * 
  * NOTE: This panel is not fit for consumption yet due to issues surrounding zoom.
  * */
-public class ARCascadePanel extends ARPanel {
+public class ARCascadeDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
 	private final int baseWidth = 1000;
@@ -21,7 +21,7 @@ public class ARCascadePanel extends ARPanel {
 	
 	private volatile Aggregates<?> baseAggregates;
 	
-	public ARCascadePanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public ARCascadeDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
 		if (glyphs != null) {
 			renderTransform = Util.zoomFit(glyphs.bounds(), baseWidth, baseHeight);
@@ -30,8 +30,8 @@ public class ARCascadePanel extends ARPanel {
 		}
 	}
 	
-	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new ARCascadePanel(aggregator, transfer, glyphs, renderer);
+	protected FullDisplay build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+		return new ARCascadeDisplay(aggregator, transfer, glyphs, renderer);
 	}
 	
 	public void baseAggregates(Aggregates<?> aggregates) {
@@ -65,7 +65,7 @@ public class ARCascadePanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle viewport = ARCascadePanel.this.getBounds();
+				Rectangle viewport = ARCascadeDisplay.this.getBounds();
 				AffineTransform vt = viewTransform();
 				double scale = renderTransform.getScaleX()/vt.getScaleX();
 				int shiftX = (int) -(vt.getTranslateX()-(renderTransform.getTranslateX()/scale));
@@ -77,7 +77,7 @@ public class ARCascadePanel extends ARPanel {
 						shiftX, shiftY, 
 						shiftX+viewport.width, shiftY+viewport.height);
 				
-				ARCascadePanel.this.aggregates(subset);
+				ARCascadeDisplay.this.aggregates(subset);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Cascade render)\n",
@@ -87,7 +87,7 @@ public class ARCascadePanel extends ARPanel {
 				renderError = true;
 			}
 			
-			ARCascadePanel.this.repaint();
+			ARCascadeDisplay.this.repaint();
 		}	
 	}
 
@@ -96,7 +96,7 @@ public class ARCascadePanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				ARCascadePanel.this.baseAggregates(renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), baseWidth, baseHeight));
+				ARCascadeDisplay.this.baseAggregates(renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), baseWidth, baseHeight));
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
@@ -106,7 +106,7 @@ public class ARCascadePanel extends ARPanel {
 				renderError = true;
 			}
 			
-			ARCascadePanel.this.repaint();
+			ARCascadeDisplay.this.repaint();
 		}
 	}
 	

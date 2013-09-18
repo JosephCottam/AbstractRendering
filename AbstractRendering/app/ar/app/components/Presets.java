@@ -10,6 +10,8 @@ import javax.swing.JComboBox;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.app.ARApp;
+import ar.app.display.ARComponent;
+import ar.app.display.FullDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
@@ -33,24 +35,25 @@ public class Presets extends PanelDelegator {
 		ARApp.loadInstances(presets, Presets.class, "");
 	}
 	
-	public boolean doZoomWith(ARPanel oldPanel) {
+	public boolean doZoomWith(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
 
 		return oldPanel == null
 				|| oldPanel.dataset() != p.glyphset()
-				|| !oldPanel.reduction().equals(p.aggregator().op());
+				|| !oldPanel.aggregator().equals(p.aggregator().op());
 	}
 	
-	public ARPanel update(ARPanel oldPanel) {
+	public ARComponent.Aggregating update(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		ARPanel newPanel = new ARPanel(p.aggregator().op(), p.transfer().op(), p.glyphset(), p.renderer());
+		ARComponent.Aggregating newPanel = new FullDisplay(p.aggregator().op(), p.transfer().op(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
-				&& newPanel.reduction().equals(oldPanel.reduction())) {
+				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
 			newPanel.aggregates(oldPanel.aggregates());
-			try {newPanel.transferViewTransform(oldPanel.viewTransform());}
-			catch (NoninvertibleTransformException e) {
-				try {newPanel.setViewTransform(new AffineTransform());}
+			try {
+				newPanel.viewTransform(oldPanel.viewTransform());
+			} catch (NoninvertibleTransformException e) {
+				try {newPanel.viewTransform(new AffineTransform());}
 				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
 			}
 		} else {

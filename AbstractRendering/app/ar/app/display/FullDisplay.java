@@ -1,6 +1,5 @@
-package ar.app.components;
+package ar.app.display;
 
-import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -12,15 +11,13 @@ import ar.*;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 
-public class ARPanel extends JPanel {
+public class FullDisplay extends ARComponent.Aggregating {
 	protected static final long serialVersionUID = 1L;
 
-	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
-	public static boolean PERF_REP = false;
+	protected final SimpleDisplay display;
 	
-	protected final Aggregator<?,?> aggregator;
-	protected final Glyphset<?> dataset;
-	protected final ARDisplay display;
+	protected Aggregator<?,?> aggregator;
+	protected Glyphset<?> dataset;
 	protected Renderer renderer;
 	
 	protected AffineTransform viewTransformRef = new AffineTransform();
@@ -31,18 +28,15 @@ public class ARPanel extends JPanel {
 	protected volatile Aggregates<?> aggregates;
 	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"ARPanel Render Thread");//TODO: Redoing painting to use futures...
 		
-	public ARPanel(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public FullDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
-		display = new ARDisplay(null, transfer);
-		ARDisplay.PERF_REP = PERF_REP;
+		display = new SimpleDisplay(null, transfer, renderer);
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
 		this.invalidate();
 		this.aggregator = aggregator;
 		this.dataset = glyphs;
 		this.renderer = renderer;
-		
-		display.withRenderer(renderer);
 		
 		ZoomPanHandler h = new ZoomPanHandler();
 		super.addMouseListener(h);
@@ -51,40 +45,42 @@ public class ARPanel extends JPanel {
 	
 	protected void finalize() {renderPool.shutdown();}
 	
-	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new ARPanel(aggregator, transfer, glyphs, renderer);
+	protected FullDisplay build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+		return new FullDisplay(aggregator, transfer, glyphs, renderer);
 	}
 
-	public ARPanel withDataset(Glyphset<?> data) {
-		return build(aggregator, display.transfer(), data, renderer);
+	public Aggregates<?> refAggregates() {return display.refAggregates();}
+	public void refAggregates(Aggregates<?> aggregates) {display.refAggregates(aggregates);}
+	
+	public Renderer renderer() {return renderer;}
+	
+	public Glyphset<?> dataset() {return dataset;}
+	public void dataset(Glyphset<?> data) {
+		this.dataset = data;
+		this.aggregates = null;
 	}
 	
-	public  ARPanel withTransfer(Transfer<?,?> t) {
-		ARPanel p = build(aggregator, t, dataset, renderer);
-		p.viewTransformRef = this.viewTransformRef;
-		p.inverseViewTransformRef = this.inverseViewTransformRef;
-		p.aggregates(this.aggregates);
-		return p;
+	public Transfer<?,?> transfer() {return display.transfer();}
+	public void transfer(Transfer<?,?> t) {this.display.transfer(t);}
+	
+	public Aggregator<?,?> aggregator() {return aggregator;}
+	public void aggregator(Aggregator<?,?> aggregator) {
+		this.aggregator = aggregator;
+		this.aggregates = null;
 	}
 	
-	public ARPanel withReduction(Aggregator<?,?> r) {
-		ARPanel p = build(r, display.transfer(), dataset, renderer);
-		p.viewTransformRef = this.viewTransformRef;
-		p.inverseViewTransformRef = this.inverseViewTransformRef;
-		return p;
-	}
-	
-	public ARPanel withRenderer(Renderer r) {
-		ARPanel p = build(aggregator, display.transfer(), dataset, r);
+	public FullDisplay withRenderer(Renderer r) {
+		FullDisplay p = build(aggregator, display.transfer(), dataset, r);
 		return p;
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public Aggregator<?,?> reduction() {return aggregator;}
 	public void aggregates(Aggregates<?> aggregates) {
+		this.display.aggregates(aggregates);
 		this.aggregates = aggregates;
-		this.display.setAggregates(aggregates);
 	}
+	
 	
 	@Override
 	public void paint(Graphics g) {
@@ -115,13 +111,13 @@ public class ARPanel extends JPanel {
 	protected final class RenderAggregates implements Runnable {
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public void run() {
-			int width = ARPanel.this.getWidth();
-			int height = ARPanel.this.getHeight();
+			int width = FullDisplay.this.getWidth();
+			int height = FullDisplay.this.getHeight();
 			long start = System.currentTimeMillis();
 			AffineTransform ivt = inverseViewTransform();
 			try {
 				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, ivt, width, height);
-				display.setAggregates(aggregates);
+				display.aggregates(aggregates);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
@@ -131,14 +127,12 @@ public class ARPanel extends JPanel {
 				renderError = true;
 			}
 			
-			ARPanel.this.repaint();
+			FullDisplay.this.repaint();
 		}
 	}
 	
 	
 	public String toString() {return String.format("ARPanel[Dataset: %1$s, Ruleset: %2$s]", dataset, display.transfer(), aggregator);}
-	public Renderer getRenderer() {return renderer;}
-	public Glyphset<?> dataset() {return dataset;}
 	
 	
 	
@@ -179,9 +173,9 @@ public class ARPanel extends JPanel {
         vt.translate(zx, zy);
         vt.scale(scaleX,scaleY);
         vt.translate(-zx, -zy);
-        try {setViewTransform(vt);}
+        try {innerSetViewTransform(vt);}
         catch (NoninvertibleTransformException e ) {
-        	try {setViewTransform(new AffineTransform());}
+        	try {innerSetViewTransform(new AffineTransform());}
 			catch (NoninvertibleTransformException e1) {}	//Default transform is invertible...so everything is safe
         }
 	}
@@ -212,7 +206,7 @@ public class ARPanel extends JPanel {
     public void panAbs(double dx, double dy) {
     	AffineTransform vt = viewTransform();
     	vt.translate(dx, dy);
-        try {setViewTransform(vt);}
+        try {innerSetViewTransform(vt);}
         catch (NoninvertibleTransformException e ) {throw new Error("Supposedly impossible error occured.", e);}
     }
 	
@@ -238,7 +232,7 @@ public class ARPanel extends JPanel {
 
         AffineTransform vt = viewTransform();
         vt.translate(dx, dy);
-        try {setViewTransform(vt);}
+        try {innerSetViewTransform(vt);}
         catch (NoninvertibleTransformException e ) {throw new Error("Supposedly impossible error occured.", e);}
 	}
 
@@ -266,12 +260,12 @@ public class ARPanel extends JPanel {
      * to the screen system.
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
-	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+	protected void innerSetViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		renderAgain = true;
-		transferViewTransform(vt);
+		viewTransform(vt);
 	}
 	
-	public void transferViewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();

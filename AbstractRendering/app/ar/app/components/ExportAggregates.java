@@ -8,7 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
-import ar.app.PanelHolder;
+import ar.app.display.ARComponent;
 import ar.app.util.AggregatesToJSON;
 
 public class ExportAggregates extends PanelDelegator {
@@ -18,7 +18,7 @@ public class ExportAggregates extends PanelDelegator {
 	private final JFileChooser fc = new JFileChooser("./data");
 
 	private File inputFile=null;
-	private final PanelHolder container;
+	private final ARComponent.Holder holder;
 	
 	private static final FileFilter CSV = new FileFilter() {
 		public boolean accept(File pathname) {
@@ -30,9 +30,9 @@ public class ExportAggregates extends PanelDelegator {
 	
 	public File inputFile() {return inputFile;}
 	
-	public ExportAggregates(PanelHolder containing) {
+	public ExportAggregates(ARComponent.Holder target) {
 		this.add(export);
-		this.container = containing;
+		this.holder = target;
 		
 		fc.setFileFilter(CSV);
 		
@@ -44,7 +44,7 @@ public class ExportAggregates extends PanelDelegator {
 				 fd.setSelectedFile(new File("../TransferJS/aggregates.json"));
 				 int returnVal = fd.showDialog(panel, "Export");
 				 if (returnVal == JFileChooser.APPROVE_OPTION) {
-					 AggregatesToJSON.export(container.getPanel().aggregates(),fd.getSelectedFile());
+					 AggregatesToJSON.export(holder.getARComponent().aggregates(),fd.getSelectedFile());
 				 }
 			}
 		});

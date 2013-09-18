@@ -7,8 +7,10 @@ import java.awt.geom.*;
 
 import javax.swing.JPanel;
 
-import ar.app.components.ARPanel;
+import ar.app.display.ARComponent;
+import ar.app.display.FullDisplay;
 
+//TODO: Drag all the zoom/pan stuff stuff out of FullDisplay and park it here.  Just use get/set ViewTransform  
 public class ZoomPanHandler implements MouseListener, MouseMotionListener{
     public static final double MIN_SCALE = Double.MIN_VALUE; //Minimum single-step change
     public static final double MAX_SCALE = Double.MAX_VALUE;   //Maximum single-step change
@@ -44,9 +46,8 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      */
     @Override
 	public void mouseDragged(MouseEvent e) {
+    	FullDisplay canvas = (FullDisplay) e.getComponent();
         if (buttonEquals(e, ZOOM_BUTTON) ) {
-        	ARPanel canvas = (ARPanel)e.getComponent();
-            
             int y = e.getY();
             int dy = y-yLast;
             double zoom = 1 + ((double)dy) / 100;
@@ -58,7 +59,6 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
             
             yLast = y;
         } else if (buttonEquals(e, PAN_BUTTON)) {
-        	ARPanel canvas = (ARPanel)e.getComponent();
             double x = e.getX(),   y = e.getY();
             double dx = x-down.getX(), dy = y-down.getY();
 
@@ -76,7 +76,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      * @param abs if true, the point p should be assumed to be in absolute
      * coordinates, otherwise it will be treated as screen (pixel) coordinates
      */
-    protected void zoom(ARPanel canvas, Point2D p, double zoom, boolean abs) {
+    protected void zoom(FullDisplay canvas, Point2D p, double zoom, boolean abs) {
         double scale = canvas.getScale();
         double result = scale * zoom;
 
@@ -107,7 +107,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 	@Override
 	public void mouseClicked(MouseEvent e) { 
 		if (e.getClickCount() == 2) {
-			ARPanel canvas = (ARPanel) e.getComponent();
+			ARComponent.Aggregating canvas = (ARComponent.Aggregating) e.getComponent();
 			canvas.zoomFit();
 		}
 	}

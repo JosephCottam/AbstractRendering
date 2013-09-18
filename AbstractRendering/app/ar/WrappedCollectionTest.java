@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 
-import ar.app.components.ARPanel;
+import ar.app.display.FullDisplay;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.WrappedCollection;
@@ -55,7 +55,7 @@ public class WrappedCollectionTest {
 		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
 		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g);
 		
-		ARPanel p = new ARPanel(new WrappedAggregator.OverplotFirst().op(), 
+		FullDisplay p = new FullDisplay(new WrappedAggregator.OverplotFirst().op(), 
 								new WrappedTransfer.EchoColor().op(), 
 								gs, 
 								new ParallelSpatial(100));

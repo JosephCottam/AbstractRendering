@@ -10,9 +10,10 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
+import ar.app.display.ARComponent;
 
-public class ARDemoApp implements PanelHolder {
-	private ARPanel panel;
+public class ARDemoApp implements ARComponent.Holder {
+	private ARComponent.Aggregating display;
 	private final JFrame frame = new JFrame();
 	private final Presets presets = new Presets();
 	private final Status status = new Status();
@@ -61,20 +62,20 @@ public class ARDemoApp implements PanelHolder {
 		final ARDemoApp app = this;
 		presets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				boolean rezoom = presets.doZoomWith(app.panel);
-				app.changeImage(presets.update(app.panel));
-				if (rezoom) {panel.zoomFit();}
+				boolean rezoom = presets.doZoomWith(app.display);
+				app.changeDisplay(presets.update(app.display));
+				if (rezoom) {display.zoomFit();}
 			}
 		});
 		
-		app.changeImage(presets.update(app.panel));
+		app.changeDisplay(presets.update(app.display));
 		
-		frame.add(panel, BorderLayout.CENTER);
+		frame.add(display, BorderLayout.CENTER);
 
 		frame.setSize(500, 500);
 		frame.validate();
 		frame.setVisible(true);
-		final ARPanel img = panel;
+		final ARComponent.Aggregating img = display;
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {public void run() {img.zoomFit();}});
 		} catch (InvocationTargetException | InterruptedException e1) {}
@@ -96,15 +97,15 @@ public class ARDemoApp implements PanelHolder {
 		
 	}
 	
-	public <A,B> void changeImage(ARPanel newImage) {
-		JPanel old = this.panel;		
+	public <A,B> void changeDisplay(ARComponent.Aggregating newDisplay) {
+		ARComponent old = this.display;		
 		if (old != null) {frame.remove(old);}
 
-		this.status.startMonitoring(newImage.getRenderer());
-		frame.add(newImage, BorderLayout.CENTER);
-		this.panel = newImage;
+		this.status.startMonitoring(newDisplay.renderer());
+		frame.add(newDisplay, BorderLayout.CENTER);
+		this.display = newDisplay;
 		frame.revalidate();
 	}
 	
-	public ARPanel getPanel() {return panel;}
+	public ARComponent getARComponent() {return display;}
 }

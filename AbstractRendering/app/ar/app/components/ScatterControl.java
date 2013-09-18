@@ -28,13 +28,14 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
+import ar.app.display.ARComponent;
 import ar.rules.Numbers;
 import ar.util.Util;
 
 public class ScatterControl extends JPanel {
 	private static final long serialVersionUID = 4425716699286853617L;
 
-	protected ARApp source;
+	protected ARComponent.Holder source;
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
 	protected final JButton refresh = new JButton("Refresh");
@@ -122,12 +123,11 @@ public class ScatterControl extends JPanel {
 
 		public void changeRegion(Rectangle2D region) {
 			this.region = region;
-			ARPanel p = parent.source.getPanel().withTransfer(parent.getTransfer());
-			parent.source.changeImage(p);
+			parent.source.getARComponent().transfer(parent.getTransfer());
 		}
 		
 		private void configure() {
-			Aggregates<?> src = parent.source == null ? null : parent.source.getPanel().aggregates(); 
+			Aggregates<?> src = parent.source == null ? null : parent.source.getARComponent().aggregates(); 
 
 			if (src == null || !(src.get(src.lowX(), src.lowY()) instanceof Number)) {return;}
 			
