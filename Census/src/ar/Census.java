@@ -256,15 +256,15 @@ public class Census {
 
 	@SuppressWarnings("all")
 	public static void show(String label, int width, int height, Aggregates<?> aggs, Transfer<?,?> t) {
-
-		JFrame frame2 = new JFrame(label);
-		frame2.setLayout(new BorderLayout());
-		frame2.setSize(width+40,height);
-		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame2.add(new ARDisplay(aggs, t), BorderLayout.CENTER);
-		frame2.setVisible(true);
-		frame2.revalidate();
-		frame2.validate();
+//
+//		JFrame frame2 = new JFrame(label);
+//		frame2.setLayout(new BorderLayout());
+//		frame2.setSize(width+40,height);
+//		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//		frame2.add(new ARDisplay(aggs, t), BorderLayout.CENTER);
+//		frame2.setVisible(true);
+//		frame2.revalidate();
+//		frame2.validate();
 		
 		Renderer r=new ParallelSpatial();
 		t.specialize((Aggregates) aggs);
@@ -279,21 +279,23 @@ public class Census {
 		Glyphset<Pair> race = GlyphsetUtils.memMap(
 				"US Census", 
 				"../data/census/Race_LatLongDenorm.hbin",
-				//new FakeMapProject(new Indexed.ToRect(.1, .1, true, 3, 2)),
-				new Indexed.ToRect(.1, .1, true, 3, 2),
+				new FakeMapProject(new Indexed.ToRect(.3, .3, true, 3, 2)),
+				//new Indexed.ToRect(10, 10, true, 3, 2),
 				new Pairer(4,1),
 				1, null);
 
 		Renderer r = new ParallelGlyphs();
-		int width = 800;
-		int height = 435;
+		int width = 2000;
+		int height = 1092;
 		AffineTransform ivt = Util.zoomFit(race.bounds(), width, height);
 		ivt.invert();
+		System.out.println("Aggregating");
 		Aggregator<Pair,CoC<Object>> raceAggregator = new AggregatePairs();
 		Aggregates<CoC<Object>> raceAggs = r.aggregate(race, raceAggregator, ivt, width, height);
 
-
+		
 		//Homo alpha
+		System.out.println("Homo Alpha");
 		Aggregates<Integer> counts = r.transfer(raceAggs, new Categories.ToCount<>());
 		//Transfer<Number, Color> homoAlpha = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255), Util.CLEAR, 10);
 		Transfer<Number, Color> homoAlpha = new  Numbers.Interpolate(new Color(255,0,0,100), new Color(255,0,0,255));
@@ -307,6 +309,7 @@ public class Census {
 		colors.put(5, Color.GRAY);	//Asian
 		colors.put(6, Color.GRAY);	//Others
 
+		System.out.println("Strat Alpha");
 		Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> t1 = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 		t1.specialize(raceAggs);
 		Aggregates<CategoricalCounts<Color>> colorAggs = r.transfer(raceAggs, t1);
@@ -314,17 +317,18 @@ public class Census {
 		show("Race_Strat_Alpha", width, height, colorAggs, stratAlpha);
 		
 		//Selection-Set
+		System.out.println("Sel Set");
 		Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(stratAlpha);
 		lift.specialize(colorAggs);
 		show("Race_Sel_quarter_native", width, height, colorAggs, lift);
-
-		//Color Weave
-		List<Shape> shapes = loadShapes("../data/tl_2010_us_state10.shp");
-		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
-		Transfer<CoC<Color>, Color> weave = new Weave();
-		
-		Aggregates<CoC<Color>> spreadAggs = r.transfer((Aggregates) colorAggs, spread);
-		show("Weave", width, height, spreadAggs, weave);
-		System.out.println("Done");
+//
+//		//Color Weave
+//		List<Shape> shapes = loadShapes("../data/tl_2010_us_state10.shp");
+//		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
+//		Transfer<CoC<Color>, Color> weave = new Weave();
+//		
+//		Aggregates<CoC<Color>> spreadAggs = r.transfer((Aggregates) colorAggs, spread);
+//		show("Weave", width, height, spreadAggs, weave);
+//		System.out.println("Done");
 	}
 }
