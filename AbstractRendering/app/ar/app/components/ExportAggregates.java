@@ -11,7 +11,7 @@ import javax.swing.filechooser.FileFilter;
 import ar.app.PanelHolder;
 import ar.app.util.AggregatesToJSON;
 
-public class ExportAggregates extends CompoundPanel {
+public class ExportAggregates extends PanelDelegator {
 	private static final long serialVersionUID = 1L;
 	
 	private final JButton export = new JButton("Export Aggregates");
@@ -36,7 +36,7 @@ public class ExportAggregates extends CompoundPanel {
 		
 		fc.setFileFilter(CSV);
 		
-		final CompoundPanel panel = this;
+		final PanelDelegator panel = this;
 
 		export.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

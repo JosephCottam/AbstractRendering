@@ -21,14 +21,14 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 
-public class Presets extends CompoundPanel {
+public class Presets extends PanelDelegator {
 	private static final long serialVersionUID = -5290930773909190497L;
 	
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
 	
 	public Presets() {
 		this.add(new LabeledItem("Presets:", presets));
-		presets.addActionListener(new CompoundPanel.DelegateAction(this));
+		presets.addActionListener(new PanelDelegator.DelegateAction(this));
 		
 		ARApp.loadInstances(presets, Presets.class, "");
 	}

@@ -10,7 +10,7 @@ import javax.swing.filechooser.FileFilter;
 
 import ar.app.ARApp;
 
-public class FileOptions extends CompoundPanel {
+public class FileOptions extends PanelDelegator {
 	private static final long serialVersionUID = 1L;
 	
 	private final ExportAggregates export;
@@ -37,7 +37,7 @@ public class FileOptions extends CompoundPanel {
 		
 		fc.setFileFilter(CSV_HBIN);
 		
-		final CompoundPanel panel = this;
+		final PanelDelegator panel = this;
 		chooseFile.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				int rc = fc.showOpenDialog(panel);

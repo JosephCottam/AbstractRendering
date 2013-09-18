@@ -5,7 +5,7 @@ import javax.swing.*;
 import ar.Renderer;
 import ar.renderers.*;
 
-public class RendererOptions extends CompoundPanel {
+public class RendererOptions extends PanelDelegator {
 	private static final long serialVersionUID = 1L;
 	private JComboBox<String> renderers = new JComboBox<String>();
 	private JComboBox<Integer> taskSize = new JComboBox<Integer>();

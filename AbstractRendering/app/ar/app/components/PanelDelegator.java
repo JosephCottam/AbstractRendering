@@ -8,7 +8,8 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-public class CompoundPanel extends JPanel {
+/**Thread-safe action listener delegator for panels.**/
+public class PanelDelegator extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private List<ActionListener> listeners = new ArrayList<ActionListener>();
 	private int count;
@@ -23,8 +24,8 @@ public class CompoundPanel extends JPanel {
 	}
 	
 	public static class DelegateAction implements ActionListener {
-		private final CompoundPanel target;
-		public DelegateAction(CompoundPanel target) {this.target = target;}
+		private final PanelDelegator target;
+		public DelegateAction(PanelDelegator target) {this.target = target;}
 		public void actionPerformed(ActionEvent e) {target.fireActionListeners();}
 	}
 }

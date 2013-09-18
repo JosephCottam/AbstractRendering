@@ -13,7 +13,7 @@ import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
-public class GlyphsetOptions extends CompoundPanel  {
+public class GlyphsetOptions extends PanelDelegator  {
 	private static final long serialVersionUID = 1L;
 	private final JComboBox<String> glyphsType = new JComboBox<String>();
 	private final JComboBox<Double> size = new JComboBox<Double>();
@@ -36,7 +36,7 @@ public class GlyphsetOptions extends CompoundPanel  {
 		size.setSelectedItem(.01);
 		this.add(new LabeledItem("Size: ", size));
 		
-		ActionListener l = new CompoundPanel.DelegateAction(this);
+		ActionListener l = new PanelDelegator.DelegateAction(this);
 		glyphsType.addActionListener(l);
 		size.addActionListener(l);
 	}
