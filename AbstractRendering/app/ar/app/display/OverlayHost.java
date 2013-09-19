@@ -32,11 +32,12 @@ public class OverlayHost extends ARComponent.Aggregating {
 	private static final long serialVersionUID = -6449887730981205865L;
 	
 	private ARComponent.Aggregating hosted;
-	private JComponent overlay= new SelectionOverlay();
+	private JComponent overlay;
 	
 	/**Host the given component in the overlay.**/
 	public OverlayHost(ARComponent.Aggregating hosted) {	
 		this.hosted = hosted;
+		this.overlay = new SelectionOverlay(this);
 		this.add(overlay);
 		this.add(hosted);
 		overlay.setVisible(false);
@@ -58,18 +59,20 @@ public class OverlayHost extends ARComponent.Aggregating {
 	private static class SelectionOverlay extends JComponent implements Selectable {
 		private static final long serialVersionUID = 9079768489874376280L;
 		
-		public Color MASKED = new Color(50,50,50,50);
-		public Color SELECTED = Util.CLEAR;
-		public Color PROVISIONAL = new Color(100,0,0,50);
+		public Color MASKED = new Color(100,100,100,50);
+		public Color SELECTED = new Color(200,0,0,50);
+		public Color PROVISIONAL = Util.CLEAR;
 		
 		private Rectangle2D selection = null;
 		private boolean provisional = false;
+		private final OverlayHost host;
 		
 		
-		public SelectionOverlay() {
+		public SelectionOverlay(OverlayHost host) {
 			AdjustRange r = new AdjustRange(this);
 			this.addMouseListener(r);
 			this.addMouseMotionListener(r);
+			this.host = host;
 		}
 		
 		public void paintComponent(Graphics g) {
@@ -77,19 +80,17 @@ public class OverlayHost extends ARComponent.Aggregating {
 			Graphics2D g2= (Graphics2D) g;
 			Area a =new Area(this.getBounds());
 			
-			if (provisional && selection != null) {
-				g.setColor(PROVISIONAL);
-				g2.fill(selection);
-			} else {
-				if (selection != null) {
-					g.setColor(SELECTED);
-					g2.fill(selection);
-					a.subtract(new Area(selection));
-				}
+			if (selection != null) {
 				g2.setColor(MASKED);
 				g2.fill(a);
+
+				g.setColor(SELECTED);
+				g2.fill(selection);
+				a.subtract(new Area(selection));
+			} else {
+				g2.setColor(SELECTED);
+				g2.fill(a);
 			}
-			
 		}
 
 		public void setSelection(Rectangle2D bounds) {
