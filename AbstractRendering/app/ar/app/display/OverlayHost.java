@@ -61,12 +61,11 @@ public class OverlayHost extends ARComponent.Aggregating {
 		
 		public Color MASKED = new Color(100,100,100,50);
 		public Color SELECTED = new Color(200,0,0,50);
-		public Color PROVISIONAL = Util.CLEAR;
+		public Color PROVISIONAL = Color.black;
 		
 		private Rectangle2D selection = null;
 		private boolean provisional = false;
 		private final OverlayHost host;
-		
 		
 		public SelectionOverlay(OverlayHost host) {
 			AdjustRange r = new AdjustRange(this);
@@ -78,6 +77,7 @@ public class OverlayHost extends ARComponent.Aggregating {
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
+			//g2.setTransform(host.viewTransform());
 			Area a =new Area(this.getBounds());
 			
 			if (selection != null) {
@@ -90,6 +90,11 @@ public class OverlayHost extends ARComponent.Aggregating {
 			} else {
 				g2.setColor(SELECTED);
 				g2.fill(a);
+			}
+			
+			if (provisional && selection != null) {
+				g2.setColor(PROVISIONAL);
+				g2.draw(selection);
 			}
 		}
 
