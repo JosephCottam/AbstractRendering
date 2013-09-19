@@ -15,6 +15,8 @@ import java.awt.geom.Area;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -72,18 +74,33 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	/**Get the subset of aggregates that corresponds to the currently selected region.
 	 * @return null if no selection; otherwise a subset of aggregates.
 	 */
-	public Aggregates<?> subset() {
-		if (overlay.selection == null || overlay.selection.isEmpty()) {return null;}
+	public <A> Aggregates<?> subset() {
+		if (overlay.selections.size() ==0) {return null;}
 		
-		Aggregates<?> aggs = hosted.aggregates();
+		Aggregates<A> aggs = (Aggregates<A>) hosted.aggregates();
 		AffineTransform rt = hosted.renderTransform();
-		Rectangle selection = rt.createTransformedShape(overlay.selection).getBounds();
+		Area selection = overlay.selectedArea().createTransformedArea(rt);
+		Rectangle bounds = selection.getBounds();
 		
-		Aggregates<?> subset = FlatAggregates.subset(
-				aggs, 
-				selection.x, selection.y, 
-				selection.x+selection.width, selection.y+selection.height);
+		int lowX = bounds.x;
+		int lowY = bounds.y;
+		int highX = (int) bounds.getMaxX();
+		int highY = (int) bounds.getMaxY();
+		
+		int width = highX-lowX;
+		int height = highY-lowY;
+		
+		Aggregates<A> subset= new FlatAggregates<>(0, 0, width, height, aggs.defaultValue());
+		for (int x=0; x<width; x++) {
+			for (int y=0; y<height; y++) {
+				if (selection.contains(x+lowX, y+lowY)) {
+					A val = aggs.get(x+lowX,y+lowY);
+					subset.set(x, y, val);
+				}
+			}
+		}
 		return subset;
+
 	}
 	
 	public void enableEnhance(boolean enable) {
@@ -140,12 +157,11 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		/**Color to indicate a provisional selection.**/
 		public Color PROVISIONAL = Color.black;
 		
+		private List<Area> selections = new ArrayList<>();
+		
 		/**Current selection in dataset coordinates.**/
 		private Rectangle2D selection = null;
-		
-		/**Is this currently a provisional selection?**/
-		private boolean provisional = false;
-		
+				
 		/**Hosting object.**/
 		private final EnhanceHost host;
 		
@@ -160,31 +176,38 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
 			Area a =new Area(this.getBounds());
+			AffineTransform vt = host.viewTransform();
 			
-			Shape s = host.viewTransform().createTransformedShape(selection);
-			
-			if (selection != null) {
+			if (selections.size() >0) {
+				Area fullSelections = selectedArea();
+				fullSelections = fullSelections.createTransformedArea(vt);
+				a.subtract(fullSelections);
 				g.setColor(SELECTED);
-				g2.fill(s);
-				a.subtract(new Area(s));
-
-				if (provisional) {
-					g2.setColor(PROVISIONAL);
-					g2.draw(s);
-				}
-
-				g2.setColor(MASKED);
-				g2.fill(a);
-			} else {
-				g2.setColor(SELECTED);
-				g2.fill(a);
+				g2.fill(fullSelections);
 			}
 			
+
+			if (selection != null) {
+				Shape s = vt.createTransformedShape(selection);
+
+				g.setColor(SELECTED);
+				g2.fill(s);
+				g2.setColor(PROVISIONAL);
+				g2.draw(s);
+			}
+			
+			if (selection == null && selections.size() == 0) {
+				g2.setColor(SELECTED);
+				g2.fill(a);
+			} else {
+				g2.setColor(MASKED);
+				g2.fill(a);
+			}
 		}
 
 		public void clear() {
 			this.selection = null; 
-			provisional = false;
+			selections.clear();
 		}
 		
 		/**Set the current selection to a new value.
@@ -198,13 +221,26 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		public void setSelection(Rectangle2D bounds, boolean provisional) {
 			try	{
 				//Convert from screen-space to canvas space
-				this.selection = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();
+				bounds = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();
 			} catch (Exception e) {/*Ignore...should be impossible...should be.*/}
-			this.provisional=provisional;
 			
-			if (!provisional) {host.forceNewRefAggregates();}
+			if (provisional) {
+				selection = bounds;
+			} else {
+				selection = null;
+				if (bounds != null) {selections.add(new Area(bounds));}
+				host.forceNewRefAggregates();
+			}
 			
 			this.repaint();
+		}
+		
+		public Area selectedArea() {
+			Area fullSelection = new Area();
+			for (Area r: selections) {
+				fullSelection.add(r);
+			}
+			return fullSelection;
 		}
 	}
 	
@@ -214,7 +250,6 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		public void setSelection(Rectangle2D bounds, boolean provisional);
 	}
 
-	//TODO: Add keyboard support for "clear" and "invert"
 	//TODO: Add multi-region selection
 	private final static class AdjustRange implements MouseListener, MouseMotionListener {
 		Point2D start;

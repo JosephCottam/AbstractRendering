@@ -123,7 +123,6 @@ public class SimpleDisplay extends ARComponent {
 				long start = System.currentTimeMillis();
 				
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
-				
 				Aggregates<Color> colors = renderer.transfer(aggs, ts);
 				
 				image = Util.asImage(colors, SimpleDisplay.this.getWidth(), SimpleDisplay.this.getHeight(), Util.CLEAR);
