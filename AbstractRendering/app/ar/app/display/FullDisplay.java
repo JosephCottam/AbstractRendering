@@ -11,6 +11,8 @@ import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
+/**Render and display exactly what fits on the screen.
+ */
 public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandler.HasViewTransform {
 	protected static final long serialVersionUID = 1L;
 
@@ -18,7 +20,6 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	
 	protected Aggregator<?,?> aggregator;
 	protected Glyphset<?> dataset;
-	protected Renderer renderer;
 	
 	protected AffineTransform viewTransformRef = new AffineTransform();
 	protected AffineTransform inverseViewTransformRef = new AffineTransform();
@@ -28,6 +29,12 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	protected volatile Aggregates<?> aggregates;
 	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"ARPanel Render Thread");//TODO: Redoing painting to use futures...
 		
+	protected final Renderer renderer;
+
+	/**Create a new instance.
+	 * 
+	 * TODO: Investigate just taking in 'renderer' since that is the only immutable thing.
+	 */
 	public FullDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super();
 		display = new SimpleDisplay(null, transfer, renderer);
@@ -79,14 +86,7 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	}
 	
 	
-	@Override
-	public void paint(Graphics g) {
-		panelPaint(g);
-		super.paint(g);
-	}
-	
-	//Override this method in subclasses to make custom painting
-	protected void panelPaint(Graphics g) {
+	public void paintComponent(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
@@ -102,8 +102,9 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 			renderPool.execute(action);
 			renderAgain =false; 
 		} 
+		super.paintComponent(g);
 	}
-	
+		
 	/**Calculate aggregates for a given region.**/
 	protected final class RenderAggregates implements Runnable {
 		@SuppressWarnings({"unchecked","rawtypes"})
@@ -136,12 +137,7 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
     /**Use this transform to convert values from the absolute system
      * to the screen system.
      */
-	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}
-	protected void innerSetViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
-		renderAgain = true;
-		viewTransform(vt);
-	}
-	
+	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);

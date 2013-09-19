@@ -6,12 +6,11 @@ import java.awt.geom.NoninvertibleTransformException;
 
 import ar.*;
 import ar.aggregates.FlatAggregates;
-import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
 
 /**Panel that renders more than just what's visible on the screen so pan can happen quickly.
  * */
-public class SubsetDisplay extends FullDisplay implements ZoomPanHandler.HasViewTransform {
+public class SubsetDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
 	private AffineTransform renderTransform;
@@ -25,25 +24,36 @@ public class SubsetDisplay extends FullDisplay implements ZoomPanHandler.HasView
 	
 	private volatile Aggregates<?> subsetAggregates;
 	
+	/**Create a new instance.**/
 	public SubsetDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
 	}
 		
+	/**Is view-relative transfer in effect?**/
 	public boolean viewRelativeTransfer() {return viewRelativeTransfer;}
+	
+	/**Set the view-relative transfer state.**/
 	public void viewRelativeTransfer(boolean viewRelativeTransfer) {
 		this.viewRelativeTransfer =viewRelativeTransfer;
 		repaint();
 	}
 	
+	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates(Aggregates<?> aggregates) {
 		this.subsetAggregates = aggregates;
 		if (!viewRelativeTransfer) {display.refAggregates(aggregates);}
 		else {display.refAggregates(null);}
-		aggregates(null);
+		display.aggregates(aggregates);
 		repaint();
 	}
 	
-	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+	public Aggregates<?> aggregates() {return aggregates;}
+	public void aggregates(Aggregates<?> aggregates) {
+		this.aggregates = aggregates;
+		this.repaint();
+	}
+	
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		//Only force full re-render if the zoom factor changed
 		if (renderTransform == null 
 				|| vt.getScaleX() != viewTransformRef.getScaleX()
@@ -58,12 +68,15 @@ public class SubsetDisplay extends FullDisplay implements ZoomPanHandler.HasView
 			subsetRender=true;
 		}
 		
-		viewTransform(vt);
+		this.viewTransformRef = vt;
+		inverseViewTransformRef  = new AffineTransform(vt);
+		inverseViewTransformRef.invert();
+		repaint();
+
 	}
 
 	
-	@Override
-	protected void panelPaint(Graphics g) {
+	public void paintComponent(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
@@ -83,15 +96,6 @@ public class SubsetDisplay extends FullDisplay implements ZoomPanHandler.HasView
 			renderPool.execute(action);
 		}
 	}
-	
-	
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
-		this.viewTransformRef = vt;
-		inverseViewTransformRef  = new AffineTransform(vt);
-		inverseViewTransformRef.invert();
-		this.subsetAggregates(null);
-	}
-
 	
 	private final class SubsetRender implements Runnable {
 		public void run() {

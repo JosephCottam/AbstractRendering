@@ -143,7 +143,7 @@ public class SimpleDisplay extends ARComponent {
 	}
 		
 	/**Utility method to show a set of aggregates w.r.t. a transfer function in its own window.**/
-	public static <A> void show(String title, int width, int height, Aggregates<A> aggregates, Transfer<A,Color> transfer) {
+	public static <A> void show(String title, int width, int height, Aggregates<? extends A> aggregates, Transfer<A,Color> transfer) {
 		JFrame frame = new JFrame(title);
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
