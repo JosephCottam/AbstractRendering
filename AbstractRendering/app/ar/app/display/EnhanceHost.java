@@ -36,7 +36,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	
 	private SubsetDisplay hosted;
 	private SelectionOverlay overlay;
-	private boolean enableEnhance;
+	private boolean enhanceEnabled;
 
 	private boolean redoRefAggregates = false;
 	
@@ -104,14 +104,14 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	
 	public void enableEnhance(boolean enable) {
-		this.enableEnhance = enable;
+		this.enhanceEnabled = enable;
 		redoRefAggregates  = true;
 		this.repaint();
 	}
 	
-	public void paintComponent(Graphics g) {
+	public void paint(Graphics g) {
 		if (redoRefAggregates) {
-			if (enableEnhance) {
+			if (enhanceEnabled) {
 				Aggregates<?> subset = subset();
 				hosted.refAggregates(subset);
 			} else {
@@ -119,8 +119,14 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			}
 			redoRefAggregates = false;
 		}
+		super.paint(g);
 		
-		super.paintComponent(g);
+		AffineTransform vt = hosted.viewTransformRef;
+		if (enhanceEnabled && vt != null) {
+			Graphics2D g2 = (Graphics2D) g;
+			g.setColor(new Color(220,220,200));
+			g2.draw(overlay.selectedArea().createTransformedArea(vt));
+		}
 	}
 
 	public Transfer<?, ?> transfer() {return hosted.transfer();}
@@ -155,7 +161,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		public Color SELECTED = new Color(200,0,0,50);
 		
 		/**Color to indicate a provisional selection.**/
-		public Color PROVISIONAL = Color.black;
+		public Color PROVISIONAL = new Color(220,0,0,100);
 		
 		private List<Area> selections = new ArrayList<>();
 		
@@ -190,10 +196,8 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			if (selection != null) {
 				Shape s = vt.createTransformedShape(selection);
 
-				g.setColor(SELECTED);
-				g2.fill(s);
 				g2.setColor(PROVISIONAL);
-				g2.draw(s);
+				g2.fill(s);
 			}
 			
 			if (selection == null && selections.size() == 0) {
