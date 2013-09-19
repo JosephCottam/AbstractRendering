@@ -13,7 +13,6 @@ import ar.util.Util;
 public class SubsetDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	private AffineTransform renderTransform;
 	
 	private boolean fullRender;
 	private boolean subsetRender;
@@ -21,7 +20,11 @@ public class SubsetDisplay extends FullDisplay {
 	/**Should transfer specialization be done view-relative or always based on full-zoom?
 	 * Default is to be based on full-zoom.**/
 	private boolean viewRelativeTransfer = false; 
+
+	/**Affine transform used to render the full set of aggregates (data-space to 'aggregates')**/
+	private AffineTransform renderTransform;
 	
+	/**Subset of aggregates picked out by the current viewport and view transform.**/
 	private volatile Aggregates<?> subsetAggregates;
 	
 	/**Create a new instance.**/
@@ -53,6 +56,9 @@ public class SubsetDisplay extends FullDisplay {
 		this.repaint();
 	}
 	
+	/**Get the affine transform currently being used to render from geometric space to aggregates.**/
+	public AffineTransform renderTransform() {return renderTransform;}
+	
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		//Only force full re-render if the zoom factor changed
 		if (renderTransform == null 
@@ -72,7 +78,6 @@ public class SubsetDisplay extends FullDisplay {
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
 		repaint();
-
 	}
 
 	

@@ -60,6 +60,7 @@ public class SimpleDisplay extends ARComponent {
 	 */
 	public void aggregates(Aggregates<?> aggregates) {
 		this.aggregates = aggregates;
+		this.refAggregates = null;
 		renderAgain = true;
 		renderError = false;
 		repaint();
