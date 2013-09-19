@@ -6,12 +6,13 @@ import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
 import ar.app.display.ARComponent;
 import ar.app.util.AggregatesToJSON;
 
-public class ExportAggregates extends PanelDelegator {
+public class ExportAggregates extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private final JButton export = new JButton("Export Aggregates");
@@ -36,13 +37,11 @@ public class ExportAggregates extends PanelDelegator {
 		
 		fc.setFileFilter(CSV);
 		
-		final PanelDelegator panel = this;
-
 		export.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
 				 fd.setSelectedFile(new File("../TransferJS/aggregates.json"));
-				 int returnVal = fd.showDialog(panel, "Export");
+				 int returnVal = fd.showDialog(ExportAggregates.this, "Export");
 				 if (returnVal == JFileChooser.APPROVE_OPTION) {
 					 AggregatesToJSON.export(holder.getARComponent().aggregates(),fd.getSelectedFile());
 				 }

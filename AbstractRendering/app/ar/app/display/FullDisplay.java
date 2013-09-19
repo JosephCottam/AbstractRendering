@@ -1,12 +1,14 @@
 package ar.app.display;
 
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
+import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.util.Util;
@@ -16,6 +18,8 @@ import ar.util.Util;
 public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandler.HasViewTransform {
 	protected static final long serialVersionUID = 1L;
 
+	protected final ActionProvider aggregatesChangedProvider = new ActionProvider();
+	
 	protected final SimpleDisplay display;
 	
 	protected Aggregator<?,?> aggregator;
@@ -51,7 +55,8 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	}
 	
 	protected void finalize() {renderPool.shutdown();}
-	
+	public void addAggregatesChangedListener(ActionListener l) {aggregatesChangedProvider.addActionListener(l);}
+
 	protected FullDisplay build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		return new FullDisplay(aggregator, transfer, glyphs, renderer);
 	}
@@ -74,15 +79,18 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	public Aggregator<?,?> aggregator() {return aggregator;}
 	public void aggregator(Aggregator<?,?> aggregator) {
 		this.aggregator = aggregator;
-		this.aggregates = null;
+		aggregates(null);
 		this.repaint();
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates) {
+		if (aggregates != this.aggregates) {display.refAggregates(null);}
+
 		this.display.aggregates(aggregates);
 		this.aggregates = aggregates;
 		this.repaint();
+		aggregatesChangedProvider.fireActionListeners();
 	}
 	
 	

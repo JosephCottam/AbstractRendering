@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 
 import ar.Glyphset;
+import ar.app.util.ActionProvider;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
@@ -13,10 +14,11 @@ import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
-public class GlyphsetOptions extends PanelDelegator  {
+public class GlyphsetOptions extends JPanel  {
 	private static final long serialVersionUID = 1L;
 	private final JComboBox<String> glyphsType = new JComboBox<String>();
 	private final JComboBox<Double> size = new JComboBox<Double>();
+	private final ActionProvider actionProvider = new ActionProvider();
 	
 	public GlyphsetOptions( ){
 
@@ -36,12 +38,14 @@ public class GlyphsetOptions extends PanelDelegator  {
 		size.setSelectedItem(.01);
 		this.add(new LabeledItem("Size: ", size));
 		
-		ActionListener l = new PanelDelegator.DelegateAction(this);
+		ActionListener l = actionProvider.delegateListener();
 		glyphsType.addActionListener(l);
 		size.addActionListener(l);
 	}
 	
 	public double glyphSize() {return (double) size.getSelectedItem();}
+	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
+
 	
 	public Glyphset<?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {

@@ -6,16 +6,19 @@ import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
 import ar.app.ARApp;
+import ar.app.util.ActionProvider;
 
-public class FileOptions extends PanelDelegator {
+public class FileOptions extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private final ExportAggregates export;
 	private final JFileChooser fc = new JFileChooser("../data");
 	private final JButton chooseFile = new JButton("Input File");
+	private final ActionProvider provider = new ActionProvider();
 
 	private File inputFile=null;
 	
@@ -30,6 +33,8 @@ public class FileOptions extends PanelDelegator {
 	
 	public File inputFile() {return inputFile;}
 	
+	public void addActionListener(ActionListener l) {provider.addActionListener(l);}
+	
 	public FileOptions(ARApp parnt) {
 		export = new ExportAggregates(parnt);
 		this.add(chooseFile);
@@ -37,13 +42,12 @@ public class FileOptions extends PanelDelegator {
 		
 		fc.setFileFilter(CSV_HBIN);
 		
-		final PanelDelegator panel = this;
 		chooseFile.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				int rc = fc.showOpenDialog(panel);
+				int rc = fc.showOpenDialog(FileOptions.this);
 				if (rc== JFileChooser.APPROVE_OPTION) {
 					inputFile = fc.getSelectedFile();
-					panel.fireActionListeners();
+					FileOptions.this.provider.fireActionListeners();
 				}
 			}});
 	}

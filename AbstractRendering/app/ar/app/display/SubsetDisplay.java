@@ -13,7 +13,6 @@ import ar.util.Util;
 public class SubsetDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
-	
 	private boolean fullRender;
 	private boolean subsetRender;
 	
@@ -38,8 +37,10 @@ public class SubsetDisplay extends FullDisplay {
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates) {
 		if (aggregates != this.aggregates) {display.refAggregates(null);}
+		
 		this.aggregates = aggregates;
 		this.repaint();
+		aggregatesChangedProvider.fireActionListeners();
 	}
 	
 	/**Get the affine transform currently being used to render from geometric space to aggregates.**/

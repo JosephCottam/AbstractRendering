@@ -1,11 +1,13 @@
 package ar.app.components;
 
 import java.awt.Color;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.io.File;
 
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 
 import ar.Glyphset;
 import ar.Renderer;
@@ -13,6 +15,7 @@ import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.app.display.FullDisplay;
 import ar.app.util.GlyphsetUtils;
+import ar.app.util.ActionProvider;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
@@ -23,14 +26,15 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 
-public class Presets extends PanelDelegator {
+public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
-	
+	private final ActionProvider actionProvider = new ActionProvider();
+
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
 	
 	public Presets() {
 		this.add(new LabeledItem("Presets:", presets));
-		presets.addActionListener(new PanelDelegator.DelegateAction(this));
+		presets.addActionListener(actionProvider.delegateListener());
 		
 		ARApp.loadInstances(presets, Presets.class, "");
 	}
@@ -61,6 +65,8 @@ public class Presets extends PanelDelegator {
 		}
 		return newPanel;
 	}
+	
+	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
 	public static interface Preset {
 		public WrappedAggregator<?,?> aggregator();
