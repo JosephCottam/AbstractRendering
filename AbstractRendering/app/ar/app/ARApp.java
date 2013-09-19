@@ -12,6 +12,7 @@ import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
+import ar.app.display.FullDisplay;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
@@ -127,11 +128,13 @@ public class ARApp implements ARComponent.Holder {
 	}
 	
 	public void displayWithRenderer(Renderer renderer) {
-		ARComponent.Aggregating newDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
+		ARComponent.Aggregating newDisplay = new FullDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
 				((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
 				loadData(),
-				rendererOptions.renderer());
+				renderer);
+		
 		if (this.display != null) {frame.remove(this.display);}
+		
 		frame.add(newDisplay, BorderLayout.CENTER);
 		this.status.startMonitoring(renderer);
 		this.display = newDisplay;

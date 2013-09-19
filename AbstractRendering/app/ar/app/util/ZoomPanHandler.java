@@ -5,16 +5,16 @@ import java.awt.Cursor;
 import java.awt.event.*;
 import java.awt.geom.*;
 
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 
 import ar.app.display.ARComponent;
-import ar.app.display.FullDisplay;
 
-//TODO: Drag all the zoom/pan stuff stuff out of FullDisplay and park it here.  Just use get/set ViewTransform  
+/**Utility for working with zoom/pan on a display component.
+ * 
+ * This class can only be registered with objects that are both JComponents 
+ * and implement the HasViewTransform interface.
+ * **/
 public class ZoomPanHandler implements MouseListener, MouseMotionListener{
-    public static final double MIN_SCALE = Double.MIN_VALUE; //Minimum single-step change
-    public static final double MAX_SCALE = Double.MAX_VALUE;   //Maximum single-step change
-	
     private static final int ZOOM_BUTTON = InputEvent.BUTTON2_MASK;
     private static final int PAN_BUTTON = InputEvent.BUTTON1_MASK;
 	
@@ -27,7 +27,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
     @Override
 	public void mousePressed(MouseEvent e) { 	
         if (buttonEquals(e, ZOOM_BUTTON) ) {
-            JPanel canvas = (JPanel) e.getComponent();
+        	JComponent canvas = (JComponent) e.getComponent();
 
             canvas.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
             
@@ -46,27 +46,41 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      */
     @Override
 	public void mouseDragged(MouseEvent e) {
-    	FullDisplay canvas = (FullDisplay) e.getComponent();
+    	HasViewTransform canvas = (HasViewTransform) e.getComponent();
+    	JComponent component = (JComponent) e.getComponent();
         if (buttonEquals(e, ZOOM_BUTTON) ) {
             int y = e.getY();
             int dy = y-yLast;
             double zoom = 1 + ((double)dy) / 100;
 
-            int cursor = Cursor.N_RESIZE_CURSOR;
-            canvas.setCursor(Cursor.getPredefinedCursor(cursor));
+            component.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
             
-            zoom(canvas, down, zoom, false);
+            zoom(canvas, zoom);
             
             yLast = y;
         } else if (buttonEquals(e, PAN_BUTTON)) {
             double x = e.getX(),   y = e.getY();
             double dx = x-down.getX(), dy = y-down.getY();
 
-            canvas.pan(dx,dy);
+            pan(canvas, dx,dy);
             down = e.getPoint();
         }
     }
 
+    protected static void pan(HasViewTransform canvas, double dx, double dy) {
+    	AffineTransform vt = canvas.viewTransform();
+    	double tx = vt.getTranslateX()+dx;
+    	double ty = vt.getTranslateY()+dy;
+    	AffineTransform t = AffineTransform.getTranslateInstance(tx,ty);
+    	t.scale(vt.getScaleX(), vt.getScaleY());
+        
+    	try {canvas.viewTransform(t);}
+		catch (NoninvertibleTransformException e) {
+			try {canvas.viewTransform(new AffineTransform());}
+			catch (NoninvertibleTransformException e1) {/**Impossible**/}
+		}
+    }
+    
     /**
      * Zoom the given display at the given point by the zoom factor,
      * in either absolute (item-space) or screen co-ordinates.
@@ -76,18 +90,15 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      * @param abs if true, the point p should be assumed to be in absolute
      * coordinates, otherwise it will be treated as screen (pixel) coordinates
      */
-    protected void zoom(FullDisplay canvas, Point2D p, double zoom, boolean abs) {
-        double scale = canvas.getScale();
-        double result = scale * zoom;
-
-        if ( result < MIN_SCALE ) {
-            zoom = MIN_SCALE/scale;
-        } else if ( result > MAX_SCALE ) {
-            zoom = MAX_SCALE/scale;
-        }       
+    protected static void zoom(HasViewTransform canvas, double zoom) {
+    	AffineTransform vt = canvas.viewTransform();
+        vt.scale(zoom, zoom);
         
-        if ( abs ) {canvas.zoomAbs(p,zoom);}
-        else {canvas.zoom(p,zoom);}
+        try {canvas.viewTransform(vt);}
+		catch (NoninvertibleTransformException e) {
+			try {canvas.viewTransform(new AffineTransform());}
+			catch (NoninvertibleTransformException e1) {/**Impossible**/}
+		}
     }
     
     /**
@@ -120,4 +131,13 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 
 	@Override
 	public void mouseMoved(MouseEvent e) {/*Ignored.*/}
+	
+	/**Interface to support the zoom/pan handler.**/
+	public static interface HasViewTransform {
+		/**Get the current view transform.  Should return a copy (not a reference).**/
+		public AffineTransform viewTransform();
+		
+		/**Set a new view transform.  Should make a copy on acceptance.**/
+		public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
+	}
 }

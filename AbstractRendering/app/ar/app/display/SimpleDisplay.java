@@ -36,7 +36,9 @@ public class SimpleDisplay extends ARComponent {
 
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
 	
-	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {this(aggregates, transfer, new SerialSpatial());}
+	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
+		this(aggregates, transfer, new SerialSpatial());
+	}
 	
 	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {
 		super();
@@ -60,6 +62,7 @@ public class SimpleDisplay extends ARComponent {
 		this.aggregates = aggregates;
 		renderAgain = true;
 		renderError = false;
+		repaint();
 	}
 	public Aggregates<?> aggregates() {return aggregates;}
 
@@ -75,14 +78,16 @@ public class SimpleDisplay extends ARComponent {
 			renderAgain = true;
 			renderError = false;
 		}
+		repaint();
 	}
 	
+	public Transfer<?,?> transfer() {return transfer;}
 	public void transfer(Transfer<?,?> transfer) {
 		this.transfer = transfer;
 		renderAgain = true;
 		renderError = false;
+		repaint();
 	}
-	public Transfer<?,?> transfer() {return transfer;}
 
 	public Renderer renderer() {return renderer;}
 	
