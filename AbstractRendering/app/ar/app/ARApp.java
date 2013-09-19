@@ -12,6 +12,7 @@ import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
+import ar.app.display.OverlayHost;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
@@ -26,6 +27,7 @@ public class ARApp implements ARComponent.Holder {
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
+	private final OverlayHost.Control showOverlay = new OverlayHost.Control();
 	private final FileOptions fileOptions;
 	private final Status status = new Status();
 	
@@ -51,6 +53,7 @@ public class ARApp implements ARComponent.Holder {
 		controls.add(rendererOptions);
 		controls.add(fileOptions);
 		controls.add(status);
+		controls.add(showOverlay);
 		
 		loadInstances(aggregators, WrappedAggregator.class, "Count (int)");
 		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
@@ -127,13 +130,16 @@ public class ARApp implements ARComponent.Holder {
 	}
 	
 	public void displayWithRenderer(Renderer renderer) {
-		ARComponent.Aggregating newDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
+		ARComponent.Aggregating innerDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
 				((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
 				loadData(),
 				renderer);
 		
+		OverlayHost newDisplay = new OverlayHost(innerDisplay);
+		
 		if (this.display != null) {frame.remove(this.display);}
 		
+		showOverlay.host(newDisplay);
 		frame.add(newDisplay, BorderLayout.CENTER);
 		this.status.startMonitoring(renderer);
 		this.display = newDisplay;

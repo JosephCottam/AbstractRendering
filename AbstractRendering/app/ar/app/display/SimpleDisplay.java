@@ -113,7 +113,7 @@ public class SimpleDisplay extends ARComponent {
 	}
 	
 	//TODO: Fix race condition between "aggregates" and "refAggregates".  May require that whenever you set "aggregtes" then "refAggregates" gets cleared off and related shenanagans elsewhere
-	public final class TransferRender implements Runnable {
+	protected final class TransferRender implements Runnable {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void run() {
 			try {

@@ -18,8 +18,6 @@ public abstract class ARComponent extends JComponent {
 	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
 	public static boolean PERF_REP = false;
 
-
-
 	public abstract Transfer<?,?> transfer();
 	public abstract void transfer(Transfer<?, ?> t);
 
