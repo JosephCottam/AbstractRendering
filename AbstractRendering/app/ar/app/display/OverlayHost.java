@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -25,14 +26,13 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.app.components.LabeledItem;
-import ar.util.Util;
 
 /**Host a panel with an optional draw-on overlay**/ 
 public class OverlayHost extends ARComponent.Aggregating {
 	private static final long serialVersionUID = -6449887730981205865L;
 	
 	private ARComponent.Aggregating hosted;
-	private JComponent overlay;
+	private SelectionOverlay overlay;
 	
 	/**Host the given component in the overlay.**/
 	public OverlayHost(ARComponent.Aggregating hosted) {	
@@ -77,45 +77,54 @@ public class OverlayHost extends ARComponent.Aggregating {
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
-			//g2.setTransform(host.viewTransform());
 			Area a =new Area(this.getBounds());
 			
+			Shape s = host.viewTransform().createTransformedShape(selection);
+			
 			if (selection != null) {
+				g.setColor(SELECTED);
+				g2.fill(s);
+				a.subtract(new Area(s));
+
+				if (provisional) {
+					g2.setColor(PROVISIONAL);
+					g2.draw(s);
+				}
+
 				g2.setColor(MASKED);
 				g2.fill(a);
-
-				g.setColor(SELECTED);
-				g2.fill(selection);
-				a.subtract(new Area(selection));
 			} else {
 				g2.setColor(SELECTED);
 				g2.fill(a);
 			}
 			
-			if (provisional && selection != null) {
-				g2.setColor(PROVISIONAL);
-				g2.draw(selection);
-			}
 		}
 
-		public void setSelection(Rectangle2D bounds) {
-			this.selection = bounds;
-			this.provisional=false;
-			this.repaint();
+		public void clear() {
+			this.selection = null; 
+			provisional = false;
 		}
 		
-		public void setProvisional(Rectangle2D bounds) {
-			this.selection = bounds;
-			this.provisional=true;
+		/**Set the current selection to a new value.
+		 * To indicate transient state, set the "provisional" flag.
+		 * 
+		 * TODO: Add flag for "extend" vs "replace"
+		 ***/
+		public void setSelection(Rectangle2D bounds, boolean provisional) {
+			try	{this.selection = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();}
+			catch (Exception e) {/*Ignore...should be impossible...should be.*/}
+			this.provisional=provisional;
 			this.repaint();
 		}
 	}
 	
 	private interface Selectable {
-		public void setSelection(Rectangle2D bounds);
-		public void setProvisional(Rectangle2D bounds);
+		public void clear();
+		public void setSelection(Rectangle2D bounds, boolean provisional);
 	}
-	
+
+	//TODO: Add keyboard support for "clear" and "invert"
+	//TODO: Add multi-region selection
 	private final static class AdjustRange implements MouseListener, MouseMotionListener {
 		Point2D start;
 		final Selectable target;
@@ -126,24 +135,20 @@ public class OverlayHost extends ARComponent.Aggregating {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
 				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
-				target.setSelection(bounds);
+				target.setSelection(bounds, false);
 			}
 			start = null;
 		}
 		
-		public void mouseMoved(MouseEvent e) {}
-
-		public void mouseClicked(MouseEvent e) {}
-		public void mouseEntered(MouseEvent e) {}
-		public void mouseExited(MouseEvent e) {}
+		public void mouseClicked(MouseEvent e) {target.clear();}
 		public void mouseDragged(MouseEvent e) {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
 				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
-				target.setProvisional(bounds);
+				target.setSelection(bounds, true);
 			}
 		}
-		
+
 		private Rectangle2D bounds(MouseEvent e) {
 			double w = Math.abs(start.getX()-e.getX());
 			double h = Math.abs(start.getY()-e.getY());
@@ -152,6 +157,10 @@ public class OverlayHost extends ARComponent.Aggregating {
 					
 			return new Rectangle2D.Double(x,y,w,h);
 		}
+		
+		public void mouseMoved(MouseEvent e) {}
+		public void mouseEntered(MouseEvent e) {}
+		public void mouseExited(MouseEvent e) {}
 	}
 
 	public Transfer<?, ?> transfer() {return hosted.transfer();}
@@ -161,7 +170,12 @@ public class OverlayHost extends ARComponent.Aggregating {
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
 	public Glyphset<?> dataset() {return hosted.dataset();}
-	public void dataset(Glyphset<?> data) {hosted.dataset(data);}
+	
+	public void dataset(Glyphset<?> data) {
+		hosted.dataset(data);
+		overlay.clear();
+	}
+	
 	public Aggregator<?, ?> aggregator() {return hosted.aggregator();}
 	public void aggregator(Aggregator<?, ?> aggregator) {hosted.aggregator(aggregator);}
 	public Renderer renderer() {return hosted.renderer();}
