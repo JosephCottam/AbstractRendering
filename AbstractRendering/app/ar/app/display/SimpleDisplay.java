@@ -27,7 +27,7 @@ public class SimpleDisplay extends ARComponent {
 	 * 
 	 * If null, the regular aggregates will be used for transfer specialization.
 	 * If non-null, this set of aggregates is used.*/
-	private Aggregates<?> refAggregates;
+	private volatile Aggregates<?> refAggregates;
 
 	private final Renderer renderer;
 	private BufferedImage image;
@@ -60,7 +60,6 @@ public class SimpleDisplay extends ARComponent {
 	 */
 	public void aggregates(Aggregates<?> aggregates) {
 		this.aggregates = aggregates;
-		this.refAggregates = null;
 		renderAgain = true;
 		renderError = false;
 		repaint();

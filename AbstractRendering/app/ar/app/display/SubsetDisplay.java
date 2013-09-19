@@ -17,10 +17,6 @@ public class SubsetDisplay extends FullDisplay {
 	private boolean fullRender;
 	private boolean subsetRender;
 	
-	/**Should transfer specialization be done view-relative or always based on full-zoom?
-	 * Default is to be based on full-zoom.**/
-	private boolean viewRelativeTransfer = false; 
-
 	/**Affine transform used to render the full set of aggregates (data-space to 'aggregates')**/
 	private AffineTransform renderTransform;
 	
@@ -32,26 +28,16 @@ public class SubsetDisplay extends FullDisplay {
 		super(reduction, transfer, glyphs, renderer);
 	}
 		
-	/**Is view-relative transfer in effect?**/
-	public boolean viewRelativeTransfer() {return viewRelativeTransfer;}
-	
-	/**Set the view-relative transfer state.**/
-	public void viewRelativeTransfer(boolean viewRelativeTransfer) {
-		this.viewRelativeTransfer =viewRelativeTransfer;
-		repaint();
-	}
-	
 	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates(Aggregates<?> aggregates) {
 		this.subsetAggregates = aggregates;
-		if (!viewRelativeTransfer) {display.refAggregates(aggregates);}
-		else {display.refAggregates(null);}
 		display.aggregates(aggregates);
 		repaint();
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates) {
+		if (aggregates != this.aggregates) {display.refAggregates(null);}
 		this.aggregates = aggregates;
 		this.repaint();
 	}
