@@ -72,6 +72,12 @@ public class Categories {
 		final CategoricalCounts<OUT> like;
 		final Map<IN,OUT> rekey;
 		final OUT missing;
+
+		/**
+		 * @param like Used as the default value
+		 * @param rekey Mapping from key in the input to new key in the output
+		 * @param missing Key to use if the input key is not found in the rekey
+		 */
 		public ReKey(CategoricalCounts<OUT> like, Map<IN,OUT> rekey, OUT missing) {
 			this.like = like;
 			this.rekey = rekey;
@@ -311,7 +317,7 @@ public class Categories {
 			return new Specialized(max, background, omin, log);
 		}
 		
-		public static final class Specialized extends HighAlpha implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
+		protected static final class Specialized extends HighAlpha implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
 			private static final long serialVersionUID = 4453971577170705122L;
 			private final int max;
 			

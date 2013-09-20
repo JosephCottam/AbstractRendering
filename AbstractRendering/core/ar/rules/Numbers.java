@@ -118,7 +118,7 @@ public final class Numbers {
 			protected abstract Color interpolate(Number v);
 		}
 
-		public static final class SpecializedLog extends BaseSpecialized {
+		protected static final class SpecializedLog extends BaseSpecialized {
 			private static final long serialVersionUID = -8820226527786085843L;
 
 			public SpecializedLog(Util.Stats extrema, Color low, Color high, Color empty, int logBasis) {
@@ -130,7 +130,7 @@ public final class Numbers {
 			}
 		}
 
-		public static final class SpecializedLinear extends BaseSpecialized {
+		protected static final class SpecializedLinear extends BaseSpecialized {
 			private static final long serialVersionUID = 7114502132818604376L;
 
 			public SpecializedLinear(Util.Stats extrema, Color low, Color high, Color empty, int logBasis) {

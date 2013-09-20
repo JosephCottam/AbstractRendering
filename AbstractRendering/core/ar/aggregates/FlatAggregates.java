@@ -110,9 +110,10 @@ public class FlatAggregates<A> implements Aggregates<A>{
 		return aggs;
 	}
 	
+	/**Indicate that bounds were not properly provided at construction.**/
 	public static final class BoundsInversionException extends RuntimeException {
 		private static final long serialVersionUID = 7513866317256715349L;
-		public BoundsInversionException(int low, int high, String dim) {
+		protected BoundsInversionException(int low, int high, String dim) {
 			super(String.format("Inverted bounds: low%1$s (%2$d) must be lower than high%1$s (%2$d)", dim,low,high));
 		}
 	}

@@ -58,7 +58,7 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	public static final class Cached<G> extends GlyphSubset<G> {
 		private final Glyph<G>[] cache;
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked","javadoc"})
 		public Cached(Glyphset.RandomAccess<G> glyphs, long low, long high) {
 			super(glyphs,low, high);
 			this.cache = new Glyph[(int) (high - low)];
@@ -77,6 +77,7 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	/**Subset that defers to the backing dataset. 
 	 * This is essentially a re-framing of indices to form a subset.**/
 	public static final class Uncached<G> extends GlyphSubset<G> {
+		@SuppressWarnings({"javadoc"})
 		public Uncached(Glyphset.RandomAccess<G> glyphs, long low, long high) {super(glyphs, low,high);}
 		public Glyph<G> get(long l) {return glyphs.get(low+l);}
 	}

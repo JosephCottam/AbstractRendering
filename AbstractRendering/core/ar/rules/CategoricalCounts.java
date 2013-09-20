@@ -90,6 +90,7 @@ public interface CategoricalCounts<T> {
 		@SuppressWarnings("unchecked")
 		public CoC<T> empty() {return new CoC<>((Comparator<T>) counts.comparator());} 
 
+		/**Combine multiple CoC objects into a single CoC.**/
 		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
 			CoC<T> combined = new CoC<T>(comp);
 			for (CoC<T> counts: sources) {

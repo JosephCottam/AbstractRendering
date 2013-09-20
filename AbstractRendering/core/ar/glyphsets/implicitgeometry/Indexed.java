@@ -21,6 +21,8 @@ public interface Indexed extends Serializable {
 	public static class ArrayWrapper implements Indexed {
 		private static final long serialVersionUID = -7081805779069559306L;
 		private final Object array;
+		
+		@SuppressWarnings("javadoc")
 		public ArrayWrapper(Object parts) {this.array = parts;}
 		public Object get(int i) {return Array.get(array, i);}
 	}
@@ -32,6 +34,8 @@ public interface Indexed extends Serializable {
 		private static final long serialVersionUID = 9142589107863879237L;
 		private final MemMapEncoder.TYPE[] types;
 		private final Object[] values;
+		
+		@SuppressWarnings("javadoc")
 		public Converter(Object[] values, MemMapEncoder.TYPE... types) {
 			this.values = values;
 			this.types = types;
@@ -62,8 +66,11 @@ public interface Indexed extends Serializable {
 		private final int vIdx;
 		private final Valuer<I,V> basis;
 		
+		/**Extract a value from an indexed item without conversion.**/
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public ToValue(int vIdx) {this(vIdx, new IdentityValuer());}
+		
+		/**Extract a value from an indexed item, but do conversion using the valuer.**/
 		public ToValue(int vIdx, Valuer<I, V> basis) {
 			this.vIdx = vIdx;
 			this.basis = basis;
@@ -87,7 +94,13 @@ public interface Indexed extends Serializable {
 		private final boolean flipY;
 		private final int xIdx, yIdx;
 		
+		/**Square construction using the indexed values directly for x/y**/
 		public ToRect(double size, int xIdx, int yIdx) {this(size,size,false,xIdx,yIdx);}
+		
+		/**Full control constructor for creating rectangles.
+		 * 
+		 * @param flipY Multiply Y-values by -1 (essentially flip up and down directions)
+		 * **/
 		public ToRect(double width, double height, boolean flipY, int xIdx, int yIdx) {
 			this.width=width;
 			this.height=height;

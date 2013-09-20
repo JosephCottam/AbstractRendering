@@ -15,6 +15,7 @@ public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 	private final Glyph<G> glyph;
 	private final Rectangle2D bounds;
 	
+	/**Initialize the glyphset with the item.**/
 	public GlyphSingleton(Glyph<G> g) {
 		glyphs = Collections.singletonList(g);
 		glyph = g;

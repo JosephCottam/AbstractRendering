@@ -32,9 +32,10 @@ public class Advise {
 			return new Specialized<>(ref.specialize(aggregates));
 		}
 		
-		public static final class Specialized<A,B> extends UnderSaturate<A,B> implements Transfer.Specialized<A, Boolean> {
+		protected static final class Specialized<A,B> extends UnderSaturate<A,B> implements Transfer.Specialized<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
 			private final Transfer.Specialized<A, B> ref;
+			
 			public Specialized(Transfer.Specialized<A,B> ref) {
 				super(ref);
 				this.ref = ref;
@@ -79,7 +80,7 @@ public class Advise {
 			return new Specialized<>(ref2, comp, max, top);
 		}
 		
-		public static final class Specialized<A,B> extends OverSaturate<A,B> implements Transfer.Specialized<A,Boolean> {
+		protected static final class Specialized<A,B> extends OverSaturate<A,B> implements Transfer.Specialized<A,Boolean> {
 			private static final long serialVersionUID = 3155281566160217841L;
 			private final Transfer.Specialized<A, B> ref;
 			private final A max;
@@ -132,7 +133,7 @@ public class Advise {
 			return new Specialized(overColor, underColor, b2,o2,u2);
 		}
 		
-		public static final class Specialized extends OverUnder implements Transfer.Specialized<Number,Color> {
+		protected static final class Specialized extends OverUnder implements Transfer.Specialized<Number,Color> {
 			private static final long serialVersionUID = 7535365761511428962L;
 			private final Transfer.Specialized<Number, Color> base;
 			private final Transfer.Specialized<Number, Boolean> under;
@@ -184,7 +185,8 @@ public class Advise {
 		/**Transfer function used to determine the colors after the ratios have been determined.**/
 		public final Transfer<Number, Color> inner;
 		
-		/**
+		/**Construct a draw dark using a linear HD interpolation as the inner function.
+		 * 
 		 * @param low Color to represent average or low value in the neighborhood
 		 * @param high Color to represent high value for the neighborhood
 		 * @param distance Distance that defines the neighborhood.
@@ -194,6 +196,7 @@ public class Advise {
 			inner = new Numbers.Interpolate(low,high,high,-1);
 		}
 		
+		/**Draw dark using the given transfer for interpolation of the values.**/ 
 		public DrawDark(int distance, Transfer<Number,Color> inner) {
 			this.distance = distance;
 			this.inner = inner;
@@ -235,10 +238,11 @@ public class Advise {
 
 		public Color emptyValue() {return Util.CLEAR;}
 
-		public static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
+		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
 			private static final long serialVersionUID = 2548271516304517444L;
 			private final Transfer.Specialized<Number, Color> inner;
 			Aggregates<Double> cache;
+			
 			public Specialized(int distance, Transfer.Specialized<Number, Color> inner, Aggregates<Double> cache) {
 				super(distance, inner);
 				this.inner=inner;
