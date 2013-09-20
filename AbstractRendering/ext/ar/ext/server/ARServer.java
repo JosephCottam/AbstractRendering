@@ -31,7 +31,6 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.util.DelimitedReader;
 import ar.util.GlyphsetLoader;
-import ar.util.MemMapEncoder;
 import ar.util.MemMapEncoder.TYPE;
 import ar.util.Util;
 import ar.Glyphset;
@@ -55,7 +54,6 @@ public class ARServer extends NanoHTTPD {
 		@SuppressWarnings({"unchecked", "rawtypes"})
 		Glyphset boost = new MemMapList<Color>(
 				new File("../data/MemVisScaledB.hbin"),
-				new MemMapEncoder.TYPE[]{TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT},
 				new Indexed.ToRect(.001, .001, true, 0, 1), 
 				new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
 		

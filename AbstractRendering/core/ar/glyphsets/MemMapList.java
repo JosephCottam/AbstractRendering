@@ -45,6 +45,8 @@ import ar.util.IndexedEncoding;
  *
  */
 public class MemMapList<V> implements Glyphset.RandomAccess<V> {
+	public static final int VERSION_UNDERSTOOD = -1;
+	
 	/**How large should backing read buffer be?**/
 	public static int BUFFER_BYTES = 30000; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
 	
@@ -68,54 +70,46 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	private final int recordEntries;
 	private final int recordSize;
-	private final int headerOffset;
+	private final int dataTableOffset;
+	private final int stringTableOffset;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	/**Create a new mem-mapped list, detect the types from the source.**/
-	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
-		this(source, null, shaper, painter);
-	}
-
-	/**Create a new mem-mapped list.
-	 * 
-	 * @param source File to memory map
-	 * @param types Types to use for conversion. Null to auto-detect
-	 * @param shaper
-	 * @param valuer
-	 */
-	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
+	/**Create a new memory mapped list, types are read from the source.**/
+	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
 		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
 
-		if (source != null && types == null) {
+		if (source != null) {
+			int version = buffer.get().getInt();
+			if (version != VERSION_UNDERSTOOD) {
+				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_UNDERSTOOD));
+			}
+			
 			recordEntries = buffer.get().getInt();
 
 			types = new TYPE[recordEntries];
 			for (int i =0; i<recordEntries; i++) {
 				char t = buffer.get().getChar();
-				if (t=='i') {types[i] = TYPE.INT;}  
-				else if (t=='l') {types[i] = TYPE.LONG;}
-				else if (t=='s') {types[i] = TYPE.SHORT;}
-				else if (t=='d') {types[i] = TYPE.DOUBLE;} 
-				else if (t=='f') {types[i] = TYPE.FLOAT;}
-				else if (t=='b') {types[i] = TYPE.BYTE;}
-				else {throw new RuntimeException(String.format("Unknown type indicator '%s' at position %s", t,i));}
+				types[i] = TYPE.typeFor(t);
 			}
-			this.types = types;
-			headerOffset = (TYPE.INT.bytes+(types.length*TYPE.CHAR.bytes));  //Int for the header length, one char per entry  
+			
+			dataTableOffset = buffer.get().getInt();
+			stringTableOffset = buffer.get().getInt();
 
 			int acc=0;
 			for (TYPE t:this.types) {acc += t.bytes;}
 			this.recordSize = acc;
 		} else {
-			recordEntries = 0;
-			headerOffset = 0;
+			recordEntries = -1;
+			dataTableOffset = -1;
+			stringTableOffset = -1;
 			this.types = null;
 			this.recordSize = -1;
 		}
-		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
+		if (stringTableOffset >=0) {throw new IllegalArgumentException("Can't handle strings (yet).");}
+		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-dataTableOffset)/recordSize;
 
 	}
 
@@ -135,7 +129,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	}
 
 	protected IndexedEncoding entry(long i) {
-		long recordOffset = (i*recordSize)+headerOffset;
+		long recordOffset = (i*recordSize)+dataTableOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
 		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
 	}
