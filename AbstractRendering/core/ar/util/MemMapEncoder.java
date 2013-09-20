@@ -24,6 +24,8 @@ import java.io.*;
  * Additionally 'x' can be used to indicate that a source-file field should not
  * be included in the output file. VarChar ('v') entries are actually pointers to the string table.
  * 
+ * NOTE: 'v' does not work yet. 
+ * 
  * File format: header + info + strings + data
  * 
  * Header:
