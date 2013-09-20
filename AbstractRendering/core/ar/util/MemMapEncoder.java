@@ -3,7 +3,6 @@ package ar.util;
 import java.nio.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.io.*;
 
 /**Utility for encoding delimited files into a binary format that
@@ -340,6 +339,7 @@ public class MemMapEncoder {
 	public static void main(String[] args) throws Exception {
 		System.out.println("Usage: MemMapEncoder -in <file> -out <file> -skip <int> -types <string>");
 		System.out.println("Type string is a string made up of s/i/l/f/d/c for short/int/long/float/double/char.");
+		System.out.println();
 		
 		File temp;
 		File in = new File(entry(args, "-in", null));
