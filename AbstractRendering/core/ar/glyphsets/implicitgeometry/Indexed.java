@@ -88,7 +88,7 @@ public interface Indexed extends Serializable {
 	 * position.  The passed value determines the position, but the size
 	 * is set by the ToRect constructor. 
 	 */
-	public static class ToRect implements Shaper<Indexed>, Serializable {
+	public static class ToRect implements Shaper.SafeApproximate<Indexed>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final double width,height;
 		private final boolean flipY;

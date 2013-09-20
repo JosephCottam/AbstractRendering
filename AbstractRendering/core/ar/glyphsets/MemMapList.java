@@ -15,6 +15,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.BigFileByteBuffer;
 import ar.util.MemMapEncoder.TYPE;
+import ar.util.MemMapEncoder;
 import ar.util.Util;
 import ar.util.IndexedEncoding;
 
@@ -58,7 +59,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 			new ThreadLocal<BigFileByteBuffer>() {
 		public BigFileByteBuffer initialValue() {
 			if (source == null) {return null;}
-			try {return new BigFileByteBuffer(source, recordSize, BUFFER_BYTES);}
+			try {return new BigFileByteBuffer(source, recordLength, BUFFER_BYTES);}
 			catch (Exception e) {throw new RuntimeException(e);}
 		}
 	};
@@ -68,10 +69,9 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final Valuer<Indexed,V> valuer;
 	private final Shaper<Indexed> shaper;
 
-	private final int recordEntries;
-	private final int recordSize;
-	private final int dataTableOffset;
-	private final int stringTableOffset;
+	private final int recordLength;
+	private final long dataTableOffset;
+	private final long stringTableOffset;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
@@ -82,34 +82,31 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 		this.shaper = shaper;
 
 		if (source != null) {
-			int version = buffer.get().getInt();
-			if (version != VERSION_UNDERSTOOD) {
-				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_UNDERSTOOD));
+			MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer.get());
+			if (header.version != VERSION_UNDERSTOOD) {
+				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", header.version, VERSION_UNDERSTOOD));
 			}
-			
-			recordEntries = buffer.get().getInt();
 
-			types = new TYPE[recordEntries];
-			for (int i =0; i<recordEntries; i++) {
-				char t = buffer.get().getChar();
-				types[i] = TYPE.typeFor(t);
-			}
+			dataTableOffset = header.dataTableOffset;
+			stringTableOffset = header.stringTableOffset;
+			types = header.types;
+			this.recordLength = header.recordLength;
 			
-			dataTableOffset = buffer.get().getInt();
-			stringTableOffset = buffer.get().getInt();
-
-			int acc=0;
-			for (TYPE t:this.types) {acc += t.bytes;}
-			this.recordSize = acc;
+			if (shaper instanceof Shaper.SafeApproximate) {
+				IndexedEncoding max = new IndexedEncoding(types, header.maximaRecordOffset, header.recordLength, buffer.get());
+				IndexedEncoding min = new IndexedEncoding(types, header.minimaRecordOffset, header.recordLength, buffer.get());
+				Rectangle2D maxBounds = shaper.shape(max).getBounds2D();
+				Rectangle2D minBounds = shaper.shape(min).getBounds2D();
+				bounds = Util.bounds(maxBounds, minBounds);
+			} 
 		} else {
-			recordEntries = -1;
 			dataTableOffset = -1;
 			stringTableOffset = -1;
 			this.types = null;
-			this.recordSize = -1;
+			this.recordLength = -1;
 		}
 		if (stringTableOffset >=0) {throw new IllegalArgumentException("Can't handle strings (yet).");}
-		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-dataTableOffset)/recordSize;
+		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-dataTableOffset)/recordLength;
 
 	}
 
@@ -129,9 +126,9 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	}
 
 	protected IndexedEncoding entry(long i) {
-		long recordOffset = (i*recordSize)+dataTableOffset;
+		long recordOffset = (i*recordLength)+dataTableOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
-		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
+		return new IndexedEncoding(types, recordOffset,recordLength,buffer);
 	}
 
 	/**Valuer being used to establish a value for each entry.**/
