@@ -1,12 +1,9 @@
 package ar;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -15,8 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.JFrame;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
@@ -30,13 +25,15 @@ import org.opengis.feature.GeometryAttribute;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.awt.PolygonShape;
 
-import ar.app.components.ARDisplay;
+import ar.app.display.SimpleDisplay;
 import ar.app.util.GlyphsetUtils;
+import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
+import ar.renderers.RenderUtils;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
@@ -87,32 +84,41 @@ public class Census {
 		public LiftIf(Transfer<CategoricalCounts<Color>, Color> baseline) {this.baseline = baseline;}
 
 		@Override
-		public Color at(int x, int y,
-				Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			
-			CategoricalCounts<Color> val = aggregates.get(x, y);
-			int keyIdx=-1;
-			for (int i=0; i< val.size(); i++) {
-				if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
-			}
-			if (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > .1) {
-				return Color.BLACK;
-			} else {
-				return baseline.at(x, y, aggregates);
-			}
-		}
-
-		@Override
 		public Color emptyValue() {return baseline.emptyValue();}
 
 		@Override
-		public void specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			baseline.specialize(aggregates);
+		public Transfer.Specialized<CategoricalCounts<Color>, Color> specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+			Transfer.Specialized ts = baseline.specialize(aggregates);
+			return new Specialized(ts);
 		}
-	}
+		
+		protected static class Specialized extends LiftIf implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
+			final Transfer.Specialized<CategoricalCounts<Color>, Color> baseline;
+			public Specialized(Transfer.Specialized<CategoricalCounts<Color>, Color> baseline) {
+				super(baseline);
+				this.baseline = baseline;
+			}
+
+			@Override
+			public Color at(int x, int y,
+					Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+				
+				CategoricalCounts<Color> val = aggregates.get(x, y);
+				int keyIdx=-1;
+				for (int i=0; i< val.size(); i++) {
+					if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
+				}
+				if (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > .1) {
+					return Color.BLACK;
+				} else {
+					return baseline.at(x, y, aggregates);
+				}
+			}
+		}
+ 	}
 
 	
-	static class Weave implements Transfer<CoC<Color>, Color> {
+	static class Weave implements Transfer.Specialized<CoC<Color>, Color> {
 		private static final long serialVersionUID = -6006747974949256518L;
 
 		public Color at(int x, int y, Aggregates<? extends CoC<Color>> aggregates) {
@@ -139,10 +145,10 @@ public class Census {
 		public Color emptyValue() {return Util.CLEAR;}
 
 		@Override
-		public void specialize(Aggregates<? extends CoC<Color>> aggregates) {/**No work**/}		
+		public Weave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
-	static class RegionSpread implements Transfer<CoC<Color>, CoC<Color>> {
+	static class RegionSpread implements Transfer.Specialized<CoC<Color>, CoC<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;
 		final List<Shape> regions;
 		final AffineTransform ivt;
@@ -168,7 +174,7 @@ public class Census {
 		public CoC<Color> emptyValue() {return new CoC<Color>(Util.COLOR_SORTER);}
 
 		@Override
-		public void specialize(Aggregates<? extends CoC<Color>> aggregates) {/**No work.**/}
+		public RegionSpread specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}
 		
 		public Shape touches(int x, int y) {
 			Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
@@ -256,19 +262,12 @@ public class Census {
 
 	@SuppressWarnings("all")
 	public static void show(String label, int width, int height, Aggregates<?> aggs, Transfer<?,?> t) {
-//
-//		JFrame frame2 = new JFrame(label);
-//		frame2.setLayout(new BorderLayout());
-//		frame2.setSize(width+40,height);
-//		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//		frame2.add(new ARDisplay(aggs, t), BorderLayout.CENTER);
-//		frame2.setVisible(true);
-//		frame2.revalidate();
-//		frame2.validate();
+
+		SimpleDisplay.show(label, width, height, (Aggregates) aggs, (Transfer) t);
 		
 		Renderer r=new ParallelSpatial();
-		t.specialize((Aggregates) aggs);
-		aggs = r.transfer((Aggregates) aggs, (Transfer) t);
+		Transfer.Specialized ts = t.specialize((Aggregates) aggs);
+		aggs = r.transfer((Aggregates) aggs, ts);
 		BufferedImage img = Util.asImage((Aggregates<Color>) aggs, width, height, Util.CLEAR);
 		Util.writeImage(img, new File("../data/" + label + ".png"));
 		
@@ -276,17 +275,18 @@ public class Census {
 	
 	
 	public static void main(String[] args) throws Exception {
-		Glyphset<Pair> race = GlyphsetUtils.memMap(
-				"US Census", 
-				"../data/census/Race_LatLongDenorm.hbin",
-				new FakeMapProject(new Indexed.ToRect(.3, .3, true, 3, 2)),
-				//new Indexed.ToRect(10, 10, true, 3, 2),
-				new Pairer(4,1),
-				1, null);
+		Glyphset<Pair> race = 
+				new MemMapList<>(
+						new File("../data/census/Race_TractLatLonDenorm.hbin"),
+						new FakeMapProject(new Indexed.ToRect(.3, .3, true, 0,1)),
+						//new Indexed.ToRect(10, 10, true, 1,0),
+						new Pairer(3,2));
 
 		Renderer r = new ParallelGlyphs();
-		int width = 2000;
-		int height = 1092;
+		
+		double ratio = 1.853;  //With x height of the US...
+		int width = 800;
+		int height = (int) (width / ratio);
 		AffineTransform ivt = Util.zoomFit(race.bounds(), width, height);
 		ivt.invert();
 		System.out.println("Aggregating");
@@ -307,12 +307,14 @@ public class Census {
 		colors.put(3, new Color(0,200,0));	//African American
 		colors.put(4, new Color(220,0,0));	//Native American
 		colors.put(5, Color.GRAY);	//Asian
-		colors.put(6, Color.GRAY);	//Others
+		colors.put(6, Color.GRAY);	//Hawaiian
+		colors.put(7, Color.GRAY);	//Other
+		colors.put(8, Color.GRAY);	//Mixed
 
 		System.out.println("Strat Alpha");
 		Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> t1 = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
-		t1.specialize(raceAggs);
-		Aggregates<CategoricalCounts<Color>> colorAggs = r.transfer(raceAggs, t1);
+		Transfer.Specialized<CategoricalCounts<Object>, CategoricalCounts<Color>> ts = t1.specialize(raceAggs);
+		Aggregates<CategoricalCounts<Color>> colorAggs = r.transfer(raceAggs, ts);
 		Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 		show("Race_Strat_Alpha", width, height, colorAggs, stratAlpha);
 		
