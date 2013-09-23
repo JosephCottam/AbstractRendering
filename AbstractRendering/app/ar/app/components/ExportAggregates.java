@@ -6,19 +6,20 @@ import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
-import ar.app.PanelHolder;
+import ar.app.display.ARComponent;
 import ar.app.util.AggregatesToJSON;
 
-public class ExportAggregates extends CompoundPanel {
+public class ExportAggregates extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private final JButton export = new JButton("Export Aggregates");
 	private final JFileChooser fc = new JFileChooser("./data");
 
 	private File inputFile=null;
-	private final PanelHolder container;
+	private final ARComponent.Holder holder;
 	
 	private static final FileFilter CSV = new FileFilter() {
 		public boolean accept(File pathname) {
@@ -30,21 +31,19 @@ public class ExportAggregates extends CompoundPanel {
 	
 	public File inputFile() {return inputFile;}
 	
-	public ExportAggregates(PanelHolder containing) {
+	public ExportAggregates(ARComponent.Holder target) {
 		this.add(export);
-		this.container = containing;
+		this.holder = target;
 		
 		fc.setFileFilter(CSV);
 		
-		final CompoundPanel panel = this;
-
 		export.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
 				 fd.setSelectedFile(new File("../TransferJS/aggregates.json"));
-				 int returnVal = fd.showDialog(panel, "Export");
+				 int returnVal = fd.showDialog(ExportAggregates.this, "Export");
 				 if (returnVal == JFileChooser.APPROVE_OPTION) {
-					 AggregatesToJSON.export(container.getPanel().aggregates(),fd.getSelectedFile());
+					 AggregatesToJSON.export(holder.getARComponent().aggregates(),fd.getSelectedFile());
 				 }
 			}
 		});

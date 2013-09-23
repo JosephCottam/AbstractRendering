@@ -1,7 +1,7 @@
-package ar.app.components;
+package ar.app.display;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -14,12 +14,9 @@ import ar.renderers.SerialSpatial;
 import ar.util.Util;
 
 /**Panel that will draw a set of aggregates on the screen with a given transfer function.**/
-public class ARDisplay extends JPanel {
+public class SimpleDisplay extends ARComponent {
 	private static final long serialVersionUID = 1L;
 	
-	/**Flag to enable/disable performance reporting messages to system.out (defaults to false)**/
-	public static boolean PERF_REP = false;
-
 	/**Transfer function to use in rendering*/
 	private Transfer<?,?> transfer;
 	
@@ -30,22 +27,26 @@ public class ARDisplay extends JPanel {
 	 * 
 	 * If null, the regular aggregates will be used for transfer specialization.
 	 * If non-null, this set of aggregates is used.*/
-	private Aggregates<?> refAggregates;
+	private volatile Aggregates<?> refAggregates;
 
-	private Renderer renderer = new SerialSpatial();
+	private final Renderer renderer;
 	private BufferedImage image;
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
 
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
-
-
-	public ARDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
+	
+	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
+		this(aggregates, transfer, new SerialSpatial());
+	}
+	
+	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {
 		super();
+		this.renderer = renderer;
 		this.transfer = transfer;
 		this.aggregates = aggregates;
 		this.addComponentListener(new ComponentListener(){
-			public void componentResized(ComponentEvent e) {ARDisplay.this.renderAgain = true;}
+			public void componentResized(ComponentEvent e) {SimpleDisplay.this.renderAgain = true;}
 			public void componentMoved(ComponentEvent e) {}
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
@@ -53,35 +54,43 @@ public class ARDisplay extends JPanel {
 	}
 	
 	protected void finalize() {renderPool.shutdown();}
-	
-	public void setAggregates(Aggregates<?> aggregates) {
+
+	/**Set the aggregates set in transfer.  
+	 * Used as default set of aggregates if refAggregates is null.
+	 */
+	public void aggregates(Aggregates<?> aggregates) {
 		this.aggregates = aggregates;
 		renderAgain = true;
 		renderError = false;
+		repaint();
+	}
+	public Aggregates<?> aggregates() {return aggregates;}
+
+	
+	public Aggregates<?> refAggregates() {
+		 return refAggregates == null ? aggregates : refAggregates;
 	}
 	
-	public void setRefAggregates(Aggregates<?> aggs) {
+	/**Set of aggregates to use in transfer-function specialization**/
+	public void refAggregates(Aggregates<?> aggs) {
 		if (this.refAggregates != aggs) {
 			this.refAggregates = aggs;
 			renderAgain = true;
 			renderError = false;
 		}
+		repaint();
 	}
 	
-	public  void withTransfer(Transfer<?,?> transfer) {
+	public Transfer<?,?> transfer() {return transfer;}
+	public void transfer(Transfer<?,?> transfer) {
 		this.transfer = transfer;
 		renderAgain = true;
 		renderError = false;
+		repaint();
 	}
+
+	public Renderer renderer() {return renderer;}
 	
-	public void withRenderer(Renderer renderer) {
-		this.renderer = renderer;
-		renderAgain = true;
-		renderError = false;
-	}
-	
-	public Aggregates<?> aggregates() {return aggregates;}
-	public Transfer<?,?> transfer() {return transfer;}
 	
 	@Override
 	public void paintComponent(Graphics g) {
@@ -103,7 +112,8 @@ public class ARDisplay extends JPanel {
 		}
 	}
 	
-	public final class TransferRender implements Runnable {
+	//TODO: Fix race condition between "aggregates" and "refAggregates".  May require that whenever you set "aggregtes" then "refAggregates" gets cleared off and related shenanagans elsewhere
+	protected final class TransferRender implements Runnable {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void run() {
 			try {
@@ -112,12 +122,10 @@ public class ARDisplay extends JPanel {
 				
 				long start = System.currentTimeMillis();
 				
-				Aggregates specAggs = refAggregates == null ? aggs : refAggregates;
-				transfer.specialize(specAggs);
+				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
+				Aggregates<Color> colors = renderer.transfer(aggs, ts);
 				
-				Aggregates<Color> colors = renderer.transfer(aggs, (Transfer) transfer);
-				
-				image = Util.asImage(colors, ARDisplay.this.getWidth(), ARDisplay.this.getHeight(), Util.CLEAR);
+				image = Util.asImage(colors, SimpleDisplay.this.getWidth(), SimpleDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
@@ -129,18 +137,17 @@ public class ARDisplay extends JPanel {
 				renderAgain = false;
 			}
 			
-			ARDisplay.this.repaint();
+			SimpleDisplay.this.repaint();
 		}
 	}
-	
-	public Renderer getRenderer() {return renderer;}
-	
-	public static <A> void show(int width, int height, Aggregates<A> aggregates, Transfer<A,Color> transfer) {
-		JFrame frame = new JFrame("ARDisplay");
+		
+	/**Utility method to show a set of aggregates w.r.t. a transfer function in its own window.**/
+	public static <A> void show(String title, int width, int height, Aggregates<? extends A> aggregates, Transfer<A,Color> transfer) {
+		JFrame frame = new JFrame(title);
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new SimpleDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

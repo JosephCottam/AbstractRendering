@@ -18,6 +18,7 @@ public class GlyphsetLoader {
 	 * 
 	 * @param glyphs Glyphset to load items into
 	 * @param reader Source of the glyph data
+	 * @param converer Convert read entries to indexed entries
 	 * @param shaper Convert the read item into a shape
 	 * @param valuer Convert the read item into a value
 	 * @return The glyphset passed in as a parameter (now with more glyphs)

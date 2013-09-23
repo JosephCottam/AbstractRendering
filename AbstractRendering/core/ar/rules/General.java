@@ -26,7 +26,7 @@ public class General {
 
 
 	/**Return what is found at the given location.**/
-	public static final class Echo<T> implements Transfer<T,T>, Aggregator<T,T> {
+	public static final class Echo<T> implements Transfer.Specialized<T,T>, Aggregator<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
@@ -42,11 +42,11 @@ public class General {
 			return emptyValue();
 		}
 		public T identity() {return emptyValue();}
-		public void specialize(Aggregates<? extends T> aggregates) {/*No work to perform*/}
+		public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}
 	}
 
 	/**Return the given value when presented with a non-empty value.**/
-	public static final class Present<IN, OUT> implements Transfer<IN,OUT> {
+	public static final class Present<IN, OUT> implements Transfer.Specialized<IN,OUT> {
 		private static final long serialVersionUID = -7511305102790657835L;
 		private final OUT present, absent;
 		
@@ -65,13 +65,13 @@ public class General {
 			return absent;
 		}
 		
-		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform*/}
+		public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
 		public OUT emptyValue() {return absent;}
 	}
 	
 	/**Transfer function that wraps a java.util.map.**/
-	public static class MapWrapper<IN,OUT> implements Transfer<IN,OUT> {
+	public static class MapWrapper<IN,OUT> implements Transfer.Specialized<IN,OUT> {
 		private static final long serialVersionUID = -4326656735271228944L;
 		private final Map<IN, OUT> mappings;
 		private final boolean nullIsValue;
@@ -98,7 +98,7 @@ public class General {
 		}
 
 		public OUT emptyValue() {return other;}
-		public void specialize(Aggregates<? extends IN> aggregates) {/*No work to perform.*/}
+		public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 
 		/**From a reader, make a map wrapper.  
 		 * 

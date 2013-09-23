@@ -28,13 +28,14 @@ import javax.swing.event.ChangeListener;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.app.ARApp;
+import ar.app.display.ARComponent;
 import ar.rules.Numbers;
 import ar.util.Util;
 
 public class ScatterControl extends JPanel {
 	private static final long serialVersionUID = 4425716699286853617L;
 
-	protected ARApp source;
+	protected ARComponent.Holder source;
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
 	protected final JButton refresh = new JButton("Refresh");
@@ -122,12 +123,11 @@ public class ScatterControl extends JPanel {
 
 		public void changeRegion(Rectangle2D region) {
 			this.region = region;
-			ARPanel p = parent.source.getPanel().withTransfer(parent.getTransfer());
-			parent.source.changeImage(p);
+			parent.source.getARComponent().transfer(parent.getTransfer());
 		}
 		
 		private void configure() {
-			Aggregates<?> src = parent.source == null ? null : parent.source.getPanel().aggregates(); 
+			Aggregates<?> src = parent.source == null ? null : parent.source.getARComponent().aggregates(); 
 
 			if (src == null || !(src.get(src.lowX(), src.lowY()) instanceof Number)) {return;}
 			
@@ -239,12 +239,12 @@ public class ScatterControl extends JPanel {
 	}
 		
 	//TODO: Extend to do additional transfer if it is 'in' instead of just return given color...possibly take in Aggregates+Image and set image to tansparent if out...
-	private static final class DeltaTransfer implements Transfer<Number,Color> {
+	private static class DeltaTransfer implements Transfer<Number,Color> {
 		private static final long serialVersionUID = 2903644806615515638L;
-		private final double minV, maxV, minDV, maxDV;
-		private final int distance;
-		private final Color out;
-		private final Transfer<Number, Color> basis;
+		protected final double minV, maxV, minDV, maxDV;
+		protected final int distance;
+		protected final Color out;
+		protected final Transfer<Number, Color> basis;
 		
 		public DeltaTransfer(double minV, double maxV, double minDV, double maxDV, int distance, Transfer<Number, Color> basis, Color out) {
 			this.minV=minV;
@@ -255,35 +255,53 @@ public class ScatterControl extends JPanel {
 			this.basis = basis;
 			this.out = out;
 		}
-		
-		@Override
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			double v = aggregates.get(x, y).doubleValue();
-			
-			if (v==aggregates.defaultValue().doubleValue()) {return basis.emptyValue();}
-			
-			if (v >= minV && v <= maxV) {
-				for (int d=-distance; d<=distance; d++) {
-					for (int dx=0; dx<=d; dx++) {
-						for (int dy=0; dy<=d; dy++) {
-							int cx=x+dx;
-							int cy=y+dy;
-							if (cx < aggregates.lowX() || cy < aggregates.lowY() || cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-							double dv = aggregates.get(cx,cy).doubleValue();
-							if (dv >= minDV && dv < maxDV) {
-								return basis.at(x, y, aggregates);
-							}
-						}
-					}
-				}
-			}
-			return out;
-		}
+
 
 		public Color emptyValue() {return Util.CLEAR;}
 
 		@Override
-		public void specialize(Aggregates<? extends Number> aggregates) {/**No useful work.**/}
+		public Specialized specialize(Aggregates<? extends Number> aggregates) {
+			Transfer.Specialized<Number,Color> ts = basis.specialize(aggregates);
+			return new Specialized(maxDV, maxDV, maxDV, maxDV, distance, ts, out);
+		}
+		
+		public static final class Specialized extends DeltaTransfer implements Transfer.Specialized<Number,Color> {
+			private static final long serialVersionUID = -6184809407036220961L;
+			
+			private final Transfer.Specialized<Number, Color> basis;
+			public Specialized(
+					double minV, double maxV, double minDV,
+					double maxDV, int distance, Transfer.Specialized<Number, Color> basis,
+					Color out) {
+				super(minV, maxV, minDV, maxDV, distance, basis, out);
+				this.basis = basis;
+			}
+			
+			@Override
+			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+				double v = aggregates.get(x, y).doubleValue();
+				
+				if (v==aggregates.defaultValue().doubleValue()) {return basis.emptyValue();}
+				
+				if (v >= minV && v <= maxV) {
+					for (int d=-distance; d<=distance; d++) {
+						for (int dx=0; dx<=d; dx++) {
+							for (int dy=0; dy<=d; dy++) {
+								int cx=x+dx;
+								int cy=y+dy;
+								if (cx < aggregates.lowX() || cy < aggregates.lowY() || cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
+								double dv = aggregates.get(cx,cy).doubleValue();
+								if (dv >= minDV && dv < maxDV) {
+									return basis.at(x, y, aggregates);
+								}
+							}
+						}
+					}
+				}
+				return out;
+			}
+			
+		}
 	}
 	
 }

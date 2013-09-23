@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import ar.app.components.ARDisplay;
-import ar.app.components.ARPanel;
+import ar.app.display.FullDisplay;
+import ar.app.display.SimpleDisplay;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelGlyphs;
@@ -73,11 +73,11 @@ public class SimpleApp {
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		vt.invert();
 		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
-		transfer.specialize(aggregates);
-		Aggregates<Color> colors = r.transfer(aggregates, transfer);
+		Transfer.Specialized<Number,Color> specializedTransfer = transfer.specialize(aggregates);
+		Aggregates<Color> colors = r.transfer(aggregates, specializedTransfer);
 		
 		//Make a final image (if the aggregates are colors)
-		@SuppressWarnings("unused")  //Unused because its just ademo of how to do it
+		@SuppressWarnings("unused")  //Unused because its just a demo of how to do it
 		BufferedImage image = Util.asImage(colors, width, height, Color.white);
 		
 		//A simple display panel can be found in ARDisplay.
@@ -91,7 +91,7 @@ public class SimpleApp {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ARDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new SimpleDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();
@@ -105,7 +105,7 @@ public class SimpleApp {
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);
 		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		final ARPanel panel = new ARPanel(aggregator, transfer, dataset, r);
+		final FullDisplay panel = new FullDisplay(aggregator, transfer, dataset, r);
 		frame2.add(panel, BorderLayout.CENTER);
 		frame2.setVisible(true);
 		frame2.revalidate();

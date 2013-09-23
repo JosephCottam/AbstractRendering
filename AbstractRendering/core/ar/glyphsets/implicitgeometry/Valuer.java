@@ -38,6 +38,7 @@ public interface Valuer<I,V> extends Serializable {
 		private static final long serialVersionUID = -8933986990047616101L;
 		private final V c;
 		
+		@SuppressWarnings("javadoc")
 		public Constant(V c) {this.c = c;}
 		public V value(I item) {return c;}
 	}
@@ -52,6 +53,7 @@ public interface Valuer<I,V> extends Serializable {
 		private final V b;
 		private final T v;
 		
+		@SuppressWarnings("javadoc")
 		public Binary(T v, V a, V b) {this.v = v; this.a = a; this.b=b;}
 		public V value(T item) {
 			if (item == v || (v != null && v.equals(item))) {return a;}

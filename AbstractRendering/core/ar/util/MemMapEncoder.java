@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.io.*;
 
 /**Utility for encoding delimited files into a binary format that
- * can be read by the included mem-mapped list.  
+ * can be read by the included memory mapped list.  
  * 
  * To properly encode values, a field-type descriptor must be supplied.
  * This is a string where each character indicates the type of the associated
@@ -19,21 +19,28 @@ import java.io.*;
  *   + d -- Double (eight bytes)
  *   + c -- Char (two bytes)
  *   + b -- Byte (one byte)
-
+ *   + v -- VarChar (eight bytes) 
+ *
  * Additionally 'x' can be used to indicate that a source-file field should not
- * be included in the output file.
+ * be included in the output file. VarChar ('v') entries are actually pointers to the string table.
  * 
- * The files that result from this encoder carry a header that describes
- * the fields of the file.  The header is an integer that indicates how many
- * fields the entries have followed by one character (two bytes) for each 
- * entry type.  The entry type characters match those passed to the encoder 
- * (except that 'x' is not valid in the header).
+ * NOTE: 'v' does not work yet. 
  * 
- * TODO: Add support for strings (type 'V').  Multi-segmented file or multiple files, where one file is the table, the other is a string-table.  Talbe file stores offsets into string-table for string values
+ * File format: header + info + strings + data
  * 
- * @author jcottam
+ * Header:
+ * 
+ * + Version Number (Int): Decoders should verify that they are ready for files encoded with the given version
+ * + Data Offset (Long): Where is the first data record
+ * + String Offset (Long): Where is the string table? (negative if there is no string table)
+ * + Record Size (Int): How many fields are in each record
+ * + Record Types ([Char]): Type characters (described above), one for each field.  Cannot include 'x'
+ * + Info Records: Metadata not be required to interpret the file.  Currently two data records to provide max/min values for columns.  
  */
 public class MemMapEncoder {
+	/**(Magic) Number as the first value in the file to indicate what version of the format was used.*/
+	public static final int VERSION_ID = -1;
+	
 	/**Types the encoder understands.
 	 * The "X" type is used to indicate that the field is being skipped.
 	 */
@@ -44,6 +51,77 @@ public class MemMapEncoder {
 		/**How many bytes is this type encoded with?**/
 		public final int bytes;
 		private TYPE(int bytes) {this.bytes=bytes;}
+		
+		public static TYPE typeFor(char t) {
+			if (t=='i') {return TYPE.INT;}  
+			else if (t=='l') {return TYPE.LONG;}
+			else if (t=='s') {return TYPE.SHORT;}
+			else if (t=='d') {return TYPE.DOUBLE;} 
+			else if (t=='f') {return TYPE.FLOAT;}
+			else if (t=='b') {return TYPE.BYTE;}
+			else if (t=='x') {return TYPE.X;}
+			else {throw new RuntimeException(String.format("Unknown type indicator '%s'", t));}
+		}
+	}
+	
+	public static final class Header {
+		public final int version;
+		public final long dataTableOffset;
+		public final long stringTableOffset;
+		public final TYPE[] types;
+		public final int recordLength;
+		public final long maximaRecordOffset;
+		public final long minimaRecordOffset;
+		
+		public Header(int version, TYPE[] types, long dataTableOffset, long stringTableOffset, long infoRecordOffset) {
+			this.version = version;
+			this.dataTableOffset = dataTableOffset;
+			this.stringTableOffset = stringTableOffset;
+			this.types = types;
+			this.recordLength = recordLength(types);
+			this.maximaRecordOffset = infoRecordOffset;
+			this.minimaRecordOffset = infoRecordOffset+recordLength;
+		}
+		
+		/**Parse a given file, return a Header object.**/
+		public static Header from(BigFileByteBuffer buffer) {
+			int version = buffer.getInt();
+			if (version != VERSION_ID) {
+				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_ID));
+			}
+
+			long dataTableOffset = buffer.getLong();
+			long stringTableOffset = buffer.getLong();
+			
+			int recordEntries = buffer.getInt();
+
+			TYPE[] types = new TYPE[recordEntries];
+			for (int i =0; i<recordEntries; i++) {
+				char t = buffer.getChar();
+				types[i] = TYPE.typeFor(t);
+			}
+			
+			long infoRecordOffset = buffer.position();
+			
+			
+			return new Header(version, types, dataTableOffset, stringTableOffset, infoRecordOffset);
+		}
+		
+	}
+	
+	
+	/**Utility for append byte arrays together.**/
+	private static byte[] append(byte[]... allBytes) {
+		int len = 0;
+		for (byte[] bt: allBytes) {len +=bt.length;}
+		
+		int offset =0;
+		byte[] combined = new byte[len];
+		for (byte[] bt: allBytes) {
+			System.arraycopy(bt, 0, combined, offset, bt.length);
+			offset += bt.length;
+		}
+		return combined;
 	}
 
 	
@@ -61,22 +139,47 @@ public class MemMapEncoder {
 		return keep;
 	}
 	
+	private static int recordLength(char[] types) {
+		int acc = 0;
+		for (char c: types) {acc += TYPE.typeFor(c).bytes;}
+		return acc;
+	}
+	
+	private static int recordLength(TYPE[] types) {
+		int acc = 0;
+		for (TYPE t: types) {acc += t.bytes;}
+		return acc;
+	}
+
+	
+
+	/**Construct a header with spaces for string offset, data offset and info records to be filled in later.**/
 	private static byte[] makeHeader(char[] types) {
+		byte[] version = intBytes(VERSION_ID);
+		byte[] recordHeader= recordHeader(types);
+		byte[] stringOffset = longBytes(-1);
+		byte[] minRecord = new byte[recordLength(types)];
+		byte[] maxRecord = new byte[recordLength(types)];
+		int headerSize = version.length+recordHeader.length+stringOffset.length+minRecord.length+maxRecord.length+TYPE.LONG.bytes;
+		byte[] dataOffset = longBytes(headerSize);
+		
+		return append(version, dataOffset, stringOffset, recordHeader, minRecord, maxRecord);
+	}
+	
+	/**Type header for the individual records.**/
+	private static byte[] recordHeader(char[] types) {
 		assert types != null;
 		assert types.length != 0;
 
 		char[] keepTypes = keepTypes(types);
 		byte[] size = intBytes(keepTypes.length);
 		byte[] encoding = charBytes(keepTypes);	
-		byte[] rslt = new byte[encoding.length+size.length] ;
 
-		System.arraycopy(size, 0, rslt, 0, size.length);
-		System.arraycopy(encoding, 0, rslt, size.length, encoding.length);
-		return rslt;
+		return append(size, encoding);
 	}
 
 	private static byte[] shortBytes(short s) {return ByteBuffer.allocate(TYPE.SHORT.bytes).putShort(s).array();}
-	private static byte[] intBytes(int i ){return ByteBuffer.allocate(TYPE.INT.bytes).putInt(i).array();}
+	private static byte[] intBytes(int i){return ByteBuffer.allocate(TYPE.INT.bytes).putInt(i).array();}
 	private static byte[] longBytes(long l) {return ByteBuffer.allocate(TYPE.LONG.bytes).putLong(l).array();}
 	private static byte[] floatBytes(float d) {return ByteBuffer.allocate(TYPE.FLOAT.bytes).putFloat(d).array();}
 	private static byte[] doubleBytes(double d) {return ByteBuffer.allocate(TYPE.DOUBLE.bytes).putDouble(d).array();}
@@ -106,7 +209,6 @@ public class MemMapEncoder {
 		}			
 	}
 
-
 	/**Write from source text to indicated binary files.**/ 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
@@ -128,8 +230,9 @@ public class MemMapEncoder {
 				entriesRead++;
 				if (entriesRead % 100000 ==0) {System.out.printf("Processed %,d entries.\n", entriesRead);}
 			}
-			
 			System.out.printf("Processed %,d entries.\n", entriesRead);
+			updateMinMax(target);
+			
 		}catch (Exception e) {
 			throw new RuntimeException(String.format("Error on or near entry %,d", entriesRead), e);
 		} finally {file.close();}
@@ -161,17 +264,92 @@ public class MemMapEncoder {
 		if (i<args.length && i>=0 && args[i].toUpperCase().equals(key)) {return args[i+1];}
 		return defVal;
 	}
+
+
+	/**Get a byte array of a single data value**/
+	private static byte[] encode(Object value, TYPE type) {
+		switch (type) {
+		case SHORT : return shortBytes((Short) value);
+		case INT : return intBytes((Integer) value);
+		case LONG : return longBytes((Long) value);
+		case FLOAT : return floatBytes((Float) value);
+		case DOUBLE : return doubleBytes((Double) value);
+		case CHAR : return charBytes((Character) value);
+		default: throw new IllegalArgumentException("Unknown type: " + type);
+		}			
+	}
+
 	
+	private static byte[] encodeArray(Number[] nums, TYPE[] types) {
+		int recordLength = recordLength(types);
+		byte[] rslt = new byte[recordLength];
+		int offset=0;
+		for (int i=0; i<nums.length;i++) {
+			byte[] nb = encode(nums[i], types[i]);
+			System.arraycopy(nb, 0, rslt, offset, nb.length);
+			offset+=nb.length;
+		}
+		return rslt;
+	}
+	
+	private static void updateMinMax(File out) throws IOException {
+		final BigFileByteBuffer buffer = new BigFileByteBuffer(out, 100, 1000, FileChannel.MapMode.READ_WRITE);
+		Header header = Header.from(buffer);
+		
+		final long entries = (buffer.fileSize()-header.dataTableOffset)/header.recordLength;
+		
+		final Number[] maxima = new Number[header.types.length];
+		final Number[] minima = new Number[header.types.length];
+		
+		for (long i=0;i<entries; i++) {
+			final long recordOffset = (i*header.recordLength)+header.dataTableOffset;
+			final IndexedEncoding enc = new IndexedEncoding(header.types, recordOffset,header.recordLength,buffer);
+			for (int f=0; f<header.types.length; f++) {
+				Object v = enc.get(f);
+				if (v instanceof Number) {
+					Number n = (Number) v;
+					maxima[f] = gt(maxima[f], n) ? maxima[f] : n;
+					minima[f] = lt(minima[f], n) ? minima[f] : n;
+				}
+			}
+		}
+		
+		byte[] maxs = encodeArray(maxima, header.types);
+		byte[] mins = encodeArray(minima, header.types);
+		buffer.put(maxs, header.maximaRecordOffset);
+		buffer.put(mins, header.minimaRecordOffset);
+	}
+	
+	private static boolean gt(Number a,  Number b) {
+		if (a == null) {return false;}
+		if (b == null) {return false;}
+		if (a == b) {return false;}
+		if (a.doubleValue() > b.doubleValue()) {return true;}
+		return false;
+	}
+	
+	private static boolean lt(Number a,  Number b) {
+		if (a == null) {return false;}
+		if (b == null) {return false;}
+		if (a == b) {return false;}
+		if (a.doubleValue() < b.doubleValue()) {return true;}
+		return false;
+	}
+
+		
 	/**Utility for converting CSVs to header-carrying binary encodings.**/
 	public static void main(String[] args) throws Exception {
 		System.out.println("Usage: MemMapEncoder -in <file> -out <file> -skip <int> -types <string>");
 		System.out.println("Type string is a string made up of s/i/l/f/d/c for short/int/long/float/double/char.");
+		System.out.println();
 		
 		File temp;
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
 		boolean direct = !entry(args, "-direct", "FALSE").toUpperCase().equals("FALSE");
+		
 		if (direct) {temp =out;}
+		
 		else {
 			temp = File.createTempFile("hbinEncoder", "hbin");
 			temp.deleteOnExit();

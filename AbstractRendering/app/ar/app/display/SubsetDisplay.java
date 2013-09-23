@@ -1,4 +1,4 @@
-package ar.app.components;
+package ar.app.display;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -10,39 +10,43 @@ import ar.util.Util;
 
 /**Panel that renders more than just what's visible on the screen so pan can happen quickly.
  * */
-public class ARSubsetPanel extends ARPanel {
+public class SubsetDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
-	
-	private AffineTransform renderTransform;
 	
 	private boolean fullRender;
 	private boolean subsetRender;
 	
-	/**Should transfer specialization be done view-relative or always based on full-zoom?
-	 * Default is to be based on full-zoom.**/
-	private boolean viewRelativeTransfer = false; 
+	/**Affine transform used to render the full set of aggregates (data-space to 'aggregates')**/
+	private AffineTransform renderTransform;
 	
-	private volatile Aggregates<?> baseAggregates;
+	/**Subset of aggregates picked out by the current viewport and view transform.**/
+	private volatile Aggregates<?> subsetAggregates;
 	
-	public ARSubsetPanel(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	/**Create a new instance.**/
+	public SubsetDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
 	}
-	
-	protected ARPanel build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new ARSubsetPanel(aggregator, transfer, glyphs, renderer);
+		
+	/**Set the subset that will be sent to transfer.**/
+	public void subsetAggregates(Aggregates<?> aggregates) {
+		this.subsetAggregates = aggregates;
+		display.aggregates(aggregates);
+		repaint();
 	}
 	
-	public void viewRelativeTransfer(boolean viewRelativeTransfer) {this.viewRelativeTransfer =viewRelativeTransfer;}
-	public boolean viewRelativeTransfer() {return viewRelativeTransfer;}
-	
-	public void baseAggregates(Aggregates<?> aggregates) {
-		this.baseAggregates = aggregates;
-		if (!viewRelativeTransfer) {display.setRefAggregates(aggregates);}
-		else {display.setRefAggregates(null);}
-		aggregates(null);
+	public Aggregates<?> aggregates() {return aggregates;}
+	public void aggregates(Aggregates<?> aggregates) {
+		if (aggregates != this.aggregates) {display.refAggregates(null);}
+		
+		this.aggregates = aggregates;
+		this.repaint();
+		aggregatesChangedProvider.fireActionListeners();
 	}
 	
-	public void setViewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+	/**Get the affine transform currently being used to render from geometric space to aggregates.**/
+	public AffineTransform renderTransform() {return renderTransform;}
+	
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		//Only force full re-render if the zoom factor changed
 		if (renderTransform == null 
 				|| vt.getScaleX() != viewTransformRef.getScaleX()
@@ -57,12 +61,14 @@ public class ARSubsetPanel extends ARPanel {
 			subsetRender=true;
 		}
 		
-		transferViewTransform(vt);
+		this.viewTransformRef = vt;
+		inverseViewTransformRef  = new AffineTransform(vt);
+		inverseViewTransformRef.invert();
+		repaint();
 	}
 
 	
-	@Override
-	protected void panelPaint(Graphics g) {
+	public void paintComponent(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
 				|| dataset == null ||  dataset.isEmpty() 
@@ -70,10 +76,10 @@ public class ARSubsetPanel extends ARPanel {
 				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else if (fullRender || baseAggregates == null || renderTransform == null) {
+		} else if (fullRender || aggregates == null || renderTransform == null) {
 			action = new AggregateRender();
 			fullRender = false;
-		} else if (subsetRender || aggregates == null) {
+		} else if (subsetRender || subsetAggregates == null) {
 			action = new SubsetRender();
 			subsetRender = false;
 		} 
@@ -87,27 +93,28 @@ public class ARSubsetPanel extends ARPanel {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle viewport = ARSubsetPanel.this.getBounds();				
+				Rectangle viewport = SubsetDisplay.this.getBounds();				
 				AffineTransform vt = viewTransform();
 				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
 				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
 				
 				Aggregates<?> subset = FlatAggregates.subset(
-						baseAggregates, 
+						aggregates, 
 						shiftX, shiftY, 
 						shiftX+viewport.width, shiftY+viewport.height);
 				
-				ARSubsetPanel.this.aggregates(subset);
+				SubsetDisplay.this.subsetAggregates(subset);
+				if (subset == null) {return;}
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Subset render)\n",
-							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
+							(end-start), subset.highX()-subset.lowX(), subset.highY()-subset.lowY());
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
 			}
 			
-			ARSubsetPanel.this.repaint();
+			SubsetDisplay.this.repaint();
 		}	
 	}
 
@@ -121,21 +128,21 @@ public class ARSubsetPanel extends ARPanel {
 				@SuppressWarnings({"unchecked","rawtypes"})
 				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), databounds.width, databounds.height);
 				
-				ARSubsetPanel.this.baseAggregates(a);
+				SubsetDisplay.this.aggregates(a);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
-							(end-start), baseAggregates.highX()-baseAggregates.lowX(), baseAggregates.highY()-baseAggregates.lowY());
+							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
 				}
 				
 			} catch (Exception e) {
 				renderError = true;
 			}
 			
-			ARSubsetPanel.this.repaint();
+			SubsetDisplay.this.repaint();
 		}
 	}
 	
 	
-	public String toString() {return String.format("ARCascadePanel[Dataset: %1$s, Ruleset: %2$s]", dataset, display.transfer(), aggregator);}
+	public String toString() {return String.format("SubsetDisplay[Dataset: %1$s, Ruleset: %2$s]", dataset, display.transfer(), aggregator);}
 }

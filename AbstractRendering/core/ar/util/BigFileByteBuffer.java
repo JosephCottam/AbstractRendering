@@ -1,12 +1,12 @@
 package ar.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-/**Sliding buffer across a large file to get around the int-limit of mem-maps.
+/**Sliding buffer across a large file to get around the int-limit of memory maps.
  * 
  * nio memory mapped files are backed by byte arrays.  Since java limits the 
  * size of an array to int indices, the largest file that can be completely mapped
@@ -32,39 +32,49 @@ import java.nio.channels.FileChannel;
  * 
  * THIS CLASS ASSUMES THE FILE SIZE DOES NOT CHANGE.  To compensate for files
  * that change size, the checkCapacity method should be called periodically
- * (which updates the internal measure of the file size). 
+ * (which updates the internal measure of the file size).
+ * 
+ * TODO: Investigating working without 'margin'
  *   
  * **/
 @SuppressWarnings("javadoc")
 public class BigFileByteBuffer {
-	private final FileInputStream inputStream;
+	private final RandomAccessFile inputFile;
+	private final FileChannel.MapMode mode;
 	private final int margin;
 	private final int bufferSize;
 	private long fileSize;
 	
 	private ByteBuffer buffer;
 	private long filePos=0;
+
+	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
+		this(source, margin, bufferSize, FileChannel.MapMode.READ_ONLY);
+	}
 	
 	/**
 	 * @param source File to read
 	 * @param margin Proximity to the end of the buffer that will trigger a window slide
+	 *               (essentially a guess at how many bytes will be needed from a reposition forward) 
 	 * @param bufferSize Size of memory map buffer to create
 	 * @throws IOException Thrown when file stream creation or memory mapping fails.
 	 */
-	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
-		inputStream = new FileInputStream(source);
-		FileChannel channel =  inputStream.getChannel();
+	public BigFileByteBuffer(File source, int margin, int bufferSize, FileChannel.MapMode mode) throws IOException {
+		String fileMode = mode == FileChannel.MapMode.READ_ONLY ? "r" : "rw";
+		inputFile = new RandomAccessFile(source, fileMode);
+		FileChannel channel =  inputFile.getChannel();
 		fileSize = checkCapacity();
 		
 		filePos = 0;
-		buffer = channel.map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, fileSize));
+		buffer = channel.map(mode, filePos, Math.min(bufferSize, fileSize));
 		
+		this.mode = mode;
 		this.margin=margin;
 		this.bufferSize = bufferSize;
 	}
 	
 	protected void finalize() {
-		try {inputStream.close();}
+		try {inputFile.close();}
 		catch (IOException e) {}
 	}
 	
@@ -84,6 +94,17 @@ public class BigFileByteBuffer {
 		this.position(offset);
 		buffer.get(target);
 	}
+
+
+	public void put(byte[] values) {put(values, position());}
+	
+	/**Write the given byte array at the given file offset.**/
+	public void put(byte[] values, long offset) {
+		ensure(offset, values.length);
+		this.position(offset);
+		buffer.put(values);
+	}
+	
 	
 	/**How large is the backing file?
 	 * 
@@ -103,7 +124,7 @@ public class BigFileByteBuffer {
 	 * @throws IOException
 	 */
 	public long checkCapacity() throws IOException {
-		fileSize = inputStream.getChannel().size();
+		fileSize = inputFile.getChannel().size();
 		return fileSize;
 	}
 	
@@ -113,11 +134,14 @@ public class BigFileByteBuffer {
 		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}
 	}
 	
+	/**Where in the file is the cursor current?**/
+	public long position() {return filePos+buffer.position();}
+	
 	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
 	private ByteBuffer ensure(long position, int bytes) {
 		if ((position < filePos) || (position+bytes) > (buffer.limit()+filePos)) {
 			filePos = position; 
-			try {buffer = inputStream.getChannel().map(FileChannel.MapMode.READ_ONLY, filePos, Math.min(bufferSize, (fileSize-filePos)));}
+			try {buffer = inputFile.getChannel().map(mode, filePos, Math.min(bufferSize, (fileSize-filePos)));}
 			catch (IOException e) {throw new RuntimeException(String.format("Error shifting buffer position to %d for reading %d bytes.", position, bytes), e);}			
 		}
 		return buffer;

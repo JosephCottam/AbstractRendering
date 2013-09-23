@@ -15,6 +15,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.BigFileByteBuffer;
 import ar.util.MemMapEncoder.TYPE;
+import ar.util.MemMapEncoder;
 import ar.util.Util;
 import ar.util.IndexedEncoding;
 
@@ -40,12 +41,13 @@ import ar.util.IndexedEncoding;
  *   +   d -- Double (eight bytes)
  *   +   c -- Char (two bytes)
  *   +   b -- Byte (one byte)
- * 
- * TODO: Add skip parameter to skip a certain number of bytes at the start of the file 
+ *   
  * @author jcottam
  *
  */
 public class MemMapList<V> implements Glyphset.RandomAccess<V> {
+	public static final int VERSION_UNDERSTOOD = -1;
+	
 	/**How large should backing read buffer be?**/
 	public static int BUFFER_BYTES = 30000; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
 	
@@ -57,7 +59,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 			new ThreadLocal<BigFileByteBuffer>() {
 		public BigFileByteBuffer initialValue() {
 			if (source == null) {return null;}
-			try {return new BigFileByteBuffer(source, recordSize, BUFFER_BYTES);}
+			try {return new BigFileByteBuffer(source, recordLength, BUFFER_BYTES);}
 			catch (Exception e) {throw new RuntimeException(e);}
 		}
 	};
@@ -67,56 +69,44 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final Valuer<Indexed,V> valuer;
 	private final Shaper<Indexed> shaper;
 
-	private final int recordEntries;
-	private final int recordSize;
-	private final int headerOffset;
+	private final int recordLength;
+	private final long dataTableOffset;
+	private final long stringTableOffset;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	/**Create a new mem-mapped list, detect the types from the source.**/
-	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> painter) {
-		this(source, null, shaper, painter);
-	}
-
-	/**Create a new mem-mapped list.
-	 * 
-	 * @param source File to memory map
-	 * @param types Types to use for conversion. Null to auto-detect
-	 * @param shaper
-	 * @param valuer
-	 */
-	public MemMapList(File source, TYPE[] types, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
+	/**Create a new memory mapped list, types are read from the source.**/
+	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
 		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
 
-		if (source != null && types == null) {
-			recordEntries = buffer.get().getInt();
-
-			types = new TYPE[recordEntries];
-			for (int i =0; i<recordEntries; i++) {
-				char t = buffer.get().getChar();
-				if (t=='i') {types[i] = TYPE.INT;}  
-				else if (t=='l') {types[i] = TYPE.LONG;}
-				else if (t=='s') {types[i] = TYPE.SHORT;}
-				else if (t=='d') {types[i] = TYPE.DOUBLE;} 
-				else if (t=='f') {types[i] = TYPE.FLOAT;}
-				else if (t=='b') {types[i] = TYPE.BYTE;}
-				else {throw new RuntimeException(String.format("Unknown type indicator '%s' at position %s", t,i));}
+		if (source != null) {
+			MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer.get());
+			if (header.version != VERSION_UNDERSTOOD) {
+				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", header.version, VERSION_UNDERSTOOD));
 			}
-			this.types = types;
-			headerOffset = (TYPE.INT.bytes+(types.length*TYPE.CHAR.bytes));  //Int for the header length, one char per entry  
 
-			int acc=0;
-			for (TYPE t:this.types) {acc += t.bytes;}
-			this.recordSize = acc;
+			dataTableOffset = header.dataTableOffset;
+			stringTableOffset = header.stringTableOffset;
+			types = header.types;
+			this.recordLength = header.recordLength;
+			
+			if (shaper instanceof Shaper.SafeApproximate) {
+				IndexedEncoding max = new IndexedEncoding(types, header.maximaRecordOffset, header.recordLength, buffer.get());
+				IndexedEncoding min = new IndexedEncoding(types, header.minimaRecordOffset, header.recordLength, buffer.get());
+				Rectangle2D maxBounds = shaper.shape(max).getBounds2D();
+				Rectangle2D minBounds = shaper.shape(min).getBounds2D();
+				bounds = Util.bounds(maxBounds, minBounds);
+			} 
 		} else {
-			recordEntries = 0;
-			headerOffset = 0;
+			dataTableOffset = -1;
+			stringTableOffset = -1;
 			this.types = null;
-			this.recordSize = -1;
+			this.recordLength = -1;
 		}
-		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-headerOffset)/recordSize;
+		if (stringTableOffset >=0) {throw new IllegalArgumentException("Can't handle strings (yet).");}
+		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-dataTableOffset)/recordLength;
 
 	}
 
@@ -136,9 +126,9 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	}
 
 	protected IndexedEncoding entry(long i) {
-		long recordOffset = (i*recordSize)+headerOffset;
+		long recordOffset = (i*recordLength)+dataTableOffset;
 		BigFileByteBuffer buffer = this.buffer.get();
-		return new IndexedEncoding(types, recordOffset,recordSize,buffer);
+		return new IndexedEncoding(types, recordOffset,recordLength,buffer);
 	}
 
 	/**Valuer being used to establish a value for each entry.**/
@@ -206,7 +196,8 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	@Override
 	public Glyphset<V> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		return GlyphSubset.make(this, bottom, top, true);
+		Glyphset<V> subset = GlyphSubset.make(this, bottom, top, true);
+		return subset;
 	}
 
 }

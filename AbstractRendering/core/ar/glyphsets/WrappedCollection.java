@@ -22,6 +22,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	protected Shaper<I> shaper;
 	protected Valuer<I,V> valuer;
 	
+	/**Wrap the passed collection, ready to construct glyphs with the passed shaper/valuer.**/
 	public WrappedCollection(Collection<I> values, 
 							Shaper<I> shaper, 
 							Valuer<I,V> valuer) {
@@ -77,6 +78,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	public static class List<I,V> extends WrappedCollection<I,V> implements Glyphset.RandomAccess<V> {
 		protected final java.util.List<I> values;
 		
+		/**List-specific wrapped collection constructor.**/
 		public List(java.util.List<I> values,
 				Shaper<I> shaper, 
 				Valuer<I,V> valuer) {

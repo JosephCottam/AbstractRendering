@@ -37,7 +37,7 @@ public final class Numbers {
 	 * 
 	 * @author jcottam
 	 */
-	public static final class FixedInterpolate implements Transfer<Number,Color> {
+	public static final class FixedInterpolate implements Transfer.Specialized<Number,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high;
 		final double lowv, highv;
@@ -60,15 +60,14 @@ public final class Numbers {
 		}
 
 		public Color emptyValue() {return Color.WHITE;}
-		public void specialize(Aggregates<? extends Number> aggregates) {/**No work to perform.**/}
+		public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/
-	public static final class Interpolate implements Transfer<Number, Color> {
+	public static class Interpolate implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 2878901447280244237L;
-		private final Color low, high, empty;
-		private final int logBasis;
-		private Util.Stats extrema;
+		protected final Color low, high, empty;
+		protected final int logBasis;
 		
 		/**
 		 * @param low Color to associate with lowest input value
@@ -89,24 +88,60 @@ public final class Numbers {
 			this.logBasis = logBasis;
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			Number v = aggregates.get(x,y);
-			if (v.equals(aggregates.defaultValue())) {
-				return empty;
+
+		public Transfer.Specialized<Number,Color> specialize(Aggregates<? extends Number> aggregates) {
+			Util.Stats stats = Util.stats(aggregates, false);
+			if (logBasis <=1) {
+				return new SpecializedLinear(stats, low, high, empty, logBasis);
+			} else {
+				return new SpecializedLog(stats, low, high, empty, logBasis);
+			}
+		}
+		
+		public Color emptyValue() {return Util.CLEAR;}
+		
+		private static abstract class BaseSpecialized extends Interpolate implements Transfer.Specialized<Number, Color> {
+			private static final long serialVersionUID = 1106343839501609604L;
+			protected final Util.Stats extrema;
+
+			public BaseSpecialized(Util.Stats extrema, Color low, Color high, Color empty, int logBasis) {
+				super(low, high, empty, logBasis);
+				this.extrema = extrema;
+			}
+
+			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+				Number v = aggregates.get(x,y);
+				if (v.equals(aggregates.defaultValue())) {return empty;}
+				return interpolate(v);
 			}
 			
-			if (logBasis <= 1) {
-				return Util.interpolate(low, high, extrema.min, extrema.max, v.doubleValue());
-			} else {
+			protected abstract Color interpolate(Number v);
+		}
+
+		protected static final class SpecializedLog extends BaseSpecialized {
+			private static final long serialVersionUID = -8820226527786085843L;
+
+			public SpecializedLog(Util.Stats extrema, Color low, Color high, Color empty, int logBasis) {
+				super(extrema, low, high, empty, logBasis);
+			}
+
+			protected Color interpolate(Number v) {
 				return Util.logInterpolate(low,high, extrema.min, extrema.max, v.doubleValue(), logBasis);
 			}
 		}
 
-		public void specialize(Aggregates<? extends Number> aggregates) {
-			this.extrema = Util.stats(aggregates, false);
+		protected static final class SpecializedLinear extends BaseSpecialized {
+			private static final long serialVersionUID = 7114502132818604376L;
+
+			public SpecializedLinear(Util.Stats extrema, Color low, Color high, Color empty, int logBasis) {
+				super(extrema, low, high, empty, logBasis);
+			}
+
+			public Color interpolate(Number v) {
+				return Util.interpolate(low, high, extrema.min, extrema.max, v.doubleValue());
+			}
+			
 		}
-		
-		public Color emptyValue() {return Util.CLEAR;}
 	}
 	
 	

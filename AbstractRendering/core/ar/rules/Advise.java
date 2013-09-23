@@ -28,14 +28,27 @@ public class Advise {
 		/**@param reference Transfer function that determines representation**/
 		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
 		public Boolean emptyValue() {return Boolean.FALSE;}
-		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
-			A def = aggregates.defaultValue();
-			A val = aggregates.get(x, y);
-			B empty = ref.emptyValue();
-			B out = ref.at(x, y, aggregates);
-			return !Util.isEqual(val, def) && Util.isEqual(empty, out); 
+		public UnderSaturate.Specialized<A,B> specialize(Aggregates<? extends A> aggregates) {
+			return new Specialized<>(ref.specialize(aggregates));
 		}
-		public void specialize(Aggregates<? extends A> aggregates) {/*No work to perform*/}
+		
+		protected static final class Specialized<A,B> extends UnderSaturate<A,B> implements Transfer.Specialized<A, Boolean> {
+			private static final long serialVersionUID = 470073013225719009L;
+			private final Transfer.Specialized<A, B> ref;
+			
+			public Specialized(Transfer.Specialized<A,B> ref) {
+				super(ref);
+				this.ref = ref;
+			}
+			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
+				A def = aggregates.defaultValue();
+				A val = aggregates.get(x, y);
+				B empty = ref.emptyValue();
+				B out = ref.at(x, y, aggregates);
+				return !Util.isEqual(val, def) && Util.isEqual(empty, out); 
+			}
+
+		}
 	}
 	
 	//TODO: Extend to reporting the magnitude of the over-saturation
@@ -46,8 +59,6 @@ public class Advise {
 		private static final long serialVersionUID = -134839100328128893L;
 		final Transfer<A,B> ref;
 		private Comparator<A> comp;
-		private A max;
-		private B top;
 
 		/**@param reference Transfer function that determines representation
 		 * @param comp Comparator used to determine "sameness"**/
@@ -57,27 +68,47 @@ public class Advise {
 		}
 
 		public Boolean emptyValue() {return Boolean.FALSE;}
-		public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
-			A val = aggregates.get(x, y);
-			B out = ref.at(x, y, aggregates);
-			return !Util.isEqual(val, max) && Util.isEqual(top, out); 
-		}
+
+		
 		
 		@Override
-		public void specialize(Aggregates<? extends A> aggregates) {
+		public Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
+			Transfer.Specialized<A,B> ref2 = ref.specialize(aggregates);
 			Point p = max(aggregates, comp);
-			max = aggregates.get(p.x, p.y);
-			top = ref.at(p.x,p.y, aggregates);
+			A max = aggregates.get(p.x, p.y);
+			B top = ref2.at(p.x,p.y, aggregates);
+			return new Specialized<>(ref2, comp, max, top);
 		}
+		
+		protected static final class Specialized<A,B> extends OverSaturate<A,B> implements Transfer.Specialized<A,Boolean> {
+			private static final long serialVersionUID = 3155281566160217841L;
+			private final Transfer.Specialized<A, B> ref;
+			private final A max;
+			private final B top;
+
+			public Specialized(Transfer.Specialized<A, B> ref, Comparator<A> comp, A max, B top) {
+				super(ref, comp);
+				this.ref = ref;
+				this.max = max;
+				this.top = top;
+			}
+			
+			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
+				A val = aggregates.get(x, y);
+				B out = ref.at(x, y, aggregates);
+				return !Util.isEqual(val, max) && Util.isEqual(top, out); 
+			}
+		}
+		
 	}
 	
 	/** Mark regions where multiple values are represented in the same way as the minimum or maximum values.*/
 	public static class OverUnder implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 7662347822550778810L;
-		private final Transfer<Number, Color> base;
-		private final Transfer<Number, Boolean> under;
-		private final Transfer<Number, Boolean> over;
-		private final Color overColor, underColor;
+		protected final Transfer<Number, Color> base;
+		protected final Transfer<Number, Boolean> under;
+		protected final Transfer<Number, Boolean> over;
+		protected final Color overColor, underColor;
 		
 		/**
 		 * @param overColor Color to mark over saturation
@@ -92,25 +123,44 @@ public class Advise {
 			this.over = new Advise.OverSaturate<Number, Color>(base, new NumberComp());
 		}
 		
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			boolean below = under.at(x, y, aggregates);
-			boolean above = over.at(x, y, aggregates);
-			if (above) {
-				return overColor;
-			} else if (below) {
-				return underColor;
-			} else {
-				return base.at(x, y, aggregates);
-			}
-		}
-
 		public Color emptyValue() {return base.emptyValue();}
-
+ 		
 		@Override
-		public void specialize(Aggregates<? extends Number> aggregates) {
-			base.specialize(aggregates);
-			over.specialize(aggregates);
-			under.specialize(aggregates);
+		public Specialized specialize(Aggregates<? extends Number> aggregates) {
+			Transfer.Specialized<Number,Color> b2 = base.specialize(aggregates);
+			Transfer.Specialized<Number, Boolean> o2 = over.specialize(aggregates);
+			Transfer.Specialized<Number, Boolean> u2 = under.specialize(aggregates);
+			return new Specialized(overColor, underColor, b2,o2,u2);
+		}
+		
+		protected static final class Specialized extends OverUnder implements Transfer.Specialized<Number,Color> {
+			private static final long serialVersionUID = 7535365761511428962L;
+			private final Transfer.Specialized<Number, Color> base;
+			private final Transfer.Specialized<Number, Boolean> under;
+			private final Transfer.Specialized<Number, Boolean> over;
+
+			public Specialized(
+					Color overColor, Color underColor,
+					Transfer.Specialized<Number, Color> base,
+					Transfer.Specialized<Number, Boolean> over,
+					Transfer.Specialized<Number, Boolean> under) {
+				super(overColor, underColor, base);
+				this.base = base;
+				this.under = under;
+				this.over = over;
+			}
+
+			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+				boolean below = under.at(x, y, aggregates);
+				boolean above = over.at(x, y, aggregates);
+				if (above) {
+					return overColor;
+				} else if (below) {
+					return underColor;
+				} else {
+					return base.at(x, y, aggregates);
+				}
+			}			
 		}
 	}
 
@@ -134,9 +184,9 @@ public class Advise {
 		
 		/**Transfer function used to determine the colors after the ratios have been determined.**/
 		public final Transfer<Number, Color> inner;
-		Aggregates<Double> cached;
 		
-		/**
+		/**Construct a draw dark using a linear HD interpolation as the inner function.
+		 * 
 		 * @param low Color to represent average or low value in the neighborhood
 		 * @param high Color to represent high value for the neighborhood
 		 * @param distance Distance that defines the neighborhood.
@@ -145,25 +195,28 @@ public class Advise {
 			this.distance=distance;
 			inner = new Numbers.Interpolate(low,high,high,-1);
 		}
-	
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			return inner.at(x,y,cached);
+		
+		/**Draw dark using the given transfer for interpolation of the values.**/ 
+		public DrawDark(int distance, Transfer<Number,Color> inner) {
+			this.distance = distance;
+			this.inner = inner;
 		}
+	
 
 		@Override
-		public void specialize(Aggregates<? extends Number> aggs) {
-
-			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
+		public Specialized specialize(Aggregates<? extends Number> aggs) {
+			Aggregates<Double> cache = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 					if (aggs.get(x, y).doubleValue() > 0) {
-						cached.set(x, y, preprocOne(x,y,aggs));
+						cache.set(x, y, preprocOne(x,y,aggs));
 					} else {
-						cached.set(x,y, Double.NaN);
+						cache.set(x,y, Double.NaN);
 					}
 				}
 			}
-			inner.specialize(cached);
+			Transfer.Specialized<Number, Color> innerS = inner.specialize(cache);
+			return new Specialized(distance, innerS, cache);
 		}
 		
 		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {
@@ -184,6 +237,22 @@ public class Advise {
 		}
 
 		public Color emptyValue() {return Util.CLEAR;}
+
+		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
+			private static final long serialVersionUID = 2548271516304517444L;
+			private final Transfer.Specialized<Number, Color> inner;
+			Aggregates<Double> cache;
+			
+			public Specialized(int distance, Transfer.Specialized<Number, Color> inner, Aggregates<Double> cache) {
+				super(distance, inner);
+				this.inner=inner;
+				this.cache = cache;
+			}
+			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+				return inner.at(x,y,cache);
+			}
+
+		}
 	}
 	
 	/**Implementation of number comparator.  

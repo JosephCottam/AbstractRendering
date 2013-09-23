@@ -30,7 +30,7 @@ public final class SerialSpatial implements Renderer {
 		return aggregates;
 	}
 	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		Aggregates<OUT> out = new FlatAggregates<OUT>(aggregates, t.emptyValue());
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {

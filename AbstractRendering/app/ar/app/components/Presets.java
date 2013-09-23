@@ -1,16 +1,21 @@
 package ar.app.components;
 
 import java.awt.Color;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.io.File;
 
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 
 import ar.Glyphset;
 import ar.Renderer;
 import ar.app.ARApp;
+import ar.app.display.ARComponent;
+import ar.app.display.FullDisplay;
 import ar.app.util.GlyphsetUtils;
+import ar.app.util.ActionProvider;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
@@ -21,36 +26,38 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 
-public class Presets extends CompoundPanel {
+public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
-	
+	private final ActionProvider actionProvider = new ActionProvider();
+
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
 	
 	public Presets() {
 		this.add(new LabeledItem("Presets:", presets));
-		presets.addActionListener(new CompoundPanel.DelegateAction(this));
+		presets.addActionListener(actionProvider.delegateListener());
 		
 		ARApp.loadInstances(presets, Presets.class, "");
 	}
 	
-	public boolean doZoomWith(ARPanel oldPanel) {
+	public boolean doZoomWith(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
 
 		return oldPanel == null
 				|| oldPanel.dataset() != p.glyphset()
-				|| !oldPanel.reduction().equals(p.aggregator().op());
+				|| !oldPanel.aggregator().equals(p.aggregator().op());
 	}
 	
-	public ARPanel update(ARPanel oldPanel) {
+	public ARComponent.Aggregating update(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		ARPanel newPanel = new ARPanel(p.aggregator().op(), p.transfer().op(), p.glyphset(), p.renderer());
+		ARComponent.Aggregating newPanel = new FullDisplay(p.aggregator().op(), p.transfer().op(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
-				&& newPanel.reduction().equals(oldPanel.reduction())) {
+				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
 			newPanel.aggregates(oldPanel.aggregates());
-			try {newPanel.transferViewTransform(oldPanel.viewTransform());}
-			catch (NoninvertibleTransformException e) {
-				try {newPanel.setViewTransform(new AffineTransform());}
+			try {
+				newPanel.viewTransform(oldPanel.viewTransform());
+			} catch (NoninvertibleTransformException e) {
+				try {newPanel.viewTransform(new AffineTransform());}
 				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
 			}
 		} else {
@@ -58,6 +65,8 @@ public class Presets extends CompoundPanel {
 		}
 		return newPanel;
 	}
+	
+	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
 	public static interface Preset {
 		public WrappedAggregator<?,?> aggregator();
@@ -164,7 +173,7 @@ public class Presets extends CompoundPanel {
 	
 	public static class Census implements Preset {
 		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.Count();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(10);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
 		public String name() {return "US Census";}
@@ -184,13 +193,13 @@ public class Presets extends CompoundPanel {
 	private static final Glyphset<Color> KIVA_ADJ; 
 	private static final Glyphset<Color> BOOST_MEMORY; 
 	private static final Glyphset<Color> BOOST_MEMORY_MM; 
-	private static final Glyphset<Color> CENSUS_MM; 
+	private static final Glyphset<Color> CENSUS_MM;
 	
 	private static String MEM_VIS_CSV = "../data/MemVisScaled.csv";
 	private static String MEM_VIS_BIN = "../data/MemVisScaledB.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kivaAdj.hbin";
-	private static String CENSUS = "../data/Total_LatLong.hbin";
+	private static String CENSUS = "../data/census/Total_LatLong.hbin";
 	
 	static {
 		if (!(new File(MEM_VIS_CSV)).exists()) {MEM_VIS_CSV = MEM_VIS_CSV + "_subset";}
@@ -224,6 +233,7 @@ public class Presets extends CompoundPanel {
 		} catch (Exception e) {e.printStackTrace();}
 		CENSUS_MM = set;
 
+		
 		set = null;
 		try {set = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Color>make());}
 		catch (Exception e) {e.printStackTrace();}

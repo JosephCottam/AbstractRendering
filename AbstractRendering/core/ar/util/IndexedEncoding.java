@@ -5,7 +5,8 @@ import java.nio.ByteBuffer;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.util.MemMapEncoder.TYPE;
 
-/**Wrapper mesh items encoded using the MemMapEncoder with the implicit geometry system).**/
+/**Wrapper to mesh items encoded using the MemMapEncoder with the implicit geometry system).
+ * **/
 public class IndexedEncoding implements Indexed {
 	private static final long serialVersionUID = 3550855955493381035L;
 	
@@ -13,14 +14,14 @@ public class IndexedEncoding implements Indexed {
 	private final ByteBuffer buffer;
 	
 	/**Create a new indexed encoding wrapper for a record in a BigFileByteBuffer**/
-	public IndexedEncoding(TYPE[] types, long offset, int recordSize, BigFileByteBuffer buffer) {
+	public IndexedEncoding(TYPE[] types, long offset, int recordLength, BigFileByteBuffer buffer) {
 		this.types = types;
 		
-		byte[] bytes = new byte[recordSize];
-		buffer.get(bytes, offset, recordSize);
+		byte[] bytes = new byte[recordLength];
+		buffer.get(bytes, offset, recordLength);
 		this.buffer = ByteBuffer.wrap(bytes);
 	}
-
+	
 	private Object value(int offset) {
 		TYPE t = types[offset];
 		switch(t) {

@@ -46,7 +46,7 @@ public final class ParallelSpatial implements Renderer {
 		return aggregates;
 	}
 	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t) {
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		return ParallelSpatial.transfer(aggregates, t, taskSize, pool);
 	}
 	
@@ -59,7 +59,7 @@ public final class ParallelSpatial implements Renderer {
 	 * @param pool Thread pool to use for parallelization
 	 * @return Resulting aggregates
 	 */
-	public static <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer<IN,OUT> t, int taskSize, ForkJoinPool pool) {
+	public static <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t, int taskSize, ForkJoinPool pool) {
 		Aggregates<OUT> result = new FlatAggregates<OUT>(aggregates, t.emptyValue());
 		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
@@ -78,12 +78,12 @@ public final class ParallelSpatial implements Renderer {
 		private final int lowx, lowy, highx, highy;
 		private final Aggregates<OUT> out;
 		private final Aggregates<? extends IN> in;
-		private final Transfer<IN, OUT> t;
+		private final Transfer.Specialized<IN, OUT> t;
 		private final int taskSize;
 		
 		public TransferTask(
 				Aggregates<? extends IN> input, Aggregates<OUT> result, 
-				Transfer<IN, OUT> t,
+				Transfer.Specialized<IN, OUT> t,
 				int taskSize,
 				int lowX, int lowY, int highX, int highY
 				) {

@@ -11,18 +11,23 @@ import java.lang.reflect.InvocationTargetException;
 import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
+import ar.app.display.ARComponent;
+import ar.app.display.EnhanceHost;
+import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 
-public class ARApp implements PanelHolder {
-	private ARPanel image;
+public class ARApp implements ARComponent.Holder {
+	private ARComponent.Aggregating display;
+	
 	private final JFrame frame = new JFrame();
 	private final JComboBox<WrappedTransfer<?,?>> transfers = new JComboBox<WrappedTransfer<?,?>>();
-	private final JComboBox<WrappedAggregator<?,?>> reductions = new JComboBox<WrappedAggregator<?,?>>();
+	private final JComboBox<WrappedAggregator<?,?>> aggregators = new JComboBox<WrappedAggregator<?,?>>();
 	
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
+	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
 	private final FileOptions fileOptions;
 	private final Status status = new Status();
 	
@@ -30,7 +35,7 @@ public class ARApp implements PanelHolder {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setTitle("Abstract Rendering Explore App");
+		frame.setTitle("Abstract Rendering: Explore");
 		frame.setLayout(new BorderLayout());
 
 		JPanel controls = new JPanel();
@@ -42,47 +47,43 @@ public class ARApp implements PanelHolder {
 		
 		fileOptions = new FileOptions(this);
 		
-		controls.add(new LabeledItem("Aggregator:", reductions));
+		controls.add(enhanceOptions);
+		controls.add(new LabeledItem("Aggregator:", aggregators));
 		controls.add(new LabeledItem("Transfer:", transfers));
 		controls.add(glyphsetOptions);
 		controls.add(rendererOptions);
 		controls.add(fileOptions);
 		controls.add(status);
-		final ARApp app = this;
 		
-		loadInstances(reductions, WrappedAggregator.class, "Count (int)");
+		loadInstances(aggregators, WrappedAggregator.class, "Count (int)");
 		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Glyphset<?> glyphs = loadData();
-				ARPanel newImage = image.withDataset(glyphs);
-				app.changeImage(newImage);
-				newImage.zoomFit();
+				display.dataset(glyphs);
+				display.zoomFit();
 			}
 		});
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Glyphset<?> glyphs = loadData();
-				ARPanel newImage = image.withDataset(glyphs);
-				app.changeImage(newImage);
-				newImage.zoomFit();
+				display.dataset(glyphs);
+				display.zoomFit();
 			}});
 		
 		rendererOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Renderer renderer = rendererOptions.renderer();
-				ARPanel newImage = image.withRenderer(renderer);
-				app.changeImage(newImage);
-				newImage.zoomFit();
+				displayWithRenderer(renderer);
 			}
 		});
 		
-		reductions.addActionListener(new ActionListener() {
+		aggregators.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				WrappedAggregator<?,?> r = (WrappedAggregator<?,?>) reductions.getSelectedItem();
-				app.changeImage(image.withReduction(r.op()));
+				WrappedAggregator<?,?> r = (WrappedAggregator<?,?>) aggregators.getSelectedItem();
+				display.aggregator(r.op());
 			}});
 		
 		transfers.addActionListener(new ActionListener() {
@@ -92,24 +93,19 @@ public class ARApp implements PanelHolder {
 				}
 				
 				WrappedTransfer<?,?> t = (WrappedTransfer<?,?>) transfers.getSelectedItem();
-				app.changeImage(image.withTransfer(t.op()));
+				display.transfer(t.op());
 				t.selected(ARApp.this);
 			}});
-	
 		
+		displayWithRenderer(rendererOptions.renderer());
 		
-		image = new ARSubsetPanel(((WrappedAggregator<?,?>) reductions.getSelectedItem()).op(), 
-							((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
-							loadData(),
-							rendererOptions.renderer());
-		
-		frame.add(image, BorderLayout.CENTER);
+		frame.add(display, BorderLayout.CENTER);
 		
 		frame.setLocation(0,0);
 		frame.setSize(500, 500);
 		frame.invalidate();
 		frame.setVisible(true);
-		image.zoomFit();
+		display.zoomFit();
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defItem) {
@@ -133,14 +129,21 @@ public class ARApp implements PanelHolder {
 		}		
 	}
 	
-	public void changeImage(ARPanel newImage) {
-		JPanel old = this.image;		
-		this.status.startMonitoring(newImage.getRenderer());
-		frame.remove(old);
-		frame.add(newImage, BorderLayout.CENTER);
-		this.image = newImage;
-		frame.revalidate();
+	public void displayWithRenderer(Renderer renderer) {
+		SubsetDisplay innerDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
+				((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
+				loadData(),
+				renderer);
 		
+		EnhanceHost newDisplay = new EnhanceHost(innerDisplay);
+		
+		if (this.display != null) {frame.remove(this.display);}
+		
+		enhanceOptions.host(newDisplay);
+		frame.add(newDisplay, BorderLayout.CENTER);
+		this.status.startMonitoring(renderer);
+		this.display = newDisplay;
+		frame.invalidate();
 		((WrappedTransfer<?,?>) transfers.getSelectedItem()).selected(this);
 	}
 
@@ -159,7 +162,7 @@ public class ARApp implements PanelHolder {
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
-		ARPanel.PERF_REP = true;
+		ARComponent.PERF_REP = true;
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {
 			new ARApp();
 		} else {
@@ -167,7 +170,6 @@ public class ARApp implements PanelHolder {
 			new ARDemoApp();
 		} 
 	}
-
-	@Override
-	public ARPanel getPanel() {return image;}
+	
+	public ARComponent getARComponent() {return display;}
 }

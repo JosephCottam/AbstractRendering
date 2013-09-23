@@ -63,9 +63,8 @@ public final class Util {
 	}
 
 	
-	/**Adds two rectangles together, returning a bounds box over the whole.
+	/**Adds two rectangles together, updating the first so it is a bounds over the whole.
 	 * Unlike Rectangle2D.union, this method treats NaN as if it were zero.
-	 * Total bounds is placed into the first argument.
 	 */
 	public static void add(Rectangle2D target, Rectangle2D more) {
 		double x = more.getX();
@@ -217,8 +216,10 @@ public final class Util {
 		double ws = width/content.getWidth();
 		double hs = height/content.getHeight();
 		double scale = Math.min(ws, hs);
-		double tx = content.getMinX();
-		double ty = content.getMinY();
+		double xmargin = width/scale-content.getWidth();
+		double ymargin = height/scale-content.getHeight();
+		double tx = content.getMinX()-(xmargin/2);
+		double ty = content.getMinY()-(ymargin/2);
 
 		AffineTransform t = AffineTransform.getScaleInstance(scale,scale);
 		t.translate(-tx,-ty);
@@ -244,7 +245,7 @@ public final class Util {
 	/**Write a buffered image to a file.**/
 	public static void writeImage(BufferedImage img, File f) {
 		try {
-			if (!f.getParentFile().exists()) {
+			if (f.getParentFile() != null && !f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
 			}
 			ImageIO.write(img, "png", f);
