@@ -118,8 +118,8 @@ public class ARApp implements ARComponent.Holder {
 			} catch (InstantiationException | IllegalAccessException
 					| IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
-				System.err.println("Error intializing GUI:");
-				e.printStackTrace();
+//				System.err.println("Error intializing GUI:");
+//				e.printStackTrace();
 			}
 		}
 		
