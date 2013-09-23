@@ -54,6 +54,7 @@ public interface CategoricalCounts<T> {
 		 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 		 ***/
 		public CoC(SortedMap<T, Integer> counts, int fullSize) {
+			//System.out.printf("count with %d cats and %d total\n", counts.size(), fullSize);
 			this.counts = counts;
 			this.fullSize = fullSize;
 		}
@@ -61,9 +62,12 @@ public interface CategoricalCounts<T> {
 		public CoC<T> extend(T key, int count) {
 			SortedMap<T,Integer> ncounts = new TreeMap<T,Integer>(counts.comparator());
 			ncounts.putAll(counts);
-			if (!ncounts.containsKey(key)) {ncounts.put(key, 0);}
-			int v = ncounts.get(key);
-			ncounts.put(key, v+count);
+			if (!ncounts.containsKey(key)) {
+				ncounts.put(key, count);
+			} else {
+				int v = ncounts.get(key);
+				ncounts.put(key, v+count);
+			}
 			int fullSize = this.fullSize + count;
 			return new CoC<T>(ncounts, fullSize);
 		}
@@ -81,6 +85,21 @@ public interface CategoricalCounts<T> {
 			for (; i>0; i--) {it.next();}
 			return it.next();			
 		}
+		
+		public boolean equals(Object other) {
+			if (!(other instanceof CoC)) {return false;}
+			CoC<?> alter = (CoC<?>) other;
+			if (alter.size() != size()) {return false;}
+			for (int i=0; i<size(); i++) {
+				if (!alter.key(i).equals(key(i))) {return false;}
+				if (alter.count(i) != count(i)) {return false;}
+			}
+			return true;
+		}
+
+		@Override
+		public int hashCode() {return counts.hashCode();}
+		
 		public int count(int i) {
 			Iterator<Integer> it = counts.values().iterator();
 			for (; i>0; i--) {it.next();}
@@ -89,6 +108,7 @@ public interface CategoricalCounts<T> {
 
 		@SuppressWarnings("unchecked")
 		public CoC<T> empty() {return new CoC<>((Comparator<T>) counts.comparator());} 
+
 
 		/**Combine multiple CoC objects into a single CoC.**/
 		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {

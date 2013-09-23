@@ -6,6 +6,6 @@
  # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/wiki-adj.csv -out ../data/wiki-adj.hbin -skip 0 -types llx -direct true
  # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/kiva.txt -out ../data/kiva.hbin -skip 1 -types illld -direct true
  # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/kiva.txt -out ../data/kiva-adj.hbin -skip 1 -types xllxx -direct true
- # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/MemVisScaled.csv -out ../data/MemVisScaled.hbin -skip 0 -types dds -direct true
+ # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/MemVisScaled.csv -out ../data/MemVisScaled.hbin -skip 0 -types ddi -direct true
  # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/CharityNet-DateStateXY.csv -out ../data/CharityNet-DateStateXY.hbin -skip 1 -types ii -direct true
- # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/census/RaceTractDenorm.csv -out ../data/census/RaceTractDenorm.hbin -skip 1 -types ddii -direct true
+ # java -cp ../AbstractRendering/AR.jar ar.util.MemMapEncoder -in ../data/census/Race_TractLatLonDenorm.csv -out ../data/census/Race_TractLatLonDenorm.hbin -skip 1 -types ddiix -direct true
