@@ -64,6 +64,7 @@ public class MemMapEncoder {
 		}
 	}
 	
+	/**Container for information found in the header.**/
 	public static final class Header {
 		public final int version;
 		public final long dataTableOffset;
