@@ -22,7 +22,7 @@ public abstract class ARComponent extends JComponent {
 	public abstract void transfer(Transfer<?, ?> t);
 
 	public abstract Aggregates<?> aggregates();
-	public abstract void aggregates(Aggregates<?> aggregates);
+	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform);
 	
 	public abstract Aggregates<?> refAggregates();
 	public abstract void refAggregates(Aggregates<?> aggregates);
@@ -42,6 +42,7 @@ public abstract class ARComponent extends JComponent {
 		
 		public abstract void zoomFit();
 		public abstract AffineTransform viewTransform();
+		public abstract AffineTransform renderTransform();
 		public abstract void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
 	}
 	

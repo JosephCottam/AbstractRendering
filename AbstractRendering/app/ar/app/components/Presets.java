@@ -33,6 +33,7 @@ import ar.renderers.ParallelSpatial;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
+import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.util.ChainedTransfer;
 import ar.util.Util;
@@ -68,9 +69,8 @@ public class Presets extends JPanel {
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
 			try {
-				//MUST set aggregates after view transform or a an extra-render occurs (at least, in Sept 2013)
 				newPanel.viewTransform(oldPanel.viewTransform());
-				newPanel.aggregates(oldPanel.aggregates());
+				newPanel.aggregates(oldPanel.aggregates(), oldPanel.renderTransform());
 			} catch (NoninvertibleTransformException e) {
 				try {newPanel.viewTransform(new AffineTransform());}
 				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
@@ -188,6 +188,17 @@ public class Presets extends JPanel {
 		public Glyphset<?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
+		public String toString() {return fullName(this);}
+	}
+	
+	public static class KivaDrawDark implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelGlyphs(10000);}
+		public Glyphset<?> glyphset() {return KIVA_ADJ;}
+		public Transfer<?,?> transfer() {
+			return new DrawDark(Color.black, Color.white, 6);
+		}
+		public String name() {return "Kiva: DrawDark";}
 		public String toString() {return fullName(this);}
 	}
 	

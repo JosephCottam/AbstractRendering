@@ -75,7 +75,9 @@ public class ARDemoApp implements ARComponent.Holder {
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = presets.doZoomWith(app.display);
 				app.changeDisplay(presets.update(app.display));
-				if (rezoom) {display.zoomFit();}
+				if (rezoom) {
+					display.zoomFit();
+				}
 			}
 		});
 		
@@ -125,7 +127,7 @@ public class ARDemoApp implements ARComponent.Holder {
 		frame.add(newHost, BorderLayout.CENTER);
 		this.status.startMonitoring(innerDisplay.renderer());
 		this.display = newHost;
-		frame.invalidate();
+		frame.revalidate();
 	}
 	
 	public ARComponent getARComponent() {return display;}

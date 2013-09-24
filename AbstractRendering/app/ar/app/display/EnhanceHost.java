@@ -132,7 +132,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public Transfer<?, ?> transfer() {return hosted.transfer();}
 	public void transfer(Transfer<?, ?> t) {hosted.transfer(t);}
 	public Aggregates<?> aggregates() {return hosted.aggregates();}
-	public void aggregates(Aggregates<?> aggregates) {hosted.aggregates(aggregates);}
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
+		hosted.aggregates(aggregates, renderTransform);
+	}
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
 	public Glyphset<?> dataset() {return hosted.dataset();}
@@ -149,6 +151,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 
 	public void zoomFit() {hosted.zoomFit();}
 	public AffineTransform viewTransform() {return hosted.viewTransform();}
+	public AffineTransform renderTransform() {return hosted.renderTransform();}
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {hosted.viewTransform(vt);}
 	
 
