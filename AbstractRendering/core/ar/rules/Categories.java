@@ -369,7 +369,8 @@ public class Categories {
 					} else {
 						alpha = omin + ((1-omin) * (cats.fullSize()/max));
 					}
-					c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
+					alpha = (int) Math.min(255, (alpha*255));
+					c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) alpha);
 				}
 				return c;			
 			}
