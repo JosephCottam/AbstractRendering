@@ -38,7 +38,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private SelectionOverlay overlay;
 	private boolean enhanceEnabled;
 
-	private boolean redoRefAggregates = false;
+	private boolean redoRefAggregates = true;
 	
 	/**Host the given component in the overlay.**/
 	public EnhanceHost(SubsetDisplay hosted) {	
@@ -136,6 +136,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
 	public Glyphset<?> dataset() {return hosted.dataset();}
+	public void renderAgain() {hosted.renderAgain();}
 	
 	public void dataset(Glyphset<?> data) {
 		hosted.dataset(data);

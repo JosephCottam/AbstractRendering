@@ -18,6 +18,7 @@ import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.app.display.FullDisplay;
+import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ActionProvider;
 import ar.app.util.WrappedAggregator;
@@ -60,9 +61,9 @@ public class Presets extends JPanel {
 				|| !oldPanel.aggregator().equals(p.aggregator());
 	}
 	
-	public ARComponent.Aggregating update(ARComponent.Aggregating oldPanel) {
+	public SubsetDisplay update(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		ARComponent.Aggregating newPanel = new FullDisplay(p.aggregator(), p.transfer(), p.glyphset(), p.renderer());
+		SubsetDisplay newPanel = new SubsetDisplay(p.aggregator(), p.transfer(), p.glyphset(), p.renderer());
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.aggregator().equals(oldPanel.aggregator())) {

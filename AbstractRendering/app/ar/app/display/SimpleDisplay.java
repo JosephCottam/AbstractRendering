@@ -89,6 +89,12 @@ public class SimpleDisplay extends ARComponent {
 		repaint();
 	}
 
+	public void renderAgain() {
+		renderAgain=true;
+		renderError=false;
+		repaint();
+	}
+	
 	public Renderer renderer() {return renderer;}
 	
 	

@@ -29,6 +29,9 @@ public abstract class ARComponent extends JComponent {
 	
 	public abstract Renderer renderer();
 
+	/**Force a full re-render.**/
+	public abstract void renderAgain();
+	
 	public static abstract class Aggregating extends ARComponent {
 		private static final long serialVersionUID = 404081973530563354L;
 		public abstract Glyphset<?> dataset();

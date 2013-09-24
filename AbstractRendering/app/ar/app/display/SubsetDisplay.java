@@ -67,6 +67,11 @@ public class SubsetDisplay extends FullDisplay {
 		repaint();
 	}
 
+	public void renderAgain() {
+		fullRender=true;
+		subsetRender=true;
+		super.renderAgain();
+	}
 	
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
@@ -112,6 +117,7 @@ public class SubsetDisplay extends FullDisplay {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
+				//e.printStackTrace();
 			}
 			
 			SubsetDisplay.this.repaint();
@@ -137,6 +143,7 @@ public class SubsetDisplay extends FullDisplay {
 				
 			} catch (Exception e) {
 				renderError = true;
+				//e.printStackTrace();
 			}
 			
 			SubsetDisplay.this.repaint();

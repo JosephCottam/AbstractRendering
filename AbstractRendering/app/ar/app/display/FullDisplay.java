@@ -93,6 +93,11 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 		aggregatesChangedProvider.fireActionListeners();
 	}
 	
+	public void renderAgain() {
+		renderAgain=true;
+		renderError=false;
+		repaint();
+	}
 	
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
