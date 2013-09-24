@@ -73,7 +73,7 @@ public class ChainedTransfer<IN,OUT> implements Transfer<IN,OUT>{
 		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> rootAggregates) {
 			synchronized(cacheGuard) {
-				if (cacheKey == null) {
+				if (cacheKey == null || cacheKey != rootAggregates) {
 					Aggregates tempAggs = rootAggregates;
 					for (Transfer.Specialized ts: specialized) {
 						tempAggs = renderer.transfer(tempAggs, ts);
