@@ -18,19 +18,22 @@ public class GlyphsetLoader {
 	 * 
 	 * @param glyphs Glyphset to load items into
 	 * @param reader Source of the glyph data
-	 * @param converer Convert read entries to indexed entries
+	 * @param converter Convert read entries to indexed entries
 	 * @param shaper Convert the read item into a shape
 	 * @param valuer Convert the read item into a value
 	 * @return The glyphset passed in as a parameter (now with more glyphs)
 	 */
-	public static <V> Glyphset<V> load(Glyphset<V> glyphs, DelimitedReader reader, Indexed.Converter c, Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
+	public static <V> Glyphset<V> load(
+			Glyphset<V> glyphs, DelimitedReader reader, 
+			Indexed.Converter converter, 
+			Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
 		int count =0;
 
 		while (reader.hasNext()) {
 			String[] parts = reader.next();
 			if (parts == null) {continue;}
 			
-			Converter item = new Converter(parts, c.types());
+			Converter item = new Converter(parts, converter.types());
 			V value = valuer.value(item);
 			Shape shape = shaper.shape(item);
 

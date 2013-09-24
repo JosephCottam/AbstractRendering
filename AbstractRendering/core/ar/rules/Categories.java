@@ -1,6 +1,7 @@
 package ar.rules;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,8 @@ public class Categories {
 		public boolean equals(Object other) {return other instanceof Last;}
 		public int hashCode() {return Last.class.hashCode();}
 	}
+	
+
 	
 	/**Convert a set of categorical counts to its total.**/ 
 	public static final class ToCount<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
@@ -178,7 +181,27 @@ public class Categories {
 		public RLE<T> identity() {return new RLE<T>();}
 	}
 	
+	/**Given a CoC as value on a glyph, create CoC aggregates.**/
+	public static final class MergeCategories<T> implements Aggregator<CoC<T>, CoC<T>> {
+		private static final long serialVersionUID = 1L;
+
+		public CoC<T> combine(long x, long y, CoC<T> current, CoC<T> update) {
+			return CategoricalCounts.CoC.rollup(null, Arrays.asList(current, update));
+		}
+
+		public CoC<T> rollup(List<CoC<T>> sources) {
+			return CategoricalCounts.CoC.rollup(null, sources);
+		}
+
+		public CoC<T> identity() {return new CoC<T>();}
+		
+		public boolean equals(Object other) {return other instanceof MergeCategories;}
+		
+		public int hashCode() {return MergeCategories.class.hashCode() + 901812091;}
+	}
+	
 	/**Create categorical counts for each aggregate.
+	 * Source data should be individuals of the given category,
 	 * 
 	 * @param <T> The type of the categories
 	 */
@@ -210,6 +233,14 @@ public class Categories {
 
 		@Override
 		public CoC<T> identity() {return new CoC<T>(comp);}
+		
+		@SuppressWarnings("rawtypes")
+		public boolean equals(Object other) {
+			if (!(other instanceof CountCategories)) {return false;}
+			CountCategories alter = (CountCategories) other;
+			return comp == alter.comp ||
+					(comp != null && comp.equals(alter.comp));
+		}
 	}
 	
 	/**Pull the nth-item from a set of categories.**/

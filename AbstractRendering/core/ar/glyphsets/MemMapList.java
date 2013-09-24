@@ -46,6 +46,7 @@ import ar.util.IndexedEncoding;
  *
  */
 public class MemMapList<V> implements Glyphset.RandomAccess<V> {
+	/**Flag field indicating the binary file encoding (hbin) version understood by the parser.**/
 	public static final int VERSION_UNDERSTOOD = -1;
 	
 	/**How large should backing read buffer be?**/

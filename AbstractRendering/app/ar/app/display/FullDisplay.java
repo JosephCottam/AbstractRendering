@@ -146,7 +146,8 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
      * to the screen system.
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+		if (this.viewTransformRef.equals(vt)) {return;}
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
