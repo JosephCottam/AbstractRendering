@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.util.MemMapEncoder.TYPE;
 
-/**Wrapper to mesh items encoded using the MemMapEncoder with the implicit geometry system).
+/**Wrapper to interface items encoded using the MemMapEncoder with the implicit geometry system.
  * **/
 public class IndexedEncoding implements Indexed {
 	private static final long serialVersionUID = 3550855955493381035L;
