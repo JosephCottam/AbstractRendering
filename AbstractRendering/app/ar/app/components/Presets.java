@@ -202,6 +202,20 @@ public class Presets extends JPanel {
 		public String toString() {return fullName(this);}
 	}
 	
+	public static class USPop10Pct implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new ChainedTransfer(
+					CHAIN_RENDERER, 
+					new Categories.NumCategories<>(), 
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 1));
+		}
+		public String name() {return "US Population 1%";}
+		public String toString() {return fullName(this);}
+	}
+	
 	public static class USPopulation implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}

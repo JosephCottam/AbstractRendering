@@ -50,6 +50,23 @@ public class Categories {
 
 	
 	/**Convert a set of categorical counts to its total.**/ 
+	public static final class NumCategories<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
+		private static final long serialVersionUID = -8842454931082209229L;
+
+		@Override
+		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			return aggregates.get(x,y).size();
+		}
+
+		@Override
+		public Integer emptyValue() {return 0;}
+
+		@Override
+		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+	}
+	
+	
+	/**Convert a set of categorical counts to its total.**/ 
 	public static final class ToCount<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
 
