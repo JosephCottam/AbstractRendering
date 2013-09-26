@@ -122,7 +122,8 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	@Override
 	public Glyph<V> get(long i) {
-		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry(i)), valuer.value(entry(i)));
+		IndexedEncoding entry = entry(i);
+		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry), valuer.value(entry));
 		return g;
 	}
 
