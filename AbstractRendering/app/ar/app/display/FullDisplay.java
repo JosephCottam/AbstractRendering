@@ -57,10 +57,6 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	protected void finalize() {renderPool.shutdown();}
 	public void addAggregatesChangedListener(ActionListener l) {aggregatesChangedProvider.addActionListener(l);}
 
-	protected FullDisplay build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new FullDisplay(aggregator, transfer, glyphs, renderer);
-	}
-
 	public Aggregates<?> refAggregates() {return display.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {display.refAggregates(aggregates);}
 	
