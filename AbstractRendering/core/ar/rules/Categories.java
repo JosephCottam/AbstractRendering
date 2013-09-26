@@ -223,7 +223,6 @@ public class Categories {
 	 * @param <T> The type of the categories
 	 */
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
-		private static final long serialVersionUID = 6049570347397483699L;
 		private final Comparator<T> comp;
 		
 		/**Create categories based on the passed comparator.
@@ -257,6 +256,11 @@ public class Categories {
 			CountCategories alter = (CountCategories) other;
 			return comp == alter.comp ||
 					(comp != null && comp.equals(alter.comp));
+		}
+		
+		public int hashCode() {
+			int base = comp == null ? Categories.class.hashCode() : comp.hashCode();
+			return base + 891734501; //Plus noise....
 		}
 	}
 	
