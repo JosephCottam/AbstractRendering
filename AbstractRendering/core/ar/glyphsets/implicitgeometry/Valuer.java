@@ -1,7 +1,6 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -66,10 +65,16 @@ public interface Valuer<I,V> extends Serializable {
 		}
 	}
 
+	/**Load the data as a key/value pair.  The key is the category, the value is an integer count.**/
 	public static class CategoryCount implements Valuer<Indexed,CategoricalCounts.CoC<Object>> {
 		private static final long serialVersionUID = 1L;
 		final int catIdx, valIdx;
 		
+		/** @param catIdx Index to get the category label from.
+		 *  @param valIdx Index to get the count value from.
+		 *  
+		 *  TODO: Add Comparator support
+		 */
 		public CategoryCount(int catIdx, int valIdx) {
 			this.catIdx = catIdx;
 			this.valIdx = valIdx;
