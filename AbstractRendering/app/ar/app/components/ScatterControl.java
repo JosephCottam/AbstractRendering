@@ -262,7 +262,7 @@ public class ScatterControl extends JPanel {
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggregates) {
 			Transfer.Specialized<Number,Color> ts = basis.specialize(aggregates);
-			return new Specialized(maxDV, maxDV, maxDV, maxDV, distance, ts, out);
+			return new Specialized(minV, maxV, minDV, maxDV, distance, ts, out);
 		}
 		
 		public static final class Specialized extends DeltaTransfer implements Transfer.Specialized<Number,Color> {
