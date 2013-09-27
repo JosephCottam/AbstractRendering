@@ -167,7 +167,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		public void selected(ARApp app) {}
 		public Transfer<Number, Color> op() {
 			Transfer<Number, Color> basis = new FixedAlpha().op();
-			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
+			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis, 20);
 		}
 		public String toString() {return "Clip Warn 10% alpha (int)";}
 	}
@@ -177,7 +177,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		public void selected(ARApp app) {}
 		public Transfer<Number, Color> op() {
 			Transfer<Number, Color> basis =new RedWhiteLog().op();
-			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis);
+			return new Advise.OverUnder(Color.BLACK, Color.BLACK, basis, 20);
 		}
 		public String toString() {return "Clip Warn HDALpha log (int)";}
 	}

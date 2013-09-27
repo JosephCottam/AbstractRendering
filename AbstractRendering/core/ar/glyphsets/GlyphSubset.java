@@ -22,7 +22,7 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 		}
 	}
 
-	public GlyphsetIterator<G> iterator() {return new GlyphsetIterator<G>(this, low, high);}
+	public GlyphsetIterator<G> iterator() {return new GlyphsetIterator<G>(this, 0, size());}
 	public boolean isEmpty() {return low >= high;}
 	public long size() {return high - low;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
@@ -62,14 +62,15 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 		public Cached(Glyphset.RandomAccess<G> glyphs, long low, long high) {
 			super(glyphs,low, high);
 			this.cache = new Glyph[(int) (high - low)];
+			for (int i=0; i<cache.length;i++) {
+				cache[i]  = glyphs.get(i+low);
+			}
 		}
 		
 		@Override
 		public Glyph<G> get(long l) {
-			if (l > Integer.MAX_VALUE) {throw new IllegalArgumentException();}
-			int i = (int) (l-low);
-			if (cache[i] == null) {cache[i] = glyphs.get(l);}
-			return cache[i];
+			if (l > Integer.MAX_VALUE) {throw new ArrayIndexOutOfBoundsException();}
+			return cache[(int) l];
 		}
 		
 	}
