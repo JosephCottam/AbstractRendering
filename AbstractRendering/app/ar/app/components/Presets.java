@@ -30,6 +30,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
+import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
@@ -207,9 +208,7 @@ public class Presets extends JPanel {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer(
-					CHAIN_RENDERER, 
-					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+			return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);
 		}
 		public String name() {return "US Population Min Alpha";}
 		public String toString() {return fullName(this);}
@@ -226,6 +225,18 @@ public class Presets extends JPanel {
 					new  Numbers.Interpolate(new Color(255,0,0,50), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population";}
+		public String toString() {return fullName(this);}
+	}
+	
+	public static class USPopulationClipWarn implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<>();}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			Transfer<Number, Color> inner = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);
+			return new Advise.OverUnder(Color.BLACK, Color.gray, inner, 10);
+		}
+		public String name() {return "US Population (Clip Warn)";}
 		public String toString() {return fullName(this);}
 	}
 	

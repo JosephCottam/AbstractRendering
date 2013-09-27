@@ -19,33 +19,48 @@ public class Advise {
 	//TODO: Extend to reporting the magnitude of the under-saturation
 	//TODO: Should this look at mins instead-of/in-addition-to empty?
 	//TODO: What if there are multiple "smallest" values?
-	//TODO: What about "perceptual differences" vs just absolute differences
+	//TODO: What about "perceptual differences" vs euclidean RGB space difference.
 	/** Mark regions where multiple values are represented in the same way as the minimum value.*/
-	public static class UnderSaturate<A,B> implements Transfer<A, Boolean> {
+	public static class UnderSaturate<A> implements Transfer<A, Boolean> {
 		private static final long serialVersionUID = -5898665841659861105L;
-		final Transfer<A,B> ref;
+		protected final Transfer<A,Color> ref;
+		protected final double tolerance; 
 		
 		/**@param reference Transfer function that determines representation**/
-		public UnderSaturate(Transfer<A,B> reference) {this.ref = reference;}
+		public UnderSaturate(Transfer<A,Color> reference, double tolerance) {
+			this.ref = reference;
+			this.tolerance = tolerance;
+		}
+		public double tolerance() {return tolerance;}
+		
 		public Boolean emptyValue() {return Boolean.FALSE;}
-		public UnderSaturate.Specialized<A,B> specialize(Aggregates<? extends A> aggregates) {
-			return new Specialized<>(ref.specialize(aggregates));
+		public UnderSaturate.Specialized<A> specialize(Aggregates<? extends A> aggregates) {
+			return new Specialized<>(ref.specialize(aggregates), tolerance);
 		}
 		
-		protected static final class Specialized<A,B> extends UnderSaturate<A,B> implements Transfer.Specialized<A, Boolean> {
+		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.Specialized<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
-			private final Transfer.Specialized<A, B> ref;
+			private final Transfer.Specialized<A, Color> ref;
 			
-			public Specialized(Transfer.Specialized<A,B> ref) {
-				super(ref);
+			public Specialized(Transfer.Specialized<A,Color> ref, double tolerance) {
+				super(ref, tolerance);
 				this.ref = ref;
 			}
+			
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
-				B empty = ref.emptyValue();
-				B out = ref.at(x, y, aggregates);
-				return !Util.isEqual(val, def) && Util.isEqual(empty, out); 
+				Color empty = ref.emptyValue();
+				Color out = ref.at(x, y, aggregates);
+				double distance = euclidean(empty, out);
+				return !Util.isEqual(val, def) && distance < tolerance;
+			}
+			
+			private static final double euclidean(Color c1, Color c2) {
+				double r = Math.pow(c1.getRed()-c2.getRed(),2);
+				double g = Math.pow(c1.getGreen()-c2.getGreen(),2);
+				double b = Math.pow(c1.getBlue()-c2.getBlue(),2);
+				return Math.sqrt(r+g+b);
 			}
 
 		}
@@ -109,17 +124,19 @@ public class Advise {
 		protected final Transfer<Number, Boolean> under;
 		protected final Transfer<Number, Boolean> over;
 		protected final Color overColor, underColor;
+		protected final double lowTolerance; //TODO: use under.tolerance instead....
 		
 		/**
 		 * @param overColor Color to mark over saturation
 		 * @param underColor Color to mark under saturation
 		 * @param base Transformation that determines all colors and to find over/under saturation
 		 */
-		public OverUnder(Color overColor, Color underColor, Transfer<Number, Color> base) {
+		public OverUnder(Color overColor, Color underColor, Transfer<Number, Color> base, double lowTolerance) {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
-			this.under = new Advise.UnderSaturate<Number, Color>(base);
+			this.lowTolerance = lowTolerance;
+			this.under = new Advise.UnderSaturate<Number>(base, lowTolerance);
 			this.over = new Advise.OverSaturate<Number, Color>(base, new NumberComp());
 		}
 		
@@ -130,7 +147,7 @@ public class Advise {
 			Transfer.Specialized<Number,Color> b2 = base.specialize(aggregates);
 			Transfer.Specialized<Number, Boolean> o2 = over.specialize(aggregates);
 			Transfer.Specialized<Number, Boolean> u2 = under.specialize(aggregates);
-			return new Specialized(overColor, underColor, b2,o2,u2);
+			return new Specialized(overColor, underColor, b2,o2,u2, lowTolerance);
 		}
 		
 		protected static final class Specialized extends OverUnder implements Transfer.Specialized<Number,Color> {
@@ -143,8 +160,9 @@ public class Advise {
 					Color overColor, Color underColor,
 					Transfer.Specialized<Number, Color> base,
 					Transfer.Specialized<Number, Boolean> over,
-					Transfer.Specialized<Number, Boolean> under) {
-				super(overColor, underColor, base);
+					Transfer.Specialized<Number, Boolean> under,
+					double lowTolerance) {
+				super(overColor, underColor, base, lowTolerance);
 				this.base = base;
 				this.under = under;
 				this.over = over;
