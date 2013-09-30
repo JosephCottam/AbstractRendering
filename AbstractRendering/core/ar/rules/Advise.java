@@ -25,25 +25,27 @@ public class Advise {
 		private static final long serialVersionUID = -5898665841659861105L;
 		protected final Transfer<A,Color> ref;
 		protected final double tolerance; 
+		protected final Comparator<A> comp;
 		
 		/**@param reference Transfer function that determines representation**/
-		public UnderSaturate(Transfer<A,Color> reference, double tolerance) {
+		public UnderSaturate(Transfer<A,Color> reference, Comparator<A> comp, double tolerance) {
 			this.ref = reference;
+			this.comp = comp;
 			this.tolerance = tolerance;
 		}
 		public double tolerance() {return tolerance;}
 		
 		public Boolean emptyValue() {return Boolean.FALSE;}
 		public UnderSaturate.Specialized<A> specialize(Aggregates<? extends A> aggregates) {
-			return new Specialized<>(ref.specialize(aggregates), tolerance);
+			return new Specialized<>(ref.specialize(aggregates), comp, tolerance);
 		}
 		
 		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.Specialized<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
 			private final Transfer.Specialized<A, Color> ref;
 			
-			public Specialized(Transfer.Specialized<A,Color> ref, double tolerance) {
-				super(ref, tolerance);
+			public Specialized(Transfer.Specialized<A,Color> ref, Comparator<A> comp, double tolerance) {
+				super(ref, comp, tolerance);
 				this.ref = ref;
 			}
 			
@@ -53,7 +55,7 @@ public class Advise {
 				Color empty = ref.emptyValue();
 				Color out = ref.at(x, y, aggregates);
 				double distance = euclidean(empty, out);
-				return !Util.isEqual(val, def) && distance < tolerance;
+				return comp.compare(val, def) != 0 && distance < tolerance;
 			}
 			
 			private static final double euclidean(Color c1, Color c2) {
@@ -70,14 +72,14 @@ public class Advise {
 	//TODO: What if there are multiple "largest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
 	/** Mark regions where multiple values are represented in the same way as the maximum value.*/
-	public static class OverSaturate<A,B> implements Transfer<A, Boolean> {
+	public static class OverSaturate<A> implements Transfer<A, Boolean> {
 		private static final long serialVersionUID = -134839100328128893L;
-		final Transfer<A,B> ref;
-		private Comparator<A> comp;
+		final Transfer<A,Color> ref;
+		protected Comparator<A> comp;
 
 		/**@param reference Transfer function that determines representation
 		 * @param comp Comparator used to determine "sameness"**/
-		public OverSaturate(Transfer<A,B> reference, Comparator<A> comp) {
+		public OverSaturate(Transfer<A,Color> reference, Comparator<A> comp) {
 			this.ref = reference;
 			this.comp = comp;
 		}
@@ -88,20 +90,20 @@ public class Advise {
 		
 		@Override
 		public Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
-			Transfer.Specialized<A,B> ref2 = ref.specialize(aggregates);
+			Transfer.Specialized<A,Color> refSpecialized = ref.specialize(aggregates);
 			Point p = max(aggregates, comp);
 			A max = aggregates.get(p.x, p.y);
-			B top = ref2.at(p.x,p.y, aggregates);
-			return new Specialized<>(ref2, comp, max, top);
+			Color top = refSpecialized.at(p.x,p.y, aggregates);
+			return new Specialized<>(refSpecialized, comp, max, top);
 		}
 		
-		protected static final class Specialized<A,B> extends OverSaturate<A,B> implements Transfer.Specialized<A,Boolean> {
+		protected static final class Specialized<A> extends OverSaturate<A> implements Transfer.Specialized<A,Boolean> {
 			private static final long serialVersionUID = 3155281566160217841L;
-			private final Transfer.Specialized<A, B> ref;
+			private final Transfer.Specialized<A, Color> ref;
 			private final A max;
-			private final B top;
+			private final Color top;
 
-			public Specialized(Transfer.Specialized<A, B> ref, Comparator<A> comp, A max, B top) {
+			public Specialized(Transfer.Specialized<A, Color> ref, Comparator<A> comp, A max, Color top) {
 				super(ref, comp);
 				this.ref = ref;
 				this.max = max;
@@ -110,19 +112,22 @@ public class Advise {
 			
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A val = aggregates.get(x, y);
-				B out = ref.at(x, y, aggregates);
-				return !Util.isEqual(val, max) && Util.isEqual(top, out); 
+				Color out = ref.at(x, y, aggregates);
+				boolean same = Util.isEqual(top, out);
+				int diff = comp.compare(val, max);
+				return diff !=0 && same; 
 			}
 		}
 		
 	}
 	
 	/** Mark regions where multiple values are represented in the same way as the minimum or maximum values.*/
-	public static class OverUnder implements Transfer<Number, Color> {
+	public static class OverUnder<A> implements Transfer<A, Color> {
 		private static final long serialVersionUID = 7662347822550778810L;
-		protected final Transfer<Number, Color> base;
-		protected final Transfer<Number, Boolean> under;
-		protected final Transfer<Number, Boolean> over;
+		protected final Transfer<A, Color> base;
+		protected final Transfer<A, Boolean> under;
+		protected final Transfer<A, Boolean> over;
+		protected final Comparator<A> comp;
 		protected final Color overColor, underColor;
 		protected final double lowTolerance; //TODO: use under.tolerance instead....
 		
@@ -131,44 +136,46 @@ public class Advise {
 		 * @param underColor Color to mark under saturation
 		 * @param base Transformation that determines all colors and to find over/under saturation
 		 */
-		public OverUnder(Color overColor, Color underColor, Transfer<Number, Color> base, double lowTolerance) {
+		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, Comparator<A> comp, double lowTolerance) {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
 			this.lowTolerance = lowTolerance;
-			this.under = new Advise.UnderSaturate<Number>(base, lowTolerance);
-			this.over = new Advise.OverSaturate<Number, Color>(base, new NumberComp());
+			this.comp = comp;
+			this.under = new Advise.UnderSaturate<A>(base, comp, lowTolerance);
+			this.over = new Advise.OverSaturate<A>(base, comp);
 		}
 		
 		public Color emptyValue() {return base.emptyValue();}
  		
 		@Override
-		public Specialized specialize(Aggregates<? extends Number> aggregates) {
-			Transfer.Specialized<Number,Color> b2 = base.specialize(aggregates);
-			Transfer.Specialized<Number, Boolean> o2 = over.specialize(aggregates);
-			Transfer.Specialized<Number, Boolean> u2 = under.specialize(aggregates);
-			return new Specialized(overColor, underColor, b2,o2,u2, lowTolerance);
+		public Specialized<A> specialize(Aggregates<? extends A> aggregates) {
+			Transfer.Specialized<A,Color> b2 = base.specialize(aggregates);
+			Transfer.Specialized<A, Boolean> o2 = over.specialize(aggregates);
+			Transfer.Specialized<A, Boolean> u2 = under.specialize(aggregates);
+			return new Specialized<A>(overColor, underColor, b2,o2,u2, comp, lowTolerance);
 		}
 		
-		protected static final class Specialized extends OverUnder implements Transfer.Specialized<Number,Color> {
+		protected static final class Specialized<A> extends OverUnder<A> implements Transfer.Specialized<A, Color> {
 			private static final long serialVersionUID = 7535365761511428962L;
-			private final Transfer.Specialized<Number, Color> base;
-			private final Transfer.Specialized<Number, Boolean> under;
-			private final Transfer.Specialized<Number, Boolean> over;
+			private final Transfer.Specialized<A, Color> base;
+			private final Transfer.Specialized<A, Boolean> under;
+			private final Transfer.Specialized<A, Boolean> over;
 
 			public Specialized(
 					Color overColor, Color underColor,
-					Transfer.Specialized<Number, Color> base,
-					Transfer.Specialized<Number, Boolean> over,
-					Transfer.Specialized<Number, Boolean> under,
+					Transfer.Specialized<A, Color> base,
+					Transfer.Specialized<A, Boolean> over,
+					Transfer.Specialized<A, Boolean> under,
+					Comparator<A> comp,
 					double lowTolerance) {
-				super(overColor, underColor, base, lowTolerance);
+				super(overColor, underColor, base, comp, lowTolerance);
 				this.base = base;
 				this.under = under;
 				this.over = over;
 			}
 
-			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+			public Color at(int x, int y, Aggregates<? extends A> aggregates) {
 				boolean below = under.at(x, y, aggregates);
 				boolean above = over.at(x, y, aggregates);
 				if (above) {
@@ -319,7 +326,7 @@ public class Advise {
 				if (v > 0) {
 					max = val;
 					p.setLocation(x, y);
-				}
+				} 
 			}
 		}
 		return p;

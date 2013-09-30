@@ -38,8 +38,9 @@ public class ChainedTransfer<IN,OUT> implements Transfer<IN,OUT>{
 		this.renderer = renderer;
 	}
 	
+	/**Default output is the default of the last item in the chain.**/
 	@Override
-	public OUT emptyValue() {return (OUT) transfers[0].emptyValue();}
+	public OUT emptyValue() {return (OUT) transfers[transfers.length-1].emptyValue();}
 
 	@Override
 	public Specialized<IN, OUT> specialize(
@@ -65,9 +66,11 @@ public class ChainedTransfer<IN,OUT> implements Transfer<IN,OUT>{
 				tempAggs = renderer.transfer(tempAggs, specialized[i]);
 			}
 			
-			//Store the results of specialization in case the whole set of aggregates was sent for specialization 
-			cacheKey = rootAggregates;
-			cachedAggs = tempAggs;
+			synchronized(cacheGuard) {
+				//Store the results of specialization in case the whole set of aggregates was sent for specialization 
+				cacheKey = rootAggregates;
+				cachedAggs = tempAggs;
+			}
 		}
 
 		@Override
@@ -79,8 +82,8 @@ public class ChainedTransfer<IN,OUT> implements Transfer<IN,OUT>{
 						tempAggs = renderer.transfer(tempAggs, ts);
 					}
 					cachedAggs = tempAggs;
+					cacheKey = rootAggregates;
 				}
-				cacheKey = rootAggregates;
 			}
 			return (OUT) cachedAggs.get(x,y);
 		}

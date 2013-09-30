@@ -223,4 +223,13 @@ public interface CategoricalCounts<T> {
 		
 		public CategoricalCounts<T> empty() {return new RLE<>();}
 	}
+	
+	
+	/**Compare the total size of two categorical counts.**/
+	public static class CompareMagnitude<A extends CategoricalCounts<?>> implements Comparator<A> {
+		public int compare(A o1, A o2) {
+			return Integer.compare(o1.fullSize(), o2.fullSize());
+		}
+		
+	}
 }

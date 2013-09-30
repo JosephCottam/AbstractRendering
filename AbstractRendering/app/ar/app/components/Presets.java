@@ -36,6 +36,7 @@ import ar.rules.Categories;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
+import ar.rules.TransferMath;
 import ar.util.ChainedTransfer;
 import ar.util.Util;
 
@@ -204,13 +205,33 @@ public class Presets extends JPanel {
 	}
 	
 	public static class USPopMinAlpha implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<>();}
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);
+			return new ChainedTransfer<>(
+				CHAIN_RENDERER,
+				new Categories.ToCount<>(),
+				new TransferMath.DivideInt(3000),
+				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
-		public String name() {return "US Population Min Alpha";}
+		public String name() {return "US Population (Min Alpha)";}
+		public String toString() {return fullName(this);}
+	}
+	
+
+	public static class USPop10Pct implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new ChainedTransfer<>(
+				CHAIN_RENDERER,
+				new Categories.ToCount<>(),
+				new TransferMath.DivideInt(3000),
+				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
+		}
+		public String name() {return "US Population 10% alpha";}
 		public String toString() {return fullName(this);}
 	}
 	
@@ -219,7 +240,7 @@ public class Presets extends JPanel {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer(
+			return new ChainedTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(), 
 					new  Numbers.Interpolate(new Color(255,0,0,50), new Color(255,0,0,255)));
@@ -229,12 +250,17 @@ public class Presets extends JPanel {
 	}
 	
 	public static class USPopulationClipWarn implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<>();}
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			Transfer<Number, Color> inner = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);
-			return new Advise.OverUnder(Color.BLACK, Color.gray, inner, 10);
+			Transfer<CoC<Number>, Color> inner = 
+					new ChainedTransfer<>(
+							CHAIN_RENDERER,
+							new Categories.ToCount<>(),
+							new TransferMath.DivideInt(3000),
+							new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+			return new Advise.OverUnder<>(Color.BLACK, Color.gray, inner, new CategoricalCounts.CompareMagnitude(), 10);
 		}
 		public String name() {return "US Population (Clip Warn)";}
 		public String toString() {return fullName(this);}
