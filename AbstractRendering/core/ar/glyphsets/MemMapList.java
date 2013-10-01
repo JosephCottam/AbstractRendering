@@ -71,6 +71,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private final Shaper<Indexed> shaper;
 
 	private final int recordLength;
+	private final int[] offsets;
 	private final long dataTableOffset;
 	private final long stringTableOffset;
 	private final long entryCount;
@@ -92,10 +93,11 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 			stringTableOffset = header.stringTableOffset;
 			types = header.types;
 			this.recordLength = header.recordLength;
+			this.offsets = MemMapEncoder.recordOffsets(types);
 			
 			if (shaper instanceof Shaper.SafeApproximate) {
-				IndexedEncoding max = new IndexedEncoding(types, header.maximaRecordOffset, header.recordLength, buffer.get());
-				IndexedEncoding min = new IndexedEncoding(types, header.minimaRecordOffset, header.recordLength, buffer.get());
+				IndexedEncoding max = entryAt(header.maximaRecordOffset);				
+				IndexedEncoding min = entryAt(header.minimaRecordOffset);
 				Rectangle2D maxBounds = shaper.shape(max).getBounds2D();
 				Rectangle2D minBounds = shaper.shape(min).getBounds2D();
 				bounds = Util.bounds(maxBounds, minBounds);
@@ -104,6 +106,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 			dataTableOffset = -1;
 			stringTableOffset = -1;
 			this.types = null;
+			this.offsets = new int[0];
 			this.recordLength = -1;
 		}
 		if (stringTableOffset >=0) {throw new IllegalArgumentException("Can't handle strings (yet).");}
@@ -122,15 +125,16 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	@Override
 	public Glyph<V> get(long i) {
-		IndexedEncoding entry = entry(i);
+		long recordOffset = (i*recordLength)+dataTableOffset;
+		IndexedEncoding entry = entryAt(recordOffset);
 		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry), valuer.value(entry));
 		return g;
 	}
 
-	protected IndexedEncoding entry(long i) {
-		long recordOffset = (i*recordLength)+dataTableOffset;
+	protected IndexedEncoding entryAt(long recordOffset) {
 		BigFileByteBuffer buffer = this.buffer.get();
-		return new IndexedEncoding(types, recordOffset,recordLength,buffer);
+		buffer.ensure(recordOffset, recordLength);
+		return new IndexedEncoding(types, buffer.rawOffset(recordOffset), buffer.rawBuffer(), recordLength, offsets);
 	}
 
 	/**Valuer being used to establish a value for each entry.**/
@@ -183,8 +187,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
 
 			for (long i=low; i<high; i++) {
-				IndexedEncoding enc = entry(i);
-				Rectangle2D bound = shaper.shape(enc).getBounds2D();
+				Rectangle2D bound = MemMapList.this.get(i).shape().getBounds2D();
 				if (bound != null) {Util.add(bounds, bound);}
 
 			}

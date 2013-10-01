@@ -141,8 +141,8 @@ public class BigFileByteBuffer {
 	/**Where in the file is the cursor current?**/
 	public long position() {return filePos+buffer.position();}
 	
-	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
-	private ByteBuffer ensure(long position, int bytes) {
+	public ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
+	public ByteBuffer ensure(long position, int bytes) {
 		if ((position < filePos) || (position+bytes) > (buffer.limit()+filePos)) {
 			filePos = position; 
 			try {buffer = inputFile.getChannel().map(mode, filePos, Math.min(bufferSize, (fileSize-filePos)));}
@@ -150,4 +150,7 @@ public class BigFileByteBuffer {
 		}
 		return buffer;
 	}
+	
+	public ByteBuffer rawBuffer() {return buffer;}
+	public int rawOffset(long position) {return (int) (position-filePos);}
 }

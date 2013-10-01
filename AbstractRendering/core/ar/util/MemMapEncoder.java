@@ -147,12 +147,23 @@ public class MemMapEncoder {
 		return acc;
 	}
 	
-	private static int recordLength(TYPE[] types) {
+	/**How many bytes in a record?*/
+	public static int recordLength(TYPE[] types) {
 		int acc = 0;
 		for (TYPE t: types) {acc += t.bytes;}
 		return acc;
 	}
-
+	
+	/**Calculate the field offsets for records.**/
+	public static int[] recordOffsets(final MemMapEncoder.TYPE[] types) {
+		int acc=0;
+		int[] offsets = new int[types.length];
+		for (int i=0; i<types.length; i++) {
+			offsets[i]=acc;
+			acc+=types[i].bytes;
+		}
+		return offsets;
+	}
 	
 
 	/**Construct a header with spaces for string offset, data offset and info records to be filled in later.**/
@@ -305,7 +316,8 @@ public class MemMapEncoder {
 		
 		for (long i=0;i<entries; i++) {
 			final long recordOffset = (i*header.recordLength)+header.dataTableOffset;
-			final IndexedEncoding enc = new IndexedEncoding(header.types, recordOffset,header.recordLength,buffer);
+			buffer.ensure(recordOffset, header.recordLength);
+			final IndexedEncoding enc = new IndexedEncoding(header.types, buffer.rawOffset(recordOffset), buffer.rawBuffer());
 			for (int f=0; f<header.types.length; f++) {
 				Object v = enc.get(f);
 				if (v instanceof Number) {
