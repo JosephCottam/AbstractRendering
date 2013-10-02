@@ -134,33 +134,6 @@ public class Presets extends JPanel {
 		public String toString() {return fullName(this);}
 	}
 	
-	public static class BoostAlpha25 implements Preset {
-		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent25();}
-		public String name() {return "BGL Memory: 25% Cache Hit";}		
-		public String toString() {return fullName(this);}
-	}
-	
-	public static class BoostAlpha95 implements Preset {
-		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent95();}
-		public String name() {return "BGL Memory: 95% Cache Hit";}		
-		public String toString() {return fullName(this);}
-	}
-	
-	public static class BoostAlphaHDAlpha implements Preset {
-		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-		public Renderer renderer() {return new ParallelSpatial(1000);}
-		public Glyphset<?>  glyphset() {return BOOST_MEMORY;}
-		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
-		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
-		public String toString() {return fullName(this);}
-	}
-	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
@@ -311,28 +284,20 @@ public class Presets extends JPanel {
 	
 	private static final Glyphset<Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Color> KIVA_ADJ; 
-	private static final Glyphset<Color> BOOST_MEMORY; 
 	private static final Glyphset<Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Color> CENSUS_MM;
 	
-	private static String MEM_VIS_CSV = "../data/MemVisScaled.csv";
-	private static String MEM_VIS_BIN = "../data/MemVisScaledB.hbin";
+	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
-	private static String KIVA_BIN = "../data/kivaAdj.hbin";
-	private static String CENSUS = "../data/census/Total_LatLong.hbin";
+	private static String KIVA_BIN = "../data/kiva-adj.hbin";
+	private static String CENSUS = "../data/census/Race_TractLatLonDenorm.hbin";
 	
 	static {
-		if (!(new File(MEM_VIS_CSV)).exists()) {MEM_VIS_CSV = MEM_VIS_CSV + "_subset";}
 		if (!(new File(MEM_VIS_BIN)).exists()) {MEM_VIS_BIN = MEM_VIS_BIN + "_subset";}
 		if (!(new File(CIRCLE_CSV)).exists()) {CIRCLE_CSV = CIRCLE_CSV + "_subset";}
 		if (!(new File(KIVA_BIN)).exists()) {KIVA_BIN = KIVA_BIN + "_subset";}
 
 		Glyphset set;
-
-		set = null;
-		try {set = GlyphsetUtils.autoLoad(new File(MEM_VIS_CSV), .1, DynamicQuadTree.<Color>make());}
-		catch (Exception e) {e.printStackTrace();}
-		BOOST_MEMORY = set;
 
 
 		set = null;

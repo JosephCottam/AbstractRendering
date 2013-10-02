@@ -2,13 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="lib/gt-api-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-geometry-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-main-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-shapefile-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-shapefile-ng-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-swing-9.4.jar"/>
-	<classpathentry kind="lib" path="lib/gt-swt-9.4.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/AbstractRendering"/>
+	<classpathentry kind="lib" path="/AbstractRendering/lib/geojson-jackson-1.0.jar"/>
+	<classpathentry kind="lib" path="/AbstractRendering/lib/jackson-annotations-2.2.2.jar"/>
+	<classpathentry kind="lib" path="/AbstractRendering/lib/jackson-core-2.2.2.jar"/>
+	<classpathentry kind="lib" path="/AbstractRendering/lib/jackson-databind-2.2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

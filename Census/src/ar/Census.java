@@ -3,9 +3,14 @@ package ar;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,17 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geotools.data.DataStore;
-import org.geotools.data.DataStoreFinder;
-import org.geotools.data.FeatureSource;
-import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.FeatureIterator;
-import org.geotools.feature.GeometryAttributeImpl;
-import org.opengis.feature.Feature;
-import org.opengis.feature.GeometryAttribute;
+import org.geojson.*;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.awt.PolygonShape;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.app.display.SimpleDisplay;
 import ar.app.util.GlyphsetUtils;
@@ -226,40 +223,7 @@ public class Census {
 		
 	}
 	
-	//From :http://stackoverflow.com/questions/2044876/does-anyone-know-of-a-library-in-java-that-can-parse-esri-shapefiles
-	@SuppressWarnings("all")
-	public static List<Shape> loadShapes(String filename) throws Exception {
-		File file = new File(filename);
-		List<Shape> polys = new ArrayList<>();
-		
-		  Map connect = new HashMap();
-		  connect.put("url", file.toURL());
-		
-		  DataStore dataStore = DataStoreFinder.getDataStore(connect);
-		  String[] typeNames = dataStore.getTypeNames();
-		  String typeName = typeNames[0];
-		
-		  FeatureSource featureSource = dataStore.getFeatureSource(typeName);
-		  FeatureCollection collection = featureSource.getFeatures();
-		  FeatureIterator iterator = collection.features();
-		
-		  try {
-		    while (iterator.hasNext()) {
-		      Feature feature = iterator.next();
-		      GeometryAttribute geoProp = feature.getDefaultGeometryProperty();
-		      GeometryAttributeImpl impl = (GeometryAttributeImpl) geoProp;
-		      Geometry hull = impl.getValue().convexHull();
-		      PolygonShape shape = new PolygonShape(hull.getCoordinates(), Collections.EMPTY_LIST);
-		      polys.add(shape);
-		    }
-		  } finally {
-		    iterator.close();
-		  }
-		 return polys;
-
-	}
 	
-
 	@SuppressWarnings("all")
 	public static void show(String label, int width, int height, Aggregates<?> aggs, Transfer<?,?> t) {
 
@@ -278,14 +242,14 @@ public class Census {
 		Glyphset<Pair> race = 
 				new MemMapList<>(
 						new File("../data/census/Race_TractLatLonDenorm.hbin"),
-						new FakeMapProject(new Indexed.ToRect(.3, .3, true, 0,1)),
-						//new Indexed.ToRect(10, 10, true, 1,0),
+						//new FakeMapProject(new Indexed.ToRect(.3, .3, true, 0,1)),
+						new Indexed.ToRect(.3,.3, true, 0,1),
 						new Pairer(3,2));
 
 		Renderer r = new ParallelGlyphs();
 		
 		double ratio = 1.853;  //With x height of the US...
-		int width = 800;
+		int width = 400;
 		int height = (int) (width / ratio);
 		AffineTransform ivt = Util.zoomFit(race.bounds(), width, height);
 		ivt.invert();
@@ -325,12 +289,14 @@ public class Census {
 		show("Race_Sel_quarter_native", width, height, colorAggs, lift);
 //
 //		//Color Weave
-//		List<Shape> shapes = loadShapes("../data/tl_2010_us_state10.shp");
+		List<Shape> shapes = GeoJsonTools.loadShapesJSON(new File("../data/maps/"));
+		shapes = GeoJsonTools.flipY(shapes);
+		GeoJsonTools.showAll(shapes, width, height, GeoJsonTools.yPositiveUpTransform(ivt.createInverse()));
 //		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
 //		Transfer<CoC<Color>, Color> weave = new Weave();
 //		
 //		Aggregates<CoC<Color>> spreadAggs = r.transfer((Aggregates) colorAggs, spread);
 //		show("Weave", width, height, spreadAggs, weave);
-//		System.out.println("Done");
+		System.out.println("Done");
 	}
 }
