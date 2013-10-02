@@ -11,12 +11,17 @@ import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
 import ar.app.display.ARComponent;
+import ar.app.display.EnhanceHost;
+import ar.app.display.SubsetDisplay;
 
 public class ARDemoApp implements ARComponent.Holder {
 	private ARComponent.Aggregating display;
 	private final JFrame frame = new JFrame();
+
+	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
 	private final Presets presets = new Presets();
 	private final Status status = new Status();
+
 	private final ExportAggregates export;
 	
 	public ARDemoApp() {
@@ -30,28 +35,34 @@ public class ARDemoApp implements ARComponent.Holder {
 		JPanel controls = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill =  GridBagConstraints.HORIZONTAL;
-		
 		c.gridx = 0;
 		c.gridy = 0;
+		c.gridwidth =2;
+		c.weightx = 1;
+		controls.add(enhanceOptions);
+
+		
+		c.gridx = 0;
+		c.gridy = 1;
 		c.gridwidth = 2;
 		c.weightx = 1;
 		controls.add(presets, c);
 		
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 2;
 		c.weightx = 0.5;
 		c.gridwidth = 1;
 		controls.add(status,c);
 
 		c.gridx = 1;
-		c.gridy = 1;		
+		c.gridy = 2;		
 		c.weightx = 0.5;
 		c.gridwidth = 1;
 		controls.add(export,c);
 		
 		JLabel instructions = new JLabel("Double-click to zoom extends and/or force refresh.", JLabel.CENTER);
 		c.gridx=0;
-		c.gridy=2;
+		c.gridy=3;
 		c.weightx=2;
 		c.weightx=1;
 		controls.add(instructions,c);
@@ -64,7 +75,9 @@ public class ARDemoApp implements ARComponent.Holder {
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = presets.doZoomWith(app.display);
 				app.changeDisplay(presets.update(app.display));
-				if (rezoom) {display.zoomFit();}
+				if (rezoom) {
+					display.zoomFit();
+				}
 			}
 		});
 		
@@ -77,7 +90,14 @@ public class ARDemoApp implements ARComponent.Holder {
 		frame.setVisible(true);
 		final ARComponent.Aggregating img = display;
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {public void run() {img.zoomFit();}});
+			SwingUtilities.invokeAndWait(
+				new Runnable() {
+					public void run() {
+						img.zoomFit();
+						img.renderAgain();
+					}
+				}
+			);
 		} catch (InvocationTargetException | InterruptedException e1) {}
 	}
 	
@@ -97,13 +117,16 @@ public class ARDemoApp implements ARComponent.Holder {
 		
 	}
 	
-	public <A,B> void changeDisplay(ARComponent.Aggregating newDisplay) {
-		ARComponent old = this.display;		
+	public <A,B> void changeDisplay(SubsetDisplay innerDisplay) {
+		ARComponent old = this.display;
 		if (old != null) {frame.remove(old);}
+		
+		EnhanceHost newHost = new EnhanceHost(innerDisplay);
 
-		this.status.startMonitoring(newDisplay.renderer());
-		frame.add(newDisplay, BorderLayout.CENTER);
-		this.display = newDisplay;
+		enhanceOptions.host(newHost);
+		frame.add(newHost, BorderLayout.CENTER);
+		this.status.startMonitoring(innerDisplay.renderer());
+		this.display = newHost;
 		frame.revalidate();
 	}
 	

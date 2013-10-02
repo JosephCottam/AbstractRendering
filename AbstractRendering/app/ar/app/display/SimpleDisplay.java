@@ -5,6 +5,7 @@ import javax.swing.JFrame;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
 
@@ -58,7 +59,7 @@ public class SimpleDisplay extends ARComponent {
 	/**Set the aggregates set in transfer.  
 	 * Used as default set of aggregates if refAggregates is null.
 	 */
-	public void aggregates(Aggregates<?> aggregates) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		this.aggregates = aggregates;
 		renderAgain = true;
 		renderError = false;
@@ -89,6 +90,12 @@ public class SimpleDisplay extends ARComponent {
 		repaint();
 	}
 
+	public void renderAgain() {
+		renderAgain=true;
+		renderError=false;
+		repaint();
+	}
+	
 	public Renderer renderer() {return renderer;}
 	
 	
@@ -133,6 +140,7 @@ public class SimpleDisplay extends ARComponent {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
+				e.printStackTrace();
 			} finally {
 				renderAgain = false;
 			}

@@ -12,7 +12,11 @@ import java.nio.channels.FileChannel;
  * size of an array to int indices, the largest file that can be completely mapped
  * is also limited.  This class subverts that limit by mapping smaller buffer and
  * moving the buffer when getting close to the end of the buffer (unless it's already 
- * touches the end of the file).
+ * touches the end of the file).  
+ * 
+ * This class does not extend nio.buffer because 
+ * it is not type-compatible at position-related operations.  This class uses
+ * long-valued indices while nio.buffer uses int-valued indices.
  * 
  * To ensure complete values can be read in one operation, a "margin" can be registered.
  * When calling "position", it attempts to ensure that there are margin-number-of-bytes
@@ -137,8 +141,8 @@ public class BigFileByteBuffer {
 	/**Where in the file is the cursor current?**/
 	public long position() {return filePos+buffer.position();}
 	
-	private ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
-	private ByteBuffer ensure(long position, int bytes) {
+	public ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
+	public ByteBuffer ensure(long position, int bytes) {
 		if ((position < filePos) || (position+bytes) > (buffer.limit()+filePos)) {
 			filePos = position; 
 			try {buffer = inputFile.getChannel().map(mode, filePos, Math.min(bufferSize, (fileSize-filePos)));}
@@ -146,4 +150,7 @@ public class BigFileByteBuffer {
 		}
 		return buffer;
 	}
+	
+	public ByteBuffer rawBuffer() {return buffer;}
+	public int rawOffset(long position) {return (int) (position-filePos);}
 }

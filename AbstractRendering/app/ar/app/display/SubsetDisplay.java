@@ -30,14 +30,15 @@ public class SubsetDisplay extends FullDisplay {
 	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates(Aggregates<?> aggregates) {
 		this.subsetAggregates = aggregates;
-		display.aggregates(aggregates);
+		display.aggregates(aggregates,null);
 		repaint();
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
-	public void aggregates(Aggregates<?> aggregates) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		if (aggregates != this.aggregates) {display.refAggregates(null);}
-		
+		this.renderTransform=renderTransform;
+		fullRender=false;
 		this.aggregates = aggregates;
 		this.repaint();
 		aggregatesChangedProvider.fireActionListeners();
@@ -67,6 +68,11 @@ public class SubsetDisplay extends FullDisplay {
 		repaint();
 	}
 
+	public void renderAgain() {
+		fullRender=true;
+		subsetRender=true;
+		super.renderAgain();
+	}
 	
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
@@ -76,10 +82,10 @@ public class SubsetDisplay extends FullDisplay {
 				|| renderError == true) {
 			g.setColor(Color.GRAY);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else if (fullRender || aggregates == null || renderTransform == null) {
+ 		} else if (fullRender) {
 			action = new AggregateRender();
 			fullRender = false;
-		} else if (subsetRender || subsetAggregates == null) {
+		} else if (subsetRender) {
 			action = new SubsetRender();
 			subsetRender = false;
 		} 
@@ -112,6 +118,7 @@ public class SubsetDisplay extends FullDisplay {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
+				//e.printStackTrace();
 			}
 			
 			SubsetDisplay.this.repaint();
@@ -128,7 +135,7 @@ public class SubsetDisplay extends FullDisplay {
 				@SuppressWarnings({"unchecked","rawtypes"})
 				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), databounds.width, databounds.height);
 				
-				SubsetDisplay.this.aggregates(a);
+				SubsetDisplay.this.aggregates(a, renderTransform);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
@@ -137,6 +144,7 @@ public class SubsetDisplay extends FullDisplay {
 				
 			} catch (Exception e) {
 				renderError = true;
+				//e.printStackTrace();
 			}
 			
 			SubsetDisplay.this.repaint();

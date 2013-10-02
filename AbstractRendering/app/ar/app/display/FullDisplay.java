@@ -57,10 +57,6 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	protected void finalize() {renderPool.shutdown();}
 	public void addAggregatesChangedListener(ActionListener l) {aggregatesChangedProvider.addActionListener(l);}
 
-	protected FullDisplay build(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
-		return new FullDisplay(aggregator, transfer, glyphs, renderer);
-	}
-
 	public Aggregates<?> refAggregates() {return display.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {display.refAggregates(aggregates);}
 	
@@ -79,20 +75,25 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	public Aggregator<?,?> aggregator() {return aggregator;}
 	public void aggregator(Aggregator<?,?> aggregator) {
 		this.aggregator = aggregator;
-		aggregates(null);
+		aggregates(null,null);
 		this.repaint();
 	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
-	public void aggregates(Aggregates<?> aggregates) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		if (aggregates != this.aggregates) {display.refAggregates(null);}
 
-		this.display.aggregates(aggregates);
+		this.display.aggregates(aggregates, renderTransform);
 		this.aggregates = aggregates;
 		this.repaint();
 		aggregatesChangedProvider.fireActionListeners();
 	}
 	
+	public void renderAgain() {
+		renderAgain=true;
+		renderError=false;
+		repaint();
+	}
 	
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
@@ -123,7 +124,7 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 			AffineTransform ivt = inverseViewTransform();
 			try {
 				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, ivt, width, height);
-				display.aggregates(aggregates);
+				display.aggregates(aggregates, viewTransformRef);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Aggregates render on %d x %d grid)\n",
@@ -146,11 +147,13 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
      * to the screen system.
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {		
+	public AffineTransform renderTransform() {return new AffineTransform(viewTransformRef);}	
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+		if (this.viewTransformRef.equals(vt)) {return;}
 		this.viewTransformRef = vt;
 		inverseViewTransformRef  = new AffineTransform(vt);
 		inverseViewTransformRef.invert();
-		this.aggregates(null);
+		this.aggregates(null, null);
 		this.repaint();
 	}
 	
@@ -162,8 +165,8 @@ public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandl
 	
 	public void zoomFit() {
 		try {
-			if (dataset() == null || dataset().bounds() ==null) {return;}
-			Rectangle2D content = dataset().bounds();
+			Rectangle2D content = (dataset == null ? null : dataset().bounds());
+			if (dataset() == null || content ==null || content.isEmpty()) {return;}
 			
 			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
 			viewTransform(vt);

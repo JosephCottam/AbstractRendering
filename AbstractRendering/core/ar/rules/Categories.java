@@ -1,6 +1,7 @@
 package ar.rules;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,25 @@ public class Categories {
 		public boolean equals(Object other) {return other instanceof Last;}
 		public int hashCode() {return Last.class.hashCode();}
 	}
+	
+
+	
+	/**Convert a set of categorical counts to its total.**/ 
+	public static final class NumCategories<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
+		private static final long serialVersionUID = -8842454931082209229L;
+
+		@Override
+		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			return aggregates.get(x,y).size();
+		}
+
+		@Override
+		public Integer emptyValue() {return 0;}
+
+		@Override
+		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+	}
+	
 	
 	/**Convert a set of categorical counts to its total.**/ 
 	public static final class ToCount<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
@@ -178,12 +198,31 @@ public class Categories {
 		public RLE<T> identity() {return new RLE<T>();}
 	}
 	
+	/**Given a CoC as value on a glyph, create CoC aggregates.**/
+	public static final class MergeCategories<T> implements Aggregator<CoC<T>, CoC<T>> {
+		private static final long serialVersionUID = 1L;
+
+		public CoC<T> combine(long x, long y, CoC<T> current, CoC<T> update) {
+			return CategoricalCounts.CoC.rollup(null, Arrays.asList(current, update));
+		}
+
+		public CoC<T> rollup(List<CoC<T>> sources) {
+			return CategoricalCounts.CoC.rollup(null, sources);
+		}
+
+		public CoC<T> identity() {return new CoC<T>();}
+		
+		public boolean equals(Object other) {return other instanceof MergeCategories;}
+		
+		public int hashCode() {return MergeCategories.class.hashCode() + 901812091;}
+	}
+	
 	/**Create categorical counts for each aggregate.
+	 * Source data should be individuals of the given category,
 	 * 
 	 * @param <T> The type of the categories
 	 */
 	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
-		private static final long serialVersionUID = 6049570347397483699L;
 		private final Comparator<T> comp;
 		
 		/**Create categories based on the passed comparator.
@@ -210,6 +249,19 @@ public class Categories {
 
 		@Override
 		public CoC<T> identity() {return new CoC<T>(comp);}
+		
+		@SuppressWarnings("rawtypes")
+		public boolean equals(Object other) {
+			if (!(other instanceof CountCategories)) {return false;}
+			CountCategories alter = (CountCategories) other;
+			return comp == alter.comp ||
+					(comp != null && comp.equals(alter.comp));
+		}
+		
+		public int hashCode() {
+			int base = comp == null ? Categories.class.hashCode() : comp.hashCode();
+			return base + 891734501; //Plus noise....
+		}
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
@@ -338,7 +390,8 @@ public class Categories {
 					} else {
 						alpha = omin + ((1-omin) * (cats.fullSize()/max));
 					}
-					c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha*255));
+					alpha = (int) Math.min(255, (alpha*255));
+					c = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) alpha);
 				}
 				return c;			
 			}

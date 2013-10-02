@@ -1,6 +1,10 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.io.Serializable;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import ar.rules.CategoricalCounts;
 
 /**Converts values from one type to another.
  * The common scenario is to select a single field from a
@@ -60,4 +64,29 @@ public interface Valuer<I,V> extends Serializable {
 			return b;
 		}
 	}
+
+	/**Load the data as a key/value pair.  The key is the category, the value is an integer count.**/
+	public static class CategoryCount implements Valuer<Indexed,CategoricalCounts.CoC<Object>> {
+		private static final long serialVersionUID = 1L;
+		final int catIdx, valIdx;
+		
+		/** @param catIdx Index to get the category label from.
+		 *  @param valIdx Index to get the count value from.
+		 *  
+		 *  TODO: Add Comparator support
+		 */
+		public CategoryCount(int catIdx, int valIdx) {
+			this.catIdx = catIdx;
+			this.valIdx = valIdx;
+		}
+		
+		public CategoricalCounts.CoC<Object> value(Indexed from) {
+			SortedMap<Object, Integer> m = new TreeMap<>();
+			Object key = from.get(catIdx);
+			Integer val = Integer.valueOf(from.get(valIdx).toString());
+			m.put(key,val);
+			return new CategoricalCounts.CoC<>(m, val); 
+		}
+	}
+	
 }

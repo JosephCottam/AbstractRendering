@@ -34,6 +34,7 @@ public class Status extends JPanel {
 	}
 	
 	private class Monitor implements Runnable {
+		private double cached;
 		public void run() {
 			while (true) {
 				try {Thread.sleep(50);}
@@ -43,8 +44,9 @@ public class Status extends JPanel {
 				}
 
 				if (watching == null) {continue;}
-				
 				double progress = watching.progress();
+				if (progress == cached) {continue;}
+				cached = progress;
 				SwingUtilities.invokeLater(new UpdateTask(progress, null));
 			}
 		}
