@@ -53,7 +53,7 @@ public class ARServer extends NanoHTTPD {
 		
 		@SuppressWarnings({"unchecked", "rawtypes"})
 		Glyphset boost = new MemMapList<Color>(
-				new File("../data/MemVisScaledB.hbin"),
+				new File("../data/MemVisScaled.hbin"),
 				new Indexed.ToRect(.001, .001, true, 0, 1), 
 				new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
 		

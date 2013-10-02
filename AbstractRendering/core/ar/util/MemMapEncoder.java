@@ -316,8 +316,7 @@ public class MemMapEncoder {
 		
 		for (long i=0;i<entries; i++) {
 			final long recordOffset = (i*header.recordLength)+header.dataTableOffset;
-			buffer.ensure(recordOffset, header.recordLength);
-			final IndexedEncoding enc = new IndexedEncoding(header.types, buffer.rawOffset(recordOffset), buffer.rawBuffer());
+			final IndexedEncoding enc = new IndexedEncoding(header.types, recordOffset, buffer);
 			for (int f=0; f<header.types.length; f++) {
 				Object v = enc.get(f);
 				if (v instanceof Number) {

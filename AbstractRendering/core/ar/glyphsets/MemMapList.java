@@ -133,8 +133,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	protected IndexedEncoding entryAt(long recordOffset) {
 		BigFileByteBuffer buffer = this.buffer.get();
-		buffer.ensure(recordOffset, recordLength);
-		return new IndexedEncoding(types, buffer.rawOffset(recordOffset), buffer.rawBuffer(), recordLength, offsets);
+		return new IndexedEncoding(types, recordOffset, buffer, recordLength, offsets);
 	}
 
 	/**Valuer being used to establish a value for each entry.**/

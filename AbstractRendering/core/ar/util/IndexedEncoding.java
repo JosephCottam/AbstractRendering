@@ -14,6 +14,14 @@ public class IndexedEncoding implements Indexed {
 	private final int[] offsets;
 	private final int recordOffset;
 	private final ByteBuffer buffer;
+
+	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer) {
+		this(types, buffer.ensureTo(recordOffset, MemMapEncoder.recordLength(types)), buffer.ensure(recordOffset, MemMapEncoder.recordLength(types)), MemMapEncoder.recordLength(types), MemMapEncoder.recordOffsets(types));
+	}
+
+	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer, int recordLength, int[] offsets) {
+		this(types, buffer.ensureTo(recordOffset, recordLength), buffer.ensure(recordOffset, recordLength), recordLength, offsets);
+	}
 	
 	/**Create a new indexed encoding wrapper for a record in a byte buffer.
 	 * This will create a new byte buffer just for the current record (so it will be logically independent of the passed buffer).

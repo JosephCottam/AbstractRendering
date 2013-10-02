@@ -69,14 +69,15 @@ public class MemoryMappingTests {
 	public void minMax() throws Exception {
 		BigFileByteBuffer buffer = new BigFileByteBuffer(new File(hbinName), 100,1000);
 		MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer);
-		IndexedEncoding maxEntry = new IndexedEncoding(header.types, 30, header.recordLength, buffer);
-		IndexedEncoding minEntry = new IndexedEncoding(header.types, 30 + header.recordLength, header.recordLength, buffer);
+		
+		IndexedEncoding maxEntry = new IndexedEncoding(header.types, header.maximaRecordOffset, buffer);
+		IndexedEncoding minEntry = new IndexedEncoding(header.types, header.minimaRecordOffset, buffer);
 		
 		double max = Double.MIN_VALUE, min=Double.MAX_VALUE;
 		
 		long cursor = header.dataTableOffset;
 		while(cursor < buffer.fileSize()) {
-			IndexedEncoding entry = new IndexedEncoding(header.types, cursor, header.recordLength,buffer);
+			IndexedEncoding entry = new IndexedEncoding(header.types, cursor, buffer);
 			cursor += header.recordLength;
 			max = Math.max(max, (Double) entry.get(0));
 			min = Math.min(min, (Double) entry.get(0));

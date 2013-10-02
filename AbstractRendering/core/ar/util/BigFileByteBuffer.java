@@ -151,6 +151,15 @@ public class BigFileByteBuffer {
 		return buffer;
 	}
 	
-	public ByteBuffer rawBuffer() {return buffer;}
-	public int rawOffset(long position) {return (int) (position-filePos);}
+	/**Same as 'ensure' but returns the  (int-indexed) buffer position that corresponds to the 
+	 * passed (long-indxed) file position.
+	 * 
+	 * @param position
+	 * @param bytes
+	 * @return
+	 */
+	public int ensureTo(long position, int bytes) {
+		ensure(position, bytes);
+		return (int) (position-filePos);
+	}
 }
