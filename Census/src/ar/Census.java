@@ -34,7 +34,9 @@ import ar.renderers.RenderUtils;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
+import ar.rules.General;
 import ar.rules.Numbers;
+import ar.util.ChainedTransfer;
 import ar.util.Util;
 
 public class Census {
@@ -112,23 +114,16 @@ public class Census {
 				}
 			}
 		}
- 	}
-
+	}
 	
 	static class Weave implements Transfer.Specialized<CoC<Color>, Color> {
 		private static final long serialVersionUID = -6006747974949256518L;
 
-		public Color at(int x, int y, Aggregates<? extends CoC<Color>> aggregates) {
-			CoC<Color> counts = aggregates.get(x, y);
-			if (counts.size()>0) {return counts.key(1);}
-			return Color.cyan;
-		}
-
-		public Color at2(int x, int y,
+		public Color at(int x, int y,
 				Aggregates<? extends CoC<Color>> aggregates) {
 			CoC<Color> counts = aggregates.get(x, y);
 			int top = counts.fullSize();
-			int r = (int) Math.random()*top;
+			int r = (int) (Math.random()*top);
 			for (int i = 0; i<counts.size();i++) {
 				int w = counts.count(i);
 				r -= w;
@@ -145,66 +140,88 @@ public class Census {
 		public Weave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
-	static class RegionSpread implements Transfer.Specialized<CoC<Color>, CoC<Color>> {
+	static class RegionSpread implements Transfer<CategoricalCounts<Color>, CoC<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;
 		final List<Shape> regions;
 		final AffineTransform ivt;
-		RegionSpread(List<Shape> reg, AffineTransform ivt) throws Exception {
+		RegionSpread(List<Shape> reg, AffineTransform ivt) {this(reg, ivt, true);}
+		protected RegionSpread(List<Shape> reg, AffineTransform ivt, boolean transform) {
 			this.ivt = ivt;
-			AffineTransform vt = ivt.createInverse();
-			this.regions = new ArrayList<>();
-			for (Shape s: reg) {
-				regions.add(vt.createTransformedShape(s));
+			if (transform) {
+				AffineTransform vt;
+				try {vt = ivt.createInverse();}
+				catch (Exception e) {throw new IllegalArgumentException("Non=invertable transform passed");}
+				this.regions = new ArrayList<>();
+				for (Shape s: reg) {
+					regions.add(vt.createTransformedShape(s));
+				}
+			} else {
+				this.regions = reg;
 			}
-		}
-
-		
-		@Override
-		public CoC<Color> at(int x, int y, Aggregates<? extends CoC<Color>> aggregates) {
-			Shape region = touches(x,y);
-			if (region == null) {return emptyValue();}
-			CoC<Color> v = gather(region, aggregates);
-			return v;
 		}
 
 		@Override
 		public CoC<Color> emptyValue() {return new CoC<Color>(Util.COLOR_SORTER);}
 
-		@Override
-		public RegionSpread specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}
 		
-		public Shape touches(int x, int y) {
+		@Override
+		public RegionSpread.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+			Map<Shape, CoC<Color>> values = new HashMap<>();
+			for (Shape region: regions) {
+				values.put(region, gather(region, aggregates));
+			}
+			return new Specialized(regions, ivt, values);
+		}
+
+		
+		protected Shape touches(int x, int y) {
 			Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
 			for (Shape s: regions) {
 				if (s.intersects(r)) {
-					System.out.println(s);
 					return s;
 				}
 			}
 			return null;
 		}
 
-		static CoC<Color> ref=new CoC(); 
-		public CoC<Color> gather(Shape region, Aggregates<? extends CoC<Color>> aggs) {
+		static CoC<Color> ref=new CoC<>(); 
+		private CoC<Color> gather(Shape region, Aggregates<? extends CategoricalCounts<Color>> aggs) {
 			Rectangle2D r = new Rectangle2D.Double(0,0,1,1);
 			CoC<Color> acc = emptyValue();
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
 					r.setRect(x, y, 1,1);
 					if (region.contains(r)) {
-						acc = CoC.rollup(Util.COLOR_SORTER, Arrays.asList(acc, aggs.get(x, y)));
+						acc = CoC.rollup(Util.COLOR_SORTER, Arrays.asList(acc, (CoC<Color>) aggs.get(x, y)));
 					}
 				}
 			}
 			if (!acc.equals(ref)) {
 				ref =acc;
-				System.out.println("Switched: " + ref.toString());
+				//System.out.println("Switched: " + ref.toString());
 			}
 			
 //			System.out.println(acc);
 			return acc;
 		}
 		
+		
+		private static class Specialized extends RegionSpread implements Transfer.Specialized<CategoricalCounts<Color>, CoC<Color>> { 
+			private final Map<Shape, CoC<Color>> regionVals;
+			
+			Specialized(List<Shape> reg, AffineTransform ivt, Map<Shape, CoC<Color>> regionVals) {
+				super(reg, ivt, false);
+				this.regionVals = regionVals;
+			}
+
+
+			@Override
+			public CoC<Color> at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+				Shape region = touches(x,y);
+				if (region == null) {return emptyValue();}
+				return regionVals.get(region);
+			}
+		}
 	}
 
 	
@@ -292,11 +309,14 @@ public class Census {
 		List<Shape> shapes = GeoJsonTools.loadShapesJSON(new File("../data/maps/"));
 		shapes = GeoJsonTools.flipY(shapes);
 		GeoJsonTools.showAll(shapes, width, height, GeoJsonTools.yPositiveUpTransform(ivt.createInverse()));
-//		Transfer<CoC<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
-//		Transfer<CoC<Color>, Color> weave = new Weave();
-//		
-//		Aggregates<CoC<Color>> spreadAggs = r.transfer((Aggregates) colorAggs, spread);
-//		show("Weave", width, height, spreadAggs, weave);
+		Transfer<CategoricalCounts<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
+		Transfer<CoC<Color>, Color> weave = new Weave();
+		Transfer chain = new ChainedTransfer(r, 
+				new General.Report<>(spread, "Started spread"), 
+				new General.Report<>(weave, "Started weave."));
+				//new General.Report<>(stratAlpha, "Started alpha."));
+		
+		show("Weave", width, height, colorAggs, chain);
 		System.out.println("Done");
 	}
 }

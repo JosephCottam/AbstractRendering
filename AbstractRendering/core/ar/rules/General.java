@@ -126,4 +126,23 @@ public class General {
 			return new MapWrapper<K,V>(dict,other,nullIsValue);
 		}
 	}
+	
+	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
+		private final Transfer<IN,OUT> inner;
+		private final String message;
+		public Report(Transfer<IN,OUT> inner, String message) {
+			this.inner = inner;
+			this.message = message;
+		}
+
+		public OUT emptyValue() {return inner.emptyValue();}
+
+		@Override
+		public ar.Transfer.Specialized<IN, OUT> specialize(
+				Aggregates<? extends IN> aggregates) {
+			System.out.println(message);
+			return inner.specialize(aggregates);
+		}
+		
+	}
 }
