@@ -7,6 +7,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
@@ -14,12 +16,12 @@ import ar.app.display.ARComponent;
 import ar.app.display.EnhanceHost;
 import ar.app.display.SubsetDisplay;
 
-public class ARDemoApp implements ARComponent.Holder {
+public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private ARComponent.Aggregating display;
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
-	private final Presets presets = new Presets();
+	private final Presets presets = new Presets(this);
 	private final Status status = new Status();
 
 	private final ExportAggregates export;
@@ -131,4 +133,8 @@ public class ARDemoApp implements ARComponent.Holder {
 	}
 	
 	public ARComponent getARComponent() {return display;}
+	public AffineTransform viewTransform() {return display.viewTransform();}
+
+	@Override
+	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {display.viewTransform(vt);}
 }

@@ -1,4 +1,4 @@
-package ar;
+package ar.ext.geojson;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -25,28 +25,36 @@ import org.geojson.LngLatAlt;
 import org.geojson.MultiPolygon;
 import org.geojson.Polygon;
 
-import ar.app.display.SimpleDisplay;
 import ar.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class GeoJsonTools {
+/**Utilities for loading GeoJSON files and converting to java shapes.**/
+public class GeoJSONTools {
 	
+	/**Load all shapes out of the files in a given directory.
+	 * 
+	 * Only loads .json files.
+	 * **/
 	public static List<Shape> loadShapesJSON(File source) throws Exception {
 		if (source.isFile()) {return Arrays.asList(loadShapeJSON(source));}
-		List shapes = new ArrayList();
+		List<Shape> shapes = new ArrayList<>();
 		for (File f: source.listFiles()) {
+			if (!f.getName().endsWith(".json")) {continue;}
 			shapes.add(loadShapeJSON(f));
 		}
 		return shapes;
 	}
 	
+	/**Load shape from the given file. 
+	 * Contents of the file are assumed to be GeoJSON.**/
 	public static Shape loadShapeJSON(File source) {
 		try {
-			FeatureCollection obj = 
+			FeatureCollection fc = 
 					new ObjectMapper().readValue(new FileInputStream(source), FeatureCollection.class);
-			FeatureCollection fc = (FeatureCollection) obj;
 			Feature feature = fc.getFeatures().get(0);
+			@SuppressWarnings("rawtypes")
+
 			Geometry geometry = (Geometry) feature.getGeometry();
 			if (geometry instanceof MultiPolygon) {
 				return toArea((MultiPolygon) geometry);
@@ -57,7 +65,8 @@ public class GeoJsonTools {
 	}
 	
 
-	public static Shape toArea(MultiPolygon source) {
+	/**Convert a multi-polygon to a java.awt.geom.shape.**/
+	protected static Shape toArea(MultiPolygon source) {
 		Area a = new Area();
 		for (List<List<LngLatAlt>> polyPoints: source.getCoordinates()) {
 			Polygon part = new Polygon(polyPoints.get(0));
@@ -69,7 +78,8 @@ public class GeoJsonTools {
 		return a;
 	}
 
-	public static Area toArea(Polygon source) {
+	/**Convert a polygon to a java.awt.geom.shape.**/
+	protected static Area toArea(Polygon source) {
 		Shape outer = toShape(source.getExteriorRing());
 		Area a = new Area(outer);
 		for (List<LngLatAlt> pts: source.getInteriorRings()) {
@@ -80,7 +90,7 @@ public class GeoJsonTools {
 	}
 
 	
-	public static Shape toShape(List<LngLatAlt> points) {
+	protected static Shape toShape(List<LngLatAlt> points) {
 		Path2D.Double pg = new Path2D.Double();
 		pg.moveTo(points.get(0).getLongitude(), points.get(0).getLatitude());
 		for (int i=1; i<points.size();i++) {
@@ -91,13 +101,9 @@ public class GeoJsonTools {
 		return pg;
 	}
 	
-	
-	public static AffineTransform yPositiveUpTransform(AffineTransform vt) {
-		AffineTransform t = (AffineTransform) vt.clone();
-		t.scale(1,-1);
-		return t;
-	}
-	
+
+	/**Change the sign on all y-coordinates.  
+	 * Useful for converting to/from scan-line y-convention (where positive values increase down).**/
 	public static List<Shape> flipY(List<Shape> input) {
 		AffineTransform flip = AffineTransform.getScaleInstance(1, -1);
 		List<Shape> output = new ArrayList<>(input.size());
@@ -107,44 +113,4 @@ public class GeoJsonTools {
 		return output;
 		
 	}
-	
-	private static final class ShowPanel extends JPanel {
-		List<Shape> shapes;
-		AffineTransform vt;
-		
-		public ShowPanel(List<Shape> shapes, AffineTransform vt) {
-			this.shapes = shapes;			
-			this.vt = vt;
-		}
-		
-		public void paintComponent(Graphics g) {
-			Graphics2D g2 = (Graphics2D) g.create();
-
-			if (vt == null) {
-				Rectangle2D bounds = null;
-				for (int i=0; i<shapes.size(); i++) {
-					bounds = Util.bounds(bounds, shapes.get(i).getBounds2D());
-				}
-				vt = Util.zoomFit(bounds, this.getWidth(), this.getHeight());
-			}
-			
-			g2.setTransform(vt);
-			g2.setPaint(Color.gray);
-			for (Shape s: shapes) {g2.fill(s);}			
-		}
-	}
-	public static void showAll(List<Shape> shapes, int width, int height, AffineTransform vt) {
-		JFrame frame = new JFrame("Test Shape loading");
-		frame.setLayout(new BorderLayout());
-		frame.setSize(width,height);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new ShowPanel(shapes, null), BorderLayout.CENTER);
-		frame.setVisible(true);
-		frame.revalidate();
-		frame.validate();
-
-
-	}
-	
-
 }

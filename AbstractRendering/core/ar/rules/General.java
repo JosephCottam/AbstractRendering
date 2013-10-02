@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
@@ -13,8 +14,8 @@ import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Tools that don't apply to a particular data type.**/
 public class General {
-	/**Aggregator that always returns the same value.**/
-	public static final class Const<T> implements Aggregator<Object,T> {
+	/**Aggregator and Transfer that always returns the same value.**/
+	public static final class Const<T> implements Aggregator<Object,T>, Transfer.Specialized<Object, T> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final T val;
 		/**@param val Value to return**/
@@ -22,6 +23,9 @@ public class General {
 		public T combine(long x, long y, T left, Object update) {return val;}
 		public T rollup(List<T> sources) {return val;}
 		public T identity() {return val;}
+		public T emptyValue() {return val;}
+		public ar.Transfer.Specialized<Object, T> specialize(Aggregates<? extends Object> aggregates) {return this;}
+		public T at(int x, int y, Aggregates<? extends Object> aggregates) {return val;}
 	}
 
 
@@ -126,6 +130,76 @@ public class General {
 			return new MapWrapper<K,V>(dict,other,nullIsValue);
 		}
 	}
+	
+
+	/**Implents "if" in a transfer function.  Applies one transfer if the predicate is true, another if it is false.**/
+	public static class Switch<IN,OUT> implements Transfer<IN,OUT> {
+		private static final long serialVersionUID = 9066005967376232334L;
+
+		private final Predicate<IN> predicate;
+		private final Transfer<IN,OUT> pass;
+		private final Transfer<IN,OUT> fail;
+		private final OUT empty;
+		
+		public Switch(Predicate<IN> predicate,
+						Transfer<IN,OUT> pass,
+						Transfer<IN,OUT> fail,
+						OUT empty) {
+			this.predicate = predicate;
+			this.pass = pass;
+			this.fail = fail;
+			this.empty = empty;
+		}
+
+		@Override
+		public OUT emptyValue() {return empty;}
+
+		@Override
+		public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
+			
+			Transfer.Specialized<IN,OUT> ps= pass.specialize(aggregates);
+			Transfer.Specialized<IN, OUT> fs = fail.specialize(aggregates);
+			Predicate.Specialized<IN> preds = predicate.specialize(aggregates);
+			return new Specialized<>(preds, ps, fs, empty);
+		}
+		
+		protected static class Specialized<IN, OUT> extends Switch<IN, OUT> implements Transfer.Specialized<IN, OUT> {
+			final Predicate.Specialized<IN> predicate;
+			final Transfer.Specialized<IN, OUT> pass;
+			final Transfer.Specialized<IN, OUT> fail;
+
+			public Specialized(
+					Predicate.Specialized<IN> predicate,
+					Transfer.Specialized<IN, OUT> pass, 
+					Transfer.Specialized<IN, OUT> fail, 
+					OUT empty) {
+				super(predicate, pass, fail, empty);
+				this.predicate = predicate;
+				this.pass = pass;
+				this.fail = fail;
+				// TODO Auto-generated constructor stub
+			}
+
+
+			@Override
+			public OUT at(int x, int y,Aggregates<? extends IN> aggregates) {
+				if (predicate.test(x, y, aggregates)) {
+					return pass.at(x, y, aggregates);
+				} else {
+					return fail.at(x, y, aggregates);
+				}
+			}
+		}
+		
+		/**Test on a specific location in a set of aggregates.**/
+		public static interface Predicate<IN> {
+			public Predicate.Specialized<IN> specialize(Aggregates<? extends IN> aggs);
+			public interface Specialized<IN> extends Predicate<IN> {
+				public boolean test(int x, int y, Aggregates<? extends IN> aggs);
+			}
+		}
+	}
+	
 	
 	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;

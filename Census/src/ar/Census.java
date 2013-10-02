@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.app.display.SimpleDisplay;
 import ar.app.util.GlyphsetUtils;
+import ar.ext.geojson.GeoJSONTools;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
@@ -75,45 +76,36 @@ public class Census {
 		public CoC<Object> identity() {return new CoC<Object>();}
 	}
 	
-	static class LiftIf implements Transfer<CategoricalCounts<Color>, Color> {
-		private static final long serialVersionUID = 9066005967376232334L;
-
-		final Transfer<CategoricalCounts<Color>, Color> baseline;
-		
-		public LiftIf(Transfer<CategoricalCounts<Color>, Color> baseline) {this.baseline = baseline;}
-
-		@Override
-		public Color emptyValue() {return baseline.emptyValue();}
-
-		@Override
-		public Transfer.Specialized<CategoricalCounts<Color>, Color> specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			Transfer.Specialized ts = baseline.specialize(aggregates);
-			return new Specialized(ts);
+	static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
+		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
+			super(
+				new Pred(cutoff), 
+				new General.Const(Color.black), 
+				baseline, 
+				baseline.emptyValue());
 		}
 		
-		protected static class Specialized extends LiftIf implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
-			final Transfer.Specialized<CategoricalCounts<Color>, Color> baseline;
-			public Specialized(Transfer.Specialized<CategoricalCounts<Color>, Color> baseline) {
-				super(baseline);
-				this.baseline = baseline;
-			}
-
-			@Override
-			public Color at(int x, int y,
-					Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+		private static final class Pred implements General.Switch.Predicate.Specialized<CategoricalCounts<Color>> {
+			private final double cutoff;
+			public Pred(double cutoff) {this.cutoff = cutoff;}
+         
+			public boolean test(int x, int y,
+					Aggregates<? extends CategoricalCounts<Color>> aggs) {
 				
-				CategoricalCounts<Color> val = aggregates.get(x, y);
+				CategoricalCounts<Color> val = aggs.get(x, y);				
 				int keyIdx=-1;
 				for (int i=0; i< val.size(); i++) {
 					if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
 				}
-				if (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > .1) {
-					return Color.BLACK;
-				} else {
-					return baseline.at(x, y, aggregates);
-				}
+				return (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > cutoff);
+			}
+
+			public ar.rules.General.Switch.Predicate.Specialized<CategoricalCounts<Color>> 
+				specialize(Aggregates<? extends CategoricalCounts<Color>> aggs) {
+				return this;
 			}
 		}
+		
 	}
 	
 	static class Weave implements Transfer.Specialized<CoC<Color>, Color> {
@@ -140,12 +132,13 @@ public class Census {
 		public Weave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
-	static class RegionSpread implements Transfer<CategoricalCounts<Color>, CoC<Color>> {
+	static class RegionGather implements Transfer<CategoricalCounts<Color>, CoC<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;
 		final List<Shape> regions;
 		final AffineTransform ivt;
-		RegionSpread(List<Shape> reg, AffineTransform ivt) {this(reg, ivt, true);}
-		protected RegionSpread(List<Shape> reg, AffineTransform ivt, boolean transform) {
+		
+		public RegionGather(List<Shape> reg, AffineTransform ivt) {this(reg, ivt, true);}
+		protected RegionGather (List<Shape> reg, AffineTransform ivt, boolean transform) {
 			this.ivt = ivt;
 			if (transform) {
 				AffineTransform vt;
@@ -165,7 +158,7 @@ public class Census {
 
 		
 		@Override
-		public RegionSpread.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+		public RegionGather.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			Map<Shape, CoC<Color>> values = new HashMap<>();
 			for (Shape region: regions) {
 				values.put(region, gather(region, aggregates));
@@ -206,7 +199,7 @@ public class Census {
 		}
 		
 		
-		private static class Specialized extends RegionSpread implements Transfer.Specialized<CategoricalCounts<Color>, CoC<Color>> { 
+		private static class Specialized extends RegionGather implements Transfer.Specialized<CategoricalCounts<Color>, CoC<Color>> { 
 			private final Map<Shape, CoC<Color>> regionVals;
 			
 			Specialized(List<Shape> reg, AffineTransform ivt, Map<Shape, CoC<Color>> regionVals) {
@@ -301,20 +294,16 @@ public class Census {
 		
 		//Selection-Set
 		System.out.println("Sel Set");
-		Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(stratAlpha);
+		Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
 		lift.specialize(colorAggs);
 		show("Race_Sel_quarter_native", width, height, colorAggs, lift);
 //
 //		//Color Weave
-		List<Shape> shapes = GeoJsonTools.loadShapesJSON(new File("../data/maps/"));
-		shapes = GeoJsonTools.flipY(shapes);
-		GeoJsonTools.showAll(shapes, width, height, GeoJsonTools.yPositiveUpTransform(ivt.createInverse()));
-		Transfer<CategoricalCounts<Color>, CoC<Color>> spread = new RegionSpread(shapes, ivt);
+		List<Shape> shapes = GeoJSONTools.loadShapesJSON(new File("../data/maps/"));
+		shapes = GeoJSONTools.flipY(shapes);
+		Transfer<CategoricalCounts<Color>, CoC<Color>> gather= new RegionGather(shapes, ivt);
 		Transfer<CoC<Color>, Color> weave = new Weave();
-		Transfer chain = new ChainedTransfer(r, 
-				new General.Report<>(spread, "Started spread"), 
-				new General.Report<>(weave, "Started weave."));
-				//new General.Report<>(stratAlpha, "Started alpha."));
+		Transfer chain = new ChainedTransfer<>(r, gather, weave);
 		
 		show("Weave", width, height, colorAggs, chain);
 		System.out.println("Done");
