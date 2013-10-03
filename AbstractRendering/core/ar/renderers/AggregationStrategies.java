@@ -60,7 +60,6 @@ public class AggregationStrategies {
 			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
 
-		//TODO: Is there a faster way to do this?  Maybe the inner-list creation can be avoided by changing rollup to take two values
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
