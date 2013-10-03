@@ -2,11 +2,9 @@ package ar.rules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
@@ -41,50 +39,57 @@ public interface CategoricalCounts<T> {
 
 	/**Count categories.  Categories are stored in sorted order (so "nth" makes sense).**/
 	public static final class CoC<T> implements CategoricalCounts<T> {
-		final SortedMap<T, Integer> counts;
+		private final Comparator<T> comp;
+		private final int[] counts;
+		private final List<T> labels;
 		private final int fullSize;
 		
 		/**Create a new CoC with "natural" ordering.**/
-		public CoC() {this(new TreeMap<T,Integer>(),0);}
+		public CoC() {this(null, new ArrayList<T>(), new int[0], 0);}
 		
 		/**@param comp Comparator used to order categories.**/
-		public CoC(Comparator<T> comp) {this(new TreeMap<T,Integer>(comp),0);}
+		public CoC(Comparator<T> comp) {this(comp, new ArrayList<T>(), new int[0], 0);}
 		
 		/**@param counts Map backing this set of counts
 		 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 		 ***/
-		public CoC(SortedMap<T, Integer> counts, int fullSize) {
+		public CoC(Comparator<T> comp, List<T>labels, int[] counts, int fullSize) {
 			//System.out.printf("count with %d cats and %d total\n", counts.size(), fullSize);
 			this.counts = counts;
+			this.labels = labels;
 			this.fullSize = fullSize;
+			this.comp = comp;
 		}
 		
 		public CoC<T> extend(T key, int count) {
-			SortedMap<T,Integer> ncounts = new TreeMap<T,Integer>(counts.comparator());
-			ncounts.putAll(counts);
-			if (!ncounts.containsKey(key)) {
-				ncounts.put(key, count);
+			int idx = Collections.binarySearch(labels, key, comp);
+			if (idx >=0) {
+				int[] newCounts = Arrays.copyOf(counts, counts.length);
+				newCounts[idx] += count;
+				return new CoC<>(comp, labels, newCounts, fullSize+count);
 			} else {
-				int v = ncounts.get(key);
-				ncounts.put(key, v+count);
+				idx = -(idx +1); 
+				ArrayList<T> newLabels = new ArrayList<>(labels);
+				newLabels.add(key);
+				Collections.sort(newLabels, comp);
+				int[] newCounts = new int[counts.length+1];
+				System.arraycopy(counts, 0, newCounts, 0, idx);
+				newCounts[idx] = count;
+				System.arraycopy(counts, idx, newCounts, idx+1, counts.length-idx);
+				return new CoC<>(comp, newLabels, newCounts, fullSize+count);
 			}
-			int fullSize = this.fullSize + count;
-			return new CoC<T>(ncounts, fullSize);
 		}
 		
 		public int count(Object key) {
-			if (counts.containsKey(key)) {return counts.get(key);}
-			else {return 0;}
+			int idx = labels.indexOf(key);
+			if (idx >= 0) {return counts[idx];}
+			return 0;
 		}
 		
-		public int size() {return counts.size();}
+		public int size() {return labels.size();}
 		public int fullSize() {return fullSize;}
 		public String toString() {return "COC: " + counts.toString();}
-		public T key(int i) {
-			Iterator<T> it = counts.keySet().iterator();
-			for (; i>0; i--) {it.next();}
-			return it.next();			
-		}
+		public T key(int i) {return labels.get(i);}
 		
 		public boolean equals(Object other) {
 			if (!(other instanceof CoC)) {return false;}
@@ -100,21 +105,16 @@ public interface CategoricalCounts<T> {
 		@Override
 		public int hashCode() {return counts.hashCode();}
 		
-		public int count(int i) {
-			Iterator<Integer> it = counts.values().iterator();
-			for (; i>0; i--) {it.next();}
-			return it.next();
-		}
+		public int count(int i) {return counts[i];}
 
-		@SuppressWarnings("unchecked")
-		public CoC<T> empty() {return new CoC<>((Comparator<T>) counts.comparator());} 
+		public CoC<T> empty() {return new CoC<>(comp);} 
 
 
 		/**Combine multiple CoC objects into a single CoC.**/
 		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
 			CoC<T> combined = new CoC<T>(comp);
 			for (CoC<T> counts: sources) {
-				for (T key: counts.counts.keySet()) {
+				for (T key: counts.labels) {
 					combined = combined.extend(key, counts.count(key));
 				}
 			}

@@ -385,7 +385,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		try {set = GlyphsetUtils.memMap(
 				"US Census", CENSUS, 
 				new Indexed.ToRect(.2, .2, true, 0, 1),
-				new Valuer.CategoryCount(3,2),
+				new Valuer.CategoryCount(new Util.ComparableComparator(), 3,2),
 				1, null);
 		} catch (Exception e) {e.printStackTrace();}
 		CENSUS_MM = set;
