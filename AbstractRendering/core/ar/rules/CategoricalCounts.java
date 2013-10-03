@@ -46,6 +46,7 @@ public interface CategoricalCounts<T> {
 		private final int fullSize;
 		
 		/**Create a new CoC with "natural" ordering.**/
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public CoC() {this(new Util.ComparableComparator(), new Object[0], new int[0], 0);}
 		
 		/**@param comp Comparator used to order categories.**/
@@ -66,6 +67,7 @@ public interface CategoricalCounts<T> {
 			this.comp = comp;
 		}
 		
+		@SuppressWarnings("unchecked")
 		public CoC<T> extend(T key, int count) {
 			int idx = Arrays.binarySearch((T[]) labels, key, comp);
 			if (idx >=0) {
@@ -80,6 +82,7 @@ public interface CategoricalCounts<T> {
 			}
 		}
 		
+		@SuppressWarnings("unchecked")
 		public int count(T key) {
 			int idx = Arrays.binarySearch((T[]) labels, key, comp);
 			if (idx >= 0) {return counts[idx];}
@@ -89,6 +92,8 @@ public interface CategoricalCounts<T> {
 		public int size() {return labels.length;}
 		public int fullSize() {return fullSize;}
 		public String toString() {return "COC: " + counts.toString();}
+		
+		@SuppressWarnings("unchecked")
 		public T key(int i) {return (T) labels[i];}
 		
 		public boolean equals(Object other) {
@@ -114,6 +119,7 @@ public interface CategoricalCounts<T> {
 		 * 
 		 * TODO: The array identity-equal almost never trips.  Can things be modified so the faster check trips?
 		 * **/
+		@SuppressWarnings({ "cast", "unchecked" })
 		public static <T> CoC<T> rollupTwo(Comparator<T> comp, CoC<T> s1, CoC<T> s2) {
 			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels, s2.labels)) {
 				int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);

@@ -1,7 +1,6 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import ar.rules.CategoricalCounts;

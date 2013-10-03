@@ -260,7 +260,9 @@ public final class Util {
 		public int compare(T lhs, T rhs) {return lhs.compareTo(rhs);}
 	}
 	
+	/**Insert a value into an array at the given index.**/
 	public static final <T> T[] insertInto(T[] values, T value, int at) {
+		@SuppressWarnings("unchecked")
 		T[] newValues = (T[]) Array.newInstance(value.getClass(), values.length+1);
 		System.arraycopy(values, 0, newValues, 0, at);
 		newValues[at] = value;
@@ -268,6 +270,7 @@ public final class Util {
 		return newValues;
 	}
 	
+	/**Insert a value into an array at the given index.**/
 	public static final int[] insertInto(int[] values, int value, int at) {
 		int[] newValues = new int[values.length+1];
 		System.arraycopy(values, 0, newValues, 0, at);
