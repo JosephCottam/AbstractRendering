@@ -45,10 +45,8 @@ public class IndexedEncoding implements Indexed {
 		this.offsets = offsets;
 		
 		this.recordOffset = 0;
-		byte[] bytes = new byte[MemMapEncoder.recordLength(types)];
 		buffer.position(recordOffset);
-		buffer.get(bytes);
-		this.buffer = ByteBuffer.wrap(bytes); 
+		this.buffer = buffer.slice();
 		
 	}
 
