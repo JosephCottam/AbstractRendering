@@ -3,7 +3,6 @@ package ar.rules;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -20,7 +19,7 @@ public class General {
 		/**@param val Value to return**/
 		public Const(T val) {this.val = val;}
 		public T combine(long x, long y, T left, Object update) {return val;}
-		public T rollup(List<T> sources) {return val;}
+		public T rollup(T left, T right) {return val;}
 		public T identity() {return val;}
 		public T emptyValue() {return val;}
 		public ar.Transfer.Specialized<Object, T> specialize(Aggregates<? extends Object> aggregates) {return this;}
@@ -40,8 +39,9 @@ public class General {
 		public T emptyValue() {return empty;}
 		
 		public T combine(long x, long y, T left, T update) {return update;}
-		public T rollup(List<T> sources) {
-			if (sources.size() >0) {return sources.get(0);}
+		public T rollup(T left, T right) {
+			if (left != null) {return left;}
+			if (right != null) {return right;}
 			return emptyValue();
 		}
 		public T identity() {return emptyValue();}
@@ -208,30 +208,4 @@ public class General {
 		}
 	}
 	
-	
-	/**Debugging utility.  Will print a message on specialization.**/
-	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
-		private final Transfer<IN,OUT> inner;
-		private final String message;
-		
-		
-		/**
-		 * @param inner Transfer function to actually perform.
-		 * @param message Message to print at specialization time.
-		 */
-		public Report(Transfer<IN,OUT> inner, String message) {
-			this.inner = inner;
-			this.message = message;
-		}
-
-		public OUT emptyValue() {return inner.emptyValue();}
-
-		@Override
-		public ar.Transfer.Specialized<IN, OUT> specialize(
-				Aggregates<? extends IN> aggregates) {
-			System.out.println(message);
-			return inner.specialize(aggregates);
-		}
-		
-	}
 }

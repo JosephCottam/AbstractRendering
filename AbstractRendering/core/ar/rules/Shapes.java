@@ -61,7 +61,7 @@ public class Shapes {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
 					r.setRect(x, y, 1,1);
 					if (region.contains(r)) {
-						acc = CoC.rollupTwo(Util.COLOR_SORTER, acc, (CoC<Color>) aggs.get(x, y));
+						acc = CoC.rollupTwo(acc, (CoC<Color>) aggs.get(x, y));
 					}
 				}
 			}

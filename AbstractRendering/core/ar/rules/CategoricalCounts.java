@@ -120,7 +120,7 @@ public interface CategoricalCounts<T> {
 		 * TODO: The array identity-equal almost never trips.  Can things be modified so the faster check trips?
 		 * **/
 		@SuppressWarnings({ "cast", "unchecked" })
-		public static <T> CoC<T> rollupTwo(Comparator<T> comp, CoC<T> s1, CoC<T> s2) {
+		public static <T> CoC<T> rollupTwo(CoC<T> s1, CoC<T> s2) {
 			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels, s2.labels)) {
 				int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);
 				for (int i=0; i< newCounts.length; i++) {newCounts[i] += s2.counts[i];}
@@ -137,7 +137,7 @@ public interface CategoricalCounts<T> {
 		public static <T> CoC<T> rollupAll(Comparator<T> comp, List<CoC<T>> sources) {
 			CoC<T> combined = new CoC<T>(comp);
 			for (CoC<T> source:sources) {
-				combined = rollupTwo(comp, combined, source);
+				combined = rollupTwo(combined, source);
 			}
 			return combined;
 		}

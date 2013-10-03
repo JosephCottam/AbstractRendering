@@ -1,8 +1,8 @@
 package ar.rules;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -22,9 +22,10 @@ public class Categories {
 			else {return left;}
 		}
 
-		public Color rollup(List<Color> sources) {
-			if (sources.size() >0) {return sources.get(0);}
-			else {return identity();}
+		public Color rollup(Color left, Color right) {
+			if (right != null) {return right;}
+			if (left != null) {return left;}
+			return identity();
 		}
 		
 		public Color identity() {return Util.CLEAR;}
@@ -36,9 +37,10 @@ public class Categories {
 	public static final class Last implements Aggregator<Color, Color> {
 		private static final long serialVersionUID = -3640093539839073637L;
 		public Color combine(long x, long y, Color left, Color update) {return update;}
-		public Color rollup(List<Color> sources) {
-			if (sources.size() >0) {return sources.get(sources.size()-1);}
-			else {return identity();}
+		public Color rollup(Color left, Color right) {
+			if (right != null) {return right;}
+			if (left != null) {return left;}
+			return identity();
 		}
 		
 		public Color identity() {return Util.CLEAR;}
@@ -184,9 +186,9 @@ public class Categories {
 		 * of the various RLEs matches contiguous blocks.  The result is essentially
 		 * concatenating each encoding in iteration order.
 		 */
-		public RLE<T> rollup(List<RLE<T>> sources) {
+		public RLE<T> rollup(RLE<T> left, RLE<T> right) {
 			RLE<T> union = new RLE<T>();
-			for (RLE<T> r: sources) {
+			for (RLE<T> r: Arrays.asList(left, right)) {
 				for (int i=0; i< r.size(); i++) {
 					union = union.extend(r.key(i), r.count(i));
 				}
@@ -202,11 +204,11 @@ public class Categories {
 		private static final long serialVersionUID = 1L;
 
 		public CoC<T> combine(long x, long y, CoC<T> current, CoC<T> update) {
-			return CategoricalCounts.CoC.rollupTwo(null, current, update);
+			return CategoricalCounts.CoC.rollupTwo(current, update);
 		}
 
-		public CoC<T> rollup(List<CoC<T>> sources) {
-			return CategoricalCounts.CoC.rollupAll(null, sources);
+		public CoC<T> rollup(CoC<T> left, CoC<T> right) {
+			return CategoricalCounts.CoC.rollupTwo(left, right);
 		}
 
 		public CoC<T> identity() {return new CoC<T>();}
@@ -242,8 +244,8 @@ public class Categories {
 		}
 
 		@Override
-		public CoC<T> rollup(List<CoC<T>> sources) {
-			return CategoricalCounts.CoC.rollupAll(comp, sources);
+		public CoC<T> rollup(CoC<T> left, CoC<T> right) {
+			return CategoricalCounts.CoC.rollupTwo(left, right);
 		}
 
 		@Override

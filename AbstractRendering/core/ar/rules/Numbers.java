@@ -1,7 +1,6 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.util.List;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -19,11 +18,7 @@ public final class Numbers {
 	public static final class Count<V> implements Aggregator<V, Integer> {
 		private static final long serialVersionUID = 5984959309743633510L;
 		public Integer combine(long x, long y, Integer left, V update) {return left+1;}
-		public Integer rollup(List<Integer> integers) {
-			int acc=0;
-			for (Integer v: integers) {acc+=v;}
-			return acc;
-		}
+		public Integer rollup(Integer left, Integer right) {return new Integer(left+right);}
 		
 		public Integer identity() {return 0;}
 		public boolean equals(Object other) {return other instanceof Count;}

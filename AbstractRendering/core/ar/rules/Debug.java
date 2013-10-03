@@ -1,9 +1,10 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.util.List;
 
+import ar.Aggregates;
 import ar.Aggregator;
+import ar.Transfer;
 import ar.util.Util;
 
 /**Classes used largely for debugging.
@@ -30,16 +31,40 @@ public class Debug {
 			return new Color(x/width, y/height,.5f ,1.0f); 
 		}
 
-		public Color rollup(List<Color> sources) {
-			int r=0,g=0,b=0,a=0;
-			for (Color c: sources) {
-				r += c.getRed();
-				g+=c.getGreen();
-				b+=c.getBlue();
-				a+=c.getAlpha();
-			}
-			int n = sources.size();
-			return new Color(r/n,g/n,b/n/a/n);
+		public Color rollup(Color left, Color right) {
+			int r = left.getRed() + right.getRed();
+			int g = left.getGreen() + right.getGreen();
+			int b = left.getBlue() + right.getBlue();
+			int a = left.getAlpha() + right.getAlpha();
+			return new Color(r/2,g/2,b/2,a/2);
 		}
+	}
+	
+
+	
+	/**Will print a message on specialization.**/
+	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
+		private final Transfer<IN,OUT> inner;
+		private final String message;
+		
+		
+		/**
+		 * @param inner Transfer function to actually perform.
+		 * @param message Message to print at specialization time.
+		 */
+		public Report(Transfer<IN,OUT> inner, String message) {
+			this.inner = inner;
+			this.message = message;
+		}
+
+		public OUT emptyValue() {return inner.emptyValue();}
+
+		@Override
+		public ar.Transfer.Specialized<IN, OUT> specialize(
+				Aggregates<? extends IN> aggregates) {
+			System.out.println(message);
+			return inner.specialize(aggregates);
+		}
+		
 	}
 }

@@ -4,7 +4,6 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,8 +64,7 @@ public class AggregationStrategies {
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
-					
-					T comb = red.rollup(Arrays.asList(target.get(x,y), source.get(x,y)));
+					T comb = red.rollup(target.get(x,y), source.get(x,y));
 					target.set(x,y, comb); 
 				}
 			}
@@ -88,19 +86,17 @@ public class AggregationStrategies {
 		if (size < 1) {return start;}
 		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
 
-		ArrayList<T> l = new ArrayList<>();
 		for (int x = start.lowX(); x < start.highX(); x=x+size) {
 			for (int y=start.lowY(); y < start.highY(); y=y+size) {
-
-				l.clear();
+				
+				T acc = start.defaultValue();
 				for (int xx=0; xx<size; xx++) {
 					for (int yy=0; yy<size; yy++) {
-						l.add(start.get(x+xx,y+yy));
+						red.rollup(acc, start.get(x+xx,y+yy));
 					}
 				}
 
-				T value = red.rollup(l);
-				end.set(x/size, y/size, value);
+				end.set(x/size, y/size, acc);
 			}
 		}
 		return end;
