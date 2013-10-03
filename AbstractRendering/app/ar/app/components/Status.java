@@ -36,17 +36,19 @@ public class Status extends JPanel {
 	private class Monitor implements Runnable {
 		private double cached;
 		public void run() {
+			int delay = 10;
 			while (true) {
-				try {Thread.sleep(500);}
+				try {Thread.sleep(delay);}
 				catch (InterruptedException e) {
 					SwingUtilities.invokeLater(new UpdateTask(-1, "Interrupted monitoring"));
 					return;
 				}
 
-				if (watching == null) {continue;}
+				if (watching == null) {delay = 500; continue;}
 				double progress = watching.progress();
-				if (progress == cached) {continue;}
+				if (progress == cached) {delay = 500; continue;}
 				cached = progress;
+				delay = 10;
 				SwingUtilities.invokeLater(new UpdateTask(progress, null));
 			}
 		}

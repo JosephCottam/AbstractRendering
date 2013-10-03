@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 
 import ar.aggregates.FlatAggregates;
+import ar.app.components.Presets;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
@@ -16,6 +17,9 @@ import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
 import ar.renderers.SerialSpatial;
 import ar.rules.Advise;
+import ar.rules.Categories;
+import ar.rules.CategoricalCounts.CoC;
+import ar.rules.CategoricalCounts.RLE;
 import ar.rules.Numbers;
 import ar.util.Util;
 
@@ -35,36 +39,43 @@ public class RenderSpeedTest {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
 		int task = Integer.parseInt(arg(args, "-task", "100000"));
+		String config = arg(args, "-config", "USPopulation");
 		String rend = arg(args, "-rend", "glyph").toUpperCase();
-		String source = arg(args, "-data", "../data/circlepoints.hbin");
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
-		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
+		
+		//Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
+		
 		//Transfer<Number,Color> transfer = new Numbers.Interpolate(new Color(255,0,0,38), Color.red);
 		//Transfer<Number,Color> transfer = new RenderSpeedTest.CachelessInterpolate(new Color(255,0,0,38), Color.red);
-		Transfer<Number,Color> transfer = new CachelessDrawDark(Color.white, Color.black, 5);
 		//Transfer<Number,Color> transfer = new CachelessDrawDark(Color.white, Color.black, 5);
-		
+		//Transfer<Number,Color> transfer = new CachelessDrawDark(Color.white, Color.black, 5);		
 		//Transfer<Number,Color> transfer = new WrappedTransfer.FixedAlpha().op();
+
+		Presets.Preset source = null;
+		for (Class clss: Presets.class.getClasses()) {
+			if (clss.getSimpleName().equals(config)) {
+				source = (Presets.Preset) clss.getConstructor().newInstance();
+			}
+		}
+		if (source == null) {throw new IllegalArgumentException("Could not find -config indicated: " + config);}
+
+		
+		Aggregator aggregator = source.aggregator();
+		Transfer transfer = source.transfer();
+		Glyphset glyphs = source.glyphset();
 	
 		ParallelGlyphs.THREAD_POOL_SIZE = cores;
 		ParallelSpatial.THREAD_POOL_SIZE = cores;
 		
 		Renderer render;
-		Glyphset<Color> glyphs;
 		if (rend.startsWith("GLYPH")) {
 			render = new ParallelGlyphs(task);
-			glyphs = new MemMapList<Color>(
-						new File(source), 
-						new ToRect(.005, .005, false, 0, 1), 
-						new Constant<Indexed,Color>(Color.red));
 		} else if (rend.startsWith("PIXEL")) {
 			render = new ParallelSpatial(task);
-			glyphs = GlyphsetUtils.autoLoad(new File(source), .005, DynamicQuadTree.<Color>make()); 
 		} else if (rend.startsWith("SPIXEL")) {
 			render = new SerialSpatial();
-			glyphs = GlyphsetUtils.autoLoad(new File(source), .005, DynamicQuadTree.<Color>make()); 
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}
