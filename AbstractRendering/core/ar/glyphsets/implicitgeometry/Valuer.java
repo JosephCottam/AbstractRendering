@@ -85,7 +85,7 @@ public interface Valuer<I,V> extends Serializable {
 			@SuppressWarnings("unchecked")
 			T key = (T) from.get(catIdx);
 			int val = ((Integer) from.get(valIdx)).intValue();
-			return new CategoricalCounts.CoC<>(comp, Arrays.asList(key), new int[]{val}, val); 
+			return new CategoricalCounts.CoC<>(comp, key, val); 
 		}
 	}
 	

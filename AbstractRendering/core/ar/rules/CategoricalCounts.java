@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import ar.util.Util;
+
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
  */
@@ -41,19 +43,23 @@ public interface CategoricalCounts<T> {
 	public static final class CoC<T> implements CategoricalCounts<T> {
 		private final Comparator<T> comp;
 		private final int[] counts;
-		private final List<T> labels;
+		private final Object[] labels;
 		private final int fullSize;
 		
 		/**Create a new CoC with "natural" ordering.**/
-		public CoC() {this(null, new ArrayList<T>(), new int[0], 0);}
+		public CoC() {this(new Util.ComparableComparator(), new Object[0], new int[0], 0);}
 		
 		/**@param comp Comparator used to order categories.**/
-		public CoC(Comparator<T> comp) {this(comp, new ArrayList<T>(), new int[0], 0);}
+		public CoC(Comparator<T> comp) {this(comp, new Object[0], new int[0], 0);}
+		
+		public CoC(Comparator<T> comp, T label, int count) {
+			this(comp, new Object[]{label}, new int[]{count}, count);
+		}
 		
 		/**@param counts Map backing this set of counts
 		 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 		 ***/
-		public CoC(Comparator<T> comp, List<T>labels, int[] counts, int fullSize) {
+		private CoC(Comparator<T> comp, Object[] labels, int[] counts, int fullSize) {
 			//System.out.printf("count with %d cats and %d total\n", counts.size(), fullSize);
 			this.counts = counts;
 			this.labels = labels;
@@ -62,34 +68,29 @@ public interface CategoricalCounts<T> {
 		}
 		
 		public CoC<T> extend(T key, int count) {
-			int idx = Collections.binarySearch(labels, key, comp);
+			int idx = Arrays.binarySearch((T[]) labels, key, comp);
 			if (idx >=0) {
 				int[] newCounts = Arrays.copyOf(counts, counts.length);
 				newCounts[idx] += count;
 				return new CoC<>(comp, labels, newCounts, fullSize+count);
 			} else {
 				idx = -(idx +1); 
-				ArrayList<T> newLabels = new ArrayList<>(labels);
-				newLabels.add(key);
-				Collections.sort(newLabels, comp);
-				int[] newCounts = new int[counts.length+1];
-				System.arraycopy(counts, 0, newCounts, 0, idx);
-				newCounts[idx] = count;
-				System.arraycopy(counts, idx, newCounts, idx+1, counts.length-idx);
+				T[] newLabels = Util.insertInto((T[]) labels, key, idx);
+				int[] newCounts = Util.insertInto(counts, count, idx);
 				return new CoC<>(comp, newLabels, newCounts, fullSize+count);
 			}
 		}
 		
-		public int count(Object key) {
-			int idx = labels.indexOf(key);
+		public int count(T key) {
+			int idx = Arrays.binarySearch((T[]) labels, key, comp);
 			if (idx >= 0) {return counts[idx];}
 			return 0;
 		}
 		
-		public int size() {return labels.size();}
+		public int size() {return labels.length;}
 		public int fullSize() {return fullSize;}
 		public String toString() {return "COC: " + counts.toString();}
-		public T key(int i) {return labels.get(i);}
+		public T key(int i) {return (T) labels[i];}
 		
 		public boolean equals(Object other) {
 			if (!(other instanceof CoC)) {return false;}
@@ -110,19 +111,21 @@ public interface CategoricalCounts<T> {
 		public CoC<T> empty() {return new CoC<>(comp);} 
 
 
-		/**Combine multiple CoC objects into a single CoC.**/
+		/**Combine multiple CoC objects into a single CoC.
+		 * TODO: The array equality measure almost never trips.  Can things be modified so the faster check trips?
+		 * **/
 		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
 			CoC<T> s1 = sources.get(0);
 			CoC<T> s2 = sources.get(1);
 			
-			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels.toArray(), s2.labels.toArray())) {
+			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels, s2.labels)) {
 				int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);
 				for (int i=0; i< newCounts.length; i++) {newCounts[i] += s2.counts[i];}
-				return new CoC<>(s1.comp, s1.labels, newCounts, s1.fullSize+s2.fullSize);
+				return new CoC<>(s1.comp, (T[]) s1.labels, newCounts, s1.fullSize+s2.fullSize);
 			} else {
 				CoC<T> combined = new CoC<T>(comp);
 				for (CoC<T> counts: sources) {
-					for (T key: counts.labels) {
+					for (T key: (T[]) counts.labels) {
 						combined = combined.extend(key, counts.count(key));
 					}
 				}
