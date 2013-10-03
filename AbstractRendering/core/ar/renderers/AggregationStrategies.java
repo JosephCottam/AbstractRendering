@@ -59,10 +59,12 @@ public class AggregationStrategies {
 			sources.add(right);
 			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
-
+	
 		for (Aggregates<T> source: sources) {
 			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
+					T newVal = source.get(x,y);
+					if (Util.isEqual(identity, newVal)) {continue;}
 					T comb = red.rollup(target.get(x,y), source.get(x,y));
 					target.set(x,y, comb); 
 				}
