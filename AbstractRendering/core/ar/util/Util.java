@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -257,5 +258,24 @@ public final class Util {
 	/**Comparator to wrap the compareTo method of comparable items.**/
 	public static class ComparableComparator<T extends Comparable<T>> implements Comparator<T> {
 		public int compare(T lhs, T rhs) {return lhs.compareTo(rhs);}
+	}
+	
+	/**Insert a value into an array at the given index.**/
+	public static final <T> T[] insertInto(T[] values, T value, int at) {
+		@SuppressWarnings("unchecked")
+		T[] newValues = (T[]) Array.newInstance(value.getClass(), values.length+1);
+		System.arraycopy(values, 0, newValues, 0, at);
+		newValues[at] = value;
+		System.arraycopy(values, at, newValues, at+1, values.length-at);
+		return newValues;
+	}
+	
+	/**Insert a value into an array at the given index.**/
+	public static final int[] insertInto(int[] values, int value, int at) {
+		int[] newValues = new int[values.length+1];
+		System.arraycopy(values, 0, newValues, 0, at);
+		newValues[at] = value;
+		System.arraycopy(values, at, newValues, at+1, values.length-at);
+		return newValues;
 	}
 }

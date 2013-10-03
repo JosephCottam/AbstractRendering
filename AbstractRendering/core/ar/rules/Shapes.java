@@ -5,7 +5,6 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class Shapes {
 	/**Given a set of regions, combine all aggregates that are in that region and make that combined
 	 * value the value of any point in the region.
 	 * 
-	 * TODO: Extend to more than colors...
+	 * TODO: Extend to more than CoC...
 	 * TODO: Consider adding the view transform to the transfer function specialization process
 	 * 
 	 */
@@ -62,7 +61,7 @@ public class Shapes {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
 					r.setRect(x, y, 1,1);
 					if (region.contains(r)) {
-						acc = CoC.rollup(Util.COLOR_SORTER, Arrays.asList(acc, (CoC<Color>) aggs.get(x, y)));
+						acc = CoC.rollupTwo(Util.COLOR_SORTER, acc, (CoC<Color>) aggs.get(x, y));
 					}
 				}
 			}

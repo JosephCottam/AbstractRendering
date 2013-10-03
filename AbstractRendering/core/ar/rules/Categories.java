@@ -1,7 +1,6 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -203,11 +202,11 @@ public class Categories {
 		private static final long serialVersionUID = 1L;
 
 		public CoC<T> combine(long x, long y, CoC<T> current, CoC<T> update) {
-			return CategoricalCounts.CoC.rollup(null, Arrays.asList(current, update));
+			return CategoricalCounts.CoC.rollupTwo(null, current, update);
 		}
 
 		public CoC<T> rollup(List<CoC<T>> sources) {
-			return CategoricalCounts.CoC.rollup(null, sources);
+			return CategoricalCounts.CoC.rollupAll(null, sources);
 		}
 
 		public CoC<T> identity() {return new CoC<T>();}
@@ -244,7 +243,7 @@ public class Categories {
 
 		@Override
 		public CoC<T> rollup(List<CoC<T>> sources) {
-			return CategoricalCounts.CoC.rollup(comp, sources);
+			return CategoricalCounts.CoC.rollupAll(comp, sources);
 		}
 
 		@Override

@@ -1,8 +1,7 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.io.Serializable;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Comparator;
 
 import ar.rules.CategoricalCounts;
 
@@ -66,26 +65,26 @@ public interface Valuer<I,V> extends Serializable {
 	}
 
 	/**Load the data as a key/value pair.  The key is the category, the value is an integer count.**/
-	public static class CategoryCount implements Valuer<Indexed,CategoricalCounts.CoC<Object>> {
+	public static class CategoryCount<T> implements Valuer<Indexed,CategoricalCounts.CoC<T>> {
 		private static final long serialVersionUID = 1L;
-		final int catIdx, valIdx;
+		private final int catIdx, valIdx;
+		private final Comparator<T> comp;
+		
 		
 		/** @param catIdx Index to get the category label from.
 		 *  @param valIdx Index to get the count value from.
-		 *  
-		 *  TODO: Add Comparator support
 		 */
-		public CategoryCount(int catIdx, int valIdx) {
+		public CategoryCount(Comparator<T> comp, int catIdx, int valIdx) {
 			this.catIdx = catIdx;
 			this.valIdx = valIdx;
+			this.comp = comp;
 		}
 		
-		public CategoricalCounts.CoC<Object> value(Indexed from) {
-			SortedMap<Object, Integer> m = new TreeMap<>();
-			Object key = from.get(catIdx);
-			Integer val = Integer.valueOf(from.get(valIdx).toString());
-			m.put(key,val);
-			return new CategoricalCounts.CoC<>(m, val); 
+		public CategoricalCounts.CoC<T> value(Indexed from) {
+			@SuppressWarnings("unchecked")
+			T key = (T) from.get(catIdx);
+			int val = ((Integer) from.get(valIdx)).intValue();
+			return new CategoricalCounts.CoC<>(comp, key, val); 
 		}
 	}
 	

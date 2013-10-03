@@ -3,10 +3,9 @@ package ar.rules;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+
+import ar.util.Util;
 
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
@@ -41,50 +40,61 @@ public interface CategoricalCounts<T> {
 
 	/**Count categories.  Categories are stored in sorted order (so "nth" makes sense).**/
 	public static final class CoC<T> implements CategoricalCounts<T> {
-		final SortedMap<T, Integer> counts;
+		private final Comparator<T> comp;
+		private final int[] counts;
+		private final Object[] labels;
 		private final int fullSize;
 		
 		/**Create a new CoC with "natural" ordering.**/
-		public CoC() {this(new TreeMap<T,Integer>(),0);}
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public CoC() {this(new Util.ComparableComparator(), new Object[0], new int[0], 0);}
 		
 		/**@param comp Comparator used to order categories.**/
-		public CoC(Comparator<T> comp) {this(new TreeMap<T,Integer>(comp),0);}
+		public CoC(Comparator<T> comp) {this(comp, new Object[0], new int[0], 0);}
+		
+		public CoC(Comparator<T> comp, T label, int count) {
+			this(comp, new Object[]{label}, new int[]{count}, count);
+		}
 		
 		/**@param counts Map backing this set of counts
 		 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 		 ***/
-		public CoC(SortedMap<T, Integer> counts, int fullSize) {
+		private CoC(Comparator<T> comp, Object[] labels, int[] counts, int fullSize) {
 			//System.out.printf("count with %d cats and %d total\n", counts.size(), fullSize);
 			this.counts = counts;
+			this.labels = labels;
 			this.fullSize = fullSize;
+			this.comp = comp;
 		}
 		
+		@SuppressWarnings("unchecked")
 		public CoC<T> extend(T key, int count) {
-			SortedMap<T,Integer> ncounts = new TreeMap<T,Integer>(counts.comparator());
-			ncounts.putAll(counts);
-			if (!ncounts.containsKey(key)) {
-				ncounts.put(key, count);
+			int idx = Arrays.binarySearch((T[]) labels, key, comp);
+			if (idx >=0) {
+				int[] newCounts = Arrays.copyOf(counts, counts.length);
+				newCounts[idx] += count;
+				return new CoC<>(comp, labels, newCounts, fullSize+count);
 			} else {
-				int v = ncounts.get(key);
-				ncounts.put(key, v+count);
+				idx = -(idx +1); 
+				T[] newLabels = Util.insertInto((T[]) labels, key, idx);
+				int[] newCounts = Util.insertInto(counts, count, idx);
+				return new CoC<>(comp, newLabels, newCounts, fullSize+count);
 			}
-			int fullSize = this.fullSize + count;
-			return new CoC<T>(ncounts, fullSize);
 		}
 		
-		public int count(Object key) {
-			if (counts.containsKey(key)) {return counts.get(key);}
-			else {return 0;}
+		@SuppressWarnings("unchecked")
+		public int count(T key) {
+			int idx = Arrays.binarySearch((T[]) labels, key, comp);
+			if (idx >= 0) {return counts[idx];}
+			return 0;
 		}
 		
-		public int size() {return counts.size();}
+		public int size() {return labels.length;}
 		public int fullSize() {return fullSize;}
 		public String toString() {return "COC: " + counts.toString();}
-		public T key(int i) {
-			Iterator<T> it = counts.keySet().iterator();
-			for (; i>0; i--) {it.next();}
-			return it.next();			
-		}
+		
+		@SuppressWarnings("unchecked")
+		public T key(int i) {return (T) labels[i];}
 		
 		public boolean equals(Object other) {
 			if (!(other instanceof CoC)) {return false;}
@@ -100,27 +110,37 @@ public interface CategoricalCounts<T> {
 		@Override
 		public int hashCode() {return counts.hashCode();}
 		
-		public int count(int i) {
-			Iterator<Integer> it = counts.values().iterator();
-			for (; i>0; i--) {it.next();}
-			return it.next();
-		}
+		public int count(int i) {return counts[i];}
 
-		@SuppressWarnings("unchecked")
-		public CoC<T> empty() {return new CoC<>((Comparator<T>) counts.comparator());} 
+		public CoC<T> empty() {return new CoC<>(comp);} 
 
 
-		/**Combine multiple CoC objects into a single CoC.**/
-		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
-			CoC<T> combined = new CoC<T>(comp);
-			for (CoC<T> counts: sources) {
-				for (T key: counts.counts.keySet()) {
-					combined = combined.extend(key, counts.count(key));
+		/**Combine multiple CoC objects into a single CoC.
+		 * 
+		 * TODO: The array identity-equal almost never trips.  Can things be modified so the faster check trips?
+		 * **/
+		@SuppressWarnings({ "cast", "unchecked" })
+		public static <T> CoC<T> rollupTwo(Comparator<T> comp, CoC<T> s1, CoC<T> s2) {
+			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels, s2.labels)) {
+				int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);
+				for (int i=0; i< newCounts.length; i++) {newCounts[i] += s2.counts[i];}
+				return new CoC<>(s1.comp, (T[]) s1.labels, newCounts, s1.fullSize+s2.fullSize);
+			} else {
+				CoC<T> combined = s1;
+				for (T key: (T[]) s2.labels) {
+					combined = combined.extend(key, s2.count(key));
 				}
+				return combined;
+			}
+		}
+		
+		public static <T> CoC<T> rollupAll(Comparator<T> comp, List<CoC<T>> sources) {
+			CoC<T> combined = new CoC<T>(comp);
+			for (CoC<T> source:sources) {
+				combined = rollupTwo(comp, combined, source);
 			}
 			return combined;
 		}
-		
 
 	}
 	
