@@ -44,9 +44,8 @@ public class IndexedEncoding implements Indexed {
 		this.types = types;
 		this.offsets = offsets;
 		
-		this.recordOffset = 0;
-		buffer.position(recordOffset);
-		this.buffer = buffer.slice();
+		this.recordOffset = recordOffset;
+		this.buffer = buffer;
 		
 	}
 

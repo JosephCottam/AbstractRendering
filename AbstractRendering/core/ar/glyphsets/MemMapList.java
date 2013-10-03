@@ -50,7 +50,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	public static final int VERSION_UNDERSTOOD = -1;
 	
 	/**How large should backing read buffer be?**/
-	public static int BUFFER_BYTES = 30000; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	public static int BUFFER_BYTES = Integer.MAX_VALUE; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
 	
 	/**Thread-pool size for parallel operations.**/
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
