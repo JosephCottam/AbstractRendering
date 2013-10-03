@@ -18,7 +18,6 @@ import ar.util.Util;
 public class Advise {
 	//TODO: Extend to reporting the magnitude of the under-saturation
 	//TODO: Should this look at mins instead-of/in-addition-to empty?
-	//TODO: What if there are multiple "smallest" values?
 	//TODO: What about "perceptual differences" vs euclidean RGB space difference.
 	/** Mark regions where multiple values are represented in the same way as the minimum value.*/
 	public static class UnderSaturate<A> implements Transfer<A, Boolean> {
@@ -71,7 +70,6 @@ public class Advise {
 	}
 	
 	//TODO: Extend to reporting the magnitude of the over-saturation
-	//TODO: What if there are multiple "largest" values?
 	//TODO: What about "perceptual differences" vs just absolute differences
 	/** Mark regions where multiple values are represented in the same way as the maximum value.*/
 	public static class OverSaturate<A> implements Transfer<A, Boolean> {

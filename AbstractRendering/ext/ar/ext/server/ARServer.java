@@ -29,6 +29,7 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
+import ar.util.ChainedTransfer;
 import ar.util.DelimitedReader;
 import ar.util.GlyphsetLoader;
 import ar.util.MemMapEncoder.TYPE;
@@ -129,7 +130,7 @@ public class ARServer extends NanoHTTPD {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> trans, AffineTransform inverseView, int width, int height) {
+	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform inverseView, int width, int height) {
 		Renderer r;
 		if (glyphs instanceof Glyphset.RandomAccess<?>) {
 			r = new ParallelGlyphs();
@@ -137,13 +138,11 @@ public class ARServer extends NanoHTTPD {
 			r = new ParallelSpatial();
 		}
 		
-		//TODO: Generalize to use a chained transfer function instead
-		Aggregates<?> aggs = r.aggregate(glyphs, agg, inverseView, width, height);
-		for (Transfer t: trans) {
-			Transfer.Specialized t2 = t.specialize(aggs);
-			aggs = r.transfer(aggs, t2);
-		}
-		return aggs;
+		Aggregates aggs = r.aggregate(glyphs, agg, inverseView, width, height);
+		Transfer transfer = new ChainedTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
+		Transfer.Specialized ts = transfer.specialize(aggs);
+		Aggregates<?> rslt = r.transfer(aggs, ts);
+		return rslt;
 	}
 	
 	public AffineTransform viewTransform(String vtTXT, Glyphset<?> g, int width, int height) {
@@ -202,7 +201,10 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	
+	/**@return Collection of known aggregator names**/
 	public Collection<String> getAggregators() {return AGGREGATORS.keySet();}
+	
+	/**@return collection of known transfer names**/
 	public Collection<String> getTransfers() {return TRANSFERS.keySet();}
 	
 	

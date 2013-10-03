@@ -39,6 +39,7 @@ import java.nio.channels.FileChannel;
  * (which updates the internal measure of the file size).
  * 
  * TODO: Investigating working without 'margin'
+ * TODO: Investigate ensureTo...it seems to overlap a lot with ensure and position...
  *   
  * **/
 @SuppressWarnings("javadoc")

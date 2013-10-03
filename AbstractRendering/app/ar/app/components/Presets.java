@@ -448,9 +448,6 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	@Override
 	public void viewTransform(AffineTransform vt)
-			throws NoninvertibleTransformException {
-		// TODO Auto-generated method stub
-		
-	}
+			throws NoninvertibleTransformException {transformSource.viewTransform(vt);}
 	
 }

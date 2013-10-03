@@ -221,8 +221,6 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		/**Set the current selection to a new value.
 		 * To indicate transient state, set the "provisional" flag.
 		 * 
-		 * TODO: Add flag for "extend" vs "replace"
-		 * 
 		 * @param bounds Selection bounds in screen-space
 		 * @param provisional Flag passed bounds as provisional selection
 		 ***/

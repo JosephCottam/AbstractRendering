@@ -22,9 +22,5 @@
  * 
  * Other glyphset support tools are also found in this package (such as glyph implementations
  *  and the interfaces/support-classes for the implicit geometry system).
- * 
- * TODO: Investigate a glyphset that wraps a shape and determines its low/high X/Y values 
- *       based on the shape bounds, also the value is the glyph value 
- * 
  * **/
 package ar.glyphsets;

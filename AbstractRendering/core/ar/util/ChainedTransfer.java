@@ -17,7 +17,6 @@ import ar.Transfer;
  * Furthermore, the first transfer performed will incur the cost of the whole chain
  * across all aggregates to accommodate locality-aware transfers.
  * 
- * TODO: Replace ARServer.execute code with this
  * TODO: Can this be done in a type-safe way?
  * 
  * @param <IN> Input type to the first transfer

@@ -177,7 +177,6 @@ public class General {
 				this.predicate = predicate;
 				this.pass = pass;
 				this.fail = fail;
-				// TODO Auto-generated constructor stub
 			}
 
 
