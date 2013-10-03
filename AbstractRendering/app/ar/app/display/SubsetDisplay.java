@@ -19,9 +19,6 @@ public class SubsetDisplay extends FullDisplay {
 	/**Affine transform used to render the full set of aggregates (data-space to 'aggregates')**/
 	private AffineTransform renderTransform;
 	
-	/**Subset of aggregates picked out by the current viewport and view transform.**/
-	private volatile Aggregates<?> subsetAggregates;
-	
 	/**Create a new instance.**/
 	public SubsetDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
@@ -29,7 +26,6 @@ public class SubsetDisplay extends FullDisplay {
 		
 	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates(Aggregates<?> aggregates) {
-		this.subsetAggregates = aggregates;
 		display.aggregates(aggregates,null);
 		repaint();
 	}

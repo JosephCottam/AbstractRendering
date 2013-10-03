@@ -15,10 +15,14 @@ public class IndexedEncoding implements Indexed {
 	private final int recordOffset;
 	private final ByteBuffer buffer;
 
+	/**Convenience for working with the BigFileByteBuffer.  
+	 * Performs buffer assurance of the requested content but requires external synchronization for multi-threading.*/
 	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer) {
 		this(types, buffer.ensureTo(recordOffset, MemMapEncoder.recordLength(types)), buffer.ensure(recordOffset, MemMapEncoder.recordLength(types)), MemMapEncoder.recordLength(types), MemMapEncoder.recordOffsets(types));
 	}
 
+	/**Convenience for working with the BigFileByteBuffer.  
+	 * Performs buffer assurance of the requested content but requires external synchronization for multi-threading.*/
 	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer, int recordLength, int[] offsets) {
 		this(types, buffer.ensureTo(recordOffset, recordLength), buffer.ensure(recordOffset, recordLength), recordLength, offsets);
 	}
@@ -34,6 +38,8 @@ public class IndexedEncoding implements Indexed {
 		this(types, recordOffset, buffer, MemMapEncoder.recordLength(types), MemMapEncoder.recordOffsets(types));
 	}
 	
+	/**Full-control constructor.  Other constructors compute these extra values from the types.
+	 * Will copy bytes.**/
 	public IndexedEncoding(final TYPE[] types, int recordOffset, ByteBuffer buffer, int recordLength, int[] offsets) {
 		this.types = types;
 		this.offsets = offsets;

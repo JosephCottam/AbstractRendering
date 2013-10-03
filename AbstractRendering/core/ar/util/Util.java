@@ -254,10 +254,8 @@ public final class Util {
 		}
 	}
 	
+	/**Comparator to wrap the compareTo method of comparable items.**/
 	public static class ComparableComparator<T extends Comparable<T>> implements Comparator<T> {
-		@Override
-		public int compare(T lhs, T rhs) {
-			return lhs.compareTo(rhs);
-		}  
+		public int compare(T lhs, T rhs) {return lhs.compareTo(rhs);}
 	}
 }

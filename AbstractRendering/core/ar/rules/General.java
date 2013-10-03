@@ -1,6 +1,5 @@
 package ar.rules;
 
-import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
@@ -141,6 +140,7 @@ public class General {
 		private final Transfer<IN,OUT> fail;
 		private final OUT empty;
 		
+		@SuppressWarnings("javadoc")
 		public Switch(Predicate<IN> predicate,
 						Transfer<IN,OUT> pass,
 						Transfer<IN,OUT> fail,
@@ -193,17 +193,33 @@ public class General {
 		
 		/**Test on a specific location in a set of aggregates.**/
 		public static interface Predicate<IN> {
+			/**
+			 * @param aggs Aggregates to specialize this predicate to.  Specialized predicates
+			 * are ready to be invoked.  The specialization process mirrors that of the
+			 * transfer-function specialization.
+			 */
 			public Predicate.Specialized<IN> specialize(Aggregates<? extends IN> aggs);
+			
+			/**Interface to indicate a predicate is ready to be used.**/
 			public interface Specialized<IN> extends Predicate<IN> {
+				
+				/**Execute the encoded test on the given data.**/
 				public boolean test(int x, int y, Aggregates<? extends IN> aggs);
 			}
 		}
 	}
 	
 	
+	/**Debugging utility.  Will print a message on specialization.**/
 	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;
 		private final String message;
+		
+		
+		/**
+		 * @param inner Transfer function to actually perform.
+		 * @param message Message to print at specialization time.
+		 */
 		public Report(Transfer<IN,OUT> inner, String message) {
 			this.inner = inner;
 			this.message = message;

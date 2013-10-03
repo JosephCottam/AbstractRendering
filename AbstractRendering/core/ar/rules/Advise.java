@@ -33,6 +33,8 @@ public class Advise {
 			this.comp = comp;
 			this.tolerance = tolerance;
 		}
+		
+		/**What is the maximum distance two items can be apart and still considered the same.**/
 		public double tolerance() {return tolerance;}
 		
 		public Boolean emptyValue() {return Boolean.FALSE;}

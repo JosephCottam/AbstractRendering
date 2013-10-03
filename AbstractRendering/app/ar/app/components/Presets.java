@@ -1,7 +1,6 @@
 package ar.app.components;
 
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Shape;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import ar.Aggregates;
@@ -23,6 +21,7 @@ import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.app.display.SubsetDisplay;
+import ar.app.util.GeoJSONTools;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ActionProvider;
 import ar.app.util.WrappedAggregator;
@@ -30,7 +29,6 @@ import ar.app.util.WrappedTransfer;
 import ar.util.HasViewTransform;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
-import ar.ext.geojson.GeoJSONTools;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -164,7 +162,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer(
+			return new ChainedTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(), 
 					new WrappedTransfer.RedWhiteLog().op());
@@ -283,7 +281,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 				Transfer<CategoricalCounts<Color>, CoC<Color>> gather = new Shapes.ShapeGather(shapes, transformProvider);
 				Transfer<CoC<Color>, Color> weave = new Categories.RandomWeave();
-				Transfer chain = new ChainedTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
+				Transfer<?, ?> chain = new ChainedTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
 				return chain;
 			} catch (Exception e) {throw new RuntimeException("Error creating transfer.",e);}
 		}
@@ -309,7 +307,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			return new ChainedTransfer(
+			return new ChainedTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
 					stratAlpha);
@@ -337,7 +335,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
 
-			return new ChainedTransfer(
+			return new ChainedTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
 					lift);
@@ -413,6 +411,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	///Predicate to lift the 'other' category to the front...
 	private static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
+		@SuppressWarnings("rawtypes")
 		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
 			super(
 				new Pred(cutoff), 

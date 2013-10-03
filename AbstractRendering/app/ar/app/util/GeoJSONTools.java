@@ -1,22 +1,14 @@
-package ar.ext.geojson;
+package ar.app.util;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -24,8 +16,6 @@ import org.geojson.Geometry;
 import org.geojson.LngLatAlt;
 import org.geojson.MultiPolygon;
 import org.geojson.Polygon;
-
-import ar.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

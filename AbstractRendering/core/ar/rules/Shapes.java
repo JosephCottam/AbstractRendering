@@ -22,6 +22,7 @@ public class Shapes {
 	 * value the value of any point in the region.
 	 * 
 	 * TODO: Extend to more than colors...
+	 * TODO: Consider adding the view transform to the transfer function specialization process
 	 * 
 	 */
 	public static class ShapeGather implements Transfer<CategoricalCounts<Color>, CoC<Color>> {
@@ -29,6 +30,10 @@ public class Shapes {
 		final List<Shape> baseRegions;
 		final HasViewTransform transformSource;
 		
+		/**
+		 * @param reg Shapes to use in gathering
+		 * @param transformSource Source of the view transform used to modify shapes
+		 */
 		public ShapeGather(List<Shape> reg, HasViewTransform transformSource) {
 			this.transformSource = transformSource;
 			this.baseRegions = reg;

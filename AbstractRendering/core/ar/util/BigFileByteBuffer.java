@@ -156,7 +156,7 @@ public class BigFileByteBuffer {
 	 * 
 	 * @param position
 	 * @param bytes
-	 * @return
+	 * @return buffer offset for the given file position
 	 */
 	public int ensureTo(long position, int bytes) {
 		ensure(position, bytes);

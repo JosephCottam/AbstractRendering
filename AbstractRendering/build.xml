@@ -125,6 +125,7 @@
       includeantruntime="false">
       <classpath>
         <fileset dir="." includes="*.jar"/>
+        <fileset dir="./lib" includes="*.jar"/>
       </classpath>
     </javac>
   
