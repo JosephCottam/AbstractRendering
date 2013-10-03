@@ -57,14 +57,19 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 	 */
 	public static final class Cached<G> extends GlyphSubset<G> {
 		private final Glyph<G>[] cache;
+		private final Rectangle2D bounds;
 
 		@SuppressWarnings({"unchecked","javadoc"})
 		public Cached(Glyphset.RandomAccess<G> glyphs, long low, long high) {
 			super(glyphs,low, high);
 			this.cache = new Glyph[(int) (high - low)];
+			Rectangle2D temp = new Rectangle2D.Double();
 			for (int i=0; i<cache.length;i++) {
-				cache[i]  = glyphs.get(i+low);
+				Glyph<G> glyph = glyphs.get(i+low);
+				Util.add(temp, glyph.shape().getBounds2D());
+				cache[i] = glyph;
 			}
+			this.bounds = temp;
 		}
 		
 		@Override
@@ -73,6 +78,8 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 			return cache[(int) l];
 		}
 		
+		@Override
+		public Rectangle2D bounds() {return bounds;}
 	}
 
 	/**Subset that defers to the backing dataset. 
