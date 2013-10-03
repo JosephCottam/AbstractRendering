@@ -14,7 +14,6 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.aggregates.ConstantAggregates;
 import ar.aggregates.FlatAggregates;
-import ar.util.Util;
 import ar.Renderer;
 import ar.Transfer;
 
@@ -129,7 +128,7 @@ public class ParallelGlyphs implements Renderer {
 			Glyphset<? extends V> subset = glyphs.segment(low,  high);
 			
 			//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
-			Rectangle bounds = view.createTransformedShape(Util.bounds(subset)).getBounds();
+			Rectangle bounds = view.createTransformedShape(subset.bounds()).getBounds();
 			bounds = bounds.intersection(viewport);
 			if (bounds.isEmpty()) {
 				int x2 = bounds.x+bounds.width;

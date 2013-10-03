@@ -86,6 +86,14 @@ public class BigFileByteBuffer {
 	/**Number of bytes in the file.**/
 	public long fileSize() {return fileSize;}
 	
+	public byte get(long pos) {return ensure(pos, 1).get(rawOffset(pos));}
+	public short getShort(long pos) {return ensure(pos, 2).getShort(rawOffset(pos));}	
+	public int getInt(long pos) {return ensure(pos, 4).getInt(rawOffset(pos));}
+	public long getLong(long pos) {return ensure(pos, 8).getLong(rawOffset(pos));}
+	public char getChar(long pos) {return ensure(pos, 2).getChar(rawOffset(pos));}
+	public double getFloat(long pos) {return ensure(pos, 4).getFloat(rawOffset(pos));}
+	public double getDouble(long pos) {return ensure(pos, 8).getDouble(rawOffset(pos));}
+	
 	public byte get() {return ensure(1).get();}
 	public short getShort() {return ensure(2).getShort();}	
 	public int getInt() {return ensure(4).getInt();}
@@ -152,15 +160,9 @@ public class BigFileByteBuffer {
 		return buffer;
 	}
 	
-	/**Same as 'ensure' but returns the  (int-indexed) buffer position that corresponds to the 
-	 * passed (long-indxed) file position.
-	 * 
-	 * @param position
-	 * @param bytes
-	 * @return buffer offset for the given file position
-	 */
-	public int ensureTo(long position, int bytes) {
-		ensure(position, bytes);
-		return (int) (position-filePos);
-	}
+	/**What does a given offset correspond to in the raw buffer.**/
+	private int rawOffset(long offset) {return (int) (offset-filePos);}
+	
+	/**What byte of the backing file does the zero-buffer position correspond to?*/ 
+	public long filePosition() {return filePos;}
 }
