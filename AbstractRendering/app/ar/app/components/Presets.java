@@ -1,30 +1,36 @@
 package ar.app.components;
 
 import java.awt.Color;
+import java.awt.Container;
+import java.awt.Shape;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.display.ARComponent;
-import ar.app.display.FullDisplay;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ActionProvider;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
+import ar.util.HasViewTransform;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
+import ar.ext.geojson.GeoJSONTools;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -33,26 +39,39 @@ import ar.renderers.ParallelSpatial;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
+import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
+import ar.rules.Shapes;
 import ar.rules.TransferMath;
 import ar.util.ChainedTransfer;
 import ar.util.Util;
 
-public class Presets extends JPanel {
+public class Presets extends JPanel implements HasViewTransform {
 	private static final long serialVersionUID = -5290930773909190497L;
 	private final ActionProvider actionProvider = new ActionProvider();
 	private static final Renderer CHAIN_RENDERER = new ParallelSpatial();
 
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
+	private final HasViewTransform transformSource;
 	
-	public Presets() {
+	public Presets(HasViewTransform transformSource) {
 		this.add(new LabeledItem("Presets:", presets));
+		this.transformSource = transformSource;
 		presets.addActionListener(actionProvider.delegateListener());
 		
 		ARApp.loadInstances(presets, Presets.class, "");
+
+		for (int i=0; i<presets.getItemCount(); i++) {
+			Preset item = presets.getItemAt(i);
+			if (item instanceof InitWithPanel) {
+				((InitWithPanel) item).init(this);
+			}
+		}
 	}
+	
+	private static interface InitWithPanel {public void init(Presets panel);}
 	
 	/**Should the display be re-zoomed?  
 	 * Returns true when the new glyphset & aggregator is not the same as the old one.**/
@@ -100,13 +119,10 @@ public class Presets extends JPanel {
 			return preset.name() + "**LOAD FAILED**";
 		} else {
 			String subset = glyphset.size() < 1000 ? "**Subset**" : "";
-			String memMap = glyphset instanceof ar.glyphsets.MemMapList ? "(Memory Maped)" : "";
-			return String.format("%s %s %s", preset.name(),  subset, memMap);
+			return String.format("%s %s", preset.name(),  subset);
 		}	
 	}		
 
-
-	
 	public static class ScatterplotAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
@@ -133,33 +149,6 @@ public class Presets extends JPanel {
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
 	}
-	
-//	public static class BoostAlpha25 implements Preset {
-//		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-//		public Renderer renderer() {return new ParallelSpatial(1000);}
-//		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
-//		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent25();}
-//		public String name() {return "BGL Memory: 25% Cache Hit";}		
-//		public String toString() {return fullName(this);}
-//	}
-//	
-//	public static class BoostAlpha95 implements Preset {
-//		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-//		public Renderer renderer() {return new ParallelSpatial(1000);}
-//		public Glyphset<?> glyphset() {return BOOST_MEMORY;}
-//		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.Percent95();}
-//		public String name() {return "BGL Memory: 95% Cache Hit";}		
-//		public String toString() {return fullName(this);}
-//	}
-//	
-//	public static class BoostAlphaHDAlpha implements Preset {
-//		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors();}
-//		public Renderer renderer() {return new ParallelSpatial(1000);}
-//		public Glyphset<?>  glyphset() {return BOOST_MEMORY;}
-//		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog();}
-//		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
-//		public String toString() {return fullName(this);}
-//	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
@@ -248,12 +237,12 @@ public class Presets extends JPanel {
 		public String name() {return "US Population";}
 		public String toString() {return fullName(this);}
 	}
-	
 	public static class USPopulationClipWarn implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
+
 			Transfer<CoC<Number>, Color> inner = 
 					new ChainedTransfer<>(
 							CHAIN_RENDERER,
@@ -265,6 +254,44 @@ public class Presets extends JPanel {
 		public String name() {return "US Population (Clip Warn)";}
 		public String toString() {return fullName(this);}
 	}
+	
+	public static class USPopulationWeave implements Preset,InitWithPanel {
+		HasViewTransform transformProvider = null;
+		private final List<Shape> shapes;
+		
+		public USPopulationWeave() {
+			try {shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/")));}
+			catch (Exception e) {throw new RuntimeException();}
+		}
+
+		/**Provide the viewTransform-access pathway.**/
+		public void init(Presets provider) {this.transformProvider = provider;}
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			try {
+				Map<Object, Color> colors = new HashMap<>();
+				colors.put(2, new Color(0,0,200));	//White
+				colors.put(3, new Color(0,200,0));	//African American
+				colors.put(4, new Color(220,0,0));	//Native American
+				colors.put(5, Color.GRAY);	//Asian
+				colors.put(6, Color.GRAY);	//Hawaiian
+				colors.put(7, Color.GRAY);	//Other
+				colors.put(8, Color.GRAY);	//Mixed
+				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+
+				Transfer<CategoricalCounts<Color>, CoC<Color>> gather = new Shapes.ShapeGather(shapes, transformProvider);
+				Transfer<CoC<Color>, Color> weave = new Categories.RandomWeave();
+				Transfer chain = new ChainedTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
+				return chain;
+			} catch (Exception e) {throw new RuntimeException("Error creating transfer.",e);}
+		}
+		public String name() {return "US Population (Weave)";}
+		public String toString() {return fullName(this);}
+	}
+	
+
 	
 	public static class USRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
@@ -291,14 +318,34 @@ public class Presets extends JPanel {
 		public String toString() {return fullName(this);}
 	}
 	
-//	public static class USRaces implements Preset {
-//		public WrappedAggregator<?,?> aggregator() {return new WrappedAggregator.Count();}
-//		public Renderer renderer() {return new ParallelGlyphs(10);}
-//		public Glyphset<?> glyphset() {return CENSUS_MM;}
-//		public WrappedTransfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog();}
-//		public String name() {return "US Census";}
-//		public String toString() {return fullName(this);}
-//	}
+
+	public static class USRacesLift implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			Map<Object, Color> colors = new HashMap<>();
+			colors.put(2, new Color(0,0,200));	//White
+			colors.put(3, new Color(0,200,0));	//African American
+			colors.put(4, new Color(220,0,0));	//Native American
+			colors.put(5, Color.GRAY);	//Asian
+			colors.put(6, Color.GRAY);	//Hawaiian
+			colors.put(7, Color.GRAY);	//Other
+			colors.put(8, Color.GRAY);	//Mixed
+
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
+			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
+
+			return new ChainedTransfer(
+					CHAIN_RENDERER,
+					rekey,
+					lift);
+		}
+		public String name() {return "US Ratial Distribution (highlight 'other')";}
+		public String toString() {return fullName(this);}
+	}
+
 	
 	public static class Overplot implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
@@ -311,28 +358,20 @@ public class Presets extends JPanel {
 	
 	private static final Glyphset<Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Color> KIVA_ADJ; 
-	//private static final Glyphset<Color> BOOST_MEMORY; 
 	private static final Glyphset<Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Color> CENSUS_MM;
 	
-	//private static String MEM_VIS_CSV = "../data/MemVisScaled.csv";
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
 	private static String CENSUS = "../data/census/Race_TractLatLonDenorm.hbin";
 	
 	static {
-		//if (!(new File(MEM_VIS_CSV)).exists()) {MEM_VIS_CSV = MEM_VIS_CSV + "_subset";}
 		if (!(new File(MEM_VIS_BIN)).exists()) {MEM_VIS_BIN = MEM_VIS_BIN + "_subset";}
 		if (!(new File(CIRCLE_CSV)).exists()) {CIRCLE_CSV = CIRCLE_CSV + "_subset";}
 		if (!(new File(KIVA_BIN)).exists()) {KIVA_BIN = KIVA_BIN + "_subset";}
 
 		Glyphset set;
-
-//		set = null;
-//		try {set = GlyphsetUtils.autoLoad(new File(MEM_VIS_CSV), .1, DynamicQuadTree.<Color>make());}
-//		catch (Exception e) {e.printStackTrace();}
-//		BOOST_MEMORY = set;
 
 
 		set = null;
@@ -368,6 +407,51 @@ public class Presets extends JPanel {
 		} catch (Exception e) {e.printStackTrace();}
 		KIVA_ADJ = set;
 
+	}
+	
+	
+
+	///Predicate to lift the 'other' category to the front...
+	private static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
+		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
+			super(
+				new Pred(cutoff), 
+				new General.Const(Color.black), 
+				baseline, 
+				baseline.emptyValue());
+		}
+		
+		private static final class Pred implements General.Switch.Predicate.Specialized<CategoricalCounts<Color>> {
+			private final double cutoff;
+			public Pred(double cutoff) {this.cutoff = cutoff;}
+         
+			public boolean test(int x, int y,
+					Aggregates<? extends CategoricalCounts<Color>> aggs) {
+				
+				CategoricalCounts<Color> val = aggs.get(x, y);				
+				int keyIdx=-1;
+				for (int i=0; i< val.size(); i++) {
+					if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
+				}
+				return (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > cutoff);
+			}
+
+			public ar.rules.General.Switch.Predicate.Specialized<CategoricalCounts<Color>> 
+				specialize(Aggregates<? extends CategoricalCounts<Color>> aggs) {
+				return this;
+			}
+		}
+		
+	}
+
+	@Override
+	public AffineTransform viewTransform() {return transformSource.viewTransform();}
+
+	@Override
+	public void viewTransform(AffineTransform vt)
+			throws NoninvertibleTransformException {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

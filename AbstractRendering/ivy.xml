@@ -8,6 +8,7 @@
     <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
     <dependency org="commons-io" name="commons-io" rev="2.4"/>
     <dependency org="org.apache.avro" name="avro" rev="1.7.4"/>
+    <dependency org="de.grundid.opendatalab" name="geojson-jackson" rev="1.0"/>
 
     <exclude type="javadoc" ext="jar" conf="deploy"/>
     <exclude type="sources" ext="jar" conf="deploy"/>

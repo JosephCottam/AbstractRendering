@@ -11,11 +11,12 @@ import ar.*;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
+import ar.util.HasViewTransform;
 import ar.util.Util;
 
 /**Render and display exactly what fits on the screen.
  */
-public class FullDisplay extends ARComponent.Aggregating implements ZoomPanHandler.HasViewTransform {
+public class FullDisplay extends ARComponent.Aggregating implements HasViewTransform {
 	protected static final long serialVersionUID = 1L;
 
 	protected final ActionProvider aggregatesChangedProvider = new ActionProvider();

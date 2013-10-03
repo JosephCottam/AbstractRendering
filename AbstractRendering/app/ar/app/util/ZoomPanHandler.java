@@ -8,6 +8,7 @@ import java.awt.geom.*;
 import javax.swing.JComponent;
 
 import ar.app.display.ARComponent;
+import ar.util.HasViewTransform;
 
 /**Utility for working with zoom/pan on a display component.
  * 
@@ -131,13 +132,4 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 
 	@Override
 	public void mouseMoved(MouseEvent e) {/*Ignored.*/}
-	
-	/**Interface to support the zoom/pan handler.**/
-	public static interface HasViewTransform {
-		/**Get the current view transform.  Should return a copy (not a reference).**/
-		public AffineTransform viewTransform();
-		
-		/**Set a new view transform.  Should make a copy on acceptance.**/
-		public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
-	}
 }

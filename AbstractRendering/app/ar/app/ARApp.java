@@ -108,7 +108,7 @@ public class ARApp implements ARComponent.Holder {
 		display.zoomFit();
 	}
 	
-	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defItem) {
+	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defaultItem) {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
@@ -118,14 +118,14 @@ public class ARApp implements ARComponent.Holder {
 			} catch (InstantiationException | IllegalAccessException
 					| IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
-//				System.err.println("Error intializing GUI:");
-//				e.printStackTrace();
+				System.err.println("Error intializing GUI:" + cls.getName());
+				e.printStackTrace();
 			}
 		}
 		
 		for (int i=0; i<target.getItemCount(); i++) {
 			B item = target.getItemAt(i);
-			if (item.toString().equals(defItem)) {target.setSelectedIndex(i); break;}
+			if (item.toString().equals(defaultItem)) {target.setSelectedIndex(i); break;}
 		}		
 	}
 	

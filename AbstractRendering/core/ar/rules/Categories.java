@@ -416,8 +416,34 @@ public class Categories {
 				}
 				return new Color((int) (r*255), (int) (g * 255), (int) (b*255));
 			}
-			
-			
 		}
 	}
+	
+	/**Implements color-weaving with a random distribution of points.**/
+	public static class RandomWeave implements Transfer.Specialized<CoC<Color>, Color> {
+		private static final long serialVersionUID = -6006747974949256518L;
+		
+		public Color at(int x, int y,
+				Aggregates<? extends CoC<Color>> aggregates) {
+			CoC<Color> counts = aggregates.get(x, y);
+			int top = counts.fullSize();
+			int r = (int) (Math.random()*top);
+			for (int i = 0; i<counts.size();i++) {
+				int w = counts.count(i);
+				r -= w;
+				if (r <= 0) {return counts.key(i);}
+			}
+			if (counts.size() >0) {return counts.key(counts.size()-1);}
+			else {return emptyValue();}
+		}
+
+		@Override
+		public Color emptyValue() {return Util.CLEAR;}
+
+		@Override
+		public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
+	}
+	
+	
+
 }
