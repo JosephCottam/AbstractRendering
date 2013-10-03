@@ -112,13 +112,22 @@ public interface CategoricalCounts<T> {
 
 		/**Combine multiple CoC objects into a single CoC.**/
 		public static <T> CoC<T> rollup(Comparator<T> comp, List<CoC<T>> sources) {
-			CoC<T> combined = new CoC<T>(comp);
-			for (CoC<T> counts: sources) {
-				for (T key: counts.labels) {
-					combined = combined.extend(key, counts.count(key));
+			CoC<T> s1 = sources.get(0);
+			CoC<T> s2 = sources.get(1);
+			
+			if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels.toArray(), s2.labels.toArray())) {
+				int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);
+				for (int i=0; i< newCounts.length; i++) {newCounts[i] += s2.counts[i];}
+				return new CoC<>(s1.comp, s1.labels, newCounts, s1.fullSize+s2.fullSize);
+			} else {
+				CoC<T> combined = new CoC<T>(comp);
+				for (CoC<T> counts: sources) {
+					for (T key: counts.labels) {
+						combined = combined.extend(key, counts.count(key));
+					}
 				}
+				return combined;
 			}
-			return combined;
 		}
 		
 
