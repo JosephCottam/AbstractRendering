@@ -134,7 +134,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		super.paint(g);
 		
 		AffineTransform vt = hosted.viewTransformRef;
-		if (enhanceEnabled && vt != null) {
+		if (enhanceEnabled && vt != null && overlay.selectedArea() != null) {
 			Graphics2D g2 = (Graphics2D) g.create();
 			g2.setColor(SHOW_ENHANCED);
 			g2.setStroke(new BasicStroke(1f));
