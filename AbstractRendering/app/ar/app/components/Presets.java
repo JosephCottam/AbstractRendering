@@ -59,7 +59,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		this.transformSource = transformSource;
 		presets.addActionListener(actionProvider.delegateListener());
 		
-		ARApp.loadInstances(presets, Presets.class, "");
+		ar.app.util.Util.loadInstances(presets, Presets.class, Presets.Preset.class, "");
 
 		for (int i=0; i<presets.getItemCount(); i++) {
 			Preset item = presets.getItemAt(i);

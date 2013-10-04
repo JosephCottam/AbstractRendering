@@ -52,6 +52,7 @@ public interface CategoricalCounts<T> {
 		/**@param comp Comparator used to order categories.**/
 		public CoC(Comparator<T> comp) {this(comp, new Object[0], new int[0], 0);}
 		
+		/**Create a Categorical count with a single categorical/count pair.**/
 		public CoC(Comparator<T> comp, T label, int count) {
 			this(comp, new Object[]{label}, new int[]{count}, count);
 		}
@@ -133,15 +134,6 @@ public interface CategoricalCounts<T> {
 				return combined;
 			}
 		}
-		
-		public static <T> CoC<T> rollupAll(Comparator<T> comp, List<CoC<T>> sources) {
-			CoC<T> combined = new CoC<T>(comp);
-			for (CoC<T> source:sources) {
-				combined = rollupTwo(combined, source);
-			}
-			return combined;
-		}
-
 	}
 	
 	/**Encapsulation of run-length encoding information.

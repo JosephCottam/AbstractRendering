@@ -15,6 +15,7 @@ import ar.app.display.ARComponent;
 import ar.app.display.EnhanceHost;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
+import ar.app.util.Util;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 
@@ -55,8 +56,8 @@ public class ARApp implements ARComponent.Holder {
 		controls.add(fileOptions);
 		controls.add(status);
 		
-		loadInstances(aggregators, WrappedAggregator.class, "Count (int)");
-		loadInstances(transfers, WrappedTransfer.class, "10% Alpha (int)");
+		Util.loadInstances(aggregators, WrappedAggregator.class, WrappedAggregator.class, "Count (int)");
+		Util.loadInstances(transfers, WrappedTransfer.class, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -108,26 +109,6 @@ public class ARApp implements ARComponent.Holder {
 		display.zoomFit();
 	}
 	
-	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, String defaultItem) {
-		Class<?>[] clss = source.getClasses();
-		for (Class<?> cls:clss) {
-			try {
-				@SuppressWarnings("unchecked") //Inherently not type-safe operation...
-				B i = (B) cls.getConstructor().newInstance();
-				target.addItem(i);
-			} catch (InstantiationException | IllegalAccessException
-					| IllegalArgumentException | InvocationTargetException
-					| NoSuchMethodException | SecurityException e) {
-				System.err.println("Error intializing GUI:" + cls.getName());
-				e.printStackTrace();
-			}
-		}
-		
-		for (int i=0; i<target.getItemCount(); i++) {
-			B item = target.getItemAt(i);
-			if (item.toString().equals(defaultItem)) {target.setSelectedIndex(i); break;}
-		}		
-	}
 	
 	public void displayWithRenderer(Renderer renderer) {
 		SubsetDisplay innerDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
