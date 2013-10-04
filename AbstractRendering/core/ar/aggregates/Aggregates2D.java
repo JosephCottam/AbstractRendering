@@ -2,25 +2,28 @@ package ar.aggregates;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 
 import ar.Aggregates;
 
-/** Aggregates implementation backed by a single array.
+/** Aggregates implemented as nested arrays.
  * This class efficiently supports subset regions.
  */
-public class FlatAggregates<A> implements Aggregates<A>{
+public class Aggregates2D<A> implements Aggregates<A>{
 	private static final long serialVersionUID = 7143994707761884518L;
-	private final A[] values;
+	private final A[][] values;
 	private final int lowX, lowY;
 	private final int highX,highY;
 	private final A defaultVal;
 	
 	/**Create a an aggregates instance with the same high/low values as the parameter. 
 	 */
-	public FlatAggregates(Aggregates<?> like, A defaultVal) {this(like.lowX(), like.lowY(), like.highX(),  like.highY(), defaultVal);}
+	public Aggregates2D(Aggregates<?> like, A defaultVal) {this(like.lowX(), like.lowY(), like.highX(),  like.highY(), defaultVal);}
 	
 	/**Create a region of aggregates from (0,0) to (highX,highY)**/
-	public FlatAggregates (final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
+	public Aggregates2D (final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
 	
 	/**Create a regional set of aggregates.
 	 * 
@@ -36,7 +39,7 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	 * @param defaultVal 
 	 */
 	@SuppressWarnings("unchecked")
-	public FlatAggregates(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
+	public Aggregates2D(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
 		if (lowX > highX) {throw new BoundsInversionException(lowX, highX, "X");}
 		if (lowY > highY) {throw new BoundsInversionException(lowY, highY, "Y");}
 		
@@ -45,31 +48,32 @@ public class FlatAggregates<A> implements Aggregates<A>{
 		this.highX = highX;
 		this.highY = highY;
 		this.defaultVal=defaultVal;
-		long size = ((long) highX-lowX)*(highY-lowY);
-		if (size > Integer.MAX_VALUE) {
+		
+		long width = highX-lowX;
+		long height = highY-lowY;
+		
+		
+		if (width > Integer.MAX_VALUE || height > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException(String.format("Aggregates of size %dx%d exceeds the implementation capacity.", (highX-lowX), (highY-lowY)));
 		}
 		
-		size = Math.max(0, size);
-		values = (A[]) new Object[(int)size];
-		Arrays.fill(values, defaultVal);
+		values = (A[][]) new Object[(int) width][(int) height];
+		for (A[] row : values) {Arrays.fill(row, defaultVal);}
 	}
 
 	/**Set the value at the given (x,y).**/
 	public synchronized void set(int x, int y, A v) {
-		if (x<lowX || x>=highX || y<lowY || y>=highY) {return;} 
-		int idx = idx(x,y);
-		values[idx] = v;
+		if (x<lowX || y < lowY || x >= highX || y > highY) {return;}
+		values[x-lowX][y-lowY] = v;
 	}
 	
 	
 	/**Get the value at the given (x,y).**/
 	public synchronized A get(int x, int y) {
-		if (x<lowX || x>=highX || y<lowY || y>=highY) {return defaultVal;} 
-		int idx = idx(x,y);
-		return values[idx];
+		if (x<lowX || y < lowY || x >= highX || y >= highY) {return defaultVal;}
+		return values[x-lowX][y-lowY];
 	}
-	
+
 	public A defaultValue() {return defaultVal;}
 
 	/**What are the bounds that can actually be stored in this aggregates object?*/
@@ -78,35 +82,33 @@ public class FlatAggregates<A> implements Aggregates<A>{
 	public int highX() {return highX;}
 	public int highY() {return highY;}
 	
-	private final int idx(int x,int y) {
-		int idx = ((highY-lowY)*(x-lowX))+(y-lowY);
-		return idx;
-	}
-
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
-	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
-
-	/**Produce an independent aggregate set that has a lowX/Y value of 0,0 and contains
-	 * values from the source as determined by the passed low/high values.
-	 * 
-	 * On null, returns null.
-	 * 
-	 * TODO: Move to the Aggregates interface when Java 1.8 comes out...
-	 * **/
-	public static <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		if (source == null) {return null;}
-		
-		int width = highX-lowX;
-		int height = highY-lowY;
-		
-		Aggregates<A> aggs= new FlatAggregates<>(0, 0, width, height, source.defaultValue());
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				A val = source.get(x+lowX,y+lowY);
-				aggs.set(x, y, val);
-			}
-		}
-		return aggs;
-	}
+	public synchronized Iterator<A> iterator() {return new Iterator2D<>(values);}
+	
+	public static final class Iterator2D<E> implements Iterator<E> {
+		  private Queue<Iterator<E>> queue = new LinkedList<Iterator<E>>();
+		  public Iterator2D(E[][] sources) {
+			  for (E[] source: sources) {queue.add(Arrays.asList(source).iterator());}
+		  }
+		  
+		  public boolean hasNext() {
+		    // If this returns true, the head of the queue will have a next element
+		    while(!queue.isEmpty()) {
+		      if(queue.peek().hasNext()) {
+		        return true;
+		      }
+		      queue.poll();
+		    }
+		    return false;
+		  }
+		  public E next() {
+		    if(!hasNext()) throw new NoSuchElementException();
+		    Iterator<E> iter = queue.poll();
+		    E result = iter.next();
+		    queue.offer(iter);
+		    return result;
+		  }
+		  public void remove() { throw new UnsupportedOperationException(); }
+		};
 }
