@@ -17,8 +17,6 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -87,7 +85,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	 * @return null if no selection; otherwise a subset of aggregates.
 	 */
 	public <A> Aggregates<?> subset() {
-		if (overlay.selections.size() ==0) {return null;}
+		if (overlay.selected == null) {return null;}
 		
 		Aggregates<A> aggs = (Aggregates<A>) hosted.aggregates();
 		AffineTransform rt = hosted.renderTransform();
@@ -211,16 +209,11 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		/**Color to make 'masked off' areas.**/
 		public Color MASKED = new Color(100,100,100,50);
 		
-		/**Color to make 'selected' areas.**/
-		public Color SELECTED = Util.CLEAR;
-		
-		/**Color to indicate a provisional selection.**/
-		public Color PROVISIONAL = Util.CLEAR;
-		
-		private List<Area> selections = new ArrayList<>();
+		private Area selected;
 		
 		/**Current selection in dataset coordinates.**/
-		private Rectangle2D selection = null;
+		private Rectangle2D provisional = null;
+		private boolean provisionalRemove = false;
 				
 		/**Hosting object.**/
 		private final EnhanceHost host;
@@ -245,31 +238,23 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			Area a =new Area(this.getBounds());
 			AffineTransform vt = host.viewTransform();
 			
-			if (selections.size() >0) {
-				Area fullSelections = selectedArea();
-				fullSelections = fullSelections.createTransformedArea(vt);
-				a.subtract(fullSelections);
-				g.setColor(SELECTED);
-				g2.fill(fullSelections);
+			if (selected != null) {a.subtract(new Area(vt.createTransformedShape(selected)));}
+			
+			if (provisional != null) {
+				Shape s = vt.createTransformedShape(provisional);
+				if (provisionalRemove) {a.add(new Area(s));}
+				else {a.subtract(new Area(s));}
 			}
 			
-			if (selection != null) {
-				Shape s = vt.createTransformedShape(selection);
-				a.subtract(new Area(s));
-			}
-			
-			if (selection == null && selections.size() == 0) {
-				g2.setColor(SELECTED);
-				g2.fill(a);
-			} else {
+			if (provisional != null || selected != null) {
 				g2.setColor(MASKED);
 				g2.fill(a);
 			}
 		}
 
 		public void clear() {
-			this.selection = null; 
-			selections.clear();
+			this.selected = null;
+			this.provisional = null;
 		}
 		
 		/**Set the current selection to a new value.
@@ -278,39 +263,43 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		 * @param bounds Selection bounds in screen-space
 		 * @param provisional Flag passed bounds as provisional selection
 		 ***/
-		public void setSelection(Rectangle2D bounds, boolean provisional) {
+		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove) {
 			try	{
 				//Convert from screen-space to canvas space
 				bounds = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();
 			} catch (Exception e) {/*Ignore...should be impossible...should be.*/}
 			
 			if (provisional) {
-				selection = bounds;
+				this.provisional = bounds;
+				this.provisionalRemove = remove;
 			} else {
-				selection = null;
-				if (bounds != null) {selections.add(new Area(bounds));}
+				this.provisional = null;
+				if (bounds != null) {
+					Area a =new Area(bounds);
+					if (remove && selected != null) {
+						selected.subtract(a);
+					} else if (selected != null) {
+						selected.add(a);						
+					} else {
+						selected = a;
+					}
+				}
+				if (selected != null && selected.isEmpty()) {selected = null;}
 				host.forceNewRefAggregates();
 			}
 			
 			this.repaint();
 		}
 		
-		public Area selectedArea() {
-			Area fullSelection = new Area();
-			for (Area r: selections) {
-				fullSelection.add(r);
-			}
-			return fullSelection;
-		}
+		public Area selectedArea() {return selected;}
 	}
 	
 	/**Interface indicating a thing has a selection region associated with it.**/
 	private interface Selectable {
 		public void clear();
-		public void setSelection(Rectangle2D bounds, boolean provisional);
+		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove);
 	}
 
-	//TODO: Add multi-region selection
 	private final static class AdjustRange implements MouseListener, MouseMotionListener {
 		Point2D start;
 		final Selectable target;
@@ -321,7 +310,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
 				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
-				target.setSelection(bounds, false);
+				target.modSelection(bounds, false, altPressed(e));
 			}
 			start = null;
 		}
@@ -331,10 +320,14 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
 				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
-				target.setSelection(bounds, true);
+				target.modSelection(bounds, true, altPressed(e));
 			}
 		}
 
+		private boolean altPressed(MouseEvent e) {
+			return (e.getModifiersEx() & MouseEvent.ALT_DOWN_MASK) == MouseEvent.ALT_DOWN_MASK; 
+		}
+		
 		private Rectangle2D bounds(MouseEvent e) {
 			double w = Math.abs(start.getX()-e.getX());
 			double h = Math.abs(start.getY()-e.getY());
