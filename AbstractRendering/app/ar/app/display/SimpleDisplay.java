@@ -101,11 +101,9 @@ public class SimpleDisplay extends ARComponent {
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		boolean doRender = (renderAgain || image == null) 
-				&& transfer != null && aggregates != null;
-		
-		if (doRender && ! renderError) {
+		if (renderAgain && transfer !=null && aggregates !=null && ! renderError) {
 			renderPool.execute(new TransferRender());
+			renderAgain = false;
 		}
 	
 		if (image != null) {
