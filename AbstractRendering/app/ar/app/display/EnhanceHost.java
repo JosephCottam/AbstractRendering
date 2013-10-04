@@ -1,5 +1,6 @@
 package ar.app.display;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -15,9 +16,12 @@ import java.awt.geom.Area;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -29,13 +33,17 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.FlatAggregates;
 import ar.app.components.LabeledItem;
+import ar.util.Util;
 
 /**Host a panel, add to it a draw-on overlay and enhance-region capability.**/ 
 public class EnhanceHost extends ARComponent.Aggregating {
 	private static final long serialVersionUID = -6449887730981205865L;
 	
+	private static final Color SHOW_ENHANCED  = new Color(100,149,237);
+	
 	private SubsetDisplay hosted;
 	private SelectionOverlay overlay;
+	private EnhancedOverlay enhanced = new EnhancedOverlay();
 	private boolean enhanceEnabled;
 
 	private boolean redoRefAggregates = true;
@@ -45,8 +53,11 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		this.hosted = hosted;
 		this.overlay = new SelectionOverlay(this);
 		this.add(overlay);
+		this.add(enhanced);
 		this.add(hosted);
+		
 		overlay.setVisible(false);
+		enhanced.setVisible(false);
 		
 		hosted.addAggregatesChangedListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {forceNewRefAggregates();}
@@ -56,6 +67,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public void layout() {
 		Rectangle b = this.getBounds();
 		hosted.setBounds(b);
+		enhanced.setBounds(b);
 		overlay.setBounds(b);
 	}
 
@@ -106,7 +118,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public void enableEnhance(boolean enable) {
 		this.enhanceEnabled = enable;
 		redoRefAggregates  = true;
+		enhanced.setVisible(enable);
 		this.repaint();
+		
 	}
 	
 	public void paint(Graphics g) {
@@ -123,8 +137,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		
 		AffineTransform vt = hosted.viewTransformRef;
 		if (enhanceEnabled && vt != null) {
-			Graphics2D g2 = (Graphics2D) g;
-			g.setColor(new Color(220,220,200));
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setColor(SHOW_ENHANCED);
+			g2.setStroke(new BasicStroke(1f));
 			g2.draw(overlay.selectedArea().createTransformedArea(vt));
 		}
 	}
@@ -154,18 +169,53 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public AffineTransform renderTransform() {return hosted.renderTransform();}
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {hosted.viewTransform(vt);}
 	
+	
 
+	private static final int borderSize = 5;
+	private static BufferedImage makeImage(int size, Color stripes, Color spaces) {
+		BufferedImage img = new BufferedImage(size,size, BufferedImage.TYPE_4BYTE_ABGR);
+		for (int x=0; x<size; x++) {
+			for (int y=0; y<size; y++) {
+				if (x ==y || x==y+1 || x==y-1 
+						|| (x==0 && y==size-1) 
+						|| (x==size-1 && y==0)) {img.setRGB(x, y, stripes.getRGB());}
+				else {img.setRGB(x, y, spaces.getRGB());}
+			}
+		}
+		return img;
+	}
+
+	private static BufferedImage flip(BufferedImage src) {
+		BufferedImage img = new BufferedImage(src.getWidth(),src.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+		for (int x=0; x<src.getWidth(); x++) {
+			for (int y=0; y<src.getHeight(); y++) {
+				img.setRGB(src.getWidth()-x-1,y, src.getRGB(x,y));
+			}
+		}
+		return img;
+	}
+
+	
+	private static class EnhancedOverlay extends JComponent {
+		public EnhancedOverlay() {
+			ImageIcon icn = new ImageIcon(flip(makeImage(borderSize+2, SHOW_ENHANCED, Util.CLEAR)));
+			
+			this.setBorder(BorderFactory.createMatteBorder(borderSize, borderSize, borderSize, borderSize, icn));
+		}
+	}
+	
 	/**Component to store and display a selection.**/
 	private static class SelectionOverlay extends JComponent implements Selectable {
 		private static final long serialVersionUID = 9079768489874376280L;
 		
 		/**Color to make 'masked off' areas.**/
 		public Color MASKED = new Color(100,100,100,50);
+		
 		/**Color to make 'selected' areas.**/
-		public Color SELECTED = new Color(200,0,0,50);
+		public Color SELECTED = Util.CLEAR;
 		
 		/**Color to indicate a provisional selection.**/
-		public Color PROVISIONAL = new Color(220,0,0,100);
+		public Color PROVISIONAL = Util.CLEAR;
 		
 		private List<Area> selections = new ArrayList<>();
 		
@@ -175,12 +225,19 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		/**Hosting object.**/
 		private final EnhanceHost host;
 		
+		
 		public SelectionOverlay(EnhanceHost host) {
 			AdjustRange r = new AdjustRange(this);
 			this.addMouseListener(r);
 			this.addMouseMotionListener(r);
 			this.host = host;
+			this.setBorder(
+					BorderFactory.createMatteBorder(
+							borderSize,borderSize,borderSize,borderSize, 
+							new ImageIcon(makeImage(borderSize+2, new Color(255,140,0), Util.CLEAR))));
 		}
+		
+		
 		
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -196,12 +253,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 				g2.fill(fullSelections);
 			}
 			
-
 			if (selection != null) {
 				Shape s = vt.createTransformedShape(selection);
-
-				g2.setColor(PROVISIONAL);
-				g2.fill(s);
+				a.subtract(new Area(s));
 			}
 			
 			if (selection == null && selections.size() == 0) {
