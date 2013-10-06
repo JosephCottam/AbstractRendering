@@ -258,8 +258,10 @@ public class Presets extends JPanel implements HasViewTransform {
 		private final List<Shape> shapes;
 		
 		public USPopulationWeave() {
-			try {shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/")));}
-			catch (Exception e) {throw new RuntimeException();}
+			try {
+				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
+				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
+			} catch (Exception e) {throw new RuntimeException(e);}
 		}
 
 		/**Provide the viewTransform-access pathway.**/

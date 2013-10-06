@@ -26,10 +26,11 @@ public class GeoJSONTools {
 	 * 
 	 * Only loads .json files.
 	 * **/
-	public static List<Shape> loadShapesJSON(File source) throws Exception {
+	public static List<Shape> loadShapesJSON(File source, boolean recursive) throws Exception {
 		if (source.isFile()) {return Arrays.asList(loadShapeJSON(source));}
 		List<Shape> shapes = new ArrayList<>();
 		for (File f: source.listFiles()) {
+			if (recursive && f.isDirectory()) {shapes.addAll(loadShapesJSON(f, true));}
 			if (!f.getName().endsWith(".json")) {continue;}
 			shapes.add(loadShapeJSON(f));
 		}
