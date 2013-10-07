@@ -366,6 +366,8 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			});
 		}
 		
+		public void clear() {box.setSelected(false);}
+		
 		/**Get the target host control.**/
 		public EnhanceHost host() {return host;}
 		/**Set the target host control.**/

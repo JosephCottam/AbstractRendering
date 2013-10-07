@@ -40,6 +40,7 @@ public class EnhanceOptions  extends JPanel {
 	/**Set the target host control.**/
 	public void host(EnhanceHost host) {
 		if (host != showOverlay.host()) {
+			showOverlay.clear();
 			enhance.setSelected(false);
 			showOverlay.host(host);
 		}
