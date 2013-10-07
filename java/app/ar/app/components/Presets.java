@@ -18,7 +18,6 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GeoJSONTools;
@@ -63,13 +62,14 @@ public class Presets extends JPanel implements HasViewTransform {
 
 		for (int i=0; i<presets.getItemCount(); i++) {
 			Preset item = presets.getItemAt(i);
-			if (item instanceof InitWithPanel) {
-				((InitWithPanel) item).init(this);
+			boolean success = item.init(this);
+			if (!success) {
+				presets.removeItem(item); 
+				i--;
 			}
 		}
 	}
 	
-	private static interface InitWithPanel {public void init(Presets panel);}
 	
 	/**Should the display be re-zoomed?  
 	 * Returns true when the new glyphset & aggregator is not the same as the old one.**/
@@ -108,6 +108,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer();
 		public Glyphset<?> glyphset();
 		public String name();
+		public boolean init(Presets panel);
 	}
 	
 	/**Generate a descriptive name from the parts of the preset instance.**/
@@ -128,6 +129,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.FixedAlpha().op();}
 		public String name() {return "Scatterplot: 10% Alpha";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 
 	public static class ScatterplotHDALphaLin implements Preset {
@@ -137,6 +139,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLinear().op();}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class ScatterplotHDALpha implements Preset {
@@ -146,6 +149,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
@@ -155,6 +159,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
@@ -169,6 +174,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class Kiva implements Preset {
@@ -178,6 +184,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class KivaDrawDark implements Preset {
@@ -189,6 +196,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "Kiva: DrawDark";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class USPopMinAlpha implements Preset {
@@ -204,6 +212,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population (Min Alpha)";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 
@@ -220,6 +229,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population 10% alpha";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	public static class USPopulation implements Preset {
@@ -235,11 +245,12 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	public static class USPopulationClipWarn implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<CoC<String>> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 
 			Transfer<CoC<Number>, Color> inner = 
@@ -248,13 +259,14 @@ public class Presets extends JPanel implements HasViewTransform {
 							new Categories.ToCount<>(),
 							new TransferMath.DivideInt(4000),
 							new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
-			return new Advise.OverUnder<>(Color.BLACK, Color.gray, inner, new CategoricalCounts.CompareMagnitude(), 10);
+			return new Advise.OverUnder(Color.BLACK, Color.gray, inner, new CategoricalCounts.CompareMagnitude(), 10);
 		}
 		public String name() {return "US Population (Clip Warn)";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USPopulationWeave implements Preset,InitWithPanel {
+	public static class USPopulationWeave implements Preset {
 		HasViewTransform transformProvider = null;
 		private final List<Shape> shapes;
 		
@@ -266,7 +278,10 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 
 		/**Provide the viewTransform-access pathway.**/
-		public void init(Presets provider) {this.transformProvider = provider;}
+		public boolean init(Presets provider) {
+			this.transformProvider = provider;
+			return glyphset() != null;
+		}
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
@@ -317,6 +332,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Ratial Distribution";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 
@@ -345,6 +361,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Ratial Distribution (highlight 'other')";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 
 	
@@ -355,12 +372,13 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.OverUnder().op();}
 		public String name() {return "Scatterplot: clipping warning";}
 		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
 	private static final Glyphset<Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Color> KIVA_ADJ; 
 	private static final Glyphset<Color> BOOST_MEMORY_MM; 
-	private static final Glyphset<Color> CENSUS_MM;
+	private static final Glyphset<CoC<String>> CENSUS_MM;
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
@@ -368,46 +386,47 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static String CENSUS = "../data/census/Race_TractLatLonDenorm.hbin";
 	
 	static {
-		if (!(new File(MEM_VIS_BIN)).exists()) {MEM_VIS_BIN = MEM_VIS_BIN + "_subset";}
-		if (!(new File(CIRCLE_CSV)).exists()) {CIRCLE_CSV = CIRCLE_CSV + "_subset";}
-		if (!(new File(KIVA_BIN)).exists()) {KIVA_BIN = KIVA_BIN + "_subset";}
-
-		Glyphset set;
-
-
-		set = null;
-		try {set = GlyphsetUtils.memMap(
+		Glyphset<Color> boost_temp = null;
+		try {boost_temp = GlyphsetUtils.memMap(
 				"BGL Memory", MEM_VIS_BIN, 
 				new Indexed.ToRect(.001, .001, true, 0, 1),
 				new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
 				1, "ddi");
-		} catch (Exception e) {e.printStackTrace();}
-		BOOST_MEMORY_MM = set;
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", MEM_VIS_BIN);
+		}
+		BOOST_MEMORY_MM = boost_temp;
 		
-		set = null;
-		try {set = GlyphsetUtils.memMap(
+		Glyphset<CoC<String>> census_temp = null;
+		try {census_temp = GlyphsetUtils.memMap(
 				"US Census", CENSUS, 
 				new Indexed.ToRect(.2, .2, true, 0, 1),
-				new Valuer.CategoryCount(new Util.ComparableComparator(), 3,2),
+				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
-		} catch (Exception e) {e.printStackTrace();}
-		CENSUS_MM = set;
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
+		}
+		CENSUS_MM = census_temp;
 
 		
-		set = null;
-		try {set = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Color>make());}
-		catch (Exception e) {e.printStackTrace();}
-		CIRCLE_SCATTER = set;
+		Glyphset<Color> circle_temp = null;
+		try {
+			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Color>make());
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
+		}
+		CIRCLE_SCATTER = circle_temp;
 		
-		set = null;
-		try {set = GlyphsetUtils.memMap(
+		Glyphset<Color> kiva_temp = null;
+		try {kiva_temp = GlyphsetUtils.memMap(
 						"Kiva", KIVA_BIN, 
 						new Indexed.ToRect(.1, 0, 1),
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
-		} catch (Exception e) {e.printStackTrace();}
-		KIVA_ADJ = set;
-
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+		}
+		KIVA_ADJ = kiva_temp;
 	}
 	
 	
