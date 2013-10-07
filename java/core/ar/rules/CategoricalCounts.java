@@ -238,8 +238,8 @@ public interface CategoricalCounts<T> {
 	
 	
 	/**Compare the total size of two categorical counts.**/
-	public static class CompareMagnitude<A extends CategoricalCounts<?>> implements Comparator<A> {
-		public int compare(A o1, A o2) {
+	public static class CompareMagnitude implements Comparator<CategoricalCounts<?>> {
+		public int compare(CategoricalCounts<?> o1, CategoricalCounts<?> o2) {
 			return Integer.compare(o1.fullSize(), o2.fullSize());
 		}
 		

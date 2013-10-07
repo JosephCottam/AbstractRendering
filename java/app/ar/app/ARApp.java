@@ -6,8 +6,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-
 import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
@@ -141,7 +139,6 @@ public class ARApp implements ARComponent.Holder {
 	 * @param args
 	 * @throws Exception 
 	 */
-	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
 		ARComponent.PERF_REP = true;
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {

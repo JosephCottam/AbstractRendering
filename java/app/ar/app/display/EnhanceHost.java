@@ -87,6 +87,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public <A> Aggregates<?> subset() {
 		if (overlay.selected == null) {return null;}
 		
+		@SuppressWarnings("unchecked")
 		Aggregates<A> aggs = (Aggregates<A>) hosted.aggregates();
 		AffineTransform rt = hosted.renderTransform();
 		Area selection = overlay.selectedArea().createTransformedArea(rt);

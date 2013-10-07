@@ -13,17 +13,17 @@ import ar.glyphsets.implicitgeometry.Valuer;
 /**Tools that don't apply to a particular data type.**/
 public class General {
 	/**Aggregator and Transfer that always returns the same value.**/
-	public static final class Const<T> implements Aggregator<Object,T>, Transfer.Specialized<Object, T> {
+	public static final class Const<OUT> implements Aggregator<Object,OUT>, Transfer.Specialized<Object, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
-		private final T val;
+		private final OUT val;
 		/**@param val Value to return**/
-		public Const(T val) {this.val = val;}
-		public T combine(long x, long y, T left, Object update) {return val;}
-		public T rollup(T left, T right) {return val;}
-		public T identity() {return val;}
-		public T emptyValue() {return val;}
-		public ar.Transfer.Specialized<Object, T> specialize(Aggregates<? extends Object> aggregates) {return this;}
-		public T at(int x, int y, Aggregates<? extends Object> aggregates) {return val;}
+		public Const(OUT val) {this.val = val;}
+		public OUT combine(long x, long y, OUT left, Object update) {return val;}
+		public OUT rollup(OUT left, OUT right) {return val;}
+		public OUT identity() {return val;}
+		public OUT emptyValue() {return val;}
+		public ar.Transfer.Specialized<Object, OUT> specialize(Aggregates<? extends Object> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends Object> aggregates) {return val;}
 	}
 
 

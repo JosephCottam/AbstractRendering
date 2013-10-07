@@ -7,7 +7,7 @@ import javax.swing.JComboBox;
 public class Util {
 
 	@SuppressWarnings("unchecked") //Several inherently not type-safe operation...
-	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, Class limit, String defaultItem) {
+	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, Class<?> limit, String defaultItem) {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
