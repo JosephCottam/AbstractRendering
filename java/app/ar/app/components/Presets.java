@@ -199,7 +199,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new ChainedTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(3000),
+				new TransferMath.DivideInt(4000),
 				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Population (Min Alpha)";}
@@ -215,7 +215,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new ChainedTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(3000),
+				new TransferMath.DivideInt(4000),
 				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
 		}
 		public String name() {return "US Population 10% alpha";}
@@ -230,7 +230,8 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new ChainedTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(), 
-					new  Numbers.Interpolate(new Color(255,0,0,50), new Color(255,0,0,255)));
+//					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255), Util.CLEAR, 2));
+					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population";}
 		public String toString() {return fullName(this);}
@@ -245,7 +246,7 @@ public class Presets extends JPanel implements HasViewTransform {
 					new ChainedTransfer<>(
 							CHAIN_RENDERER,
 							new Categories.ToCount<>(),
-							new TransferMath.DivideInt(3000),
+							new TransferMath.DivideInt(4000),
 							new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 			return new Advise.OverUnder<>(Color.BLACK, Color.gray, inner, new CategoricalCounts.CompareMagnitude(), 10);
 		}

@@ -43,7 +43,6 @@ Abstract rendering provides the tools to define the intermediate stage
 of "counting the items that touch each pixel" and for "transforming those counts into colors."
 These two stages are encapsulated as "aggregation" and "transfer" respectively.
 
-
 The Framework
 ---------
 
@@ -80,7 +79,7 @@ Extensions
 --------
 
 The basic system described above can be extended in a variety of ways.
-This repository represents extensive investigation into efficient and
+This repository represents investigation into efficient and
 convenient ways to work with such pixel-level intermediates.
 It explores multiple ways to store and access data, including
 two parallelization strategies, out-of-core data access, distributed rendering
@@ -92,7 +91,7 @@ system described above.
 ----------
 #### Organizational Note
 
-This repository is divided into sections based on implementation.  The "AbstractRendering" directory
+This repository is divided into sections based on implementation.  The "java" directory
 contains a Java implementation of the system described above.  README.md in that directory
 describes building the system and execution of an example application.  JavaDocs
 can also be generated to describe the API.

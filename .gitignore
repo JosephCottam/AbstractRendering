@@ -7,8 +7,8 @@ data
 *.pyc
 *.hbin
 *.swp
-AbstractRendering/docs/*
-AbstractRendering/doc/*
-AbstractRendering/lib/*
-AbstractRendering/testResults/*
+java/docs/*
+java/doc/*
+java/lib/*
+java/testResults/*
 RemoteSystemsTempFiles
