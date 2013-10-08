@@ -325,7 +325,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			}
 		}
 
-		private boolean altPressed(MouseEvent e) {
+		private static boolean altPressed(MouseEvent e) {
 			return (e.getModifiersEx() & MouseEvent.ALT_DOWN_MASK) == MouseEvent.ALT_DOWN_MASK; 
 		}
 		

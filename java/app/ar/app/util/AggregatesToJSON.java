@@ -15,8 +15,7 @@ public class AggregatesToJSON {
 		else if (!(aggs.get(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
 		else {content = export((Aggregates<Integer>)aggs);}
 	
-		try {
-			FileWriter w = new FileWriter(file);
+		try(FileWriter w = new FileWriter(file)) {
 			w.write(content);
 			w.close();
 		} catch (IOException e) {throw new RuntimeException("Error writing JSON.", e);}

@@ -225,10 +225,10 @@ public class MemMapEncoder {
 	/**Write from source text to indicated binary files.**/ 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
 		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
-		FileOutputStream file = new FileOutputStream(target);
+		
 		
 		int entriesRead = 0;
-		try {
+		try(FileOutputStream file = new FileOutputStream(target)) {
 			byte[] header = makeHeader(types); 
 			file.write(header);
 
@@ -248,7 +248,7 @@ public class MemMapEncoder {
 			
 		}catch (Exception e) {
 			throw new RuntimeException(String.format("Error on or near entry %,d", entriesRead), e);
-		} finally {file.close();}
+		}
 	}
 
 

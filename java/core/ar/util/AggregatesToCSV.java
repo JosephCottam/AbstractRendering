@@ -21,8 +21,7 @@ public class AggregatesToCSV {
 		else if (!(aggs.get(0, 0) instanceof Integer)) {content = "Can only export integer aggregates.";}
 		else {content = asCSV((Aggregates<Integer>)aggs);}
 	
-		try {
-			FileWriter w = new FileWriter(file,false);
+		try(FileWriter w = new FileWriter(file,false)) {
 			w.write(content);
 			w.close();
 		} catch (IOException e) {throw new RuntimeException("Error writing JSON.", e);}

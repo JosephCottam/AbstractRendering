@@ -145,6 +145,7 @@ public class ARApp implements ARComponent.Holder {
 	 * @param args
 	 * @throws Exception 
 	 */
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
 		ARComponent.PERF_REP = true;
 		if (args.length >0 && args[0].toUpperCase().equals("-EXT")) {

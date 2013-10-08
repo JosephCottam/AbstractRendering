@@ -2,7 +2,16 @@ package ar;
 
 import java.io.Serializable;
 
-/**Transfer functions converts an aggregate into a pixel.
+/**Transfer functions converts an aggregate value into another aggregate value, often a color.
+ * 
+ * Transfer functions are doing analysis and transformation on the discrete values 
+ * represented by a set of aggregates.  Since Abstract Rendering is focused on visualization,
+ * many transfer functions directly produce colors (and an image is essentially a set of color aggregates).
+ * 
+ * However, sometimes producing colors immediately is awkward, so transfer functions
+ * are generalized to produce any time of aggregate desired.  Multi-stage transfer
+ * is logically the same as single stage, by simple function composition.
+ * ar.util.MultiStageTransfer is a utility for achieving that composition. 
  * 
  * Transfer functions have a two-phase life cycle: generic and specialized.
  * Often a transfer function needs information about the data it is about

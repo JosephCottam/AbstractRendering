@@ -29,7 +29,7 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
-import ar.util.ChainedTransfer;
+import ar.util.MultiStageTransfer;
 import ar.util.DelimitedReader;
 import ar.util.GlyphsetLoader;
 import ar.util.MemMapEncoder.TYPE;
@@ -139,7 +139,7 @@ public class ARServer extends NanoHTTPD {
 		}
 		
 		Aggregates aggs = r.aggregate(glyphs, agg, inverseView, width, height);
-		Transfer transfer = new ChainedTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
+		Transfer transfer = new MultiStageTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;

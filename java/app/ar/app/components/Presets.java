@@ -41,7 +41,7 @@ import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.Shapes;
 import ar.rules.TransferMath;
-import ar.util.ChainedTransfer;
+import ar.util.MultiStageTransfer;
 import ar.util.Util;
 
 public class Presets extends JPanel implements HasViewTransform {
@@ -166,7 +166,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer<Object, Object>(
+			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(), 
 					new WrappedTransfer.RedWhiteLog().op());
@@ -203,7 +203,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer<>(
+			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
 				new TransferMath.DivideInt(4000),
@@ -220,7 +220,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer<>(
+			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
 				new TransferMath.DivideInt(4000),
@@ -236,7 +236,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
 		public Glyphset<?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new ChainedTransfer<>(
+			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(), 
 //					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255), Util.CLEAR, 2));
@@ -280,7 +280,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 				Transfer<CategoricalCounts<Color>, CoC<Color>> gather = new Shapes.ShapeGather(shapes, transformProvider);
 				Transfer<CoC<Color>, Color> weave = new Categories.RandomWeave();
-				Transfer<?, ?> chain = new ChainedTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
+				Transfer<?, ?> chain = new MultiStageTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
 				return chain;
 			} catch (Exception e) {throw new RuntimeException("Error creating transfer.",e);}
 		}
@@ -306,7 +306,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			return new ChainedTransfer<Object, Object>(
+			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
 					stratAlpha);
@@ -335,7 +335,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
 
-			return new ChainedTransfer<Object, Object>(
+			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
 					lift);
@@ -353,7 +353,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
-	private static String CENSUS = "../data/census/Race_TractLatLonDenorm.hbin";
+	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
 	
 	static {
 		Glyphset<Color> boost_temp = null;
