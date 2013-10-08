@@ -90,10 +90,10 @@ public class AggregationStrategies {
 		for (int x = start.lowX(); x < start.highX(); x=x+size) {
 			for (int y=start.lowY(); y < start.highY(); y=y+size) {
 				
-				T acc = start.defaultValue();
+				T acc = red.identity();
 				for (int xx=0; xx<size; xx++) {
 					for (int yy=0; yy<size; yy++) {
-						red.rollup(acc, start.get(x+xx,y+yy));
+						acc = red.rollup(acc, start.get(x+xx,y+yy));
 					}
 				}
 
