@@ -36,11 +36,13 @@ import java.util.Collection;
  * A particularly common way to support segmentation is to support random access.
  * When random access is present, a number of additional classes for segmentation
  * can be used.
+ * 
+ * @param <I> The type of the information associated with a glyph entry.
  */
-public interface Glyphset<T> extends Iterable<Glyph<T>> {
+public interface Glyphset<I> extends Iterable<Glyph<I>> {
 	
 	/**Return all glyphs that intersect the passed rectangle.**/
-	public Collection<Glyph<T>> intersects(Rectangle2D r);
+	public Collection<Glyph<I>> intersects(Rectangle2D r);
 	
 	/**Is this glyphset empty?*/
 	public boolean isEmpty();
@@ -79,7 +81,7 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 * @param top Upper marker. This is an exclusive bound.
 	 * @return A subset of the data.
 	 */
-	public Glyphset<T> segment(long bottom, long top) throws IllegalArgumentException;
+	public Glyphset<I> segment(long bottom, long top) throws IllegalArgumentException;
 	
 	
 	/**Glyphsets that support random access.

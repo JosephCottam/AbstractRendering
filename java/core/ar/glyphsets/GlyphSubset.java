@@ -9,10 +9,10 @@ import ar.Glyphset;
 import ar.util.Util;
 
 /**Subset of a random-access dataset. **/
-public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
-	protected final Glyphset.RandomAccess<G> glyphs;
+public abstract class GlyphSubset<I> implements Glyphset.RandomAccess<I> {
+	protected final Glyphset.RandomAccess<I> glyphs;
 	protected final long low, high;
-	protected GlyphSubset(Glyphset.RandomAccess<G> glyphs, long low, long high) {
+	protected GlyphSubset(Glyphset.RandomAccess<I> glyphs, long low, long high) {
 		this.glyphs=glyphs;
 		this.low =low;
 		this.high=high;
@@ -22,19 +22,19 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 		}
 	}
 
-	public GlyphsetIterator<G> iterator() {return new GlyphsetIterator<G>(this, 0, size());}
+	public GlyphsetIterator<I> iterator() {return new GlyphsetIterator<I>(this, 0, size());}
 	public boolean isEmpty() {return low >= high;}
 	public long size() {return high - low;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public long segments() {return high - low;}
-	public Glyphset<G> segment(long bottom, long top)
+	public Glyphset<I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		return new Cached<G>(glyphs, bottom + this.low, top + this.low);
+		return new Cached<I>(glyphs, bottom + this.low, top + this.low);
 	}
 
-	public Collection<Glyph<G>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<G>> contained = new ArrayList<Glyph<G>>();
-		for (Glyph<G> g : this) {
+	public Collection<Glyph<I>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<I>> contained = new ArrayList<Glyph<I>>();
+		for (Glyph<I> g : this) {
 			if (g.shape().intersects(r)) {
 				contained.add(g);
 			}

@@ -11,23 +11,23 @@ import ar.Glyphset;
  * It will visit the specified low-index, but not the high-index.  
  * 
  * */
-public class GlyphsetIterator<V> implements Iterator<Glyph<V>>{
-	private final Glyphset.RandomAccess<V> glyphs;
+public class GlyphsetIterator<I> implements Iterator<Glyph<I>>{
+	private final Glyphset.RandomAccess<I> glyphs;
 	private final long high;
 	private long at = 0;
 	
 	/**Iterator over the full range of a glyphset.**/
-	public GlyphsetIterator(Glyphset.RandomAccess<V> glyphs) {this(glyphs, 0, glyphs.size());}
+	public GlyphsetIterator(Glyphset.RandomAccess<I> glyphs) {this(glyphs, 0, glyphs.size());}
 	
 	/**Iterator over a sub-range of a glyphset.**/
-	public GlyphsetIterator(Glyphset.RandomAccess<V> glyphs, long low, long high) {
+	public GlyphsetIterator(Glyphset.RandomAccess<I> glyphs, long low, long high) {
 		this.glyphs = glyphs;
 		this.at = low;
 		this.high=high;
 	}
 
 	public boolean hasNext() {return at < high;}
-	public Glyph<V> next() {
+	public Glyph<I> next() {
 		if (!hasNext()) {return null;}
 		return glyphs.get(at++);
 	}

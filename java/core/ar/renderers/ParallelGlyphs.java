@@ -47,12 +47,12 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <V,A> Aggregates<A> aggregate(Glyphset<? extends V> glyphs, Aggregator<V,A> op, 
+	public <I,A> Aggregates<A> aggregate(Glyphset<? extends I> glyphs, Aggregator<I,A> op, 
 			AffineTransform view, int width, int height) {
 		
 		recorder.reset(glyphs.size());
 		
-		ReduceTask<V,A> t = new ReduceTask<V,A>(
+		ReduceTask<I,A> t = new ReduceTask<I,A>(
 				glyphs, 
 				view, 
 				op, 
@@ -73,22 +73,22 @@ public class ParallelGlyphs implements Renderer {
 	
 	public double progress() {return recorder.percent();}
 
-	private static final class ReduceTask<V,A> extends RecursiveTask<Aggregates<A>> {
+	private static final class ReduceTask<I,A> extends RecursiveTask<Aggregates<A>> {
 		private static final long serialVersionUID = 705015978061576950L;
 
 		private final int taskSize;
 		private final long low;
 		private final long high;
-		private final Glyphset<? extends V> glyphs;
+		private final Glyphset<? extends I> glyphs;
 		private final AffineTransform view;
 		private final Rectangle viewport;
-		private final Aggregator<V,A> op;
+		private final Aggregator<I,A> op;
 		private final RenderUtils.Progress recorder;
 
 		
-		public ReduceTask(Glyphset<? extends V> glyphs, 
+		public ReduceTask(Glyphset<? extends I> glyphs, 
 				AffineTransform view,
-				Aggregator<V,A> op, 
+				Aggregator<I,A> op, 
 				Rectangle viewport,
 				int taskSize,
 				RenderUtils.Progress recorder,
@@ -111,8 +111,8 @@ public class ParallelGlyphs implements Renderer {
 		private final Aggregates<A> split() {
 			long mid = low+((high-low)/2);
 
-			ReduceTask<V,A> top = new ReduceTask<V,A>(glyphs, view, op, viewport, taskSize, recorder, low, mid);
-			ReduceTask<V,A> bottom = new ReduceTask<V,A>(glyphs, view, op, viewport, taskSize, recorder, mid, high);
+			ReduceTask<I,A> top = new ReduceTask<I,A>(glyphs, view, op, viewport, taskSize, recorder, low, mid);
+			ReduceTask<I,A> bottom = new ReduceTask<I,A>(glyphs, view, op, viewport, taskSize, recorder, mid, high);
 			invokeAll(top, bottom);
 			Aggregates<A> aggs;
 			try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
@@ -122,7 +122,7 @@ public class ParallelGlyphs implements Renderer {
 		
 		//TODO: Consider the actual shape.  Currently assumes that the bounds box matches the actual item bounds..
 		private final Aggregates<A> local() {
-			Glyphset<? extends V> subset = glyphs.segment(low,  high);
+			Glyphset<? extends I> subset = glyphs.segment(low,  high);
 			
 			//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
 			Rectangle bounds = view.createTransformedShape(subset.bounds()).getBounds();
@@ -145,7 +145,7 @@ public class ParallelGlyphs implements Renderer {
 			
 			final int width = viewport.width;
 			final int height =viewport.height;
-			for (Glyph<? extends V> g: subset) {
+			for (Glyph<? extends I> g: subset) {
 				//Discretize the glyph into the aggregates array
 				Rectangle2D b = g.shape().getBounds2D();
 				lowP.setLocation(b.getMinX(), b.getMinY());
@@ -159,7 +159,7 @@ public class ParallelGlyphs implements Renderer {
 				int highx = (int) Math.ceil(highP.getX());
 				int highy = (int) Math.ceil(highP.getY());
 
-				V v = g.info();
+				I v = g.info();
 				
 				for (int x=Math.max(0,lowx); x<highx && x< width; x++){
 					for (int y=Math.max(0, lowy); y<highy && y< height; y++) {

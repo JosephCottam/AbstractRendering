@@ -38,7 +38,7 @@ import ar.util.Util;
  * 
  * **/
 
-public abstract class DynamicQuadTree<V> implements Glyphset<V> {
+public abstract class DynamicQuadTree<I> implements Glyphset<I> {
 	/**Smallest quad that will be created.**/
 	public static double MIN_DIM = .001d;
 	
@@ -98,31 +98,31 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	public abstract Rectangle2D bounds();
 	
 	/**Add an item to the node's sub-tree**/
-	public abstract void add(Glyph<V> glyph);
+	public abstract void add(Glyph<I> glyph);
 
 	/**How many things are held in this sub-tree?**/
 	public long size() {return items().size();}
 
 	/**What are the items of the sub-tree?**/
-	public Collection<Glyph<V> > items() {
-		Collection<Glyph<V>> collector = new HashSet<Glyph<V>>();
+	public Collection<Glyph<I> > items() {
+		Collection<Glyph<I>> collector = new HashSet<Glyph<I>>();
 		items(collector);
 		return collector;		
 	}
 
 	/**Efficiency method for collecting items.**/
-	protected abstract void items(Collection<Glyph<V>> collector);
+	protected abstract void items(Collection<Glyph<I>> collector);
 
 
 	/**What items in this sub-tree contain the passed point?**/	
-	public Collection<Glyph<V>> intersects(Rectangle2D pixel) {
-		Collection<Glyph<V>> collector = new HashSet<Glyph<V>>();
+	public Collection<Glyph<I>> intersects(Rectangle2D pixel) {
+		Collection<Glyph<I>> collector = new HashSet<Glyph<I>>();
 		intersects(pixel, collector);
 		return collector;
 	}
 
 	/**Efficiency method for collecting items touching a point**/
-	protected abstract void intersects(Rectangle2D pixel, Collection<Glyph<V>> collector);
+	protected abstract void intersects(Rectangle2D pixel, Collection<Glyph<I>> collector);
 
 	protected boolean doSplit() {return false;}
 	

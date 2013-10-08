@@ -17,7 +17,7 @@ public final class SerialSpatial implements Renderer {
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 	
 	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
-	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphset, final Aggregator<V,A> op,   
+	public <I,A> Aggregates<A> aggregate(final Glyphset<? extends I> glyphset, final Aggregator<I,A> op,   
 			final AffineTransform view, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());

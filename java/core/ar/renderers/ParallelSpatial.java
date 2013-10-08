@@ -38,7 +38,7 @@ public final class ParallelSpatial implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
+	public <I,A> Aggregates<A> aggregate(final Glyphset<? extends I> glyphs, final Aggregator<I,A> op, 
 			final AffineTransform view, final int width, final int height) {
 		
 		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
@@ -47,7 +47,7 @@ public final class ParallelSpatial implements Renderer {
 		try {inverseView = view.createInverse();}
 		catch (Exception e) {throw new IllegalArgumentException(e);}
 		
-		ReduceTask<V,A> t = new ReduceTask<V,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
+		ReduceTask<I,A> t = new ReduceTask<I,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;
 	}
@@ -126,19 +126,19 @@ public final class ParallelSpatial implements Renderer {
 		}
 	}
 	
-	private static final class ReduceTask<G,A> extends RecursiveAction {
+	private static final class ReduceTask<I,A> extends RecursiveAction {
 		private static final long serialVersionUID = -6471136218098505342L;
 
 		private final int taskSize;
 		private final int lowx, lowy, highx, highy;
 		private final Aggregates<A> aggs;
-		private final Aggregator<G,A> op;
-		private final Glyphset<? extends G> glyphs;
+		private final Aggregator<I,A> op;
+		private final Glyphset<? extends I> glyphs;
 		private final AffineTransform inverseView;
 		private final RenderUtils.Progress recorder;
 		
-		public ReduceTask(Glyphset<? extends G> glyphs, AffineTransform view, 
-				Aggregator<G,A> op, RenderUtils.Progress recorder, int taskSize,   
+		public ReduceTask(Glyphset<? extends I> glyphs, AffineTransform view, 
+				Aggregator<I,A> op, RenderUtils.Progress recorder, int taskSize,   
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy) {
 			this.glyphs = glyphs;
 			this.inverseView = view;
@@ -163,10 +163,10 @@ public final class ParallelSpatial implements Renderer {
 			if ((width*height) > taskSize) {
 				int centerx = center(lowx, highx);
 				int centery = center(lowy, highy);
-				ReduceTask<G,A> SW = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    lowy,    centerx, centery);
-				ReduceTask<G,A> NW = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    centery, centerx, highy);
-				ReduceTask<G,A> SE = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, lowy,    highx,   centery);
-				ReduceTask<G,A> NE = new ReduceTask<G,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, centery, highx,   highy);
+				ReduceTask<I,A> SW = new ReduceTask<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    lowy,    centerx, centery);
+				ReduceTask<I,A> NW = new ReduceTask<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    centery, centerx, highy);
+				ReduceTask<I,A> SE = new ReduceTask<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, lowy,    highx,   centery);
+				ReduceTask<I,A> NE = new ReduceTask<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, centery, highx,   highy);
 				invokeAll(SW,NW,SE,NE);
 			} else {
 				for (int x=lowx; x<highx; x++) {

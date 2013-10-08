@@ -45,7 +45,7 @@ import ar.util.IndexedEncoding;
  * @author jcottam
  *
  */
-public class MemMapList<V> implements Glyphset.RandomAccess<V> {
+public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	/**Flag field indicating the binary file encoding (hbin) version understood by the parser.**/
 	public static final int VERSION_UNDERSTOOD = -1;
 	
@@ -67,7 +67,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	private final File source;
 	private final TYPE[] types;
-	private final Valuer<Indexed,V> valuer;
+	private final Valuer<Indexed,I> valuer;
 	private final Shaper<Indexed> shaper;
 
 	private final int recordLength;
@@ -78,7 +78,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	private Rectangle2D bounds;
 
 	/**Create a new memory mapped list, types are read from the source.**/
-	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,V> valuer) {
+	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,I> valuer) {
 		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
@@ -117,17 +117,17 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public Collection<Glyph<V>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<V>> contained = new ArrayList<Glyph<V>>();
-		for (Glyph<V> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<I>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<I>> contained = new ArrayList<Glyph<I>>();
+		for (Glyph<I> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
 		return contained;
 	}
 
 	@Override
-	public Glyph<V> get(long i) {
+	public Glyph<I> get(long i) {
 		long recordOffset = (i*recordLength)+dataTableOffset;
 		IndexedEncoding entry = entryAt(recordOffset);
-		Glyph<V> g = new SimpleGlyph<V>(shaper.shape(entry), valuer.value(entry));
+		Glyph<I> g = new SimpleGlyph<I>(shaper.shape(entry), valuer.value(entry));
 		return g;
 	}
 
@@ -137,7 +137,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	}
 
 	/**Valuer being used to establish a value for each entry.**/
-	public Valuer<Indexed,V> valuer() {return valuer;}
+	public Valuer<Indexed,I> valuer() {return valuer;}
 	
 	/**Shaper being used to provide geometry for each entry.**/ 
 	public Shaper<Indexed> shaper() {return shaper;}
@@ -147,7 +147,7 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public Iterator<Glyph<V>> iterator() {return new GlyphsetIterator<V>(this);}
+	public Iterator<Glyph<I>> iterator() {return new GlyphsetIterator<I>(this);}
 
 	public Rectangle2D bounds() {
 		if (bounds == null) {
@@ -197,9 +197,9 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 	public long segments() {return size();}
 
 	@Override
-	public Glyphset<V> segment(long bottom, long top)
+	public Glyphset<I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		Glyphset<V> subset = GlyphSubset.make(this, bottom, top, true);
+		Glyphset<I> subset = GlyphSubset.make(this, bottom, top, true);
 		return subset;
 	}
 
