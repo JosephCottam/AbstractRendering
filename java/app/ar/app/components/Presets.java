@@ -33,7 +33,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelGlyphs;
 import ar.renderers.ParallelSpatial;
-import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
@@ -247,24 +246,6 @@ public class Presets extends JPanel implements HasViewTransform {
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
-	public static class USPopulationClipWarn implements Preset {
-		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<CoC<String>> glyphset() {return CENSUS_MM;}
-		public Transfer<?,?> transfer() {
-
-			Transfer<CoC<Number>, Color> inner = 
-					new ChainedTransfer<>(
-							CHAIN_RENDERER,
-							new Categories.ToCount<>(),
-							new TransferMath.DivideInt(4000),
-							new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
-			return new Advise.OverUnder(Color.BLACK, Color.gray, inner, new CategoricalCounts.CompareMagnitude(), 10);
-		}
-		public String name() {return "US Population (Clip Warn)";}
-		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
-	}
 	
 	public static class USPopulationWeave implements Preset {
 		HasViewTransform transformProvider = null;
@@ -360,17 +341,6 @@ public class Presets extends JPanel implements HasViewTransform {
 					lift);
 		}
 		public String name() {return "US Ratial Distribution (highlight 'other')";}
-		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
-	}
-
-	
-	public static class Overplot implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.OverUnder().op();}
-		public String name() {return "Scatterplot: clipping warning";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}

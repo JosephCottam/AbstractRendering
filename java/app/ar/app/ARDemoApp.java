@@ -21,6 +21,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
+	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
 	private final Presets presets = new Presets(this);
 	private final Status status = new Status();
 
@@ -39,9 +40,16 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		c.fill =  GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth =2;
+		c.gridwidth =1;
 		c.weightx = 1;
-		controls.add(enhanceOptions);
+		controls.add(enhanceOptions,c);
+
+		c.fill =  GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 0;
+		c.gridwidth =1;
+		c.weightx = 1;
+		controls.add(clipwarnControl,c);
 
 		
 		c.gridx = 0;
@@ -126,6 +134,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		EnhanceHost newHost = new EnhanceHost(innerDisplay);
 
 		enhanceOptions.host(newHost);
+		clipwarnControl.target(newHost);
 		frame.add(newHost, BorderLayout.CENTER);
 		this.status.startMonitoring(innerDisplay.renderer());
 		this.display = newHost;

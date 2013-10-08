@@ -130,13 +130,20 @@ public class Advise {
 		protected final Comparator<A> comp;
 		protected final Color overColor, underColor;
 		protected final double lowTolerance; //TODO: use under.tolerance instead....
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
+			this(overColor, underColor, base, lowTolerance, new Util.ComparableComparator());
+		}
 		
 		/**
 		 * @param overColor Color to mark over saturation
 		 * @param underColor Color to mark under saturation
 		 * @param base Transformation that determines all colors and to find over/under saturation
+		 * @param lowerTolerance How close should be considered too-close in undersaturation
+		 * @param comp Comparator used to determine similarity between items
 		 */
-		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, Comparator<A> comp, double lowTolerance) {
+		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
@@ -145,6 +152,8 @@ public class Advise {
 			this.under = new Advise.UnderSaturate<A>(base, comp, lowTolerance);
 			this.over = new Advise.OverSaturate<A>(base, comp);
 		}
+		
+		public Transfer<A,Color> baseTransfer() {return base;}
 		
 		public Color emptyValue() {return base.emptyValue();}
  		
@@ -169,7 +178,7 @@ public class Advise {
 					Transfer.Specialized<A, Boolean> under,
 					Comparator<A> comp,
 					double lowTolerance) {
-				super(overColor, underColor, base, comp, lowTolerance);
+				super(overColor, underColor, base, lowTolerance, comp);
 				this.base = base;
 				this.under = under;
 				this.over = over;

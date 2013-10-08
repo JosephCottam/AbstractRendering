@@ -10,7 +10,7 @@ import ar.util.Util;
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
  */
-public interface CategoricalCounts<T> {
+public interface CategoricalCounts<T> extends Comparable<CategoricalCounts<T>> {
 	
 	/**Add a new value at the given key.**/
 	public CategoricalCounts<T> extend(T key, int qty);
@@ -134,6 +134,11 @@ public interface CategoricalCounts<T> {
 				return combined;
 			}
 		}
+
+		@Override
+		public int compareTo(CategoricalCounts<T> o) {
+			return Integer.compare(fullSize(), o.fullSize());
+		}
 	}
 	
 	/**Encapsulation of run-length encoding information.
@@ -234,14 +239,10 @@ public interface CategoricalCounts<T> {
 		}
 		
 		public CategoricalCounts<T> empty() {return new RLE<>();}
-	}
-	
-	
-	/**Compare the total size of two categorical counts.**/
-	public static class CompareMagnitude implements Comparator<CategoricalCounts<?>> {
-		public int compare(CategoricalCounts<?> o1, CategoricalCounts<?> o2) {
-			return Integer.compare(o1.fullSize(), o2.fullSize());
-		}
 		
+		@Override
+		public int compareTo(CategoricalCounts<T> o) {
+			return Integer.compare(fullSize(), o.fullSize());
+		}
 	}
 }
