@@ -24,6 +24,7 @@ public class ARApp implements ARComponent.Holder {
 	private final JComboBox<WrappedTransfer<?,?>> transfers = new JComboBox<WrappedTransfer<?,?>>();
 	private final JComboBox<WrappedAggregator<?,?>> aggregators = new JComboBox<WrappedAggregator<?,?>>();
 	
+	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
 	private final GlyphsetOptions glyphsetOptions = new GlyphsetOptions();
 	private final RendererOptions rendererOptions = new RendererOptions();
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
@@ -46,7 +47,11 @@ public class ARApp implements ARComponent.Holder {
 		
 		fileOptions = new FileOptions(this);
 		
-		controls.add(enhanceOptions);
+		JPanel toggles = new JPanel();
+		toggles.add(enhanceOptions);
+		toggles.add(clipwarnControl);
+		
+		controls.add(toggles);
 		controls.add(new LabeledItem("Aggregator:", aggregators));
 		controls.add(new LabeledItem("Transfer:", transfers));
 		controls.add(glyphsetOptions);
@@ -119,6 +124,7 @@ public class ARApp implements ARComponent.Holder {
 		if (this.display != null) {frame.remove(this.display);}
 		
 		enhanceOptions.host(newDisplay);
+		clipwarnControl.target(newDisplay);
 		frame.add(newDisplay, BorderLayout.CENTER);
 		this.status.startMonitoring(renderer);
 		this.display = newDisplay;
