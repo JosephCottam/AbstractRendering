@@ -42,10 +42,10 @@ public class RDDRender implements Serializable {
 	 */
 	public <A> Aggregates<A> aggregate(JavaRDD<Glyph<A>> glyphs,
 			Aggregator<A, A> op, 
-			AffineTransform inverseView, 
+			AffineTransform view, 
 			int width,
 			int height) {
-		JavaRDD<Aggregates<A>> aggset = glyphs.map(new GlyphToAggregates<A>(inverseView));
+		JavaRDD<Aggregates<A>> aggset = glyphs.map(new GlyphToAggregates<A>(view));
 		return aggset.reduce(new Rollup<A>(op));
 	}
 	

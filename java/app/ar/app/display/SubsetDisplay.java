@@ -59,8 +59,6 @@ public class SubsetDisplay extends FullDisplay {
 		}
 		
 		this.viewTransformRef = vt;
-		inverseViewTransformRef  = new AffineTransform(vt);
-		inverseViewTransformRef.invert();
 		repaint();
 	}
 
@@ -130,7 +128,7 @@ public class SubsetDisplay extends FullDisplay {
 				renderTransform = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
 
 				@SuppressWarnings({"unchecked","rawtypes"})
-				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform.createInverse(), databounds.width, databounds.height);
+				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform, databounds.width, databounds.height);
 				
 				SubsetDisplay.this.aggregates(a, renderTransform);
 				long end = System.currentTimeMillis();

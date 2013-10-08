@@ -130,7 +130,7 @@ public class ARServer extends NanoHTTPD {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform inverseView, int width, int height) {
+	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
 		Renderer r;
 		if (glyphs instanceof Glyphset.RandomAccess<?>) {
 			r = new ParallelGlyphs();
@@ -138,7 +138,7 @@ public class ARServer extends NanoHTTPD {
 			r = new ParallelSpatial();
 		}
 		
-		Aggregates aggs = r.aggregate(glyphs, agg, inverseView, width, height);
+		Aggregates aggs = r.aggregate(glyphs, agg, view, width, height);
 		Transfer transfer = new MultiStageTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);

@@ -13,19 +13,17 @@ public interface Renderer extends Serializable {
 	
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
-	 * This method uses an inverse view transform because iteration is usually driven from the
-	 * pixel-space but glyph selection occurs in canvas space. Therefore, the most common transformation
-	 * is from pixels to canvas (not the more common canvas to pixels).
-	 *  
 	 * @param glyphs  The items to render
 	 * @param op Means to convert the glyphset into an aggregate for a specific position
-	 * @param inverseView The *inverse* view transform 
+	 * @param viewTransform The view transform (e.g., geometry to screen) 
 	 * @param width The width of the current viewport
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
 	 */
-	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
-			final AffineTransform inverseView, final int width, final int height);
+	public <V,A> Aggregates<A> aggregate(
+			final Glyphset<? extends V> glyphs, 
+			final Aggregator<V,A> op, 
+			final AffineTransform viewTransform, final int width, final int height);
 	
 	
 	/**Produces an new set of aggregates for rendering, converting a set of aggregates into a set of colors.

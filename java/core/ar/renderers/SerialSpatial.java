@@ -16,10 +16,17 @@ public final class SerialSpatial implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 	
+	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
 	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphset, final Aggregator<V,A> op,   
-			final AffineTransform inverseView, final int width, final int height) {
+			final AffineTransform view, final int width, final int height) {
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
+
+		AffineTransform inverseView;
+		try {inverseView = view.createInverse();}
+		catch (Exception e) {throw new IllegalArgumentException(e);}
+		
+		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 				A val = AggregationStrategies.pixel(aggregates, op, glyphset, inverseView, x, y);

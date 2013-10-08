@@ -27,7 +27,6 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	protected Glyphset<?> dataset;
 	
 	protected AffineTransform viewTransformRef = new AffineTransform();
-	protected AffineTransform inverseViewTransformRef = new AffineTransform();
 
 	protected volatile boolean renderAgain = false;
 	protected volatile boolean renderError = false;
@@ -122,9 +121,9 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 			int width = FullDisplay.this.getWidth();
 			int height = FullDisplay.this.getHeight();
 			long start = System.currentTimeMillis();
-			AffineTransform ivt = inverseViewTransform();
+			AffineTransform vt = viewTransform();
 			try {
-				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, ivt, width, height);
+				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, vt, width, height);
 				display.aggregates(aggregates, viewTransformRef);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
@@ -152,16 +151,8 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		if (this.viewTransformRef.equals(vt)) {return;}
 		this.viewTransformRef = vt;
-		inverseViewTransformRef  = new AffineTransform(vt);
-		inverseViewTransformRef.invert();
-		this.aggregates(null, null);
 		this.repaint();
 	}
-	
-	/**Use this transform to convert screen values to the absolute/canvas
-	 * values.
-	 */
-	public AffineTransform inverseViewTransform() {return new AffineTransform(inverseViewTransformRef);}
 
 	
 	public void zoomFit() {

@@ -39,8 +39,14 @@ public final class ParallelSpatial implements Renderer {
 	
 	
 	public <V,A> Aggregates<A> aggregate(final Glyphset<? extends V> glyphs, final Aggregator<V,A> op, 
-			final AffineTransform inverseView, final int width, final int height) {
-		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity()); 
+			final AffineTransform view, final int width, final int height) {
+		
+		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
+
+		AffineTransform inverseView;
+		try {inverseView = view.createInverse();}
+		catch (Exception e) {throw new IllegalArgumentException(e);}
+		
 		ReduceTask<V,A> t = new ReduceTask<V,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;
@@ -131,11 +137,11 @@ public final class ParallelSpatial implements Renderer {
 		private final AffineTransform inverseView;
 		private final RenderUtils.Progress recorder;
 		
-		public ReduceTask(Glyphset<? extends G> glyphs, AffineTransform inverseView, 
+		public ReduceTask(Glyphset<? extends G> glyphs, AffineTransform view, 
 				Aggregator<G,A> op, RenderUtils.Progress recorder, int taskSize,   
 				Aggregates<A> aggs, int lowx, int lowy, int highx, int highy) {
 			this.glyphs = glyphs;
-			this.inverseView = inverseView;
+			this.inverseView = view;
 			this.recorder = recorder;
 			this.op=op;
 			this.taskSize = taskSize;

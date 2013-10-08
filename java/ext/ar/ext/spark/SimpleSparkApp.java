@@ -50,11 +50,11 @@ public class SimpleSparkApp {
 
 		JavaRDD<Glyph<Integer>> glyphs = base.map(new Glypher<>(shaper,valuer)).cache();
  		Rectangle2D contentBounds = RDDRender.bounds(glyphs);
-		AffineTransform ivt = Util.zoomFit(contentBounds, width, height);
+		AffineTransform view = Util.zoomFit(contentBounds, width, height);
 
  		
  		RDDRender render = new RDDRender();
- 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<>(), ivt, width, height);
+ 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<>(), view, width, height);
 
 		
 		if (outFile == null) {

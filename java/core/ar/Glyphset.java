@@ -4,8 +4,8 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 
 /**
- * A collection of glyphs for rendering. A glyph is a geometric description and
- * accompanying data values.
+ * A collection of glyphs for rendering. 
+ * A glyph is a geometric description and accompanying data values.
  * 
  * Segmentation
  * ------------
@@ -26,9 +26,9 @@ import java.util.Collection;
  * set. So providing and index into the data isn't convenient. However, it is
  * discrete at the level of leaf-quads. Similarly, the Avro serialization format
  * provides segments, but not random-access to those segments. The data can
- * still be divided, but providing the notion of "a precise division" that
- * random access structures provide is unattractive. The segment system provides
- * a vocabulary for specifying data subsets without implying precision.
+ * still be divided, but providing the level of control over what falls into which
+ * division random access structures provide is expensive and unnecessary. 
+ * The segment system provides a vocabulary for specifying data subsets without implying precision.
  * 
  * 
  * Random Access
@@ -57,16 +57,7 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 * @throws UnsupportedOperationException -- Not all glyphsets support adding items.
 	 ***/
 	public void add(Glyph<T> g);
-	
-	/**Glyphsets that support random access.
-	 * This interface is largely to support parallel execution.
-	 */
-	public static interface RandomAccess<T> extends Glyphset<T> {
-		/**Return the item at the specified index.**/
-		public Glyph<T> get(long l);
-	}
-		
-	
+
 	/**One greater than the highest value for "top" in "segment".
 	 * 
 	 * Analogous to "length" or "size" but without the semantic interpretation on what underlies
@@ -95,4 +86,13 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 * @return A subset of the data.
 	 */
 	public Glyphset<T> segment(long bottom, long top) throws IllegalArgumentException;
+	
+	
+	/**Glyphsets that support random access.
+	 * This interface is largely to support parallel execution.
+	 */
+	public static interface RandomAccess<T> extends Glyphset<T> {
+		/**Return the item at the specified index.**/
+		public Glyph<T> get(long l);
+	}
 }

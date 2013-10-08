@@ -48,11 +48,8 @@ public class ParallelGlyphs implements Renderer {
 
 	@Override
 	public <V,A> Aggregates<A> aggregate(Glyphset<? extends V> glyphs, Aggregator<V,A> op, 
-			AffineTransform inverseView, int width, int height) {
+			AffineTransform view, int width, int height) {
 		
-		AffineTransform view;
-		try {view = inverseView.createInverse();}
-		catch (Exception e) {throw new RuntimeException("Error inverting the inverse-view transform....");}
 		recorder.reset(glyphs.size());
 		
 		ReduceTask<V,A> t = new ReduceTask<V,A>(

@@ -104,7 +104,10 @@ public class AggregationStrategies {
 	}
 	
 	
-	/**Perform aggregation for a single pixel.**/
+	/**Perform aggregation for a single pixel.
+	 * 
+	 * @param inverseView The INVERSE view transform (screen to canvas).
+	 * **/
 	public static <A,V> A pixel(
 			Aggregates<A> aggregates, 
 			Aggregator<V,A> op,
