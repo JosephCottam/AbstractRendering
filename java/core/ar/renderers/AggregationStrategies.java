@@ -123,7 +123,7 @@ public class AggregationStrategies {
 		Collection<? extends Glyph<? extends V>> glyphs = glyphset.intersects(pixel);
 		A acc = aggregates.get(x, y);
 		for (Glyph<? extends V> g: glyphs) {
-			V val = g.value();
+			V val = g.info();
 			acc = op.combine(x, y, acc, val);
 		}
 		return acc;

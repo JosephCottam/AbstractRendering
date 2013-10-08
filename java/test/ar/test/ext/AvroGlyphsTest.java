@@ -66,7 +66,7 @@ public class AvroGlyphsTest {
 		for (int i=0;i<reference.size(); i++) {
 			Glyph<?> res = result.get(i);
 			Glyph<?> ref = reference.get(i);
-			assertEquals("Value did not match at " + i, ref.value(), res.value().toString());
+			assertEquals("Value did not match at " + i, ref.info(), res.info().toString());
 		}
 
 	}

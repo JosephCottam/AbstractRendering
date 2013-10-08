@@ -9,12 +9,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ar.Glyphset;
+import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.util.BigFileByteBuffer;
 import ar.util.DelimitedReader;
-import ar.util.GlyphsetLoader;
 import ar.util.IndexedEncoding;
 import ar.util.MemMapEncoder;
 import ar.util.MemMapEncoder.TYPE;
@@ -37,7 +37,7 @@ public class MemoryMappingTests {
 		assertTrue("hbin not found after encode.", hbin.exists());
 		
 		mm = new MemMapList<Integer>(hbin, new Indexed.ToRect(1, 0, 1), new Indexed.ToValue<Integer,Integer>(2));
-		ref = (GlyphList<Integer>) GlyphsetLoader.load(
+		ref = (GlyphList<Integer>) GlyphsetUtils.load(
 				new ar.glyphsets.GlyphList<Integer>(), 
 				new DelimitedReader(csv, 1, "\\s*,\\s*"),
 				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
@@ -55,7 +55,7 @@ public class MemoryMappingTests {
 		assertEquals("Sizes don't match.", ref.size(), mm.size());
 		for (int i=0; i< ref.size(); i++) {
 			assertEquals("Mismatched shape at " + i, ref.get(i).shape(), mm.get(i).shape());
-			assertEquals("Mismatched value at " + i, ref.get(i).value(), mm.get(i).value());
+			assertEquals("Mismatched value at " + i, ref.get(i).info(), mm.get(i).info());
 		}
 	}
 	

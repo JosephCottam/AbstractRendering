@@ -52,12 +52,6 @@ public interface Glyphset<T> extends Iterable<Glyph<T>> {
 	 * */
 	public long size();
 	
-	/**Add a new item to this glyphset.
-	 * TODO: Is this required? It is only used in utility spaces, most of which already "know" the glyphset type.
-	 * @throws UnsupportedOperationException -- Not all glyphsets support adding items.
-	 ***/
-	public void add(Glyph<T> g);
-
 	/**One greater than the highest value for "top" in "segment".
 	 * 
 	 * Analogous to "length" or "size" but without the semantic interpretation on what underlies

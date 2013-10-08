@@ -25,7 +25,6 @@ public final class GlyphSingleton<G> implements Glyphset.RandomAccess<G> {
 	public Iterator<Glyph<G>> iterator() {return glyphs.iterator();}
 	public Glyph<G> get(long i) {return glyphs.get(0);}
 	public boolean isEmpty() {return glyphs.isEmpty();}
-	public void add(Glyph<G> g) {throw new UnsupportedOperationException();}
 	public long size() {return glyphs.size();}
 	public Rectangle2D bounds() {return bounds;}
 

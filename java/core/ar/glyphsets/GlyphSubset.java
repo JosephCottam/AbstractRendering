@@ -32,11 +32,6 @@ public abstract class GlyphSubset<G> implements Glyphset.RandomAccess<G> {
 		return new Cached<G>(glyphs, bottom + this.low, top + this.low);
 	}
 
-	public void add(Glyph<G> g) {
-		throw new UnsupportedOperationException(
-				"Cannot add items to subset view.");
-	}
-
 	public Collection<Glyph<G>> intersects(Rectangle2D r) {
 		ArrayList<Glyph<G>> contained = new ArrayList<Glyph<G>>();
 		for (Glyph<G> g : this) {

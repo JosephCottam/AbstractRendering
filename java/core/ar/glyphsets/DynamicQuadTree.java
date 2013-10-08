@@ -96,7 +96,7 @@ public abstract class DynamicQuadTree<V> implements Glyphset<V> {
 	 * Where concernBounds is a statement of what may be, 
 	 * bounds is a statement of what is.**/
 	public abstract Rectangle2D bounds();
-
+	
 	/**Add an item to the node's sub-tree**/
 	public abstract void add(Glyph<V> glyph);
 

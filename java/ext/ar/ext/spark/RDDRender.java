@@ -114,7 +114,7 @@ public class RDDRender implements Serializable {
 		public Aggregates<V> call(Glyph<V> glyph) throws Exception {
 			Shape s = vt.createTransformedShape(glyph.shape());
 			Rectangle bounds = s.getBounds();
-			V v = glyph.value();
+			V v = glyph.info();
 			Aggregates<V> aggs = new FlatAggregates<V>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
 			return aggs;
 		}

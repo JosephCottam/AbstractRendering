@@ -23,5 +23,5 @@ public class SimpleGlyph<V> implements Glyph<V>, Serializable {
 	}
 
 	public Shape shape() {return shape;}
-	public V value() {return value;}
+	public V info() {return value;}
 }

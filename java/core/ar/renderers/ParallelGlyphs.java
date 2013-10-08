@@ -159,7 +159,7 @@ public class ParallelGlyphs implements Renderer {
 				int highx = (int) Math.ceil(highP.getX());
 				int highy = (int) Math.ceil(highP.getY());
 
-				V v = g.value();
+				V v = g.info();
 				
 				for (int x=Math.max(0,lowx); x<highx && x< width; x++){
 					for (int y=Math.max(0, lowy); y<highy && y< height; y++) {

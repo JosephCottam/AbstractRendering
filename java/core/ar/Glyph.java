@@ -14,5 +14,5 @@ public interface Glyph<V> {
 	public Shape shape();
 
 	/**What is the value associated with this glyph?*/
-	public V value();
+	public V info();
 }

@@ -147,7 +147,6 @@ public class MemMapList<V> implements Glyphset.RandomAccess<V> {
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public void add(Glyph<V> g) {throw new UnsupportedOperationException();}
 	public Iterator<Glyph<V>> iterator() {return new GlyphsetIterator<V>(this);}
 
 	public Rectangle2D bounds() {

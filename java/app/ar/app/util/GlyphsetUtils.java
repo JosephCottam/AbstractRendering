@@ -1,16 +1,20 @@
 package ar.app.util;
 
 import java.awt.Color;
+import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.lang.reflect.Method;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.util.ColorNames;
 import ar.util.DelimitedReader;
 import ar.util.MemMapEncoder;
@@ -60,7 +64,7 @@ public class GlyphsetUtils {
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {
-				return load(glyphs, source, skip, glyphSize, flipY, xField, yField, colorField, valueField);
+				return load((DynamicQuadTree<T>) glyphs, source, skip, glyphSize, flipY, xField, yField, colorField, valueField);
 			}
 
 		} 
@@ -75,7 +79,7 @@ public class GlyphsetUtils {
 	 * That type will be Color if colorindex >= 0 or if both colorIndex and valueIndex are less than 0.
 	 * Otherwise it will be String
 	 *  
-	 * @param glyphs
+	 * @param glyphs  Glyphset with an 'add(Glyph)' method (will be loaded via reflection)
 	 * @param file
 	 * @param skip
 	 * @param size
@@ -86,11 +90,16 @@ public class GlyphsetUtils {
 	 * @param valueField
 	 */
 	@SuppressWarnings("unchecked")
-	public static <V> Glyphset<V> load(final Glyphset<V> glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField, int valueField) {
+	public static <V> Glyphset<V> load(final Glyphset <V> glyphs, File file, int skip, double size, boolean flipy, int xField, int yField, int colorField, int valueField) {
 		DelimitedReader loader = new DelimitedReader(file, skip, DelimitedReader.CSV);
 		final int yflip = flipy?-1:1;
 		int count =0;
-
+		
+		Method m;
+		try {m = glyphs.getClass().getMethod("add", Glyph.class);}
+		catch (NoSuchMethodException | SecurityException e1) {throw new IllegalArgumentException("Cannot access 'add' on the passed glypshet.", e1);}
+		m.setAccessible(true); //Suppress java access checking.  Allows access to (for example) public methods of private classes
+		
 		while (loader.hasNext()) {
 			String[] parts = loader.next();
 			if (parts == null) {continue;}
@@ -109,7 +118,7 @@ public class GlyphsetUtils {
 
 			Glyph<V> g = new SimpleGlyph<V>(rect, (V) value);
 			
-			try {glyphs.add(g);}
+			try {m.invoke(glyphs, g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			
 			count++;
@@ -120,6 +129,47 @@ public class GlyphsetUtils {
 		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
 		
 
+		return glyphs;
+	}
+	
+	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.
+	 * 
+	 * This method creates concrete geometry, though it uses the implicit geometry system to achieve it. 
+	 * 
+	 * @param glyphs Glyphset to load items into
+	 * @param reader Source of the glyph data
+	 * @param converter Convert read entries to indexed entries
+	 * @param shaper Convert the read item into a shape
+	 * @param valuer Convert the read item into a value
+	 * @return The glyphset passed in as a parameter (now with more glyphs)
+	 */
+	public static <V> Glyphset<V> load(
+			Glyphset<V> glyphs, DelimitedReader reader, 
+			Indexed.Converter converter, 
+			Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
+		int count =0;
+		
+		Method m;
+		try {m = glyphs.getClass().getMethod("add", Glyph.class);}
+		catch (NoSuchMethodException | SecurityException e1) {throw new IllegalArgumentException("Cannot access 'add' on the passed glypshet.", e1);}
+		m.setAccessible(true); //Suppress java access checking.  Allows access to (for example) public methods of private classes
+
+
+		while (reader.hasNext()) {
+			String[] parts = reader.next();
+			if (parts == null) {continue;}
+			
+			Converter item = new Converter(parts, converter.types());
+			V value = valuer.value(item);
+			Shape shape = shaper.shape(item);
+
+			Glyph<V> g = new SimpleGlyph<V>(shape, value);
+			try {m.invoke(glyphs, g);}
+			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
+			count++;
+		}
+		//The check below causes an issue if memory is tight...the check has a non-trivial overhead on some glyphset types
+		if (count != glyphs.size()) {throw new RuntimeException(String.format("Error loading data; Read and retained glyph counts don't match (%s read vs %s retained).", count, glyphs.size()));}
 		return glyphs;
 	}
 

@@ -54,10 +54,6 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 		};
 	}
 	
-	public void add(ar.Glyph<V> g) {
-		throw new UnsupportedOperationException("Cannot add directly to wrapped list.  Must add to backing collection.");
-	}	
-
 	@Override
 	public long segments() {return values.size();}
 

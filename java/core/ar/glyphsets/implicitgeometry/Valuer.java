@@ -11,6 +11,8 @@ import ar.rules.CategoricalCounts;
  * However, this class can also be used to do general-purpose
  *  conversions during data load.
  *  
+ *  This class can be used as a generalized "info" function in conjunction with the Wrapped Collection.
+ *  
  * <I> Input value type
  * <V> Output value type
  * **/

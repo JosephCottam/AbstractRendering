@@ -15,6 +15,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
+import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.DynamicQuadTree;
@@ -31,7 +32,6 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.util.MultiStageTransfer;
 import ar.util.DelimitedReader;
-import ar.util.GlyphsetLoader;
 import ar.util.MemMapEncoder.TYPE;
 import ar.util.Util;
 import ar.Glyphset;
@@ -45,7 +45,7 @@ public class ARServer extends NanoHTTPD {
 	
 	static {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Glyphset circlepoints = GlyphsetLoader.load(
+		Glyphset circlepoints = GlyphsetUtils.load(
 				DynamicQuadTree.make(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),

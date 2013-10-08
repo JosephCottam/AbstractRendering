@@ -25,7 +25,7 @@ public class RHIPEToolsTest {
 		RHIPETools.TraceEntry te = new RHIPETools.TraceEntry(0,1,2,size);
 		
 		Glyph<String> g = te.glyph(item);
-		assertEquals("Category did not match.", cat, g.value());
+		assertEquals("Category did not match.", cat, g.info());
 		assertEquals("Shape did not match", new Rectangle2D.Double(x,y,size,size), g.shape());
 	}
 	
@@ -40,7 +40,7 @@ public class RHIPEToolsTest {
 			Glyph<String> g = glyphset.get(i);
 			assertEquals("X mismatch on " + i, i+10, g.shape().getBounds().x);
 			assertEquals("Y mismatch on " + i, i+20, g.shape().getBounds().y);
-			assertEquals("Category mismatch on " + i, Integer.toString(i+40), g.value());
+			assertEquals("Category mismatch on " + i, Integer.toString(i+40), g.info());
 		}
 	}
 	

@@ -36,7 +36,7 @@ public class WrappedCollectionTests {
 		
 		Glyphset.RandomAccess<Object> ra = (Glyphset.RandomAccess<Object>) g;
 		
-		for (int i=0; i<data.size(); i++) {assertEquals(ra.get(i).value(), data.get(i).get(2));}		
+		for (int i=0; i<data.size(); i++) {assertEquals(ra.get(i).info(), data.get(i).get(2));}		
 	}
 
 	@Test
