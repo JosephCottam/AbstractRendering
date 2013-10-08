@@ -41,6 +41,44 @@ public class Debug {
 	}
 	
 
+	/**Throw an error during some phase.**/
+	public static class TransferError<IN,OUT> implements Transfer<IN,OUT> {
+		public enum PHASE {ID, SPEC, COMBINE, ROLLUP, AT}
+		protected final RuntimeException toThrow = new RuntimeException("Forced Error");
+		protected final PHASE phase;
+		protected final Transfer<IN,OUT> base;
+		
+		public TransferError(Transfer<IN,OUT> base,PHASE phase) {
+			this.phase = phase;
+			this.base = base;
+		}
+		
+		public OUT emptyValue() {
+			if (phase != PHASE.ID) {throw toThrow;}
+			return base.emptyValue();
+		}
+
+		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
+			if (phase == PHASE.SPEC) {throw toThrow;}
+			return new Specialized<>(base.specialize(aggregates), phase);
+		}
+
+		public static class Specialized<IN,OUT> extends TransferError<IN,OUT> implements Transfer.Specialized<IN, OUT> {
+			private final Transfer.Specialized<IN, OUT> base;
+			public Specialized(Transfer.Specialized<IN, OUT> base,
+					ar.rules.Debug.TransferError.PHASE phase) {
+				super(base, phase);
+				this.base = base;
+			}
+
+			@Override
+			public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+				if (phase == PHASE.AT) {throw toThrow;}
+				return base.at(x,y, aggregates);
+			}
+			
+		}
+	}
 	
 	/**Will print a message on specialization.**/
 	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {

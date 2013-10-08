@@ -403,7 +403,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	///Predicate to lift the 'other' category to the front...
 	private static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
 			super(
 				new Pred(cutoff), 

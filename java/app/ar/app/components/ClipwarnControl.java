@@ -22,6 +22,7 @@ public class ClipwarnControl  extends JPanel {
 		this.add(new LabeledItem("Clipping warning:", clipwarn));
 		
 		clipwarn.addActionListener(new ActionListener() {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
 			public void actionPerformed(ActionEvent e) {
 				JCheckBox b = (JCheckBox) e.getSource();
 				Transfer<?,?> old = target.transfer();

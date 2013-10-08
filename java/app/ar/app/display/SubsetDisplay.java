@@ -114,6 +114,7 @@ public class SubsetDisplay extends FullDisplay {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
+				System.err.println(e.getMessage());
 				//e.printStackTrace();
 			}
 			
@@ -140,6 +141,7 @@ public class SubsetDisplay extends FullDisplay {
 				
 			} catch (Exception e) {
 				renderError = true;
+				System.err.println(e.getMessage());
 				//e.printStackTrace();
 			}
 			
