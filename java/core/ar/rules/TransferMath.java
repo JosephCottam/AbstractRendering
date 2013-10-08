@@ -15,7 +15,6 @@ public final class TransferMath {
 	public static class DivideInt implements Transfer.Specialized<Integer, Integer> {
 		private final int denominator;
 		
-		
 		/**@param denominator Value to divide by*/
 		public DivideInt(int denominator) {this.denominator = denominator;}
 		public Integer emptyValue() {return 0;}
@@ -25,6 +24,18 @@ public final class TransferMath {
 			int val = aggregates.get(x, y).intValue()/denominator;
 			return val;
 		}
-		
+	}
+	
+	public static class DivideDouble implements Transfer.Specialized<Number, Double> {
+		private final double denominator;
+
+		/**@param denominator Value to divide by*/
+		public DivideDouble(double denominator) {this.denominator = denominator;}
+		public Double emptyValue() {return 0d;}
+		public ar.Transfer.Specialized<Number, Double> specialize(
+				Aggregates<? extends Number> aggregates) {return this;}
+		public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
+			return aggregates.get(x, y).doubleValue()/denominator;
+		}
 	}
 }

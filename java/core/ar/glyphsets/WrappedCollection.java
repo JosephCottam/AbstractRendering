@@ -123,7 +123,7 @@ public class WrappedCollection<I,V> implements Glyphset<V> {
 	 * Copying is advisable if the source data structure is either (1) actively being changed
 	 * or (2) a glyph-parallel rendering is desired but the source data is not random access.
 	 */
-	public static <I,V> Glyphset<V> toList(
+	public static <I,V> Glyphset.RandomAccess<V> toList(
 			Collection<I> basis, 
 			Shaper<I> shaper, 
 			Valuer<I,V> valuer) {
