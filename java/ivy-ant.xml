@@ -27,7 +27,7 @@
       uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
   </target>
 
-  <target name="deep-clean" depends="init" description="--> clean the ivy installation">
+  <target name="deep-clean" depends="init" >
     <!--Remove ivy from the place where this script would install it and all dependencies.
          Use with caution, will remove ivy from the specified location, even if it
          was not put there by this script in the first place.-->
@@ -41,7 +41,7 @@
     <ivy:retrieve conf="dev"/>
   </target>
 
-  <target name="fetch" depends="init,markdown" description="retrieve dependencies with ivy">
+  <target name="fetch" depends="init,markdown" >
     <ivy:retrieve conf="deploy"/>
   </target>
 

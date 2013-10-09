@@ -192,10 +192,10 @@
   </target>
 
   <include file="ivy-ant.xml" as="ivy"/> 
-  <target name="depends" depends="ivy.fetch"/>
-  <target name="depends-dev" depends="ivy.fetch-dev"/>
-  <target name="clean-deep" depends="clean,ivy.deep-clean"/>
-  <target name="clean-depends">
+  <target name="depends" depends="ivy.fetch" description="Download dependencies"/>
+  <target name="depends-dev" depends="ivy.fetch-dev" description="Download development dependencies."/>
+  <target name="clean-deep" depends="clean,ivy.deep-clean" description="Remove dependencies AND ivy."/>
+  <target name="clean-depends" description="Remove dependencies.">
     <delete dir="${lib}"/>
   </target>
 </project>
