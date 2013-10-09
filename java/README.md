@@ -21,16 +21,13 @@ The simplest application is titled "SimpleApp." It is executed with
 The source code (found in app/ar/SimpleApp.jar) provides documented example of how
 to use Abstract Rendering through the provided swing panel or to produce images directly.
 
-For a more interactive demo, run "java -jar ARApp.jar".
+For a more interactive demo, run "java -cp ARApp.jar:AR.jar:lib/* ar.app.ARApp".
 This application presents a number of preset datasets/treatments in the drop-down box.
 Shifting between datasets results in a full rendering, but only shifting
 between a treatments results in partial re-rendering (just 
 re-executing the transfer function).
 
-Pan is done with Drag.  Zoom is done with Shift+Drag.
-Triple-click on the main plot area to zoom-extents.
-
-For a more full-featured application execute "java -jar ARApp.jar -ext".
+For a more full-featured application execute "java -cp ARApp.jar:AR.jar:lib/* ar.app.ARApp -ext".
 This application allows exploration of your own data and various treatments.
 However, there are combinations that will not work (for example, glyph-parallel 
 rendering requires a list-based glyph container type).  No effort is made to 
