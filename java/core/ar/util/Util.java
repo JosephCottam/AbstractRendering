@@ -23,6 +23,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
+import ar.util.MemMapEncoder.TYPE;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {
@@ -30,6 +31,24 @@ public final class Util {
 	public static final Color CLEAR = new Color(0,0,0,0);
 
 	private Util() {}
+	
+	/**Convert from the types understood by the memory mappers to the types understood by this system.**/
+	public static final Converter.TYPE[] transcodeTypes(TYPE... types) {
+		Converter.TYPE[] newTypes = new Converter.TYPE[types.length];
+		for (int i=0; i< types.length; i++) {
+			switch(types[i]) {
+				case X: newTypes[i] = Converter.TYPE.X; break;
+				case INT: newTypes[i] = Converter.TYPE.INT; break;
+				case SHORT: newTypes[i] = Converter.TYPE.SHORT; break;
+				case LONG: newTypes[i] = Converter.TYPE.LONG; break;
+				case DOUBLE: newTypes[i] = Converter.TYPE.DOUBLE; break;
+				case FLOAT: newTypes[i] = Converter.TYPE.FLOAT; break;
+				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
+			}
+		}
+		return newTypes;
+	}
+
 	
 	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.
 	 * 
@@ -43,7 +62,8 @@ public final class Util {
 	 * @return The glyphset passed in as a parameter (now with more glyphs)
 	 */
 	public static <V> Glyphset<V> load(
-			Glyphset<V> glyphs, DelimitedReader reader, 
+			Glyphset<V> glyphs, 
+			DelimitedReader reader, 
 			Indexed.Converter converter, 
 			Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
 		int count =0;
@@ -58,7 +78,7 @@ public final class Util {
 			String[] parts = reader.next();
 			if (parts == null) {continue;}
 			
-			Converter item = new Converter(parts, converter.types());
+			Converter item = converter.applyTo(parts);
 			V value = valuer.value(item);
 			Shape shape = shaper.shape(item);
 

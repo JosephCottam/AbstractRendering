@@ -4,7 +4,9 @@ import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 
+import ar.util.ColorNames;
 import ar.util.MemMapEncoder;
+import ar.util.Util;
 
 /**Interface designating something has an integer-valued "get" function.
  * This interface is the basis for array-based and file-record conversions
@@ -31,12 +33,21 @@ public interface Indexed extends Serializable {
 	 * Uses toString and primitive parsers.
 	 */
 	public static class Converter implements Indexed {
+		/**Types the converter understands. "X" means skip.**/
+		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR}
 		private static final long serialVersionUID = 9142589107863879237L;
-		private final MemMapEncoder.TYPE[] types;
+		private final TYPE[] types;
 		private final Object[] values;
 		
-		@SuppressWarnings("javadoc")
-		public Converter(Object[] values, MemMapEncoder.TYPE... types) {
+		public Converter(MemMapEncoder.TYPE... types) {this(Util.transcodeTypes(types));}
+		
+		/**Instantiate a converter with a null value-array.
+		 * This converter is essentially a template for future converts built for specific data.
+		 */
+		public Converter(TYPE... types) {this(null, types);}
+		
+		/**Instantiate a converter for a specific set of values.*/
+		public Converter(Object[] values, TYPE... types) {
 			this.values = values;
 			this.types = types;
 		}
@@ -46,15 +57,18 @@ public interface Indexed extends Serializable {
 			String s = values[i].toString();
 			switch (types[i]) {
 				case INT: return Integer.valueOf(s);
+				case SHORT: return Short.valueOf(s);
 				case LONG: return Long.valueOf(s);
-				case DOUBLE: return Double.valueOf(s);
 				case FLOAT: return Float.valueOf(s);
+				case DOUBLE: return Double.valueOf(s);
+				case COLOR: return ColorNames.byName(s, null);
 				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
 			}
 		}
 		
 		/**Get the type array associated with this converter.**/
-		public MemMapEncoder.TYPE[] types() {return types;}
+		public TYPE[] types() {return types;}
+		public Converter applyTo(Object[] values) {return new Converter(values, types);}
 	}
 	
 	

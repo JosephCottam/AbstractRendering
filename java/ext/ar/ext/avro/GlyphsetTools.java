@@ -29,8 +29,7 @@ public class GlyphsetTools {
 	}
 	
 	/**Internal utility for seting up an avro reader.**/
-	private static DataFileReader<GenericRecord> reader(String sourceName) throws IOException {
-		File source = new File(sourceName);
+	private static DataFileReader<GenericRecord> reader(File source) throws IOException {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
 		DataFileReader<GenericRecord> fr =new DataFileReader<GenericRecord>(source, dr);
 		return fr;
@@ -44,8 +43,8 @@ public class GlyphsetTools {
 	 * @param glypher Converter from generic-record to a glyph-derived class
 	 * @throws IOException
 	 */
-	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(String sourceName, Valuer<GenericRecord,Glyph<V>> glypher, Class<V> valueType) throws IOException {
-		DataFileReader<GenericRecord> reader = reader(sourceName); 
+	public static <A extends Glyph<V>,V> Glyphset.RandomAccess<V> fullLoad(File source, Valuer<GenericRecord,Glyph<V>> glypher, Class<V> valueType) throws IOException {
+		DataFileReader<GenericRecord> reader = reader(source); 
 		GlyphList<V> l = new GlyphList<V>();
 		for (GenericRecord r: reader) {l.add(glypher.value(r));}
 		return l;
@@ -63,12 +62,12 @@ public class GlyphsetTools {
 	 * @throws IOException
 	 */
 	public static <A extends Glyph<V>,V,INNER> Glyphset<V> wrappedLoad(
-			String sourceFile, 
+			File source, 
 			Valuer<GenericRecord,INNER> realizer,
 			Shaper<INNER> shaper, 
 			Valuer<INNER, V> valuer) throws IOException {
 		
-		DataFileReader<GenericRecord> reader = reader(sourceFile); 
+		DataFileReader<GenericRecord> reader = reader(source); 
 		ArrayList<INNER> l = new ArrayList<INNER>();
 		for (GenericRecord r: reader) {l.add(realizer.value(r));}
 		return new WrappedCollection.List<INNER, V>(l, shaper, valuer);

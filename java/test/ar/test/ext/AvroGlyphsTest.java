@@ -15,7 +15,6 @@ import org.junit.Test;
 
 import ar.Glyph;
 import ar.Glyphset;
-import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.GlyphsetTools;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
@@ -23,6 +22,8 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.DelimitedReader;
+import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
+import ar.util.Util;
 
 public class AvroGlyphsTest {
 
@@ -44,16 +45,16 @@ public class AvroGlyphsTest {
 
 	@Test
 	public void circlepointsRoundTrip() throws Exception {
-		String csv = "../data/circlepoints.csv";
-		String output = "../testResults/circlepoints.avro";
-		String schema = "../data/circlepoints.avsc";
+		File csv = new File("../data/circlepoints.csv");
+		File output = new File("../testResults/circlepoints.avro");
+		File schema = new File("../data/circlepoints.avsc");
 		
-		assertTrue("Input file not found.", new File(csv).exists());
-		assertTrue("Schema file not found.", new File(schema).exists());
+		assertTrue("Input file not found.", csv.exists());
+		assertTrue("Schema file not found.", schema.exists());
 
 		encode(csv, output, schema);
 		
-		GlyphList<?> reference =(GlyphList<?>) GlyphsetUtils.load(new GlyphList<>(), new File(csv), 1, .1, false, 2, 3, -1, 4); 
+		GlyphList<?> reference = (GlyphList<?>) Util.load(new GlyphList<>(), new DelimitedReader(csv), new Indexed.Converter(TYPE.X, TYPE.X, TYPE.INT, TYPE.INT, TYPE.INT), new Indexed.ToRect(.1, 2,3), new Indexed.ToValue<>(4));
 		Glyphset.RandomAccess<Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());
@@ -72,22 +73,22 @@ public class AvroGlyphsTest {
 	}
 	
 	/**Utility to write items to an avro file.**/
-	public void encode(String sourceFile, String targetFile, String schemaFile) throws Exception {
-		Schema schema = new Schema.Parser().parse(new File(schemaFile));
+	public void encode(File sourceFile, File targetFile, File schemaFile) throws Exception {
+		Schema schema = new Schema.Parser().parse(schemaFile);
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
-		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
-		dataFileWriter.create(schema, new File(targetFile));
-		
-		DelimitedReader reader = new DelimitedReader(new File(sourceFile), 1, "\\s*,\\s*");
-		while (reader.hasNext()) {
-			final String[] record = reader.next();
-			if (record == null) {continue;}
-			final GenericRecord r = new GenericData.Record(schema);
-			for (int i=0; i<record.length;i++) {r.put(i, Double.valueOf(record[i]));}
-			dataFileWriter.append(r);
+
+		try (DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)) {
+			dataFileWriter.create(schema, targetFile);
+			
+			DelimitedReader reader = new DelimitedReader(sourceFile, 1, "\\s*,\\s*");
+			while (reader.hasNext()) {
+				final String[] record = reader.next();
+				if (record == null) {continue;}
+				final GenericRecord r = new GenericData.Record(schema);
+				for (int i=0; i<record.length;i++) {r.put(i, Double.valueOf(record[i]));}
+				dataFileWriter.append(r);
+			}
 		}
-		
-		dataFileWriter.close();
 	}
 
 }

@@ -18,7 +18,9 @@ public class DelimitedReader implements Iterator<String[]> {
 	private BufferedReader reader;
 	private final Pattern splitter;
 
-
+	/**Delimited reader for the given file with a header row and CSV delimiter.**/
+	public DelimitedReader(File file) {this(file, 1, CSV);}
+	
 	/** @param file Source file
 	 * @param skip Number of lines to skip (i.e., header lines)
 	 * @param delimiter Regular expression to split fields appart

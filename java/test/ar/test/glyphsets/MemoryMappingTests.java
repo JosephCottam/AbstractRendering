@@ -40,7 +40,7 @@ public class MemoryMappingTests {
 		ref = (GlyphList<Integer>) Util.load(
 				new ar.glyphsets.GlyphList<Integer>(), 
 				new DelimitedReader(csv, 1, "\\s*,\\s*"),
-				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
+				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3), new Indexed.ToValue<Integer,Integer>(4));
 	}
 	

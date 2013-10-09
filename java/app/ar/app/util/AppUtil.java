@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JComboBox;
 
-public class Util {
+public class AppUtil {
 
 	@SuppressWarnings("unchecked") //Several inherently not type-safe operation...
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, Class<?> limit, String defaultItem) {

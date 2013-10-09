@@ -20,6 +20,7 @@ import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
@@ -31,7 +32,6 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.util.MultiStageTransfer;
 import ar.util.DelimitedReader;
-import ar.util.MemMapEncoder.TYPE;
 import ar.util.Util;
 import ar.Glyphset;
 
@@ -47,7 +47,7 @@ public class ARServer extends NanoHTTPD {
 		Glyphset circlepoints = Util.load(
 				DynamicQuadTree.make(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
-				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
+				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3),
 				new Indexed.ToValue(4, new Valuer.ToInt<Object>()));
 		

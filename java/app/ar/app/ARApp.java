@@ -13,7 +13,7 @@ import ar.app.display.ARComponent;
 import ar.app.display.EnhanceHost;
 import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
-import ar.app.util.Util;
+import ar.app.util.AppUtil;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 
@@ -59,8 +59,8 @@ public class ARApp implements ARComponent.Holder {
 		controls.add(fileOptions);
 		controls.add(status);
 		
-		Util.loadInstances(aggregators, WrappedAggregator.class, WrappedAggregator.class, "Count (int)");
-		Util.loadInstances(transfers, WrappedTransfer.class, WrappedTransfer.class, "10% Alpha (int)");
+		AppUtil.loadInstances(aggregators, WrappedAggregator.class, WrappedAggregator.class, "Count (int)");
+		AppUtil.loadInstances(transfers, WrappedTransfer.class, WrappedTransfer.class, "10% Alpha (int)");
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
