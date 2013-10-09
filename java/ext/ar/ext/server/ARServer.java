@@ -15,7 +15,6 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.DynamicQuadTree;
@@ -45,7 +44,7 @@ public class ARServer extends NanoHTTPD {
 	
 	static {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Glyphset circlepoints = GlyphsetUtils.load(
+		Glyphset circlepoints = Util.load(
 				DynamicQuadTree.make(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
@@ -121,13 +120,6 @@ public class ARServer extends NanoHTTPD {
 	
 	/**Execute the passed aggregator and list of transfers.
 	 * This is inherently not statically type-safe, so it may produce type errors at runtime.  
-	 * @param glyphs
-	 * @param agg
-	 * @param trans
-	 * @param inverseView
-	 * @param width
-	 * @param height
-	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {

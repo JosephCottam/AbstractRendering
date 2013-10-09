@@ -82,8 +82,7 @@
     <!--Include extensions with the core library.-->
 
     <mkdir dir="${coreBin}"/>
-    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" 
-      includeantruntime="false">
+    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" includeantruntime="false">
       <exclude name="**/spark/**" if="spark.absent"/>
       <classpath>
         <fileset dir="${lib}" includes="*.jar"/>
@@ -125,7 +124,7 @@
       includeantruntime="false">
       <classpath>
         <fileset dir="." includes="*.jar"/>
-        <fileset dir="./lib" includes="*.jar"/>
+        <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javac>
   
@@ -165,11 +164,11 @@
     <mkdir dir="${results}"/>
     <mkdir dir="${testBin}"/>
     
-    <javac destdir="${testBin}" target="1.7" includeantruntime="false"
-      sourcepath="" srcdir="${testSrc}">
+    <javac destdir="${testBin}" sourcepath="" srcdir="${testSrc}"
+      includeantruntime="false">
       <classpath>
         <fileset dir="." includes="*.jar"/>
-        <fileset dir="${lib}" includes="**/*.jar"/>
+        <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javac>
 

@@ -32,7 +32,7 @@ import ar.util.Util;
 /**Tests the amount of time to render count visualizations.
  * **/
 @SuppressWarnings("unused")
-public class RenderSpeedTest {
+public class RenderSpeed {
 	private static String arg(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();
 		for (int i=0; i<args.length; i++) {

@@ -9,7 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ar.Glyphset;
-import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -18,6 +17,7 @@ import ar.util.DelimitedReader;
 import ar.util.IndexedEncoding;
 import ar.util.MemMapEncoder;
 import ar.util.MemMapEncoder.TYPE;
+import ar.util.Util;
 
 public class MemoryMappingTests {
 	private static String csvName = "../data/circlepoints.csv";
@@ -37,7 +37,7 @@ public class MemoryMappingTests {
 		assertTrue("hbin not found after encode.", hbin.exists());
 		
 		mm = new MemMapList<Integer>(hbin, new Indexed.ToRect(1, 0, 1), new Indexed.ToValue<Integer,Integer>(2));
-		ref = (GlyphList<Integer>) GlyphsetUtils.load(
+		ref = (GlyphList<Integer>) Util.load(
 				new ar.glyphsets.GlyphList<Integer>(), 
 				new DelimitedReader(csv, 1, "\\s*,\\s*"),
 				new Indexed.Converter(null, TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),

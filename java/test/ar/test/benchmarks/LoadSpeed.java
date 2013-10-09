@@ -6,7 +6,7 @@ import java.io.FilenameFilter;
 import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.*;
 
-public class LoadSpeedTest {
+public class LoadSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = args.length >0 ? Integer.parseInt(args[0]) : 10;
 		File root = new File("./data/");

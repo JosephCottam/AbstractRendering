@@ -9,7 +9,7 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
 
-public class BoundsSpeedTest {
+public class BoundsSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = args.length >0 ? Integer.parseInt(args[0]) : 10;
 		
