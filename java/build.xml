@@ -1,4 +1,6 @@
-<project name="AbstractRendering" default="build" basedir=".">
+<project name="AbstractRendering" default="build" basedir="."
+  xmlns:ivy="antlib:org.apache.ivy.ant">
+
   <property name="bin" value="bin"/>
   <property name="appSrc" value="app"/>
   <property name="appBin" value="${bin}/appBin" />
@@ -238,11 +240,11 @@
 
   <target name="fetch-dev" description="Fetch dependencies need for development.">
     <!--Some things are only needed by developers, get those with this task.-->
-    <retrieve conf="dev"/>
+    <ivy:retrieve conf="dev"/>
   </target>
 
   <target name="fetch" depends="init,markdown" description="Fetch runtime/basic-build dependencies">
-    <retrieve conf="deploy"/>
+    <ivy:retrieve conf="deploy"/>
   </target>
 
   <target name="markdown">
