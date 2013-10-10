@@ -11,8 +11,8 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
 import ar.Glyphset;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.ConstantAggregates;
-import ar.aggregates.FlatAggregates;
 import ar.util.Util;
 
 
@@ -57,7 +57,7 @@ public class AggregationStrategies {
 		} else {
 			sources.add(left);
 			sources.add(right);
-			target = new FlatAggregates<T>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
+			target = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
 		}
 	
 		for (Aggregates<T> source: sources) {
@@ -85,7 +85,7 @@ public class AggregationStrategies {
 	public static <T> Aggregates<T> verticalRollup(Aggregates<T> start, Aggregator<?,T> red, double factor) {
 		int size = (int) Math.round(factor);
 		if (size < 1) {return start;}
-		Aggregates<T> end = new FlatAggregates<T>(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
+		Aggregates<T> end = AggregateUtils.make(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
 
 		for (int x = start.lowX(); x < start.highX(); x=x+size) {
 			for (int y=start.lowY(); y < start.highY(); y=y+size) {

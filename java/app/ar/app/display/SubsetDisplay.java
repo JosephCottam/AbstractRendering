@@ -5,7 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 
 import ar.*;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.util.Util;
 
 /**Panel that renders more than just what's visible on the screen so pan can happen quickly.
@@ -98,7 +98,7 @@ public class SubsetDisplay extends FullDisplay {
 				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
 				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
 				
-				Aggregates<?> subset = FlatAggregates.subset(
+				Aggregates<?> subset = AggregateUtils.subset(
 						aggregates, 
 						shiftX, shiftY, 
 						shiftX+viewport.width, shiftY+viewport.height);

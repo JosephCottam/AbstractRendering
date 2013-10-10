@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
+import ar.aggregates.AggregateUtils;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.renderers.SerialSpatial;
 import ar.util.Util;
@@ -105,15 +106,12 @@ public class SimpleDisplay extends ARComponent {
 			renderPool.execute(new TransferRender());
 			renderAgain = false;
 		}
-	
+
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			Graphics2D g2 = (Graphics2D) g;
 			g2.drawRenderedImage(image,g2.getTransform());
-		} else {
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
 	}
 	
@@ -130,7 +128,7 @@ public class SimpleDisplay extends ARComponent {
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
 				Aggregates<Color> colors = renderer.transfer(aggs, ts);
 				
-				image = Util.asImage(colors, SimpleDisplay.this.getWidth(), SimpleDisplay.this.getHeight(), Util.CLEAR);
+				image = AggregateUtils.asImage(colors, SimpleDisplay.this.getWidth(), SimpleDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 

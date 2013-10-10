@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import ar.aggregates.AggregateUtils;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
@@ -71,7 +72,7 @@ public class BatchExport {
 					Transfer<Number, Color> t = new WrappedTransfer.OverUnder().op();
 					Transfer.Specialized<Number, Color> ts = t.specialize(aggs);
 					Aggregates<Color> colors = render.transfer(aggs, ts);
-					BufferedImage img = Util.asImage(colors, width, height, Color.white);
+					BufferedImage img = AggregateUtils.asImage(colors, width, height, Color.white);
 					Util.writeImage(img, new File(filename));
 				}
 				System.out.printf("\t Done!\n", filename);

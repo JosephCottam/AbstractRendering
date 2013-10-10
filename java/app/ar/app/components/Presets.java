@@ -125,7 +125,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.FixedAlpha().op();}
+		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
@@ -135,7 +135,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLinear().op();}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
@@ -145,7 +145,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
 		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
@@ -169,7 +169,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(), 
-					new WrappedTransfer.RedWhiteLog().op());
+					new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10));
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}

@@ -67,8 +67,8 @@ public class MultiStageTransfer<IN,OUT> implements Transfer<IN,OUT>{
 				tempAggs = renderer.transfer(tempAggs, specialized[i]);
 			}
 			
+			//Store the results of specialization in case the whole set of aggregates was sent for specialization 
 			synchronized(cacheGuard) {
-				//Store the results of specialization in case the whole set of aggregates was sent for specialization 
 				cacheKey = rootAggregates;
 				cachedAggs = tempAggs;
 			}

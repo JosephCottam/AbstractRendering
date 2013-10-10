@@ -332,7 +332,7 @@ public class Categories {
 
 		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 		
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return background;}
 	}
 	
 	
@@ -363,7 +363,7 @@ public class Categories {
 		}
 		
 
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return background;}
 		public HighAlpha.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			int max=Integer.MIN_VALUE;
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}

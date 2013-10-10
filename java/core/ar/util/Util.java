@@ -1,7 +1,6 @@
 package ar.util;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
@@ -294,22 +293,6 @@ public final class Util {
 		AffineTransform t = AffineTransform.getScaleInstance(scale,scale);
 		t.translate(-tx,-ty);
 		return t;
-	}
-	
-	/**From a set of color aggregates, make a new image.**/
-	public static BufferedImage asImage(Aggregates<Color> aggs, int width, int height, Color background) {
-		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics g = i.getGraphics();
-		g.setColor(background);
-		g.fillRect(0, 0, width, height);
-		g.dispose();
-		for (int x=Math.max(0, aggs.lowX()); x<Math.min(width, aggs.highX()); x++) {
-			for (int y=Math.max(0, aggs.lowY()); y<Math.min(height, aggs.highY()); y++) {
-				Color c = aggs.get(x, y);
-				if (c != null) {i.setRGB(x, y, c.getRGB());}			
-			}			
-		}
-		return i;
 	}
 	
 	/**Write a buffered image to a file.**/

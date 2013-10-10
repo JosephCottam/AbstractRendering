@@ -11,7 +11,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.AggregationStrategies;
@@ -50,7 +50,7 @@ public class TileUtils {
 			for (int col=0; col<cols; col++) {
 				int lowX=(col*tileWidth)+aggs.lowX();
 				int lowY=(col*tileHeight)+aggs.lowY();
-				Aggregates<?> subset = subset(aggs, lowX, lowY, lowX+tileWidth, lowY+tileHeight);
+				Aggregates<?> subset = AggregateUtils.alignedSubset(aggs, lowX, lowY, lowX+tileWidth, lowY+tileHeight);
 				
 				File target = extend(levelRoot, Integer.toString(col), Integer.toString(row), ".avro");
 				target.getParentFile().mkdirs();
@@ -61,24 +61,6 @@ public class TileUtils {
 			}
 		}
 	}
-	
-	/**Create a new aggregate set that is a subset of the old aggregate set.
-	 * 
-	 * The new aggregate set will have the same indices as the old aggregate set
-	 * (so 100,100 in the old one will have the same value as 100,100 in the old),
-	 * however the new aggregate set will not necessarily have the same lowX/lowY or highX/highY
-	 * as the old set.  The new aggregate set will have the same default value as the old.
-	 */
-	public static  <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		Aggregates<A> target = new FlatAggregates<A>(lowX, lowY, highX, highY, source.defaultValue());
-		for (int x=lowX; x<highX; x++) {
-			for (int y=lowY; y<highY; y++) {
-				target.set(x, y, source.get(x, y));
-			}
-		}
-		return target;
-	}
-	
 	
 	/**Given a set of aggregates, rollup the specified number of levels, output to the 
 	 * given root into sub-directories per-level.

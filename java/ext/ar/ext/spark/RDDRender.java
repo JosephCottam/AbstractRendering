@@ -10,7 +10,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.SerialSpatial;
 import ar.util.Util;
@@ -115,7 +115,7 @@ public class RDDRender implements Serializable {
 			Shape s = vt.createTransformedShape(glyph.shape());
 			Rectangle bounds = s.getBounds();
 			V v = glyph.info();
-			Aggregates<V> aggs = new FlatAggregates<V>(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
+			Aggregates<V> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
 			return aggs;
 		}
 	}

@@ -7,7 +7,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.
  * This class is largely for reference.  In most cases, a parallel renderer is better.
@@ -20,7 +20,7 @@ public final class SerialSpatial implements Renderer {
 	public <I,A> Aggregates<A> aggregate(final Glyphset<? extends I> glyphset, final Aggregator<I,A> op,   
 			final AffineTransform view, final int width, final int height) {
 		recorder.reset(width*height);
-		Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
+		Aggregates<A> aggregates = AggregateUtils.make(width, height, op.identity());
 
 		AffineTransform inverseView;
 		try {inverseView = view.createInverse();}
@@ -38,7 +38,7 @@ public final class SerialSpatial implements Renderer {
 	}
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
-		Aggregates<OUT> out = new FlatAggregates<OUT>(aggregates, t.emptyValue());
+		Aggregates<OUT> out = AggregateUtils.make(aggregates, t.emptyValue());
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {

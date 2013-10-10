@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import ar.aggregates.AggregateUtils;
 import ar.app.display.FullDisplay;
 import ar.app.display.SimpleDisplay;
 import ar.glyphsets.WrappedCollection;
@@ -78,7 +79,7 @@ public class SimpleApp {
 		
 		//Make a final image (if the aggregates are colors)
 		@SuppressWarnings("unused")  //Unused because its just a demo of how to do it
-		BufferedImage image = Util.asImage(colors, width, height, Color.white);
+		BufferedImage image = AggregateUtils.asImage(colors, width, height, Color.white);
 		
 		//A simple display panel can be found in ARDisplay.
 		//It takes aggregates and a transfer function to make colors.

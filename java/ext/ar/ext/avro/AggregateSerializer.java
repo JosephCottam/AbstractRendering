@@ -26,7 +26,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 
 import ar.Aggregates;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
 
@@ -177,7 +177,7 @@ public class AggregateSerializer {
 			GenericData.Array<GenericRecord> entries = 
 					(GenericData.Array<GenericRecord>) r.get("values");
 
-			Aggregates<A> aggs = new FlatAggregates<A>(lowX, lowY, highX, highY, defVal);
+			Aggregates<A> aggs = AggregateUtils.make(lowX, lowY, highX, highY, defVal);
 			for (int i=0; i<entries.size(); i++) {
 				int x = i % xCount;
 				int y = i / xCount;
@@ -208,7 +208,7 @@ public class AggregateSerializer {
 			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
 					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
 
-			Aggregates<A> aggs = new FlatAggregates<A>(lowX, lowY, highX, highY, defVal);
+			Aggregates<A> aggs = AggregateUtils.make(lowX, lowY, highX, highY, defVal);
 			for (int row=0; row<rows.size(); row++) {
 				int x = row+aggs.lowX();
 				GenericData.Array<GenericRecord> cols = rows.get(row);

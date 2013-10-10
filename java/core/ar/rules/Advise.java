@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 import ar.Aggregates;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.util.Util;
 
 /**Advise methods provide information about where to look in a visualization.
@@ -239,7 +239,7 @@ public class Advise {
 
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggs) {
-			Aggregates<Double> cache = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
+			Aggregates<Double> cache = AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 					if (aggs.get(x, y).doubleValue() > 0) {

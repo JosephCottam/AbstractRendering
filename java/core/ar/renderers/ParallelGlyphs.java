@@ -12,8 +12,8 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
 import ar.Glyphset;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.ConstantAggregates;
-import ar.aggregates.FlatAggregates;
 import ar.Renderer;
 import ar.Transfer;
 
@@ -135,7 +135,7 @@ public class ParallelGlyphs implements Renderer {
 												Math.max(x2, bounds.x), Math.min(y2, bounds.y),
 												op.identity());
 			}				
-			Aggregates<A> aggregates = new FlatAggregates<A>(bounds.x, bounds.y,
+			Aggregates<A> aggregates = AggregateUtils.make(bounds.x, bounds.y,
 														 bounds.x+bounds.width, bounds.y+bounds.height, 
 														 op.identity());
 			

@@ -9,7 +9,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 
 /**Task stealing renderer that operates on a per-pixel basis, designed to be used with a spatially-decomposed glyph set.
  * Divides aggregates space into regions and works on each region in isolation
@@ -41,7 +41,7 @@ public final class ParallelSpatial implements Renderer {
 	public <I,A> Aggregates<A> aggregate(final Glyphset<? extends I> glyphs, final Aggregator<I,A> op, 
 			final AffineTransform view, final int width, final int height) {
 		
-		final Aggregates<A> aggregates = new FlatAggregates<A>(width, height, op.identity());
+		final Aggregates<A> aggregates = AggregateUtils.make(width, height, op.identity());
 
 		AffineTransform inverseView;
 		try {inverseView = view.createInverse();}
@@ -66,7 +66,7 @@ public final class ParallelSpatial implements Renderer {
 	 * @return Resulting aggregates
 	 */
 	public static <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t, int taskSize, ForkJoinPool pool) {
-		Aggregates<OUT> result = new FlatAggregates<OUT>(aggregates, t.emptyValue());
+		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
 		TransferTask<IN, OUT> task = new TransferTask<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;

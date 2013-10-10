@@ -26,7 +26,7 @@ import java.io.Serializable;
  *
  * @param <A>  Type of the values to be stored in the aggregate set.
  */
-public interface Aggregates<A> extends Iterable<A>, Serializable {
+public interface Aggregates<A> extends Serializable, Iterable<A> {
 	/**Get the aggregate value at the given position.**/
 	public A get(int x, int y);
 	

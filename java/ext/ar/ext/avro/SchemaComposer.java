@@ -83,8 +83,7 @@ public class SchemaComposer {
 
 	/**Load a schema from a file.**/
 	public SchemaComposer add(File file)throws IOException {
-		FileInputStream fis = new FileInputStream(file);
-		try {
+		try (FileInputStream fis = new FileInputStream(file)) {
 			return add(fis);
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + file.getName(), e.getCause());

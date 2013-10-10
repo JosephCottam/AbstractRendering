@@ -29,7 +29,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.AggregateUtils;
 import ar.app.components.LabeledItem;
 import ar.util.Util;
 
@@ -101,7 +101,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		int width = highX-lowX;
 		int height = highY-lowY;
 		
-		Aggregates<A> subset= new FlatAggregates<>(0, 0, width, height, aggs.defaultValue());
+		Aggregates<A> subset= AggregateUtils.make(0, 0, width, height, aggs.defaultValue());
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
 				if (selection.contains(x+lowX, y+lowY)) {

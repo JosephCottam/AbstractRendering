@@ -2,9 +2,6 @@ package ar.aggregates;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
-import java.util.Queue;
 
 import ar.Aggregates;
 
@@ -62,14 +59,14 @@ public class Aggregates2D<A> implements Aggregates<A>{
 	}
 
 	/**Set the value at the given (x,y).**/
-	public synchronized void set(int x, int y, A v) {
+	public void set(int x, int y, A v) {
 		if (x<lowX || y < lowY || x >= highX || y > highY) {return;}
 		values[x-lowX][y-lowY] = v;
 	}
 	
 	
 	/**Get the value at the given (x,y).**/
-	public synchronized A get(int x, int y) {
+	public A get(int x, int y) {
 		if (x<lowX || y < lowY || x >= highX || y >= highY) {return defaultVal;}
 		return values[x-lowX][y-lowY];
 	}
@@ -84,31 +81,5 @@ public class Aggregates2D<A> implements Aggregates<A>{
 	
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
-	public synchronized Iterator<A> iterator() {return new Iterator2D<>(values);}
-	
-	public static final class Iterator2D<E> implements Iterator<E> {
-		  private Queue<Iterator<E>> queue = new LinkedList<Iterator<E>>();
-		  public Iterator2D(E[][] sources) {
-			  for (E[] source: sources) {queue.add(Arrays.asList(source).iterator());}
-		  }
-		  
-		  public boolean hasNext() {
-		    // If this returns true, the head of the queue will have a next element
-		    while(!queue.isEmpty()) {
-		      if(queue.peek().hasNext()) {
-		        return true;
-		      }
-		      queue.poll();
-		    }
-		    return false;
-		  }
-		  public E next() {
-		    if(!hasNext()) throw new NoSuchElementException();
-		    Iterator<E> iter = queue.poll();
-		    E result = iter.next();
-		    queue.offer(iter);
-		    return result;
-		  }
-		  public void remove() { throw new UnsupportedOperationException(); }
-		};
+	public Iterator<A> iterator() {return new Iterator2D<>(this);};
 }

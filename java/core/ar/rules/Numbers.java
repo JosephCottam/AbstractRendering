@@ -54,7 +54,7 @@ public final class Numbers {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
 
-		public Color emptyValue() {return Color.WHITE;}
+		public Color emptyValue() {return Util.CLEAR;}
 		public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
 	}
 	
@@ -93,7 +93,7 @@ public final class Numbers {
 			}
 		}
 		
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return empty;}
 		
 		private static abstract class BaseSpecialized extends Interpolate implements Transfer.Specialized<Number, Color> {
 			private static final long serialVersionUID = 1106343839501609604L;

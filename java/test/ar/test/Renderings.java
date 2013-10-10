@@ -15,6 +15,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
@@ -50,7 +51,7 @@ public class Renderings {
 		Aggregates<A> ser_aggs = r.aggregate(g, agg, ivt.createInverse(), width, height);
 		Transfer.Specialized<? super A,Color> t2 = t.specialize(ser_aggs);
 		Aggregates<Color> ser_trans = r.transfer(ser_aggs, t2);
-		BufferedImage img = Util.asImage(ser_trans, width, height, Color.white);
+		BufferedImage img = AggregateUtils.asImage(ser_trans, width, height, Color.white);
 		return img;
 	}
 	
