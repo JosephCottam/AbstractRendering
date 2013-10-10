@@ -140,7 +140,7 @@ public class Advise {
 		 * @param overColor Color to mark over saturation
 		 * @param underColor Color to mark under saturation
 		 * @param base Transformation that determines all colors and to find over/under saturation
-		 * @param lowerTolerance How close should be considered too-close in undersaturation
+		 * @param lowTolerance How close should be considered too-close in undersaturation
 		 * @param comp Comparator used to determine similarity between items
 		 */
 		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {

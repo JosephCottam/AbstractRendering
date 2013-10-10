@@ -86,9 +86,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
      * Zoom the given display at the given point by the zoom factor,
      * in either absolute (item-space) or screen co-ordinates.
      * @param canvas the canvas to zoom
-     * @param p the point to center the zoom upon
      * @param zoom the scale factor by which to zoom
-     * @param abs if true, the point p should be assumed to be in absolute
      * coordinates, otherwise it will be treated as screen (pixel) coordinates
      */
     protected static void zoom(HasViewTransform canvas, double zoom) {
