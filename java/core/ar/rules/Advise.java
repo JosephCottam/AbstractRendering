@@ -270,7 +270,7 @@ public class Advise {
 			return surroundingSum/cellCount;
 		}
 
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return Color.white;}
 
 		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
 			private static final long serialVersionUID = 2548271516304517444L;

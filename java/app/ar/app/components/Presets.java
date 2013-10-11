@@ -169,7 +169,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(), 
-					new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10));
+					new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Color.white, 10));
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}

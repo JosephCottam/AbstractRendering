@@ -14,7 +14,6 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
 import ar.rules.Numbers;
-import ar.util.Util;
 
 public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	public void deselected();
@@ -93,7 +92,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class RedWhiteLog implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Util.CLEAR, 10);}
+		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Color.white, 10);}
 		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}
@@ -142,7 +141,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class EchoColor implements WrappedTransfer<Color,Color> {
-		public Transfer<Color,Color> op() {return new General.Echo<Color>(Util.CLEAR);}
+		public Transfer<Color,Color> op() {return new General.Echo<Color>(Color.white);}
 		public String toString() {return "Echo (Color)";}
 		public void selected(ARApp app) {}
 		public void deselected() {}

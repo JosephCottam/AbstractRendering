@@ -34,27 +34,33 @@ public final class Numbers {
 	 */
 	public static final class FixedInterpolate implements Transfer.Specialized<Number,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
-		final Color low, high;
+		final Color low, high, background;
 		final double lowv, highv;
 
+		public FixedInterpolate(Color low, Color high, double lowV, double highV) {
+			this(low, high, lowV, highV, Color.white);
+		}
+		
 		/**
 		 * @param low Color to associated with lowV
 		 * @param high Color to associate with highV
 		 * @param lowV Expected lowest input value
 		 * @param highV Expected highest input value
+		 * @param background Background color (used for no-value)
 		 */
-		public FixedInterpolate(Color low, Color high, double lowV, double highV) {
+		public FixedInterpolate(Color low, Color high, double lowV, double highV, Color background) {
 			this.low = low;
 			this.high = high;
 			this.lowv = lowV;
 			this.highv = highV;
+			this.background = background;
 		}
 
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
 
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return background;}
 		public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
 	}
 	
@@ -68,7 +74,7 @@ public final class Numbers {
 		 * @param low Color to associate with lowest input value
 		 * @param high Color to associate with highest input value
 		 */
-		public Interpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
+		public Interpolate(Color low, Color high) {this(low,high, Color.white, 0);}
 		
 		/**
 		 * @param low Color to associate with lowest input value

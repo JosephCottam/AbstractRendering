@@ -30,7 +30,6 @@ import ar.Transfer;
 import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.rules.Numbers;
-import ar.util.Util;
 
 public class ScatterControl extends JPanel {
 	private static final long serialVersionUID = 4425716699286853617L;
@@ -257,7 +256,7 @@ public class ScatterControl extends JPanel {
 		}
 
 
-		public Color emptyValue() {return Util.CLEAR;}
+		public Color emptyValue() {return Color.white;}
 
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggregates) {
