@@ -72,7 +72,6 @@ public class SimpleApp {
 		int width = 800;
 		int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
-		vt.invert();
 		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
 		Transfer.Specialized<Number,Color> specializedTransfer = transfer.specialize(aggregates);
 		Aggregates<Color> colors = r.transfer(aggregates, specializedTransfer);
@@ -81,14 +80,14 @@ public class SimpleApp {
 		@SuppressWarnings("unused")  //Unused because its just a demo of how to do it
 		BufferedImage image = AggregateUtils.asImage(colors, width, height, Color.white);
 		
-		//A simple display panel can be found in ARDisplay.
+		//A simple display panel can be found in SimpleDisplay.
 		//It takes aggregates and a transfer function to make colors.
 		//This is largely a static display though, since all display decisions have been made.
 		//The ARDisplay includes a renderer (or it can be passed in), but it only
 		//performs the "transfer" step.  As such, we reuse the aggregates from above.
 		//Only the last line of this section is Abstract rendering specific.  The rest
 		//is swing frame boilerplate.
-		JFrame frame = new JFrame("ARDisplay");
+		JFrame frame = new JFrame("Simple Display");
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -97,12 +96,13 @@ public class SimpleApp {
 		frame.revalidate();
 		frame.validate();
 		
-		//ARPanel is more fully-featured than ARDisplay. It will run the whole render loop
+		//Full Display is more fully-featured than ARDisplay. It will run the whole render loop
 		//and includes zoom/pan listeners.  It is harder to use though, because it takes control
 		//over the process in a more robust but somewhat opaque way.
 		//Since ARPanel drives the whole rendering process, it takes the dataset, rendering strategy
 		//and related definitions in as parameters
-		JFrame frame2 = new JFrame("ARPanel");
+		JFrame frame2 = new JFrame("Full Display");
+		frame2.setLocation(100, 0);
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);
 		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

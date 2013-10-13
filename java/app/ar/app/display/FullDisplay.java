@@ -101,7 +101,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 				|| dataset == null ||  dataset.isEmpty() 
 				|| aggregator == null
 				|| renderError == true) {
-			g.setColor(Color.GRAY);
+			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else if (renderAgain || aggregates == null) {
 			action = new RenderAggregates();
@@ -151,6 +151,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		if (this.viewTransformRef.equals(vt)) {return;}
 		this.viewTransformRef = vt;
+		this.renderAgain = true;
 		this.repaint();
 	}
 
