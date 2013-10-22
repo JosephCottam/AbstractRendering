@@ -10,7 +10,7 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.renderers.tasks.GlyphParallelAggregate;
+import ar.renderers.tasks.GlyphParallelAggregation;
 import ar.renderers.tasks.PixelParallelTransfer;
 
 
@@ -47,8 +47,9 @@ public class ParallelGlyphs implements Renderer {
 			AffineTransform view, int width, int height) {
 		
 		recorder.reset(glyphs.size());
-		
-		GlyphParallelAggregate<I,A> t = new GlyphParallelAggregate<I,A>(
+
+		GlyphParallelAggregation<I,A> t = GlyphParallelAggregation.make(
+				glyphs.iterator().next().shape().getClass(),	//HACK: This lookup may be fragile.  It may better to get the aggregates to tell the geometry type...
 				glyphs, 
 				view, 
 				op, 

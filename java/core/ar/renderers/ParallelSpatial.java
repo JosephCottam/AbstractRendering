@@ -9,7 +9,7 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.renderers.tasks.PixelParallelAggregate;
+import ar.renderers.tasks.PixelParallelAggregation;
 import ar.renderers.tasks.PixelParallelTransfer;
 
 /**Task stealing renderer that operates on a per-pixel basis, designed to be used with a spatially-decomposed glyph set.
@@ -48,7 +48,7 @@ public final class ParallelSpatial implements Renderer {
 		try {inverseView = view.createInverse();}
 		catch (Exception e) {throw new IllegalArgumentException(e);}
 		
-		PixelParallelAggregate<I,A> t = new PixelParallelAggregate<I,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
+		PixelParallelAggregation<I,A> t = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;
 	}

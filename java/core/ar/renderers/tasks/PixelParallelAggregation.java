@@ -10,7 +10,7 @@ import ar.renderers.AggregationStrategies;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
 
-public final class PixelParallelAggregate<I,A> extends RecursiveAction {
+public final class PixelParallelAggregation<I,A> extends RecursiveAction {
 	private static final long serialVersionUID = -6471136218098505342L;
 
 	private final int taskSize;
@@ -21,7 +21,7 @@ public final class PixelParallelAggregate<I,A> extends RecursiveAction {
 	private final AffineTransform inverseView;
 	private final RenderUtils.Progress recorder;
 	
-	public PixelParallelAggregate(Glyphset<? extends I> glyphs, AffineTransform view, 
+	public PixelParallelAggregation(Glyphset<? extends I> glyphs, AffineTransform view, 
 			Aggregator<I,A> op, RenderUtils.Progress recorder, int taskSize,   
 			Aggregates<A> aggs, int lowx, int lowy, int highx, int highy) {
 		this.glyphs = glyphs;
@@ -47,10 +47,10 @@ public final class PixelParallelAggregate<I,A> extends RecursiveAction {
 		if ((width*height) > taskSize) {
 			int centerx = Util.mean(lowx, highx);
 			int centery = Util.mean(lowy, highy);
-			PixelParallelAggregate<I,A> SW = new PixelParallelAggregate<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    lowy,    centerx, centery);
-			PixelParallelAggregate<I,A> NW = new PixelParallelAggregate<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    centery, centerx, highy);
-			PixelParallelAggregate<I,A> SE = new PixelParallelAggregate<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, lowy,    highx,   centery);
-			PixelParallelAggregate<I,A> NE = new PixelParallelAggregate<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, centery, highx,   highy);
+			PixelParallelAggregation<I,A> SW = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    lowy,    centerx, centery);
+			PixelParallelAggregation<I,A> NW = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, lowx,    centery, centerx, highy);
+			PixelParallelAggregation<I,A> SE = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, lowy,    highx,   centery);
+			PixelParallelAggregation<I,A> NE = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggs, centerx, centery, highx,   highy);
 			invokeAll(SW,NW,SE,NE);
 		} else {
 			for (int x=lowx; x<highx; x++) {

@@ -50,6 +50,7 @@ public final class Util {
 
 	/**Mean of two values.**/
 	public static final int mean(int low, int high) {return low+((high-low)/2);}
+	public static final long mean(long low, long high) {return low+((high-low)/2);}
 
 	
 	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.
