@@ -48,6 +48,9 @@ public final class Util {
 		return newTypes;
 	}
 
+	/**Mean of two values.**/
+	public static final int mean(int low, int high) {return low+((high-low)/2);}
+
 	
 	/**Load a set of glyphs from a delimited reader, using the provided shaper and valuer.
 	 * 
