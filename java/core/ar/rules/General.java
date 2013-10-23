@@ -11,6 +11,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.Util;
 
 /**Tools that don't apply to a particular data type.**/
 public class General {
@@ -41,7 +42,9 @@ public class General {
 				
 				for (int x=base.lowX(); x<base.highX(); x++) {
 					for (int y=base.lowY(); y<base.highY(); y++) {
-						spreader.spread(cached, x,y, base.get(x, y), combiner);
+						V baseVal = base.get(x,y);
+						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
+						spreader.spread(cached, x,y, baseVal, combiner);
 					}
 				}
 			}
@@ -65,12 +68,12 @@ public class General {
 			public UnitSquare(int size) {this.size=Math.abs(size);}
 			
 			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
-				for (int xx=-size; xx<size; xx++) {
-					for (int yy=-size; yy<size; yy++) {
+				for (int xx=-size; xx<=size; xx++) {
+					for (int yy=-size; yy<=size; yy++) {
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
-						target.set(xv, yv, op.combine(xv, yv, base, update));
+						target.set(xv, yv, op.rollup(base, update));
 					}
 				}
 			}
@@ -84,14 +87,14 @@ public class General {
 			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
 				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
 				Point2D p = new Point2D.Double();
-				for (int xx=-radius; xx<radius; xx++) {
-					for (int yy=-radius; yy<radius; yy++) {
+				for (int xx=-radius; xx<=radius; xx++) {
+					for (int yy=-radius; yy<=radius; yy++) {
 						int xv = x+xx;
 						int yv = y+yy;
 						p.setLocation(xv, yv);
 						if (!e.contains(p)) {continue;}
 						V update = target.get(xv, yv);
-						target.set(xv, yv, op.combine(xv, yv, base, update));
+						target.set(xv, yv, op.rollup(base, update));
 					}
 				}
 			}
@@ -102,14 +105,14 @@ public class General {
 				int radius = (int) base.doubleValue();
 				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
 				Point2D p = new Point2D.Double();
-				for (int xx=-radius; xx<radius; xx++) {
-					for (int yy=-radius; yy<radius; yy++) {
+				for (int xx=-radius; xx<=radius; xx++) {
+					for (int yy=-radius; yy<=radius; yy++) {
 						int xv = x+xx;
 						int yv = y+yy;
 						p.setLocation(xv, yv);
 						if (!e.contains(p)) {continue;}
 						N update = target.get(xv, yv);
-						target.set(xv, yv, op.combine(xv, yv, base, update));
+						target.set(xv, yv, op.rollup(base, update));
 					}
 				}
 			}

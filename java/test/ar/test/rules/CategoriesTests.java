@@ -1,10 +1,10 @@
 package ar.test.rules;
 
 import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.awt.Color;
 
-import org.junit.Test;
 
 import ar.Aggregates;
 import ar.aggregates.FlatAggregates;
