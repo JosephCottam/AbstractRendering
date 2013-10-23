@@ -85,7 +85,7 @@ public class General {
 			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
 			
 			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
-				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
+				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
 					for (int yy=-radius; yy<=radius; yy++) {
@@ -103,7 +103,7 @@ public class General {
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
 			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<N,N> op) {
 				int radius = (int) base.doubleValue();
-				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
+				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
 					for (int yy=-radius; yy<=radius; yy++) {
