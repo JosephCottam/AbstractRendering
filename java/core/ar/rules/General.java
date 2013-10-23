@@ -1,5 +1,7 @@
 package ar.rules;
 
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
@@ -12,6 +14,108 @@ import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Tools that don't apply to a particular data type.**/
 public class General {
+	
+	public static class Spread<V> implements Transfer<V,V> {
+		final V empty;
+		final Spreader<V> spreader;
+		final Aggregator<V,V> combiner;
+		
+		public Spread(V empty, Spreader<V> spreader, Aggregator<V,V> combiner) {
+			this.empty = empty;
+			this.spreader = spreader;
+			this.combiner = combiner;
+		}
+
+		public V emptyValue() {return empty;}
+		
+		/**Calculations are done at specialization time, so transfer is fast but specialization is slow.**/
+		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {
+			return new Specialized<>(empty, spreader, aggregates, combiner);
+		}
+		
+		public static class Specialized<V> extends Spread<V> implements Transfer.Specialized<V, V>  {
+			private final Aggregates<V> cached;
+			public Specialized(V empty, Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
+				super(empty, spreader, combiner);
+				cached = ar.aggregates.AggregateUtils.make(base, empty);
+				
+				for (int x=base.lowX(); x<base.highX(); x++) {
+					for (int y=base.lowY(); y<base.highY(); y++) {
+						spreader.spread(cached, x,y, base.get(x, y), combiner);
+					}
+				}
+			}
+
+			public V at(int x, int y, Aggregates<? extends V> aggregates) {return cached.get(x, y);}			
+		}
+		
+		/**Spreader takes a type argument in case the spreading depends on the value.
+		 * This capability can be used to implement (for example) a map with circles centered-on and proportional to a value. 
+		 */
+		public static interface Spreader<V> {
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<V,V> op);
+		}
+		
+		/**Spread in a square pattern of a fixed size.  The location is in the center.
+		 * Size is the number of units up/down/left/right of center to go, so total
+		 * length will be 2*size+1.
+		 */
+		public static class UnitSquare<V> implements Spreader<V> {
+			private final int size;
+			public UnitSquare(int size) {this.size=Math.abs(size);}
+			
+			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
+				for (int xx=-size; xx<size; xx++) {
+					for (int yy=-size; yy<size; yy++) {
+						int xv = x+xx;
+						int yv = y+yy;
+						V update = target.get(xv, yv);
+						target.set(xv, yv, op.combine(xv, yv, base, update));
+					}
+				}
+			}
+			
+		}
+		
+		public static class UnitCircle<V> implements Spreader<V> {
+			private final int radius;
+			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
+			
+			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
+				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
+				Point2D p = new Point2D.Double();
+				for (int xx=-radius; xx<radius; xx++) {
+					for (int yy=-radius; yy<radius; yy++) {
+						int xv = x+xx;
+						int yv = y+yy;
+						p.setLocation(xv, yv);
+						if (!e.contains(p)) {continue;}
+						V update = target.get(xv, yv);
+						target.set(xv, yv, op.combine(xv, yv, base, update));
+					}
+				}
+			}
+		}
+		
+		public static class ValueCircle<N extends Number> implements Spreader<N> {
+			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<N,N> op) {
+				int radius = (int) base.doubleValue();
+				Ellipse2D e = new Ellipse2D.Double(x,y,radius,radius);
+				Point2D p = new Point2D.Double();
+				for (int xx=-radius; xx<radius; xx++) {
+					for (int yy=-radius; yy<radius; yy++) {
+						int xv = x+xx;
+						int yv = y+yy;
+						p.setLocation(xv, yv);
+						if (!e.contains(p)) {continue;}
+						N update = target.get(xv, yv);
+						target.set(xv, yv, op.combine(xv, yv, base, update));
+					}
+				}
+			}
+		}
+	}
+	
 	/**Aggregator and Transfer that always returns the same value.**/
 	public static final class Const<OUT> implements Aggregator<Object,OUT>, Transfer.Specialized<Object, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
