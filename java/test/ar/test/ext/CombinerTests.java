@@ -2,6 +2,7 @@ package ar.test.ext;
 
 import static org.junit.Assert.*;
 
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.net.Socket;
 
@@ -24,7 +25,7 @@ public class CombinerTests {
 
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Object>make());
 		Renderer r = new ParallelSpatial();
 		count = r.aggregate(glyphs, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
 	}

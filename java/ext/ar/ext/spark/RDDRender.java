@@ -40,7 +40,8 @@ public class RDDRender implements Serializable {
 	 * @param height
 	 * @return Aggregate set that results from collecting all items
 	 */
-	public <A> Aggregates<A> aggregate(JavaRDD<Glyph<A>> glyphs,
+	public <A,G> Aggregates<G,A> aggregate(
+			JavaRDD<Glyph<G,A>> glyphs,
 			Aggregator<A, A> op, 
 			AffineTransform view, 
 			int width,
@@ -61,12 +62,12 @@ public class RDDRender implements Serializable {
 
 	/**Utility method for calculating the bounds on an RDD glyphset.
 	 ***/
-	public static <T> Rectangle2D bounds(JavaRDD<Glyph<T>> glyphs) {
-		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<T>,Rectangle2D>() {
+	public static <G> Rectangle2D bounds(JavaRDD<Glyph<G,?>> glyphs) {
+		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<G,?>,Rectangle2D>() {
 			private static final long serialVersionUID = 7387911686369652132L;
 
-			public Rectangle2D call(Glyph<T> glyph) throws Exception {
-				return glyph.shape().getBounds2D();
+			public Rectangle2D call(Glyph<G,?> glyph) throws Exception {
+				return Util.boundOne(glyph.shape());
 			}});
 		
 		return rects.reduce(new Function2<Rectangle2D, Rectangle2D,Rectangle2D>() {
@@ -105,17 +106,18 @@ public class RDDRender implements Serializable {
 	 * TODO: Extend with info function so it will convert Glyph<V> to Aggregates<A>
 	 * 
 	 * **/
-	public class GlyphToAggregates<V> extends Function<Glyph<V>, Aggregates<V>> {
+	public class GlyphToAggregates<G,A> extends Function<Glyph<G,A>, Aggregates<A>> {
 		private static final long serialVersionUID = 7666400467739718445L;
 		
 		private final AffineTransform vt;
 		public GlyphToAggregates(AffineTransform vt) {this.vt = vt;}
 		
-		public Aggregates<V> call(Glyph<V> glyph) throws Exception {
-			Shape s = vt.createTransformedShape(glyph.shape());
+		public Aggregates<A> call(Glyph<G,A> glyph) throws Exception {
+			//TODO: Generalize to shape/point system
+			Shape s = vt.createTransformedShape(Util.boundOne(glyph.shape()));
 			Rectangle bounds = s.getBounds();
-			V v = glyph.info();
-			Aggregates<V> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
+			A v = glyph.info();
+			Aggregates<A> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
 			return aggs;
 		}
 	}

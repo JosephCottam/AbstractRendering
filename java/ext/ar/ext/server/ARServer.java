@@ -40,19 +40,19 @@ import ar.Glyphset;
 public class ARServer extends NanoHTTPD {
 	private static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
 	private static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
-	private static Map<String, Glyphset<?>> DATASETS = new HashMap<String, Glyphset<?>>();
+	private static Map<String, Glyphset<?,?>> DATASETS = new HashMap<String, Glyphset<?,?>>();
 	
 	static {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Glyphset circlepoints = Util.load(
-				DynamicQuadTree.make(),
+				DynamicQuadTree.<Rectangle2D, Integer>make(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3),
 				new Indexed.ToValue(4, new Valuer.ToInt<Object>()));
 		
 		@SuppressWarnings({"unchecked", "rawtypes"})
-		Glyphset boost = new MemMapList<Color>(
+		Glyphset boost = new MemMapList<>(
 				new File("../data/MemVisScaled.hbin"),
 				new Indexed.ToRect(.001, .001, true, 0, 1), 
 				new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
@@ -101,7 +101,7 @@ public class ARServer extends NanoHTTPD {
 			
 			if (!format.equals("json") && !format.equals("binary")) {throw new RuntimeException("Invalid return format: " + format);}
 			
-			Glyphset<?> dataset = loadData(datasetID);
+			Glyphset<?,?> dataset = loadData(datasetID);
 			Aggregator<?,?> agg = getAgg(aggID);
 			List<Transfer<?,?>> transfers = getTransfers(transferIDS);
 			AffineTransform vt = viewTransform(viewTransTXT, dataset, width, height);
@@ -122,9 +122,9 @@ public class ARServer extends NanoHTTPD {
 	 * This is inherently not statically type-safe, so it may produce type errors at runtime.  
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public Aggregates<?> execute(Glyphset<?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
+	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
 		Renderer r;
-		if (glyphs instanceof Glyphset.RandomAccess<?>) {
+		if (glyphs instanceof Glyphset.RandomAccess<?,?>) {
 			r = new ParallelGlyphs();
 		} else {
 			r = new ParallelSpatial();
@@ -137,7 +137,7 @@ public class ARServer extends NanoHTTPD {
 		return rslt;
 	}
 	
-	public AffineTransform viewTransform(String vtTXT, Glyphset<?> g, int width, int height) {
+	public AffineTransform viewTransform(String vtTXT, Glyphset<?,?> g, int width, int height) {
 		if (vtTXT == null) {
 			Rectangle2D bounds = g.bounds();
 			return Util.zoomFit(bounds, width, height);
@@ -152,8 +152,8 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
-	public Glyphset<?> loadData(String id) {
-		Glyphset<?> d = DATASETS.get(id.toUpperCase());
+	public Glyphset<?,?> loadData(String id) {
+		Glyphset<?,?> d = DATASETS.get(id.toUpperCase());
 		if (d == null) {throw new RuntimeException("Dataset not found: " + id);}
 		return d;
 	}

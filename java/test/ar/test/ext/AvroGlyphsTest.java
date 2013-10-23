@@ -3,6 +3,7 @@ package ar.test.ext;
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 
 import org.apache.avro.Schema;
@@ -27,18 +28,18 @@ import ar.util.Util;
 
 public class AvroGlyphsTest {
 
-	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<V>> {
+	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<Rectangle2D, V>> {
 		private static final long serialVersionUID = 1897764346439188788L;
-		Shaper<Indexed> shaper;
+		Shaper<Rectangle2D, Indexed> shaper;
 		Valuer<Indexed, V> valuer;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
 			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);
 			valuer = new Indexed.ToValue<Object,V>(vfield);
 		}
 		
-		public Glyph<V> value(GenericRecord r) {
+		public Glyph<Rectangle2D, V> value(GenericRecord r) {
 			Indexed from =new GlyphsetTools.IndexedRecord(r);
-			return new SimpleGlyph<V>(shaper.shape(from), valuer.value(from));
+			return new SimpleGlyph<Rectangle2D, V>(shaper.shape(from), valuer.value(from));
 		}
 	}
 	
@@ -54,19 +55,25 @@ public class AvroGlyphsTest {
 
 		encode(csv, output, schema);
 		
-		GlyphList<?> reference = (GlyphList<?>) Util.load(new GlyphList<>(), new DelimitedReader(csv), new Indexed.Converter(TYPE.X, TYPE.X, TYPE.INT, TYPE.INT, TYPE.INT), new Indexed.ToRect(.1, 2,3), new Indexed.ToValue<>(4));
-		Glyphset.RandomAccess<Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4), Color.class);
+		GlyphList<?,?> reference = (GlyphList<?,?>) Util.load(
+				new GlyphList<Rectangle2D, Object>(), 
+				new DelimitedReader(csv), 
+				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.INT, TYPE.INT, TYPE.INT), 
+				new Indexed.ToRect(.1, 2,3), 
+				new Indexed.ToValue<>(4));
+		
+		Glyphset.RandomAccess<Rectangle2D, Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4), Color.class);
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {
-			Glyph<?> res = result.get(i);
-			Glyph<?> ref = reference.get(i);
+			Glyph<?,?> res = result.get(i);
+			Glyph<?,?> ref = reference.get(i);
 			assertEquals("Shape did not match at " + i, ref.shape(), res.shape());
 		}
 
 		for (int i=0;i<reference.size(); i++) {
-			Glyph<?> res = result.get(i);
-			Glyph<?> ref = reference.get(i);
+			Glyph<?,?> res = result.get(i);
+			Glyph<?,?> ref = reference.get(i);
 			assertEquals("Value did not match at " + i, ref.info(), res.info().toString());
 		}
 

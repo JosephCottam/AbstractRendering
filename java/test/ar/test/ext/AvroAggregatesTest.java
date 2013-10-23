@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,7 +26,6 @@ import ar.renderers.ParallelSpatial;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
-
 import ar.aggregates.FlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
@@ -39,7 +39,7 @@ public class AvroAggregatesTest {
 	
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset<Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Color>make());
+		Glyphset<Rectangle2D, Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make());
 		Renderer r = new ParallelSpatial();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 

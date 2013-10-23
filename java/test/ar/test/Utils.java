@@ -22,7 +22,7 @@ public class Utils {
 	@Test
 	public void  pointBounds() {
 		Rectangle2D b = Util.boundOne(new Point2D.Double(1,1));
-		assertEquals(b, new Rectangle2D.Double(1,1,0,0));
+		assertEquals(b, new Rectangle2D.Double(1,1,Double.MIN_VALUE,Double.MIN_VALUE));
 		
 		Glyph<Point2D,Object>[] pts = new Glyph[] {
 				new SimpleGlyph<>(new Point2D.Double(1,1)),

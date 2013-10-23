@@ -122,7 +122,8 @@ public final class Util {
 			Glyphset<G,I> glyphs, 
 			DelimitedReader reader, 
 			Indexed.Converter converter, 
-			Shaper<G, Indexed> shaper, Valuer<Indexed, I> valuer) {
+			Shaper<G, Indexed> shaper, 
+			Valuer<Indexed, I> valuer) {
 		int count =0;
 		
 		Method m;

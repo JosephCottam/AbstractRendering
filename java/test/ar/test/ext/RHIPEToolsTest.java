@@ -24,7 +24,7 @@ public class RHIPEToolsTest {
 		Indexed item = new Indexed.ArrayWrapper(entry);
 		RHIPETools.TraceEntry te = new RHIPETools.TraceEntry(0,1,2,size);
 		
-		Glyph<String> g = te.glyph(item);
+		Glyph<Rectangle2D, String> g = te.glyph(item);
 		assertEquals("Category did not match.", cat, g.info());
 		assertEquals("Shape did not match", new Rectangle2D.Double(x,y,size,size), g.shape());
 	}
@@ -34,10 +34,10 @@ public class RHIPEToolsTest {
 		String entries = "10,20,30,40\n11,21,31,41\n12,22,32,42\n13,23,33,43\n14,24,34,44";
 		
 		RHIPETools.TraceEntry te = new RHIPETools.TraceEntry(0,1,3,1);
-		Glyphset.RandomAccess<String> glyphset = RHIPETools.fromText(entries, "\n", ",", te);
+		Glyphset.RandomAccess<Rectangle2D, String> glyphset = RHIPETools.fromText(entries, "\n", ",", te);
 		
 		for (int i=0; i<glyphset.size(); i++) {
-			Glyph<String> g = glyphset.get(i);
+			Glyph<Rectangle2D, String> g = glyphset.get(i);
 			assertEquals("X mismatch on " + i, i+10, g.shape().getBounds().x);
 			assertEquals("Y mismatch on " + i, i+20, g.shape().getBounds().y);
 			assertEquals("Category mismatch on " + i, Integer.toString(i+40), g.info());

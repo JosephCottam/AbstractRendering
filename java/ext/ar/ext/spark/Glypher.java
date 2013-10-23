@@ -9,18 +9,18 @@ import spark.api.java.function.Function;
 
 
 /**Wrap a shaper and a valuer up into a single object that produces glyphs.**/
-public class Glypher<V> extends Function<Indexed, Glyph<V>> {
+public class Glypher<G,I> extends Function<Indexed, Glyph<G,I>> {
 	private static final long serialVersionUID = -2010087917940244951L;
 	
-	final Shaper<Indexed> shaper;
-	final Valuer<Indexed, V> valuer;
-	public Glypher(Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
+	final Shaper<G,Indexed> shaper;
+	final Valuer<Indexed, I> valuer;
+	public Glypher(Shaper<G,Indexed> shaper, Valuer<Indexed, I> valuer) {
 		this.shaper=shaper;
 		this.valuer=valuer;
 	}
 
-	public Glyph<V> call(Indexed item) throws Exception {
-		return new SimpleGlyph<V>(shaper.shape(item), valuer.value(item));
+	public Glyph<G,I> call(Indexed item) throws Exception {
+		return new SimpleGlyph<G,I>(shaper.shape(item), valuer.value(item));
 	}
 
 }

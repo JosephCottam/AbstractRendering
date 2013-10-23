@@ -1,6 +1,5 @@
 package ar.ext.rhipe;
 
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class RHIPETools {
 	 * @param fieldTerminal String that delimits a field (cannot be the same as lineTerminal) 
 	 * @param glypher Object that converts String arrays into glyphs
 	 */
-	public static final Glyphset.RandomAccess<String> fromText(
+	public static final Glyphset.RandomAccess<Rectangle2D, String> fromText(
 			String text, 
 			String lineTerminal, 
 			String fieldTerminal, 
@@ -40,7 +39,7 @@ public class RHIPETools {
 			Indexed item = new Indexed.ArrayWrapper(raw);
 			items.add(item);
 		}
-		return new WrappedCollection.List<Indexed,String>(items, glypher, glypher);
+		return new WrappedCollection.List<Indexed,Rectangle2D, String>(items, glypher, glypher);
 	}
 	
 
@@ -49,7 +48,7 @@ public class RHIPETools {
 	
 	/**Shaper/Valuer to convert the expected trace entries (as Indexed-wrapped arrays-of-strings) into glyphs.
 	 */
-	public static final class TraceEntry implements Shaper<Indexed>, Valuer<Indexed, String> {
+	public static final class TraceEntry implements Shaper<Rectangle2D, Indexed>, Valuer<Indexed, String> {
 		private static final long serialVersionUID = 8559592969089399368L;
 		private final int xField, yField, catField;
 		private final double size;
@@ -60,13 +59,13 @@ public class RHIPETools {
 			this.yField=yField;
 			this.size = size;
 		}
-		public Shape shape(Indexed from) {
+		public Rectangle2D shape(Indexed from) {
 			double x = Double.parseDouble(from.get(xField).toString());
 			double y = Double.parseDouble(from.get(yField).toString());
 			return new Rectangle2D.Double(x,y,size,size);
 		}
 		public String value(Indexed from) {return (String) from.get(catField);} 
-		public Glyph<String> glyph(Indexed from) {return new SimpleGlyph<String>(shape(from), value(from));}
+		public Glyph<Rectangle2D, String> glyph(Indexed from) {return new SimpleGlyph<Rectangle2D, String>(shape(from), value(from));}
 	}
 	
 	
@@ -94,7 +93,7 @@ public class RHIPETools {
 	 */
 	public static String[] render(String entries, AffineTransform ivt, int width, int height) {
 		TraceEntry te = new TraceEntry();
-		Glyphset<String> glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
+		Glyphset<Rectangle2D, String> glyphs = fromText(entries, "\\s*\n", "\\s*,\\s*", te);
 		Renderer r = new SerialSpatial();
 		Aggregator<Object, Integer> agg = new Numbers.Count<Object>();
 		Aggregates<?> aggs = r.aggregate(glyphs, agg, ivt, width, height);
