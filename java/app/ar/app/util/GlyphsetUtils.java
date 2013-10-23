@@ -1,6 +1,7 @@
 package ar.app.util;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.Arrays;
 
@@ -34,7 +35,7 @@ public class GlyphsetUtils {
 
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static <T> Glyphset<T> autoLoad(File source, double glyphSize, Glyphset<T> glyphs) {
+	public static <G,T> Glyphset<G,T> autoLoad(File source, double glyphSize, Glyphset<G,T> glyphs) {
 		try {
 			DelimitedReader r = new DelimitedReader(source, 0, DelimitedReader.CSV);
 			String[] line = r.next();
@@ -55,7 +56,7 @@ public class GlyphsetUtils {
 			}
 			
 			if (glyphs instanceof MemMapList) {
-				MemMapList<T> list = new MemMapList<T>(source, ((MemMapList<T>) glyphs).shaper(), ((MemMapList<T>) glyphs).valuer());
+				MemMapList<G,T> list = new MemMapList<>(source, ((MemMapList<G,T>) glyphs).shaper(), ((MemMapList<G,T>) glyphs).valuer());
 				System.out.printf("Setup list of %d entries.\n", list.size());
 				return list;
 			} else {
@@ -74,8 +75,9 @@ public class GlyphsetUtils {
 				if (valField >=0) {valuer = new Indexed.ToValue<Indexed,T>(valField);}
 				else {valuer = new Valuer.Constant<>(Color.red);}
 				
+				
 				return Util.load(
-						glyphs, 
+						(Glyphset<Rectangle2D,T>) glyphs, 
 						new DelimitedReader(source, skip, DelimitedReader.CSV), 
 						new Converter(types),
 						new Indexed.ToRect(glyphSize, glyphSize, true, xField, yField), 
@@ -87,13 +89,13 @@ public class GlyphsetUtils {
 		catch (Exception e) {throw new RuntimeException(e);}
 	}
 
-	public static final <V> Glyphset<V> memMap(String label, String file, Shaper<Indexed> shaper, Valuer<Indexed, V> valuer, int skip, String types) {
+	public static final <G,V> Glyphset<G,V> memMap(String label, String file, Shaper<G,Indexed> shaper, Valuer<Indexed, V> valuer, int skip, String types) {
 		System.out.printf("Memory mapping %s...", label);
 		File f = new File(file);
 
 		try {
 			long start = System.currentTimeMillis();
-			Glyphset<V> g = new MemMapList<V>(f, shaper, valuer);
+			Glyphset<G,V> g = new MemMapList<>(f, shaper, valuer);
 			long end = System.currentTimeMillis();
 			if (label != null) {System.out.printf("prepared %s entries (%s ms).\n", g.size(), end-start);}
 			return g;
@@ -103,7 +105,7 @@ public class GlyphsetUtils {
 					System.out.println("Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
-					return new MemMapList<V>(f, shaper, valuer);
+					return new MemMapList<>(f, shaper, valuer);
 				} else {throw e;}
 			} catch (Exception ex) {
 				System.out.println("Faield to load data.");

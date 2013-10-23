@@ -4,15 +4,36 @@ import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 
 import org.junit.Test;
 
 import ar.Aggregates;
+import ar.Glyph;
 import ar.aggregates.FlatAggregates;
+import ar.glyphsets.SimpleGlyph;
 import ar.util.Util;
 
 public class Utils {
 
+	@SuppressWarnings("unchecked")
+	@Test
+	public void  pointBounds() {
+		Rectangle2D b = Util.boundOne(new Point2D.Double(1,1));
+		assertEquals(b, new Rectangle2D.Double(1,1,0,0));
+		
+		Glyph<Point2D,Object>[] pts = new Glyph[] {
+				new SimpleGlyph<>(new Point2D.Double(1,1)),
+				new SimpleGlyph<>(new Point2D.Double(2,2)),
+				new SimpleGlyph<>(new Point2D.Double(-1,-1))
+		};
+		
+		Rectangle2D bounds = Util.bounds(Arrays.asList(pts));
+		assertEquals(new Rectangle2D.Double(-1,-1,3,3), bounds);
+	}
+	
 	@Test
 	public void isEqual() {
 		assertTrue("nulls", Util.isEqual(null, null));

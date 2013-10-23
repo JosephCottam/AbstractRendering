@@ -3,6 +3,7 @@ package ar;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class SimpleApp {
 		//However, in exchange we need to supply the "shaper" and the "valuer" instances.
 		//These instances are defined above and depend on what exactly is
 		//held in the collection being wrapped.
-		Glyphset<Double> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4), Double.class);
+		Glyphset<Rectangle2D, Double> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4), Double.class);
 		
 
 

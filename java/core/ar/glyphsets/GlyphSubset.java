@@ -9,10 +9,10 @@ import ar.Glyphset;
 import ar.util.Util;
 
 /**Subset of a random-access dataset. **/
-public abstract class GlyphSubset<I> implements Glyphset.RandomAccess<I> {
-	protected final Glyphset.RandomAccess<I> glyphs;
+public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
+	protected final Glyphset.RandomAccess<G,I> glyphs;
 	protected final long low, high;
-	protected GlyphSubset(Glyphset.RandomAccess<I> glyphs, long low, long high) {
+	protected GlyphSubset(Glyphset.RandomAccess<G,I> glyphs, long low, long high) {
 		this.glyphs=glyphs;
 		this.low =low;
 		this.high=high;
@@ -22,20 +22,20 @@ public abstract class GlyphSubset<I> implements Glyphset.RandomAccess<I> {
 		}
 	}
 
-	public GlyphsetIterator<I> iterator() {return new GlyphsetIterator<I>(this, 0, size());}
+	public GlyphsetIterator<G,I> iterator() {return new GlyphsetIterator<G,I>(this, 0, size());}
 	public boolean isEmpty() {return low >= high;}
 	public long size() {return high - low;}
 	public Rectangle2D bounds() {return Util.bounds(this);}
 	public long segments() {return high - low;}
-	public Glyphset<I> segment(long bottom, long top)
+	public Glyphset<G,I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		return new Cached<I>(glyphs, bottom + this.low, top + this.low);
+		return new Cached<>(glyphs, bottom + this.low, top + this.low);
 	}
 
-	public Collection<Glyph<I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<I>> contained = new ArrayList<Glyph<I>>();
-		for (Glyph<I> g : this) {
-			if (g.shape().intersects(r)) {
+	public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<G,I>> contained = new ArrayList<>();
+		for (Glyph<G,I> g : this) {
+			if (Util.intersects(r, g.shape())) {
 				contained.add(g);
 			}
 		}
@@ -50,25 +50,25 @@ public abstract class GlyphSubset<I> implements Glyphset.RandomAccess<I> {
 	 * is slow, but it adds a memory cost.  For example, memory
 	 * mapped lists are relatively slow to produce any give glyph. 
 	 */
-	public static final class Cached<G> extends GlyphSubset<G> {
-		private final Glyph<G>[] cache;
+	public static final class Cached<G,I> extends GlyphSubset<G,I> {
+		private final Glyph<G,I>[] cache;
 		private final Rectangle2D bounds;
 
 		@SuppressWarnings({"unchecked","javadoc"})
-		public Cached(Glyphset.RandomAccess<G> glyphs, long low, long high) {
+		public Cached(Glyphset.RandomAccess<G,I> glyphs, long low, long high) {
 			super(glyphs,low, high);
 			this.cache = new Glyph[(int) (high - low)];
 			Rectangle2D temp = new Rectangle2D.Double();
 			for (int i=0; i<cache.length;i++) {
-				Glyph<G> glyph = glyphs.get(i+low);
-				Util.add(temp, glyph.shape().getBounds2D());
+				Glyph<G,I> glyph = glyphs.get(i+low);
+				Util.add(temp, Util.boundOne(glyph.shape()));
 				cache[i] = glyph;
 			}
 			this.bounds = temp;
 		}
 		
 		@Override
-		public Glyph<G> get(long l) {
+		public Glyph<G,I> get(long l) {
 			if (l > Integer.MAX_VALUE) {throw new ArrayIndexOutOfBoundsException();}
 			return cache[(int) l];
 		}
@@ -79,18 +79,18 @@ public abstract class GlyphSubset<I> implements Glyphset.RandomAccess<I> {
 
 	/**Subset that defers to the backing dataset. 
 	 * This is essentially a re-framing of indices to form a subset.**/
-	public static final class Uncached<G> extends GlyphSubset<G> {
+	public static final class Uncached<G,I> extends GlyphSubset<G,I> {
 		@SuppressWarnings({"javadoc"})
-		public Uncached(Glyphset.RandomAccess<G> glyphs, long low, long high) {super(glyphs, low,high);}
-		public Glyph<G> get(long l) {return glyphs.get(low+l);}
+		public Uncached(Glyphset.RandomAccess<G,I> glyphs, long low, long high) {super(glyphs, low,high);}
+		public Glyph<G,I> get(long l) {return glyphs.get(low+l);}
 	}
 
 	/**Subset a random-access glyphset; caching optional.*/
-	public static <G> GlyphSubset<G> make(Glyphset.RandomAccess<G> source, long low, long  high, boolean cache) {
+	public static <G,I> GlyphSubset<G,I> make(Glyphset.RandomAccess<G,I> source, long low, long  high, boolean cache) {
 		if (cache) {
-			return new GlyphSubset.Cached<G>(source, low, high);
+			return new GlyphSubset.Cached<G,I>(source, low, high);
 		} else {
-			return new GlyphSubset.Uncached<G>(source, low, high);
+			return new GlyphSubset.Uncached<G,I>(source, low, high);
 		}
 	}
 

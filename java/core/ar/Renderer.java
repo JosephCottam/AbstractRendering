@@ -20,8 +20,8 @@ public interface Renderer extends Serializable {
 	 * @param height The height of the current viewport
 	 * @return Resulting aggregate set
 	 */
-	public <I,A> Aggregates<A> aggregate(
-			final Glyphset<? extends I> glyphs, 
+	public <I,G,A> Aggregates<A> aggregate(
+			final Glyphset<? extends G, ? extends I> glyphs, 
 			final Aggregator<I,A> op, 
 			final AffineTransform viewTransform, final int width, final int height);
 	

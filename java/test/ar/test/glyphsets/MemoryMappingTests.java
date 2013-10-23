@@ -2,6 +2,7 @@ package ar.test.glyphsets;
 
 import static org.junit.Assert.*;
 
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 
 import org.junit.AfterClass;
@@ -23,8 +24,8 @@ public class MemoryMappingTests {
 	private static String csvName = "../data/circlepoints.csv";
 	private static String hbinName = "../data/circlepointsTests.hbin";
 
-	private static Glyphset.RandomAccess<Integer> mm = null;
-	private static Glyphset.RandomAccess<Integer> ref = null;
+	private static Glyphset.RandomAccess<Rectangle2D, Integer> mm = null;
+	private static Glyphset.RandomAccess<Rectangle2D, Integer> ref = null;
 	
 	@BeforeClass
 	public static void makeHbin() throws Exception {
@@ -36,9 +37,9 @@ public class MemoryMappingTests {
 		MemMapEncoder.write(csv, 1, hbin, "xxddi".toCharArray());
 		assertTrue("hbin not found after encode.", hbin.exists());
 		
-		mm = new MemMapList<Integer>(hbin, new Indexed.ToRect(1, 0, 1), new Indexed.ToValue<Integer,Integer>(2));
-		ref = (GlyphList<Integer>) Util.load(
-				new ar.glyphsets.GlyphList<Integer>(), 
+		mm = new MemMapList<Rectangle2D, Integer>(hbin, new Indexed.ToRect(1, 0, 1), new Indexed.ToValue<Integer,Integer>(2));
+		ref = (GlyphList<Rectangle2D, Integer>) Util.load(
+				new ar.glyphsets.GlyphList<Rectangle2D, Integer>(), 
 				new DelimitedReader(csv, 1, "\\s*,\\s*"),
 				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3), new Indexed.ToValue<Integer,Integer>(4));

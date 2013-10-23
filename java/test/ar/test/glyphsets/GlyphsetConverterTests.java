@@ -2,6 +2,7 @@ package ar.test.glyphsets;
 
 import static org.junit.Assert.*;
 
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -20,8 +21,8 @@ public class GlyphsetConverterTests {
 	public void convert() {
 		Valuer<Integer, Double> converter = converter();
 		Collection<Indexed> data = data();
-		Glyphset.RandomAccess<Integer> base = WrappedCollection.toList(data, shaper(), valuer());
-		Glyphset.RandomAccess<Double> glyphs = new GlyphsetConverter<>(base, converter);
+		Glyphset.RandomAccess<Rectangle2D, Integer> base = WrappedCollection.toList(data, shaper(), valuer());
+		Glyphset.RandomAccess<Rectangle2D, Double> glyphs = new GlyphsetConverter<>(base, converter);
 		
 		assertNotNull(base);
 		assertNotNull(glyphs);
@@ -33,7 +34,7 @@ public class GlyphsetConverterTests {
 	}
 
 
-	public Shaper<Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
+	public Shaper<Rectangle2D, Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Integer> valuer() {return new Indexed.ToValue<Object,Integer>(2);}
 	public Valuer<Integer, Double> converter() {
 		return new Valuer<Integer,Double>() {

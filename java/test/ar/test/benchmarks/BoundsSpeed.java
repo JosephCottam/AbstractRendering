@@ -1,6 +1,7 @@
 package ar.test.benchmarks;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FilenameFilter;
 
@@ -24,7 +25,7 @@ public class BoundsSpeed {
 			long total=0;
 			try {
 			for (int i=0; i<iterations; i++) {
-				Glyphset<Color> glyphs = new MemMapList<Color>(
+				Glyphset<Rectangle2D, Color> glyphs = new MemMapList<>(
 							source, 
 							new Indexed.ToRect(.1,.1, false, 0, 1), 
 							new Valuer.Constant<Indexed,Color>(Color.red));

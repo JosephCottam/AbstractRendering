@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -46,7 +47,7 @@ public class Renderings {
 		}
 	}
 	
-	public <V,A> BufferedImage image(Renderer r, Glyphset<V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
+	public <G,V,A> BufferedImage image(Renderer r, Glyphset<G,V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
 		AffineTransform ivt = Util.zoomFit(g.bounds(), width, height);
 		Aggregates<A> ser_aggs = r.aggregate(g, agg, ivt.createInverse(), width, height);
 		Transfer.Specialized<? super A,Color> t2 = t.specialize(ser_aggs);
@@ -55,7 +56,7 @@ public class Renderings {
 		return img;
 	}
 	
-	public <V,A> void testWith(String test, Glyphset<V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
+	public <G,V,A> void testWith(String test, Glyphset<G,V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
 		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
 		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));
 		
@@ -75,7 +76,7 @@ public class Renderings {
 
 	@Test
 	public void CheckerboardQuad() throws Exception {
-		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("checker_quad", glyphs, agg, t);
@@ -84,7 +85,7 @@ public class Renderings {
 
 	@Test
 	public void CirclepointsQuad() throws Exception {
-		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("circle_quad", glyphs, agg, t);
@@ -93,10 +94,10 @@ public class Renderings {
 	
 	@Test
 	public void CirclepointsMemMap() throws Exception {
-		Glyphset<Object> glyphs = GlyphsetUtils.autoLoad(
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(
 				new File("../data/circlepoints.hbin"), 
 				.001, 
-				new MemMapList<Object>(
+				new MemMapList<Rectangle2D, Object>(
 						null, 
 						new Indexed.ToRect(.01, 0, 1), 
 						new Valuer.Constant<Indexed, Object>(1)));

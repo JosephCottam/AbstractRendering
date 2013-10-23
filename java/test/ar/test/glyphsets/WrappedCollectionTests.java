@@ -2,6 +2,7 @@ package ar.test.glyphsets;
 
 import static org.junit.Assert.*;
 
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,7 +20,7 @@ public class WrappedCollectionTests {
 	@Test
 	public void toQuadTree() {
 		Collection<Indexed> data = data();
-		Glyphset<Object> g = WrappedCollection.toQuadTree(data, shaper(), valuer());
+		Glyphset<Rectangle2D, Object> g = WrappedCollection.toQuadTree(data, shaper(), valuer());
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
@@ -28,13 +29,13 @@ public class WrappedCollectionTests {
 	@Test
 	public void wrapList() {
 		ArrayList<Indexed> data = data();
-		Glyphset<Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
+		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
 		assertEquals("Failed to identify list.", WrappedCollection.List.class, g.getClass());
 		
-		Glyphset.RandomAccess<Object> ra = (Glyphset.RandomAccess<Object>) g;
+		Glyphset.RandomAccess<Rectangle2D, Object> ra = (Glyphset.RandomAccess<Rectangle2D, Object>) g;
 		
 		for (int i=0; i<data.size(); i++) {assertEquals(ra.get(i).info(), data.get(i).get(2));}		
 	}
@@ -44,14 +45,14 @@ public class WrappedCollectionTests {
 		Collection<Indexed> data = new HashSet<Indexed>();
 		data.addAll(data());
 		
-		Glyphset<Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
+		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
 		assertFalse("Incorrectly identified list.", g.getClass() == WrappedCollection.List.class);
 	}
 
-	public Shaper<Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
+	public Shaper<Rectangle2D, Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Object> valuer() {return new Indexed.ToValue<Object,Object>(2);}
 	
 	public ArrayList<Indexed> data() {

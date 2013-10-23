@@ -24,7 +24,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	protected final SimpleDisplay display;
 	
 	protected Aggregator<?,?> aggregator;
-	protected Glyphset<?> dataset;
+	protected Glyphset<?,?> dataset;
 	
 	protected AffineTransform viewTransformRef = new AffineTransform();
 
@@ -39,7 +39,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	 * 
 	 * TODO: Investigate just taking in 'renderer' since that is the only immutable thing.
 	 */
-	public FullDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public FullDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?,?> glyphs, Renderer renderer) {
 		super();
 		display = new SimpleDisplay(null, transfer, renderer);
 		this.setLayout(new BorderLayout());
@@ -62,8 +62,8 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	
 	public Renderer renderer() {return renderer;}
 	
-	public Glyphset<?> dataset() {return dataset;}
-	public void dataset(Glyphset<?> data) {
+	public Glyphset<?,?> dataset() {return dataset;}
+	public void dataset(Glyphset<?,?> data) {
 		this.dataset = data;
 		this.aggregates = null;
 		this.repaint();

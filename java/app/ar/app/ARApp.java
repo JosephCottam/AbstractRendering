@@ -64,7 +64,7 @@ public class ARApp implements ARComponent.Holder {
 
 		fileOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Glyphset<?> glyphs = loadData();
+				Glyphset<?,?> glyphs = loadData();
 				display.dataset(glyphs);
 				display.zoomFit();
 			}
@@ -72,7 +72,7 @@ public class ARApp implements ARComponent.Holder {
 		
 		glyphsetOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Glyphset<?> glyphs = loadData();
+				Glyphset<?,?> glyphs = loadData();
 				display.dataset(glyphs);
 				display.zoomFit();
 			}});
@@ -132,12 +132,12 @@ public class ARApp implements ARComponent.Holder {
 		((WrappedTransfer<?,?>) transfers.getSelectedItem()).selected(this);
 	}
 
-	public Glyphset<?> loadData() {
+	public Glyphset<?,?> loadData() {
 		File dataFile = fileOptions.inputFile();
 		if (dataFile  == null) {return null;}
 		System.out.print("Loading " + dataFile.getName() + "...");
 		double glyphSize = glyphsetOptions.glyphSize();
-		Glyphset<?> glyphSet = glyphsetOptions.makeGlyphset();
+		Glyphset<?,?> glyphSet = glyphsetOptions.makeGlyphset();
 		return GlyphsetUtils.autoLoad(dataFile, glyphSize, glyphSet);
 	}
 	

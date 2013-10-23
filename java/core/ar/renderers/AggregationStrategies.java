@@ -108,10 +108,10 @@ public class AggregationStrategies {
 	 * 
 	 * @param inverseView The INVERSE view transform (screen to canvas).
 	 * **/
-	public static <A,I> A pixel(
+	public static <A,G,I> A pixel(
 			Aggregates<A> aggregates, 
 			Aggregator<I,A> op,
-			Glyphset<? extends I> glyphset,
+			Glyphset<? extends G, ? extends I> glyphset,
 			AffineTransform inverseView, 
 			int x, int y) {
 		
@@ -120,9 +120,9 @@ public class AggregationStrategies {
 		Rectangle2D pixel = new Rectangle(x,y,1,1);
 		pixel = inverseView.createTransformedShape(pixel).getBounds2D(); 
 		
-		Collection<? extends Glyph<? extends I>> glyphs = glyphset.intersects(pixel);
+		Collection<? extends Glyph<? extends G, ? extends I>> glyphs = glyphset.intersects(pixel);
 		A acc = aggregates.get(x, y);
-		for (Glyph<? extends I> g: glyphs) {
+		for (Glyph<? extends G, ? extends I> g: glyphs) {
 			I val = g.info();
 			acc = op.combine(x, y, acc, val);
 		}

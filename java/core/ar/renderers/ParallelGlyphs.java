@@ -43,13 +43,13 @@ public class ParallelGlyphs implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public <I,A> Aggregates<A> aggregate(Glyphset<? extends I> glyphs, Aggregator<I,A> op, 
+	public <I,G,A> Aggregates<A> aggregate(Glyphset<? extends G, ? extends I> glyphs, Aggregator<I,A> op, 
 			AffineTransform view, int width, int height) {
 		
 		recorder.reset(glyphs.size());
 
-		GlyphParallelAggregation<I,A> t = GlyphParallelAggregation.make(
-				glyphs.iterator().next().shape().getClass(),	//HACK: This lookup may be fragile.  It may better to get the aggregates to tell the geometry type...
+		GlyphParallelAggregation<I,G,A> t = GlyphParallelAggregation.make(
+				(Class<G>) glyphs.iterator().next().shape().getClass(),	//HACK: This lookup may be fragile.  It may better to get the aggregates to tell the geometry type...
 				glyphs, 
 				view, 
 				op, 

@@ -151,10 +151,10 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
-	public Glyphset<?> dataset() {return hosted.dataset();}
+	public Glyphset<?,?> dataset() {return hosted.dataset();}
 	public void renderAgain() {hosted.renderAgain();}
 	
-	public void dataset(Glyphset<?> data) {
+	public void dataset(Glyphset<?,?> data) {
 		hosted.dataset(data);
 		overlay.clear();
 	}

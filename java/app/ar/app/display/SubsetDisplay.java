@@ -8,8 +8,7 @@ import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.util.Util;
 
-/**Panel that renders more than just what's visible on the screen so pan can happen quickly.
- * */
+/**Panel that renders the entire dataset at the current zoom resolution, so pan can happen quickly.*/
 public class SubsetDisplay extends FullDisplay {
 	private static final long serialVersionUID = 2549632552666062944L;
 	
@@ -20,7 +19,7 @@ public class SubsetDisplay extends FullDisplay {
 	private AffineTransform renderTransform;
 	
 	/**Create a new instance.**/
-	public SubsetDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?> glyphs, Renderer renderer) {
+	public SubsetDisplay(Aggregator<?,?> reduction, Transfer<?,?> transfer, Glyphset<?,?> glyphs, Renderer renderer) {
 		super(reduction, transfer, glyphs, renderer);
 	}
 		
@@ -84,9 +83,7 @@ public class SubsetDisplay extends FullDisplay {
 			subsetRender = false;
 		} 
 
-		if (action != null) {
-			renderPool.execute(action);
-		}
+		if (action != null) {renderPool.execute(action);}
 	}
 	
 	private final class SubsetRender implements Runnable {

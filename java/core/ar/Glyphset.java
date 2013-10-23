@@ -39,10 +39,9 @@ import java.util.Collection;
  * 
  * @param <I> The type of the information associated with a glyph entry.
  */
-public interface Glyphset<I> extends Iterable<Glyph<I>> {
-	
+public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	/**Return all glyphs that intersect the passed rectangle.**/
-	public Collection<Glyph<I>> intersects(Rectangle2D r);
+	public Collection<Glyph<G,I>> intersects(Rectangle2D r);
 	
 	/**Is this glyphset empty?*/
 	public boolean isEmpty();
@@ -81,14 +80,15 @@ public interface Glyphset<I> extends Iterable<Glyph<I>> {
 	 * @param top Upper marker. This is an exclusive bound.
 	 * @return A subset of the data.
 	 */
-	public Glyphset<I> segment(long bottom, long top) throws IllegalArgumentException;
+	public Glyphset<G,I> segment(long bottom, long top) throws IllegalArgumentException;
 	
 	
 	/**Glyphsets that support random access.
 	 * This interface is largely to support parallel execution.
 	 */
-	public static interface RandomAccess<T> extends Glyphset<T> {
+	public static interface RandomAccess<G,I> extends Glyphset<G,I> {
 		/**Return the item at the specified index.**/
-		public Glyph<T> get(long l);
+		public Glyph<G,I> get(long l);
 	}
+
 }

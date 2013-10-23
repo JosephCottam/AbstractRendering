@@ -18,23 +18,17 @@ import ar.util.Util;
  * @author jcottam
  *
  */
-public class GlyphList<I> implements Glyphset<I>, Glyphset.RandomAccess<I> {
-	protected final List<Glyph<I>> glyphs = new ArrayList<Glyph<I>>();
+public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
+	protected final List<Glyph<G,I>> glyphs = new ArrayList<Glyph<G,I>>();
 	protected Rectangle2D bounds;
 	
-	public Iterator<Glyph<I>> iterator() {return glyphs.iterator();}
+	public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
-	public void add(Glyph<I> g) {glyphs.add(g); bounds=null;}
+	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
 	public long size() {return glyphs.size();}
-	public Glyph<I> get(long i) {
+	public Glyph<G,I> get(long i) {
 		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}
 		return glyphs.get((int) i);
-	}
-
-	public Collection<Glyph<I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<I>> contained = new ArrayList<Glyph<I>>();
-		for (Glyph<I> g: glyphs) {if (g.shape().intersects(r)) {contained.add(g);}}
-		return contained;
 	}
 	
 	public Rectangle2D bounds() {
@@ -44,8 +38,14 @@ public class GlyphList<I> implements Glyphset<I>, Glyphset.RandomAccess<I> {
 	
 	public long segments() {return size();}
 
-	public Glyphset<I> segment(long bottom, long top)
+	public Glyphset<G,I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		return new GlyphSubset.Uncached<I>(this, bottom, top);
+		return new GlyphSubset.Uncached<G,I>(this, bottom, top);
 	}
+
+	  public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<G,I>> contained = new ArrayList<>();
+		for (Glyph<G,I> g: glyphs) {if (Util.intersects(r, g.shape())) {contained.add(g);}}
+		return contained;
+	  }
 }

@@ -39,16 +39,16 @@ public final class ParallelSpatial implements Renderer {
 	protected void finalize() {pool.shutdownNow();}
 	
 	
-	public <I,A> Aggregates<A> aggregate(final Glyphset<? extends I> glyphs, final Aggregator<I,A> op, 
+	public <I,G,A> Aggregates<A> aggregate(final Glyphset<? extends G, ? extends I> glyphs, final Aggregator<I,A> op, 
 			final AffineTransform view, final int width, final int height) {
-		
+
 		final Aggregates<A> aggregates = AggregateUtils.make(width, height, op.identity());
 
 		AffineTransform inverseView;
 		try {inverseView = view.createInverse();}
 		catch (Exception e) {throw new IllegalArgumentException(e);}
 		
-		PixelParallelAggregation<I,A> t = new PixelParallelAggregation<I,A>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
+		PixelParallelAggregation<I,G,A> t = new PixelParallelAggregation<>(glyphs, inverseView, op, recorder, taskSize, aggregates, 0,0, width, height);
 		pool.invoke(t);
 		return aggregates;
 	}

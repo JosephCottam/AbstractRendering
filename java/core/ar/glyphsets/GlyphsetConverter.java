@@ -17,34 +17,34 @@ import ar.glyphsets.implicitgeometry.Valuer;
  * @param <I> Original input value type
  * @param <V> Post-conversion value type
  */
-public class GlyphsetConverter<I,V> implements Glyphset.RandomAccess<V> {
-	protected final Glyphset<I> base;
+public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
+	protected final Glyphset<G,I> base;
 	protected final Valuer<I,V> converter;
-	protected final Glyphset.RandomAccess<I> randomAccess;
+	protected final Glyphset.RandomAccess<G,I> randomAccess;
 	
-	public GlyphsetConverter(Glyphset<I> base, Valuer<I,V> converter) {
+	public GlyphsetConverter(Glyphset<G,I> base, Valuer<I,V> converter) {
 		this.base = base;
 		this.converter = converter;
 		if (base instanceof Glyphset.RandomAccess) {
-			this.randomAccess = (Glyphset.RandomAccess<I>) base;
+			this.randomAccess = (Glyphset.RandomAccess<G,I>) base;
 		} else {
 			randomAccess = null;
 		}
 	}
 	
-	protected Glyph<V> wrap(Glyph<I> g) {
+	protected Glyph<G,V> wrap(Glyph<G,I> g) {
 		return new SimpleGlyph<>(g.shape(), converter.value(g.info()));
 	}
 	
 	@Override
-	public Iterator<Glyph<V>> iterator() {
-		return new Iterator<Glyph<V>>() {
-			Iterator<Glyph<I>> base = GlyphsetConverter.this.base.iterator();
+	public Iterator<Glyph<G,V>> iterator() {
+		return new Iterator<Glyph<G,V>>() {
+			Iterator<Glyph<G,I>> base = GlyphsetConverter.this.base.iterator();
 
 			public void remove() {base.remove();}
 			public boolean hasNext() {return base.hasNext();}
-			public Glyph<V> next() {
-				Glyph<I> g = base.next();
+			public Glyph<G,V> next() {
+				Glyph<G,I> g = base.next();
 				return wrap(g);
 			}
 
@@ -52,10 +52,10 @@ public class GlyphsetConverter<I,V> implements Glyphset.RandomAccess<V> {
 	}
 
 	@Override
-	public Collection<Glyph<V>> intersects(Rectangle2D r) {
-		Collection<Glyph<I>> subs = base.intersects(r);
-		ArrayList<Glyph<V>> a = new ArrayList<>(subs.size());
-		for (Glyph<I> g: subs) {a.add(wrap(g));}
+	public Collection<Glyph<G,V>> intersects(Rectangle2D r) {
+		Collection<Glyph<G,I>> subs = base.intersects(r);
+		ArrayList<Glyph<G,V>> a = new ArrayList<>(subs.size());
+		for (Glyph<G,I> g: subs) {a.add(wrap(g));}
 		return a;
 	}
 
@@ -65,13 +65,13 @@ public class GlyphsetConverter<I,V> implements Glyphset.RandomAccess<V> {
 	public long segments() {return base.segments();}
 
 	@Override
-	public Glyphset<V> segment(long bottom, long top)
+	public Glyphset<G,V> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		return new GlyphsetConverter<>(base.segment(bottom, top), converter);
 	}
 
 	@Override
-	public Glyph<V> get(long l) {
+	public Glyph<G,V> get(long l) {
 		if (randomAccess != null) {return wrap(randomAccess.get(l));}
 		else {throw new UnsupportedOperationException("Cannot perform random access because backing collection does not support it.");}
 	}

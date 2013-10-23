@@ -45,7 +45,7 @@ import ar.util.IndexedEncoding;
  * @author jcottam
  *
  */
-public class MemMapList<I> implements Glyphset.RandomAccess<I> {
+public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	/**Flag field indicating the binary file encoding (hbin) version understood by the parser.**/
 	public static final int VERSION_UNDERSTOOD = -1;
 	
@@ -68,7 +68,7 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	private final File source;
 	private final TYPE[] types;
 	private final Valuer<Indexed,I> valuer;
-	private final Shaper<Indexed> shaper;
+	private final Shaper<G,Indexed> shaper;
 
 	private final int recordLength;
 	private final int[] offsets;
@@ -78,7 +78,7 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	private Rectangle2D bounds;
 
 	/**Create a new memory mapped list, types are read from the source.**/
-	public MemMapList(File source, Shaper<Indexed> shaper, Valuer<Indexed,I> valuer) {
+	public MemMapList(File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer) {
 		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
@@ -98,8 +98,8 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 			if (shaper instanceof Shaper.SafeApproximate) {
 				IndexedEncoding max = entryAt(header.maximaRecordOffset);				
 				IndexedEncoding min = entryAt(header.minimaRecordOffset);
-				Rectangle2D maxBounds = shaper.shape(max).getBounds2D();
-				Rectangle2D minBounds = shaper.shape(min).getBounds2D();
+				Rectangle2D maxBounds = Util.boundOne(shaper.shape(max));
+				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
 			} 
 		} else {
@@ -117,17 +117,17 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
-	public Collection<Glyph<I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<I>> contained = new ArrayList<Glyph<I>>();
-		for (Glyph<I> g: this) {if (g.shape().intersects(r)) {contained.add(g);}}
+	public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
+		ArrayList<Glyph<G,I>> contained = new ArrayList<Glyph<G,I>>();
+		for (Glyph<G,I> g: this) {if (Util.intersects(r, g.shape())) {contained.add(g);}}
 		return contained;
 	}
 
 	@Override
-	public Glyph<I> get(long i) {
+	public Glyph<G,I> get(long i) {
 		long recordOffset = (i*recordLength)+dataTableOffset;
 		IndexedEncoding entry = entryAt(recordOffset);
-		Glyph<I> g = new SimpleGlyph<I>(shaper.shape(entry), valuer.value(entry));
+		Glyph<G,I> g = new SimpleGlyph<G,I>(shaper.shape(entry), valuer.value(entry));
 		return g;
 	}
 
@@ -140,14 +140,14 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	public Valuer<Indexed,I> valuer() {return valuer;}
 	
 	/**Shaper being used to provide geometry for each entry.**/ 
-	public Shaper<Indexed> shaper() {return shaper;}
+	public Shaper<G,Indexed> shaper() {return shaper;}
 	
 	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
 
 	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
 	public long size() {return entryCount;}
-	public Iterator<Glyph<I>> iterator() {return new GlyphsetIterator<I>(this);}
+	public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
 
 	public Rectangle2D bounds() {
 		if (bounds == null) {
@@ -185,7 +185,7 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
 
 			for (long i=low; i<high; i++) {
-				Rectangle2D bound = MemMapList.this.get(i).shape().getBounds2D();
+				Rectangle2D bound = Util.boundOne(MemMapList.this.get(i).shape());
 				if (bound != null) {Util.add(bounds, bound);}
 
 			}
@@ -197,9 +197,9 @@ public class MemMapList<I> implements Glyphset.RandomAccess<I> {
 	public long segments() {return size();}
 
 	@Override
-	public Glyphset<I> segment(long bottom, long top)
+	public Glyphset<G,I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		Glyphset<I> subset = GlyphSubset.make(this, bottom, top, true);
+		Glyphset<G,I> subset = GlyphSubset.make(this, bottom, top, true);
 		return subset;
 	}
 

@@ -3,7 +3,6 @@ package ar;
 import java.util.ArrayList;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
@@ -19,7 +18,7 @@ import ar.renderers.*;
 public class WrappedCollectionTest {
 
 	/**Demo geometry creator.**/
-	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Integer> {
+	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Rectangle2D, Integer> {
 		private static final long serialVersionUID = 2114709599706433845L;
 		
 		private static final Color[] COLORS = new Color[]{Color.RED, Color.BLUE, Color.GREEN,Color.PINK,Color.ORANGE};
@@ -31,7 +30,7 @@ public class WrappedCollectionTest {
 			this.size = size;
 		}
 
-		public Shape shape(Integer from) {
+		public Rectangle2D shape(Integer from) {
 			from = from*2;
 			int row = from/columns;
 			int col = from%columns;
@@ -53,7 +52,7 @@ public class WrappedCollectionTest {
 		
 		for (int i=0; i< 1000; i++) {vs.add(i);}
 		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
-		WrappedCollection<Integer,Color> gs = new WrappedCollection<>(vs, g,g);
+		WrappedCollection<Integer,Rectangle2D, Color> gs = new WrappedCollection<>(vs, g, g);
 		
 		FullDisplay p = new FullDisplay(new WrappedAggregator.OverplotFirst().op(), 
 								new WrappedTransfer.EchoColor().op(), 

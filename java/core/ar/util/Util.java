@@ -3,6 +3,7 @@ package ar.util;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -47,7 +48,60 @@ public final class Util {
 		}
 		return newTypes;
 	}
+	
+	
+	///---------- TOOLS FOR PRETENDING THAT POINTS ARE SHAPES TOO!! ----------------------------
+	/**Check for intersection between a rectangle and another (presumably) geometric object.**/
+	public static boolean intersects(Rectangle2D r, Object o) {
+		if (o instanceof Point2D) {return intersects(r, (Point2D) o);}
+		if (o instanceof Shape) {return intersects(r, (Shape) o);}
+		throw new IllegalArgumentException("Object passed must be either a shape or a point.");
+	}
+	public static boolean intersects(Rectangle2D r, Point2D p) {return r.contains(p);}
+	public static boolean intersects(Rectangle2D r, Shape s) {return s.intersects(r);}
+	
+	public static Rectangle2D boundOne(Object o) {
+		if (o instanceof Point2D) {return boundOne((Point2D) o);}
+		if (o instanceof Shape) {return boundOne((Shape) o);}
+		throw new IllegalArgumentException("Object passed must be either a shape or a point.  Recieved: " + o.getClass().getName());		
+	}
+	public static Rectangle2D boundOne(Shape s) {return s.getBounds2D();}
+	public static Rectangle2D boundOne(Point2D p) {return new Rectangle2D.Double(p.getX(), p.getY(), Double.MIN_VALUE, Double.MIN_VALUE);}
+	///------------------------------------------------------------------------------------------------	
 
+
+	/**What bounding box closely contains all of the glyphs in the passed collection.**/
+	public static <G> Rectangle2D bounds(Iterable<? extends Glyph<G, ?>> glyphs) {return bounds(glyphs.iterator());}
+	
+	/**What bounding box closely contains all of the glyphs covered by the iterator.**/
+	public static <G> Rectangle2D bounds(Iterator<? extends Glyph<G, ?>> glyphs) {
+		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		while (glyphs.hasNext()) {
+			Glyph<G, ?> g = glyphs.next();
+			if (g == null) {continue;}
+			G shape = g.shape();
+			if (shape instanceof Point2D) {
+				bounds.add((Point2D) shape);
+			} else if (shape instanceof Shape) {
+				Rectangle2D bound = ((Shape) shape).getBounds2D();
+				if (bound != null) {add(bounds, bound);}
+			}
+		}
+		return bounds;
+	}
+
+	
+	/**What bounding box closely contains all of the glyphs passed.**/
+	public static Rectangle2D bounds(Rectangle2D... rs) {
+		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		for (Rectangle2D r: rs) {
+			if (r != null) {add(bounds, r);}
+		}
+		return bounds;
+	}
+
+
+	
 	/**Mean of two values.**/
 	public static final int mean(int low, int high) {return low+((high-low)/2);}
 	public static final long mean(long low, long high) {return low+((high-low)/2);}
@@ -64,11 +118,11 @@ public final class Util {
 	 * @param valuer Convert the read item into a value
 	 * @return The glyphset passed in as a parameter (now with more glyphs)
 	 */
-	public static <V> Glyphset<V> load(
-			Glyphset<V> glyphs, 
+	public static <G,I> Glyphset<G,I> load(
+			Glyphset<G,I> glyphs, 
 			DelimitedReader reader, 
 			Indexed.Converter converter, 
-			Shaper<Indexed> shaper, Valuer<Indexed, V> valuer) {
+			Shaper<G, Indexed> shaper, Valuer<Indexed, I> valuer) {
 		int count =0;
 		
 		Method m;
@@ -82,10 +136,10 @@ public final class Util {
 			if (parts == null) {continue;}
 			
 			Converter item = converter.applyTo(parts);
-			V value = valuer.value(item);
-			Shape shape = shaper.shape(item);
+			I value = valuer.value(item);
+			G shape = shaper.shape(item);
 
-			Glyph<V> g = new SimpleGlyph<V>(shape, value);
+			Glyph<G,I> g = new SimpleGlyph<G,I>(shape, value);
 			try {m.invoke(glyphs, g);}
 			catch (Exception e) {throw new RuntimeException("Error loading item number " + count, e);}
 			count++;
@@ -109,35 +163,9 @@ public final class Util {
 		Arrays.fill(chars,' ');
 		return new String(chars);
 	}
-
-	/**What bounding box closely contains all of the glyphs in the passed collection.**/
-	public static Rectangle2D bounds(Iterable<? extends Glyph<?>> glyphs) {return bounds(glyphs.iterator());}
-	
-	/**What bounding box closely contains all of the glyphs covered by the iterator.**/
-	public static Rectangle2D bounds(Iterator<? extends Glyph<?>> glyphs) {
-		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-		while (glyphs.hasNext()) {
-			Glyph<?> g = glyphs.next();
-			if (g == null) {continue;}
-			Rectangle2D bound = g.shape().getBounds2D();
-			if (bound != null) {add(bounds, bound);}
-		}
-		return bounds;
-	}
-
-	
-	/**What bounding box closely contains all of the glyphs passed.**/
-	public static Rectangle2D bounds(Rectangle2D... rs) {
-		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-		for (Rectangle2D r: rs) {
-			if (r != null) {add(bounds, r);}
-		}
-		return bounds;
-	}
-
-	
+		
 	/**Adds two rectangles together, updating the first so it is a bounds over the whole.
-	 * Unlike Rectangle2D.union, this method treats NaN as if it were zero.
+	 * Unlike Rectangle2D.add, this method treats NaN as if it were zero.
 	 */
 	public static void add(Rectangle2D target, Rectangle2D more) {
 		double x = more.getX();

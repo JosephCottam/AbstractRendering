@@ -1,5 +1,6 @@
 package ar.glyphsets.implicitgeometry;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -97,12 +98,37 @@ public interface Indexed extends Serializable {
 	}
 	
 
+
+	/**Convert an item to a fixed-sized rectangle at a variable
+	 * position.  The passed value determines the position, but the size
+	 * is set by the ToRect constructor. 
+	 */
+	public static class ToPoint implements Shaper.SafeApproximate<Point2D, Indexed>, Serializable {
+		private static final long serialVersionUID = 2509334944102906705L;
+		private final boolean flipY;
+		private final int xIdx, yIdx;
+		
+		 /** @param flipY Multiply Y-values by -1 (essentially flip up and down directions)**/
+		public ToPoint(boolean flipY, int xIdx, int yIdx) {
+			this.flipY=flipY;
+			this.xIdx = xIdx;
+			this.yIdx = yIdx;
+		}
+		public Point2D shape(Indexed from) {
+			double x=((Number) from.get(xIdx)).doubleValue();
+			double y=((Number) from.get(yIdx)).doubleValue();
+			
+			y = flipY ? -y : y; 
+			return new Point2D.Double(x, y);
+		}	
+	}
+	
 	
 	/**Convert an item to a fixed-sized rectangle at a variable
 	 * position.  The passed value determines the position, but the size
 	 * is set by the ToRect constructor. 
 	 */
-	public static class ToRect implements Shaper.SafeApproximate<Indexed>, Serializable {
+	public static class ToRect implements Shaper.SafeApproximate<Rectangle2D, Indexed>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final double width,height;
 		private final boolean flipY;

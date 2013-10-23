@@ -2,6 +2,7 @@ package ar;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -47,7 +48,7 @@ public class BatchExport {
 		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
 			
 		Renderer render = new ParallelGlyphs();
-		Glyphset<Color> glyphs = new MemMapList<Color>(
+		Glyphset<Rectangle2D, Color> glyphs = new MemMapList<Rectangle2D, Color>(
 					new File(source), 
 					new ToRect(size, size, false, 0, 1), 
 					new Constant<Indexed,Color>(Color.red));

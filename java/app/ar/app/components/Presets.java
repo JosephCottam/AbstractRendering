@@ -5,6 +5,8 @@ import java.awt.Shape;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -105,14 +107,14 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Aggregator<?,?> aggregator();
 		public Transfer<?,?> transfer();
 		public Renderer renderer();
-		public Glyphset<?> glyphset();
+		public Glyphset<?,?> glyphset();
 		public String name();
 		public boolean init(Presets panel);
 	}
 	
 	/**Generate a descriptive name from the parts of the preset instance.**/
 	public static String fullName(Preset preset) {
-		Glyphset<?> glyphset = preset.glyphset();
+		Glyphset<?,?> glyphset = preset.glyphset();
 		if (glyphset ==null) {
 			return preset.name() + "**LOAD FAILED**";
 		} else {
@@ -124,7 +126,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class ScatterplotAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
 		public String toString() {return fullName(this);}
@@ -134,7 +136,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class ScatterplotHDALphaLin implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
@@ -144,7 +146,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class ScatterplotHDALpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelSpatial(100);}
-		public Glyphset<?> glyphset() {return CIRCLE_SCATTER;}
+		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
@@ -154,7 +156,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
+		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
 		public String toString() {return fullName(this);}
@@ -164,7 +166,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class BoostMMAlphaActivity implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return BOOST_MEMORY_MM;}
+		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
@@ -179,7 +181,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class Kiva implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelGlyphs(10000);}
-		public Glyphset<?> glyphset() {return KIVA_ADJ;}
+		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
 		public String toString() {return fullName(this);}
@@ -189,7 +191,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class KivaDrawDark implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelGlyphs(10000);}
-		public Glyphset<?> glyphset() {return KIVA_ADJ;}
+		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {
 			return new DrawDark(Color.black, Color.white, 6);
 		}
@@ -201,7 +203,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class USPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
@@ -218,7 +220,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class USPop10Pct implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
@@ -234,7 +236,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class USPopulation implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
@@ -265,7 +267,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			try {
 				Map<Object, Color> colors = new HashMap<>();
@@ -293,7 +295,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class USRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
 			colors.put(2, new Color(0,0,200));	//White
@@ -320,7 +322,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	public static class USRacesLift implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelGlyphs(1000);}
-		public Glyphset<?> glyphset() {return CENSUS_MM;}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
 			colors.put(2, new Color(0,0,200));	//White
@@ -345,10 +347,10 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	private static final Glyphset<Color> CIRCLE_SCATTER; 
-	private static final Glyphset<Color> KIVA_ADJ; 
-	private static final Glyphset<Color> BOOST_MEMORY_MM; 
-	private static final Glyphset<CoC<String>> CENSUS_MM;
+	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
+	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
+	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
+	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
@@ -356,10 +358,12 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
 	
 	static {
-		Glyphset<Color> boost_temp = null;
+		//Glyphset<Rectangle2D, Color> boost_temp = null;
+		Glyphset<Point2D, Color> boost_temp = null;
 		try {boost_temp = GlyphsetUtils.memMap(
 				"BGL Memory", MEM_VIS_BIN, 
-				new Indexed.ToRect(.001, .001, true, 0, 1),
+				new Indexed.ToPoint(true, 0, 1),
+				//new Indexed.ToRect(.001, .001, true,0,1),
 				new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
 				1, "ddi");
 		} catch (Exception e) {
@@ -367,10 +371,10 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		BOOST_MEMORY_MM = boost_temp;
 		
-		Glyphset<CoC<String>> census_temp = null;
+		Glyphset<Point2D, CoC<String>> census_temp = null;
 		try {census_temp = GlyphsetUtils.memMap(
 				"US Census", CENSUS, 
-				new Indexed.ToRect(.2, .2, true, 0, 1),
+				new Indexed.ToPoint(true, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
 		} catch (Exception e) {
@@ -379,18 +383,18 @@ public class Presets extends JPanel implements HasViewTransform {
 		CENSUS_MM = census_temp;
 
 		
-		Glyphset<Color> circle_temp = null;
+		Glyphset<Rectangle2D, Color> circle_temp = null;
 		try {
-			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Color>make());
+			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Rectangle2D, Color>make());
 		} catch (Exception e) {
 			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
 		}
 		CIRCLE_SCATTER = circle_temp;
 		
-		Glyphset<Color> kiva_temp = null;
+		Glyphset<Point2D, Color> kiva_temp = null;
 		try {kiva_temp = GlyphsetUtils.memMap(
 						"Kiva", KIVA_BIN, 
-						new Indexed.ToRect(.1, 0, 1),
+						new Indexed.ToPoint(false, 0, 1),
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
 		} catch (Exception e) {

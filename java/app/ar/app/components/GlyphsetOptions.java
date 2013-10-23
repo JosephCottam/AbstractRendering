@@ -4,6 +4,7 @@ import javax.swing.*;
 
 import java.awt.Color;
 import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
 
 import ar.Glyphset;
 import ar.app.util.ActionProvider;
@@ -47,14 +48,14 @@ public class GlyphsetOptions extends JPanel  {
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 
 	
-	public Glyphset<?> makeGlyphset() {
+	public Glyphset<?,?> makeGlyphset() {
 		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
 			return DynamicQuadTree.make();
 		} else if (glyphsType.getSelectedItem().equals("List")) {
-			return new GlyphList<Color>();			
+			return new GlyphList<Rectangle2D, Color>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (double) size.getSelectedItem();
-			Shaper<Indexed> shaper = new ToRect(sz, sz, false, 0,1);
+			Shaper<Rectangle2D, Indexed> shaper = new ToRect(sz, sz, false, 0,1);
 			Valuer<Indexed, Color> valuer = new Constant<Indexed,Color>(Color.red);
 			return new MemMapList<>(null, shaper, valuer);
 		} else {
