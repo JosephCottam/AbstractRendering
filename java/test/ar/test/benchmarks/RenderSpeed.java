@@ -86,8 +86,8 @@ public class RenderSpeed {
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}
-		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
-		AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
+		
+		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
 		
 		if (header) {
 			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, task-size");
@@ -96,7 +96,7 @@ public class RenderSpeed {
 		try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, vt, width, height);
 				long end = System.currentTimeMillis();
 				long aggTime = end-start;
 

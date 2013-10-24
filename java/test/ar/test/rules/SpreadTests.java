@@ -94,7 +94,6 @@ public class SpreadTests {
 		General.Spread<Integer> transfer2 = new General.Spread<Integer>(0, spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);
-		System.out.println(AggregateUtils.toString(rslt));
 		
 		assertThat(String.format("Failed at (%d, %d)", 0,0), rslt.get(0,0), is(0));
 		assertThat(String.format("Failed at (%d, %d)", 1,1), rslt.get(1,1), is(0));

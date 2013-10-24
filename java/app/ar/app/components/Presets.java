@@ -178,6 +178,16 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
+	public static class KivaRects implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelGlyphs(10000);}
+		public Glyphset<?,?> glyphset() {return KIVA_ADJ_RECTS;}
+		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
+		public String name() {return "Kiva: HDAlpha (Rectangles)";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+	
 	public static class Kiva implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelGlyphs(10000);}
@@ -349,6 +359,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
+	private static final Glyphset<Rectangle2D, Color> KIVA_ADJ_RECTS; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
 	
@@ -401,6 +412,17 @@ public class Presets extends JPanel implements HasViewTransform {
 			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		KIVA_ADJ = kiva_temp;
+		
+		Glyphset<Rectangle2D, Color> kiva_temp2 = null;
+		try {kiva_temp2 = GlyphsetUtils.memMap(
+						"Kiva", KIVA_BIN, 
+						new Indexed.ToRect(Double.MIN_VALUE, Double.MIN_VALUE, false, 0, 1),
+						new Valuer.Constant<Indexed, Color>(Color.RED), 
+						1, null);
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+		}
+		KIVA_ADJ_RECTS = kiva_temp2;
 	}
 	
 	
