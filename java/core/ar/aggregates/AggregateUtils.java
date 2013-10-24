@@ -83,4 +83,19 @@ public class AggregateUtils {
 		return aggs;
 	}
 
+	public static String toString(Aggregates<?> aggs) {
+		StringBuilder b = new StringBuilder();
+		b.append(String.format("%d-%d by %d-%d\n", aggs.lowX(), aggs.highX(), aggs.lowY(), aggs.highY()));
+		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
+			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+				b.append(aggs.get(x, y));
+				b.append(", ");
+			}
+			b.deleteCharAt(b.length()-1);
+			b.deleteCharAt(b.length()-1);
+			b.append("\n");
+		}
+		return b.toString();
+	}
+	
 }

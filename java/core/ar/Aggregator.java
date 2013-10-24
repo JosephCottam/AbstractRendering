@@ -23,9 +23,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * 
 	 * The x and y position are provided as arguments so position-sensitive
 	 * aggregation can be performed.  Any other contextual information
-	 * needs to be provided through the class in some other way.  The x and y
-	 * values should correspond to the LEFT value from the aggregate set
-	 * and the pixel location related to the RIGHT value.
+	 * needs to be provided through the class in some other way.
 	 * 
 	 * @param x The x-position being operated on
 	 * @param y The y-position being operated on
