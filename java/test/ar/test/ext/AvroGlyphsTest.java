@@ -47,8 +47,8 @@ public class AvroGlyphsTest {
 	@Test
 	public void circlepointsRoundTrip() throws Exception {
 		File csv = new File("../data/circlepoints.csv");
-		File output = new File("../testResults/circlepoints.avro");
 		File schema = new File("../data/circlepoints.avsc");
+		File output = new File("./testResults/circlepoints.avro");
 		
 		assertTrue("Input file not found.", csv.exists());
 		assertTrue("Schema file not found.", schema.exists());
@@ -58,7 +58,7 @@ public class AvroGlyphsTest {
 		GlyphList<?,?> reference = (GlyphList<?,?>) Util.load(
 				new GlyphList<Rectangle2D, Object>(), 
 				new DelimitedReader(csv), 
-				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.INT, TYPE.INT, TYPE.INT), 
+				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT), 
 				new Indexed.ToRect(.1, 2,3), 
 				new Indexed.ToValue<>(4));
 		
@@ -74,7 +74,7 @@ public class AvroGlyphsTest {
 		for (int i=0;i<reference.size(); i++) {
 			Glyph<?,?> res = result.get(i);
 			Glyph<?,?> ref = reference.get(i);
-			assertEquals("Value did not match at " + i, ref.info(), res.info().toString());
+			assertEquals("Value did not match at " + i, ref.info(), res.info());
 		}
 
 	}
