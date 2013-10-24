@@ -65,10 +65,11 @@ public class CombinerTests {
 	}
 	
 	public void send(Aggregates<?> aggs, String host, int port) throws Exception {
-		Socket s = new Socket(host, port);
-		AggregateSerializer.serialize(aggs, s.getOutputStream());
-		s.close();
-		Thread.sleep(1000);
+		try (Socket s = new Socket(host, port)) {
+			AggregateSerializer.serialize(aggs, s.getOutputStream());
+			s.close();
+			Thread.sleep(1000);
+		}
 	}
 
 	

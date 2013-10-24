@@ -1,7 +1,5 @@
 package ar.test.rules;
 
-
-
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
@@ -10,7 +8,6 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer.Specialized;
-import ar.aggregates.AggregateUtils;
 import ar.aggregates.FlatAggregates;
 import ar.renderers.ParallelGlyphs;
 import ar.rules.General;
