@@ -29,10 +29,8 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	protected final Rectangle viewport;
 	protected final Aggregator<I,A> op;
 	protected final RenderUtils.Progress recorder;
-	protected final Class<? super G> type;
 
 	protected GlyphParallelAggregation(
-			Class<? super G> type,
 			Glyphset<? extends G, ? extends I> glyphs, 
 			AffineTransform view,
 			Aggregator<I,A> op, 
@@ -40,7 +38,6 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			int taskSize,
 			RenderUtils.Progress recorder,
 			long low, long high) {
-		this.type = type;
 		this.glyphs = glyphs;
 		this.view = view;
 		this.op = op;
@@ -60,8 +57,8 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	protected final Aggregates<A> split() {
 		long mid = Util.mean(low, high);
 
-		GlyphParallelAggregation<I,G,A> top = GlyphParallelAggregation.make(type, glyphs, view, op, viewport, taskSize, recorder, low, mid);
-		GlyphParallelAggregation<I,G,A> bottom = GlyphParallelAggregation.make(type, glyphs, view, op, viewport, taskSize, recorder, mid, high);
+		GlyphParallelAggregation<I,G,A> top = this.subTask(low, mid);
+		GlyphParallelAggregation<I,G,A> bottom = this.subTask(mid, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
@@ -80,7 +77,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	/**Discretize each glyph into an aggregates set.**/
 	protected abstract Aggregates<A> local();
 	
-	
+	protected abstract GlyphParallelAggregation<I,G,A> subTask(long low, long high);
 	
 	protected Aggregates<A> allocateAggregates(Glyphset<? extends G, ? extends I> subset) {
 		//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
@@ -99,25 +96,25 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				op.identity());
 	}
 
-	private static final class Points<I,G extends Point2D, A> extends GlyphParallelAggregation<I,G,A> {
+	private static final class Points<I, A> extends GlyphParallelAggregation<I,Point2D,A> {
 		public Points(
-				Glyphset<? extends G, ? extends I> glyphs, 
+				Glyphset<? extends Point2D, ? extends I> glyphs, 
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
 				int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
-			super(Point2D.class, glyphs, view, op, viewport, taskSize, recorder, low,high);
+			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
 		}
 
 		protected final Aggregates<A> local() {
-			Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
+			Glyphset<? extends Point2D, ? extends I> subset = glyphs.segment(low,  high);
 			Aggregates<A> aggregates = allocateAggregates(subset);
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
 			Point2D scratch = new Point2D.Double();
-			for (Glyph<? extends G, ? extends I> g: subset) {
+			for (Glyph<? extends Point2D, ? extends I> g: subset) {
 				Point2D p = g.shape();	//A point has no bounding box...so life is easy
 				view.transform(p, scratch);
 				int x = (int) scratch.getX();
@@ -130,19 +127,23 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			recorder.update(subset.size());
 			return aggregates;
 		}
+
+		@Override
+		protected GlyphParallelAggregation<I, Point2D, A> subTask(long low, long high) {
+			return new Points<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
+		}
 	}
 
-
-	private static final class Lines<I,G extends Line2D,A> extends GlyphParallelAggregation<I,G,A> {
+	private static final class Lines<I, A> extends GlyphParallelAggregation<I,Line2D,A> {
 		public Lines(
-				Glyphset<? extends G, ? extends I> glyphs, 
+				Glyphset<? extends Line2D, ? extends I> glyphs, 
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
 				int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
-			super(Line2D.class, glyphs, view, op, viewport, taskSize, recorder, low,high);
+			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
 		}
 
 		
@@ -200,17 +201,23 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		
 		
 		protected final Aggregates<A> local() {
-			Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
+			Glyphset<? extends Line2D, ? extends I> subset = glyphs.segment(low,  high);
 			Aggregates<A> aggregates = allocateAggregates(subset);
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
-			for (Glyph<? extends G, ? extends I> g: subset) {
+			for (Glyph<? extends Line2D, ? extends I> g: subset) {
 				bressenham(aggregates, g.shape(), g.info());
 			}
 
 			recorder.update(subset.size());
 			return aggregates;
 		}
+		
+		@Override
+		protected GlyphParallelAggregation<I, Line2D, A> subTask(long low, long high) {
+			return new Lines<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
+		}
+
 	}
 	
 	private static final class Rectangles<I,A> extends GlyphParallelAggregation<I,Rectangle2D,A> {
@@ -222,7 +229,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
-			super(Rectangle2D.class, glyphs, view, op, viewport, taskSize, recorder, low,high);
+			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
 		}
 
 		protected final Aggregates<A> local() {
@@ -261,22 +268,27 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			recorder.update(subset.size());
 			return aggregates;
 		}
+		
+		@Override
+		protected GlyphParallelAggregation<I, Rectangle2D, A> subTask(long low, long high) {
+			return new Rectangles<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
+		}
 	}
 
-	private static final class Shapes<I,G extends Shape, A> extends GlyphParallelAggregation<I,G,A> {
+	private static final class Shapes<I, A> extends GlyphParallelAggregation<I,Shape,A> {
 		public Shapes(
-				Glyphset<? extends G, ? extends I> glyphs, 
+				Glyphset<? extends Shape, ? extends I> glyphs, 
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
 				int taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
-			super(Shape.class, glyphs, view, op, viewport, taskSize, recorder, low,high);
+			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
 		}
 
 		protected final Aggregates<A> local() {
-			Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
+			Glyphset<? extends Shape, ? extends I> subset = glyphs.segment(low,  high);
 			Aggregates<A> aggregates = allocateAggregates(subset);
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
@@ -287,7 +299,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 
 			final int width = viewport.width;
 			final int height =viewport.height;
-			for (Glyph<? extends G, ? extends I> g: subset) {
+			for (Glyph<? extends Shape, ? extends I> g: subset) {
 				Rectangle2D b = g.shape().getBounds2D();
 				lowP.setLocation(b.getMinX(), b.getMinY());
 				highP.setLocation(b.getMaxX(), b.getMaxY());
@@ -313,6 +325,11 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 
 			recorder.update(subset.size());
 			return aggregates;
+		}
+		
+		@Override
+		protected GlyphParallelAggregation<I, Shape, A> subTask(long low, long high) {
+			return new Shapes<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
 		}
 	}
 	
