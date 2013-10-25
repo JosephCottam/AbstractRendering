@@ -24,20 +24,24 @@ public final class ParallelSpatial implements Renderer {
 	
 	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
-	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
+	private final ForkJoinPool pool;
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
 	/**Render with task-size determined by DEFAULT_TASK_SIZE.**/
-	public ParallelSpatial() {this(DEFAULT_TASK_SIZE);}
+	public ParallelSpatial() {this(DEFAULT_TASK_SIZE, null);}
 
 	/**Render with task-size determined by the passed parameter.**/
-	public ParallelSpatial(int taskSize) {
-		this.taskSize = taskSize;
-	}
-	protected void finalize() {pool.shutdownNow();}
+	public ParallelSpatial(int taskSize) {this(taskSize, null);}
 	
+	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.**/
+	public ParallelSpatial(int taskSize, ForkJoinPool pool) {
+		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
+
+		this.taskSize = taskSize;
+		this.pool = pool;
+	}	
 	
 	public <I,G,A> Aggregates<A> aggregate(final Glyphset<? extends G, ? extends I> glyphs, final Aggregator<I,A> op, 
 			final AffineTransform view, final int width, final int height) {

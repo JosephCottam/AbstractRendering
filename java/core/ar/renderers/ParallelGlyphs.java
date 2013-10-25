@@ -26,21 +26,24 @@ public class ParallelGlyphs implements Renderer {
 
 	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
-	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
+	private final ForkJoinPool pool;
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
 
 	/**Render with task-size determined by DEFAULT_TASK_SIZE.**/
-	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
-	
+	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE, null);}
 	
 	/**Render with task-size determined by the passed parameter.**/
-	public ParallelGlyphs(int taskSize) {
-		this.taskSize = taskSize;
-	}
+	public ParallelGlyphs(int taskSize) {this(taskSize, null);}
+
+	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.**/
+	public ParallelGlyphs(int taskSize, ForkJoinPool pool) {
+		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
 	
-	protected void finalize() {pool.shutdownNow();}
+		this.taskSize = taskSize;
+		this.pool = pool;
+	}
 
 	@Override
 	public <I,G,A> Aggregates<A> aggregate(Glyphset<? extends G, ? extends I> glyphs, Aggregator<I,A> op, 

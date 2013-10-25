@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -50,6 +51,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static final long serialVersionUID = -5290930773909190497L;
 	private final ActionProvider actionProvider = new ActionProvider();
 	private static final Renderer CHAIN_RENDERER = new ParallelSpatial();
+	private static final ForkJoinPool RENDER_POOL = new ForkJoinPool();  
 
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
 	private final HasViewTransform transformSource;
@@ -125,7 +127,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	public static class ScatterplotAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(100, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
@@ -135,7 +137,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	public static class ScatterplotHDALphaLin implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(100, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
@@ -145,7 +147,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class ScatterplotHDALpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelSpatial(100);}
+		public Renderer renderer() {return new ParallelSpatial(100, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
@@ -155,7 +157,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
@@ -165,7 +167,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object, Object>(
@@ -180,7 +182,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class KivaRects implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelGlyphs(10000);}
+		public Renderer renderer() {return new ParallelGlyphs(10000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ_RECTS;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha (Rectangles)";}
@@ -190,7 +192,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class Kiva implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelGlyphs(10000);}
+		public Renderer renderer() {return new ParallelGlyphs(10000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
@@ -200,7 +202,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class KivaDrawDark implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelGlyphs(10000);}
+		public Renderer renderer() {return new ParallelGlyphs(10000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {
 			return new DrawDark(Color.black, Color.white, 6);
@@ -212,7 +214,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class USPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
@@ -229,7 +231,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	public static class USPop10Pct implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
@@ -245,7 +247,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class USPopulation implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
@@ -276,7 +278,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return glyphset() != null;
 		}
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			try {
@@ -304,7 +306,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 	public static class USRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
@@ -331,7 +333,7 @@ public class Presets extends JPanel implements HasViewTransform {
 
 	public static class USRacesLift implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelGlyphs(1000);}
+		public Renderer renderer() {return new ParallelGlyphs(1000, RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
