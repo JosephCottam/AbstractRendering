@@ -335,7 +335,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	
 	@SuppressWarnings("unchecked")
 	public static <I,G,A> GlyphParallelAggregation<I,G,A> make(
-			Class<? super G> geometryType,
+			Class<?> geometryType,
 			Glyphset<? extends G, ? extends I> glyphs, 
 			AffineTransform view,
 			Aggregator<I,A> op, 

@@ -30,17 +30,23 @@ public class ParallelGlyphs implements Renderer {
 
 	private final int taskSize;
 	private final RenderUtils.Progress recorder = RenderUtils.recorder();
-
-	/**Render with task-size determined by DEFAULT_TASK_SIZE.**/
-	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE, null);}
 	
-	/**Render with task-size determined by the passed parameter.**/
-	public ParallelGlyphs(int taskSize) {this(taskSize, null);}
+	private final Class<?> geometryType;
 
-	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.**/
-	public ParallelGlyphs(int taskSize, ForkJoinPool pool) {
+	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
+	public ParallelGlyphs(int taskSize) {this(taskSize, null, null);}
+	public ParallelGlyphs(int taskSize, ForkJoinPool pool) {this(taskSize, pool, null);}
+
+	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.
+	 * 
+	 * @param geometryType -- The geometry type renderers should expect to us.  Null means "auto detect from passed glyphs"...which may fail at runtime.
+	 * @param taskSize -- Granularity of tasks 
+	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
+	 * **/
+	public ParallelGlyphs(int taskSize, ForkJoinPool pool, Class<?> geometryType) {
 		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
 	
+		this.geometryType = geometryType;
 		this.taskSize = taskSize;
 		this.pool = pool;
 	}
@@ -50,9 +56,12 @@ public class ParallelGlyphs implements Renderer {
 			AffineTransform view, int width, int height) {
 		
 		recorder.reset(glyphs.size());
+		
+		Class<?> geometryType = this.geometryType;
+		if (geometryType == null) {geometryType = glyphs.iterator().next().shape().getClass();}
 
 		GlyphParallelAggregation<I,G,A> t = GlyphParallelAggregation.make(
-				(Class<G>) glyphs.iterator().next().shape().getClass(),	//HACK: This lookup may be fragile.  It may better to get the aggregates to tell the geometry type...
+				geometryType,
 				glyphs, 
 				view, 
 				op, 
