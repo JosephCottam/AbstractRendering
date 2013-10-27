@@ -12,7 +12,7 @@ import ar.Glyph;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.renderers.AggregationStrategies;
-import ar.renderers.SerialSpatial;
+import ar.renderers.SerialRenderer;
 import ar.util.Util;
 import spark.api.java.JavaRDD;
 import spark.api.java.function.Function;
@@ -54,7 +54,7 @@ public class RDDRender implements Serializable {
 	public <IN, OUT> Aggregates<OUT> transfer(
 			Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t) {
 		Transfer.Specialized<IN, OUT> t2 = t.specialize(aggregates);
-		return new SerialSpatial().transfer(aggregates, t2);
+		return new SerialRenderer().transfer(aggregates, t2);
 	}
 
 	public double progress() {return -1;}

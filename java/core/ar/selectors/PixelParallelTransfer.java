@@ -1,12 +1,13 @@
-package ar.renderers.tasks;
+package ar.selectors;
 
 import java.util.concurrent.RecursiveAction;
 
 import ar.Aggregates;
+import ar.Selector;
 import ar.Transfer;
 import ar.util.Util;
 
-public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
+public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction implements Selector {
 	private static final long serialVersionUID = 7512448648194530526L;
 	
 	private final int lowx, lowy, highx, highy;

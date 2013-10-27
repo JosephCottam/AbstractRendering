@@ -1,4 +1,4 @@
-package ar.renderers.tasks;
+package ar.selectors;
 
 import java.awt.geom.AffineTransform;
 import java.util.concurrent.RecursiveAction;
@@ -6,11 +6,12 @@ import java.util.concurrent.RecursiveAction;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
+import ar.Selector;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
 
-public final class PixelParallelAggregation<I,G,A> extends RecursiveAction {
+public final class PixelParallelAggregation<I,G,A> extends RecursiveAction implements Selector {
 	private static final long serialVersionUID = -6471136218098505342L;
 
 	private final int taskSize;

@@ -42,12 +42,10 @@ public class RendererOptions extends JPanel {
 	
 	public Renderer renderer() {
 		int size = (Integer) taskSize.getSelectedItem();
-		if (renderers.getSelectedItem().equals("Parallel (Spatial)")) {
-			return new ParallelSpatial(size);
-		} else if (renderers.getSelectedItem().equals("Serial")) {
-			return new SerialSpatial();
+		if (renderers.getSelectedItem().equals("Serial")) {
+			return new SerialRenderer();
 		} else if (renderers.getSelectedItem().equals("Parallel (Glyphs)")) {
-			return new ParallelGlyphs(size);
+			return new ParallelRenderer(size);
 		} else {
 			throw new RuntimeException("Unknown renderer selected: " + renderers.getSelectedItem());
 		}

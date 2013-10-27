@@ -22,7 +22,7 @@ import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.glyphsets.DynamicQuadTree;
-import ar.renderers.ParallelSpatial;
+import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
@@ -40,7 +40,7 @@ public class AvroAggregatesTest {
 	@BeforeClass
 	public static void load() throws Exception {
 		Glyphset<Rectangle2D, Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make());
-		Renderer r = new ParallelSpatial();
+		Renderer r = new ParallelRenderer();
 		AffineTransform ivt = new AffineTransform(241.4615556310524, 
 				0.0, 
 				0.0, 

@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.MostRecentOnlyExecutor;
-import ar.renderers.SerialSpatial;
+import ar.renderers.SerialRenderer;
 import ar.util.Util;
 
 /**Panel that will draw a set of aggregates on the screen with a given transfer function.**/
@@ -39,7 +39,7 @@ public class SimpleDisplay extends ARComponent {
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
 	
 	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
-		this(aggregates, transfer, new SerialSpatial());
+		this(aggregates, transfer, new SerialRenderer());
 	}
 	
 	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {

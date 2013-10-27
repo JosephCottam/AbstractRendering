@@ -10,15 +10,15 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.renderers.tasks.GlyphParallelAggregation;
-import ar.renderers.tasks.PixelParallelTransfer;
+import ar.selectors.GlyphParallelAggregation;
+import ar.selectors.PixelParallelTransfer;
 
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
  */
-public class ParallelGlyphs implements Renderer {
+public class ParallelRenderer implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
 	
 	/**Default task size for parallel operations.**/ 
@@ -33,9 +33,9 @@ public class ParallelGlyphs implements Renderer {
 	
 	private final Class<?> geometryType;
 
-	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
-	public ParallelGlyphs(int taskSize) {this(taskSize, null, null);}
-	public ParallelGlyphs(int taskSize, ForkJoinPool pool) {this(taskSize, pool, null);}
+	public ParallelRenderer() {this(DEFAULT_TASK_SIZE);}
+	public ParallelRenderer(int taskSize) {this(taskSize, null, null);}
+	public ParallelRenderer(int taskSize, ForkJoinPool pool) {this(taskSize, pool, null);}
 
 	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.
 	 * 
@@ -43,7 +43,7 @@ public class ParallelGlyphs implements Renderer {
 	 * @param taskSize -- Granularity of tasks 
 	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
 	 * **/
-	public ParallelGlyphs(int taskSize, ForkJoinPool pool, Class<?> geometryType) {
+	public ParallelRenderer(int taskSize, ForkJoinPool pool, Class<?> geometryType) {
 		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
 	
 		this.geometryType = geometryType;

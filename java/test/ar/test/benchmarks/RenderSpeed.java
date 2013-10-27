@@ -19,9 +19,8 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
-import ar.renderers.ParallelGlyphs;
-import ar.renderers.ParallelSpatial;
-import ar.renderers.SerialSpatial;
+import ar.renderers.ParallelRenderer;
+import ar.renderers.SerialRenderer;
 import ar.rules.Advise;
 import ar.rules.Categories;
 import ar.rules.CategoricalCounts.CoC;
@@ -73,16 +72,13 @@ public class RenderSpeed {
 		Transfer transfer = source.transfer();
 		Glyphset glyphs = source.glyphset();
 	
-		ParallelGlyphs.THREAD_POOL_SIZE = cores;
-		ParallelSpatial.THREAD_POOL_SIZE = cores;
+		ParallelRenderer.THREAD_POOL_SIZE = cores;
 		
 		Renderer render;
 		if (rend.startsWith("GLYPH")) {
-			render = new ParallelGlyphs(task);
-		} else if (rend.startsWith("PIXEL")) {
-			render = new ParallelSpatial(task);
+			render = new ParallelRenderer(task);
 		} else if (rend.startsWith("SPIXEL")) {
-			render = new SerialSpatial();
+			render = new SerialRenderer();
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
 		}

@@ -24,8 +24,7 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
-import ar.renderers.ParallelGlyphs;
-import ar.renderers.ParallelSpatial;
+import ar.renderers.ParallelRenderer;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
@@ -123,12 +122,7 @@ public class ARServer extends NanoHTTPD {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
-		Renderer r;
-		if (glyphs instanceof Glyphset.RandomAccess<?,?>) {
-			r = new ParallelGlyphs();
-		} else {
-			r = new ParallelSpatial();
-		}
+		Renderer r = new ParallelRenderer();
 		
 		Aggregates aggs = r.aggregate(glyphs, agg, view, width, height);
 		Transfer transfer = new MultiStageTransfer(r, transfers.toArray(new Transfer[transfers.size()]));

@@ -16,7 +16,7 @@ import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
-import ar.renderers.ParallelSpatial;
+import ar.renderers.ParallelRenderer;
 import ar.rules.Numbers;
 import ar.util.Util;
 
@@ -26,7 +26,7 @@ public class CombinerTests {
 	@BeforeClass
 	public static void load() throws Exception {
 		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Object>make());
-		Renderer r = new ParallelSpatial();
+		Renderer r = new ParallelRenderer();
 		count = r.aggregate(glyphs, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
 	}
 	

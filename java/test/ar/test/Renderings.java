@@ -42,7 +42,7 @@ public class Renderings {
 		assertThat(res.getHeight(), is(ref.getHeight()));
 		for (int x = 0; x<res.getWidth(); x++) {
 			for (int y=0; y<res.getHeight(); y++) {
-				assertThat(String.format(msg + "(%d,%d)", x, y), res.getRGB(x, y), is(ref.getRGB(x, y)));
+				assertThat(String.format(msg + " (%d,%d)", x, y), res.getRGB(x, y), is(ref.getRGB(x, y)));
 			}
 		}
 	}
@@ -58,20 +58,22 @@ public class Renderings {
 	}
 	
 	public <G,V,A> void testWith(String test, Glyphset<G,V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
-		BufferedImage ref_img =image(new SerialSpatial(), glyphs, agg, t);
+		RenderUtils.RECORD_PROGRESS = true;
+		Renderer r = new SerialRenderer();
+		BufferedImage ref_img =image(r, glyphs, agg, t);
+		System.out.println(r.progress());
 		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));
 		
-		BufferedImage ser_img = image(new SerialSpatial(), glyphs, agg, t);
+		r = new SerialRenderer();
+		BufferedImage ser_img = image(r, glyphs, agg, t);
 		Util.writeImage(ser_img, new File(String.format("./testResults/%s/ser.png", test)));
 		assertImageEquals("Serial", ref_img, ser_img);
 		
-		BufferedImage ps_img = image(new ParallelSpatial(), glyphs, agg, t);
-		Util.writeImage(ps_img, new File(String.format("./testResults/%s/ps.png", test)));
-		assertImageEquals("Parallel spatial", ref_img, ps_img);
 		
-		BufferedImage pg_img = image(new ParallelGlyphs(), glyphs, agg, t);
+		r = new ParallelRenderer();
+		BufferedImage pg_img = image(r, glyphs, agg, t);
 		Util.writeImage(pg_img, new File(String.format("./testResults/%s/pg.png", test)));
-		assertImageEquals("Parallel glyphs", ref_img, ps_img);
+		assertImageEquals("Parallel glyphs", ref_img, pg_img);
 	}
 	
 

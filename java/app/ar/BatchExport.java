@@ -13,7 +13,7 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
-import ar.renderers.ParallelGlyphs;
+import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.util.AggregatesToCSV;
@@ -47,7 +47,7 @@ public class BatchExport {
 		
 		Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
 			
-		Renderer render = new ParallelGlyphs();
+		Renderer render = new ParallelRenderer();
 		Glyphset<Rectangle2D, Color> glyphs = new MemMapList<Rectangle2D, Color>(
 					new File(source), 
 					new ToRect(size, size, false, 0, 1), 

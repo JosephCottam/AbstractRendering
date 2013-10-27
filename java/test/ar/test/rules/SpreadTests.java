@@ -9,7 +9,7 @@ import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer.Specialized;
 import ar.aggregates.FlatAggregates;
-import ar.renderers.ParallelGlyphs;
+import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
@@ -18,7 +18,7 @@ public class SpreadTests {
 
 	@Test
 	public void testFullSquare() {
-		Renderer r = new ParallelGlyphs();
+		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
 		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
@@ -37,7 +37,7 @@ public class SpreadTests {
 		
 	@Test
 	public void testCenterSquare() {
-		Renderer r = new ParallelGlyphs();
+		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
 		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
@@ -59,7 +59,7 @@ public class SpreadTests {
 	
 	@Test
 	public void testUnitCircle() {
-		Renderer r = new ParallelGlyphs();
+		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
 		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
@@ -82,7 +82,7 @@ public class SpreadTests {
 	
 	@Test
 	public void testValueCircle4() {
-		Renderer r = new ParallelGlyphs();
+		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
 		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 4);
@@ -105,7 +105,7 @@ public class SpreadTests {
 	
 	@Test
 	public void testValueCircle2() {
-		Renderer r = new ParallelGlyphs();
+		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
 		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 2);

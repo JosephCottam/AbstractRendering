@@ -57,7 +57,7 @@ public class WrappedCollectionTest {
 		FullDisplay p = new FullDisplay(new WrappedAggregator.OverplotFirst().op(), 
 								new WrappedTransfer.EchoColor().op(), 
 								gs, 
-								new ParallelSpatial(100));
+								new ParallelRenderer(1000));
 		
 		frame.setLayout(new BorderLayout());
 		frame.add(p, BorderLayout.CENTER);

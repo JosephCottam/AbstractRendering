@@ -1,4 +1,4 @@
-package ar.renderers.tasks;
+package ar.selectors;
 
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -13,13 +13,14 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
 import ar.Glyphset;
+import ar.Selector;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.ConstantAggregates;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
 
-public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggregates<A>> {
+public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggregates<A>> implements Selector {
 	private static final long serialVersionUID = 705015978061576950L;
 	protected final int taskSize;
 	protected final long low;
