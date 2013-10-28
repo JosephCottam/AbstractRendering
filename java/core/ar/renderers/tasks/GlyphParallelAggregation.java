@@ -15,6 +15,7 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.ConstantAggregates;
+import ar.aggregates.TouchedBoundsWrapper;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
@@ -79,21 +80,11 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	
 	protected abstract GlyphParallelAggregation<I,G,A> subTask(long low, long high);
 	
-	protected Aggregates<A> allocateAggregates(Glyphset<? extends G, ? extends I> subset) {
-		//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
-		Rectangle bounds = view.createTransformedShape(subset.bounds()).getBounds();
-		bounds = bounds.intersection(viewport);
-		if (bounds.isEmpty()) {
-			int x2 = bounds.x+bounds.width;
-			int y2 = bounds.y+bounds.height;
-			recorder.update(high-low);
-			return new ConstantAggregates<A>(Math.min(x2, bounds.x), Math.min(y2, bounds.y),
-					Math.max(x2, bounds.x), Math.min(y2, bounds.y),
-					op.identity());
-		}				
-		return AggregateUtils.make(bounds.x, bounds.y,
-				bounds.x+bounds.width, bounds.y+bounds.height, 
-				op.identity());
+	protected Aggregates<A> allocateAggregates(Rectangle2D bounds) {
+		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
+		return new TouchedBoundsWrapper<>(AggregateUtils.make(fullBounds.x, fullBounds.y,
+				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
+				op.identity()), false);
 	}
 
 	private static final class Points<I, A> extends GlyphParallelAggregation<I,Point2D,A> {
@@ -110,7 +101,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 
 		protected final Aggregates<A> local() {
 			Glyphset<? extends Point2D, ? extends I> subset = glyphs.segment(low,  high);
-			Aggregates<A> aggregates = allocateAggregates(subset);
+			Aggregates<A> aggregates = allocateAggregates(glyphs.bounds());
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
 			Point2D scratch = new Point2D.Double();
@@ -127,7 +118,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			recorder.update(subset.size());
 			return aggregates;
 		}
-
+		
 		@Override
 		protected GlyphParallelAggregation<I, Point2D, A> subTask(long low, long high) {
 			return new Points<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
@@ -202,7 +193,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		
 		protected final Aggregates<A> local() {
 			Glyphset<? extends Line2D, ? extends I> subset = glyphs.segment(low,  high);
-			Aggregates<A> aggregates = allocateAggregates(subset);
+			Aggregates<A> aggregates = allocateAggregates(glyphs.bounds());
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
 			for (Glyph<? extends Line2D, ? extends I> g: subset) {
@@ -234,7 +225,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 
 		protected final Aggregates<A> local() {
 			Glyphset<? extends Rectangle2D, ? extends I> subset = glyphs.segment(low,  high);
-			Aggregates<A> aggregates = allocateAggregates(subset);
+			Aggregates<A> aggregates = allocateAggregates(glyphs.bounds());
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
 
@@ -289,7 +280,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 
 		protected final Aggregates<A> local() {
 			Glyphset<? extends Shape, ? extends I> subset = glyphs.segment(low,  high);
-			Aggregates<A> aggregates = allocateAggregates(subset);
+			Aggregates<A> aggregates = allocateAggregates(glyphs.bounds());
 			if (aggregates instanceof ConstantAggregates) {return aggregates;}
 
 
