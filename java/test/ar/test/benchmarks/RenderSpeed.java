@@ -45,7 +45,6 @@ public class RenderSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		int task = Integer.parseInt(arg(args, "-task", "100000"));
 		String config = arg(args, "-config", "USPopulation");
 		String rend = arg(args, "-rend", "glyph").toUpperCase();
 		int width = Integer.parseInt(arg(args, "-width", "500"));
@@ -78,9 +77,9 @@ public class RenderSpeed {
 		
 		Renderer render;
 		if (rend.startsWith("GLYPH")) {
-			render = new ParallelGlyphs(task);
+			render = new ParallelGlyphs();
 		} else if (rend.startsWith("PIXEL")) {
-			render = new ParallelSpatial(task);
+			render = new ParallelSpatial();
 		} else if (rend.startsWith("SPIXEL")) {
 			render = new SerialSpatial();
 		} else {
@@ -90,7 +89,7 @@ public class RenderSpeed {
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
 		
 		if (header) {
-			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, task-size");
+			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores");
 		}
 		
 		try {
@@ -108,7 +107,7 @@ public class RenderSpeed {
 
 				aggs.get(0, 0);
 				colors.get(0, 0);
-				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d, %d\n", source, aggTime, transTime, i, width, height, rend, cores, task);
+				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d, %d\n", source, aggTime, transTime, i, width, height, rend, cores);
 				System.out.flush();
 			}
 		} catch (Exception e) {
