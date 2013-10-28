@@ -8,6 +8,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
 import ar.Transfer.Specialized;
 import ar.aggregates.FlatAggregates;
@@ -26,6 +27,7 @@ import ar.rules.Categories;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.CategoricalCounts.RLE;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
 /**Tests the amount of time to render count visualizations.
@@ -84,6 +86,7 @@ public class RenderSpeed {
 		}
 		
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
+		Selector s = TouchesPixel.make(glyphs);
 		
 		if (header) {
 			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, task-size");
@@ -92,7 +95,7 @@ public class RenderSpeed {
 		try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, vt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, s, aggregator, vt, width, height);
 				long end = System.currentTimeMillis();
 				long aggTime = end-start;
 

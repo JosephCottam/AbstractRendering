@@ -18,6 +18,7 @@ import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelRenderer;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.DelimitedReader;
 import ar.util.Util;
 
@@ -66,6 +67,12 @@ public class SimpleApp {
 		//The transfer function is used to convert one set of aggregates into another.
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
 		Transfer<Number, Color> transfer = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+
+
+		//Selector associates the glyphs individual bins.  
+		//The geometry type matters (and thus is a type-parameter) because it determines which test to use
+		Selector<Rectangle2D> selector = TouchesPixel.make(dataset);
+
 		
 		//Drive the rendering "by-hand"  (ie, not using any of the swing tools)
 		//We must first define a display surface's size, shape and zoom characteristics
@@ -73,7 +80,7 @@ public class SimpleApp {
 		int width = 800;
 		int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
-		Aggregates<Integer> aggregates = r.aggregate(dataset, aggregator, vt, width, height);
+		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 		Transfer.Specialized<Number,Color> specializedTransfer = transfer.specialize(aggregates);
 		Aggregates<Color> colors = r.transfer(aggregates, specializedTransfer);
 		

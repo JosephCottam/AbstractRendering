@@ -11,6 +11,7 @@ import ar.*;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
+import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
@@ -122,8 +123,10 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 			int height = FullDisplay.this.getHeight();
 			long start = System.currentTimeMillis();
 			AffineTransform vt = viewTransform();
+			Selector selector = TouchesPixel.make(dataset);
+
 			try {
-				aggregates = renderer.aggregate(dataset, (Aggregator) aggregator, vt, width, height);
+				aggregates = renderer.aggregate(dataset, selector, (Aggregator) aggregator, vt, width, height);
 				display.aggregates(aggregates, viewTransformRef);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {

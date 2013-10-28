@@ -6,6 +6,7 @@ import java.awt.geom.NoninvertibleTransformException;
 
 import ar.*;
 import ar.aggregates.AggregateUtils;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
 /**Panel that renders the entire dataset at the current zoom resolution, so pan can happen quickly.*/
@@ -118,14 +119,18 @@ public class SubsetDisplay extends FullDisplay {
 	}
 
 	private final class AggregateRender implements Runnable {
+		
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
 				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
 				renderTransform = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
-
+				
+				@SuppressWarnings({"rawtypes"})
+				Selector selector = TouchesPixel.make(dataset);
+				
 				@SuppressWarnings({"unchecked","rawtypes"})
-				Aggregates<?> a = renderer.aggregate(dataset, (Aggregator) aggregator, renderTransform, databounds.width, databounds.height);
+				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, renderTransform, databounds.width, databounds.height);
 				
 				SubsetDisplay.this.aggregates(a, renderTransform);
 				long end = System.currentTimeMillis();

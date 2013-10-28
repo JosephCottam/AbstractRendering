@@ -6,6 +6,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 
@@ -14,10 +15,13 @@ import ar.aggregates.AggregateUtils;
  * **/
 public final class SerialRenderer implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
-	private final RenderUtils.Progress recorder = RenderUtils.recorder();
+	private final ProgressReporter recorder = RenderUtils.recorder();
 	
 	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
-	public <I,G,A> Aggregates<A> aggregate(final Glyphset<? extends G, ? extends I> glyphs, final Aggregator<I,A> op,   
+	public <I,G,A> Aggregates<A> aggregate(
+			final Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			final Aggregator<I,A> op,
 			final AffineTransform view, final int width, final int height) {
 		
 		recorder.reset(width*height);
@@ -26,7 +30,6 @@ public final class SerialRenderer implements Renderer {
 		AffineTransform inverseView;
 		try {inverseView = view.createInverse();}
 		catch (Exception e) {throw new IllegalArgumentException(e);}
-		
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
@@ -49,5 +52,5 @@ public final class SerialRenderer implements Renderer {
 		}
 		return out;
 	}
-	public double progress() {return recorder.percent();}
+	public ProgressReporter progress() {return recorder;}
 }

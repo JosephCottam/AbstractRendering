@@ -3,6 +3,9 @@ package ar;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 
+import ar.renderers.ProgressReporter;
+import ar.Selector;
+
 /**A renderer implements a strategy for converting glyphs (geometry+data) into images.
  * Strategies can include parallelization, different iterations orders, synch/asynch return, 
  * different write orders, etc.
@@ -14,7 +17,8 @@ public interface Renderer extends Serializable {
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
 	 * @param glyphs  The items to render
-	 * @param op Means to convert the glyphset into an aggregate for a specific position
+	 * @param op Converts a glyph into an aggregate for a specific position
+	 * @param selector Associates glyphs with positions
 	 * @param viewTransform The view transform (e.g., geometry to screen) 
 	 * @param width The width of the current viewport
 	 * @param height The height of the current viewport
@@ -22,6 +26,7 @@ public interface Renderer extends Serializable {
 	 */
 	public <I,G,A> Aggregates<A> aggregate(
 			final Glyphset<? extends G, ? extends I> glyphs, 
+			final Selector<G> selector,
 			final Aggregator<I,A> op, 
 			final AffineTransform viewTransform, final int width, final int height);
 	
@@ -51,5 +56,5 @@ public interface Renderer extends Serializable {
 	 * 
 	 * @return The percent of predicted work that has been completed.
 	 */
-	public double progress();
+	public ProgressReporter progress();
 }

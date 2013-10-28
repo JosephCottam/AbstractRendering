@@ -16,6 +16,7 @@ import ar.glyphsets.implicitgeometry.Indexed.ToRect;
 import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
@@ -53,6 +54,8 @@ public class BatchExport {
 					new ToRect(size, size, false, 0, 1), 
 					new Constant<Indexed,Color>(Color.red));
 		glyphs.bounds(); //Force bounds calc to only happen once...hopefully
+		
+		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 
 		try {
 			for (int i=0; i< widths.length; i++) {
@@ -60,7 +63,7 @@ public class BatchExport {
 				int height = Integer.parseInt(heights[i]);
 				System.out.printf("Processing %s at %dx%d\n", source, width, height);
 				AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, aggregator, ivt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, selector, aggregator, ivt, width, height);
 				String filepart = String.format("%dx%d", width, height);
 				String filename = String.format(outPattern, filepart);
 				System.out.printf("\t Writing to %s\n", filename);

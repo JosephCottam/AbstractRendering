@@ -16,6 +16,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.GlyphsetUtils;
@@ -25,6 +26,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.*;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
 
@@ -51,7 +53,8 @@ public class Renderings {
 
 	public <G,V,A> BufferedImage image(Renderer r, Glyphset<G,V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
 		AffineTransform vt = Util.zoomFit(g.bounds(), width, height);
-		Aggregates<A> ser_aggs = r.aggregate(g, agg, vt, width, height);
+		Selector<G> selector = TouchesPixel.make(g);
+		Aggregates<A> ser_aggs = r.aggregate(g, selector, agg, vt, width, height);
 		Transfer.Specialized<? super A,Color> t2 = t.specialize(ser_aggs);
 		Aggregates<Color> imgAggs = r.transfer(ser_aggs, t2);
 		BufferedImage img = AggregateUtils.asImage(imgAggs, width, height, Color.white);
@@ -62,7 +65,6 @@ public class Renderings {
 		RenderUtils.RECORD_PROGRESS = true;
 		Renderer r = new SerialRenderer();
 		BufferedImage ref_img =image(r, glyphs, agg, t);
-		System.out.println(r.progress());
 		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));
 		
 		r = new SerialRenderer();

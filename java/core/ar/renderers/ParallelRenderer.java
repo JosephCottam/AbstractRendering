@@ -8,9 +8,11 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.selectors.TouchesPixel;
+import ar.renderers.tasks.GlyphParallelAggregation;
+import ar.renderers.tasks.PixelParallelTransfer;
 
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
@@ -28,13 +30,10 @@ public class ParallelRenderer implements Renderer {
 	private final ForkJoinPool pool;
 
 	private final int taskSize;
-	private final RenderUtils.Progress recorder = RenderUtils.recorder();
+	private final ProgressReporter recorder = RenderUtils.recorder();
 	
-	private final Class<?> geometryType;
-
 	public ParallelRenderer() {this(DEFAULT_TASK_SIZE);}
-	public ParallelRenderer(int taskSize) {this(taskSize, null, null);}
-	public ParallelRenderer(int taskSize, ForkJoinPool pool) {this(taskSize, pool, null);}
+	public ParallelRenderer(int taskSize) {this(taskSize, null);}
 
 	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.
 	 * 
@@ -42,28 +41,27 @@ public class ParallelRenderer implements Renderer {
 	 * @param taskSize -- Granularity of tasks 
 	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
 	 * **/
-	public ParallelRenderer(int taskSize, ForkJoinPool pool, Class<?> geometryType) {
+	public ParallelRenderer(int taskSize, ForkJoinPool pool) {
 		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
-	
-		this.geometryType = geometryType;
+ 
 		this.taskSize = taskSize;
 		this.pool = pool;
 	}
 
 	@Override
-	public <I,G,A> Aggregates<A> aggregate(Glyphset<? extends G, ? extends I> glyphs, Aggregator<I,A> op, 
+	public <I,G,A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
 		
 		recorder.reset(glyphs.size());
-		
-		Class<?> geometryType = this.geometryType;
-		if (geometryType == null) {geometryType = glyphs.iterator().next().shape().getClass();}
 
-		TouchesPixel<I,G,A> t = TouchesPixel.make(
-				geometryType,
+		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(
 				glyphs, 
-				view, 
+				selector,
 				op, 
+				view, 
 				new Rectangle(0,0,width,height),
 				taskSize,
 				recorder,
@@ -82,5 +80,5 @@ public class ParallelRenderer implements Renderer {
 		return result;
 	}
 	
-	public double progress() {return recorder.percent();}
+	public ProgressReporter progress() {return recorder;}
 }

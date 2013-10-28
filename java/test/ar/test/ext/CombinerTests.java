@@ -12,12 +12,14 @@ import org.junit.Test;
 import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
 import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.ParallelRenderer;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
 public class CombinerTests {
@@ -26,8 +28,9 @@ public class CombinerTests {
 	@BeforeClass
 	public static void load() throws Exception {
 		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Object>make());
+		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		Renderer r = new ParallelRenderer();
-		count = r.aggregate(glyphs, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
+		count = r.aggregate(glyphs, selector, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10).createInverse(), 10,10);
 	}
 	
 	@Test

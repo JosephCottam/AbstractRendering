@@ -21,11 +21,13 @@ import org.junit.Test;
 import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.glyphsets.DynamicQuadTree;
 import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.aggregates.FlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
@@ -47,8 +49,9 @@ public class AvroAggregatesTest {
 				241.4615556310524,
 				238.49100176586487, 
 				236.13546883394775).createInverse();
-		count = r.aggregate(glyphs, new Numbers.Count<Object>(), ivt, 500,500);
-		rles = r.aggregate(glyphs, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
+		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
+		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), ivt, 500,500);
+		rles = r.aggregate(glyphs, s, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
 	}
 	
 	@Test

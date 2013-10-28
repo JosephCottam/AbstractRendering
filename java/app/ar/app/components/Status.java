@@ -45,7 +45,7 @@ public class Status extends JPanel {
 				}
 
 				if (watching == null) {delay = 500; continue;}
-				double progress = watching.progress();
+				double progress = watching.progress().percent();
 				if (progress == cached) {delay = 500; continue;}
 				cached = progress;
 				delay = 10;
