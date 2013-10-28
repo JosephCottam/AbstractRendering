@@ -82,8 +82,9 @@ public class FlatAggregates<A> implements Aggregates<A>{
 		int idx = ((highY-lowY)*(x-lowX))+(y-lowY);
 		return idx;
 	}
-
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
 	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
+	
+	public String toString() {return String.format("Aggregates from %d,%d to %d,%d.", lowX, lowY, highX,highY);}
 }

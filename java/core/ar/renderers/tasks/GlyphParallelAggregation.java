@@ -22,7 +22,7 @@ import ar.util.Util;
 
 public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggregates<A>> {
 	private static final long serialVersionUID = 705015978061576950L;
-	protected final int taskSize;
+	protected final long taskSize;
 	protected final long low;
 	protected final long high;
 	protected final Glyphset<? extends G, ? extends I> glyphs;
@@ -36,7 +36,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			AffineTransform view,
 			Aggregator<I,A> op, 
 			Rectangle viewport,
-			int taskSize,
+			long taskSize,
 			RenderUtils.Progress recorder,
 			long low, long high) {
 		this.glyphs = glyphs;
@@ -94,7 +94,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
-				int taskSize,
+				long taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
 			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
@@ -132,7 +132,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
-				int taskSize,
+				long taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
 			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
@@ -218,7 +218,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
-				int taskSize,
+				long taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
 			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
@@ -273,7 +273,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				AffineTransform view,
 				Aggregator<I,A> op, 
 				Rectangle viewport,
-				int taskSize,
+				long taskSize,
 				RenderUtils.Progress recorder,
 				long low, long high) {
 			super(glyphs, view, op, viewport, taskSize, recorder, low,high);
@@ -332,7 +332,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			AffineTransform view,
 			Aggregator<I,A> op, 
 			Rectangle viewport,
-			int taskSize,
+			long taskSize,
 			RenderUtils.Progress recorder,
 			long low, long high) {
 

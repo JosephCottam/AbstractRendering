@@ -21,9 +21,6 @@ import ar.renderers.tasks.PixelParallelTransfer;
 public class ParallelGlyphs implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
 	
-	/**Default task size for parallel operations.**/ 
-	public static int DEFAULT_TASK_SIZE = 100000;
-
 	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool;
@@ -33,8 +30,9 @@ public class ParallelGlyphs implements Renderer {
 	
 	private final Class<?> geometryType;
 
-	public ParallelGlyphs() {this(DEFAULT_TASK_SIZE);}
+	public ParallelGlyphs() {this(-1);}
 	public ParallelGlyphs(int taskSize) {this(taskSize, null, null);}
+	public ParallelGlyphs(ForkJoinPool pool) {this(-1, pool, null);}
 	public ParallelGlyphs(int taskSize, ForkJoinPool pool) {this(taskSize, pool, null);}
 
 	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.
@@ -55,8 +53,9 @@ public class ParallelGlyphs implements Renderer {
 	public <I,G,A> Aggregates<A> aggregate(Glyphset<? extends G, ? extends I> glyphs, Aggregator<I,A> op, 
 			AffineTransform view, int width, int height) {
 		
+		long taskSize = this.taskSize >0 ? this.taskSize : glyphs.segments()/THREAD_POOL_SIZE;
 		recorder.reset(glyphs.size());
-		
+				
 		Class<?> geometryType = this.geometryType;
 		if (geometryType == null) {geometryType = glyphs.iterator().next().shape().getClass();}
 
@@ -78,9 +77,14 @@ public class ParallelGlyphs implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
+		int taskSize = this.taskSize >0 ? this.taskSize : size(aggregates)/THREAD_POOL_SIZE;
 		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;
+	}
+	
+	private final int size(Aggregates<?> aggs) {
+		return (aggs.highX()-aggs.lowX()) * aggs.highY()-aggs.lowY();
 	}
 	
 	public double progress() {return recorder.percent();}

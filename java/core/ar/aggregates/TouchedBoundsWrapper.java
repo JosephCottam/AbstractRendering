@@ -38,14 +38,16 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 		base.set(x,y, val);
 		
 		if (x < lowX && x >= base.lowX()) {lowX = x;}
-		if (x > highX && x < base.highX()) {highX = x;}
+		if (x > highX && x < base.highX()) {highX = x+1;}
 		if (y < lowY && y >= base.lowY()) {lowY = y;}
-		if (y > highY && y < base.highY()) {highY = y;}
+		if (y > highY && y < base.highY()) {highY = y+1;}
 	}
 
 	public A defaultValue() {return base.defaultValue();}
-	public int lowX() {return Math.min(lowX, base.lowX());}
-	public int lowY() {return Math.min(lowY, base.lowY());}
-	public int highX() {return Math.max(highX, base.highX());}
-	public int highY() {return Math.max(highY, base.highY());}
+	public int lowX() {return Math.max(lowX, base.lowX());}
+	public int lowY() {return Math.max(lowY, base.lowY());}
+	public int highX() {return Math.min(highX, base.highX());}
+	public int highY() {return Math.min(highY, base.highY());}
+
+	public String toString() {return String.format("Wrapped Aggregates from %d,%d to %d,%d.", lowX, lowY, highX,highY);}
 }
