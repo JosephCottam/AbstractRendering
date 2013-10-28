@@ -20,7 +20,8 @@ import ar.renderers.AggregationStrategies;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
 
-public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggregates<A>> implements Selector {
+/**Modify bins that a shape touches.**/
+public abstract class TouchesPixel<I,G,A> extends RecursiveTask<Aggregates<A>> implements Selector {
 	private static final long serialVersionUID = 705015978061576950L;
 	protected final int taskSize;
 	protected final long low;
@@ -31,7 +32,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	protected final Aggregator<I,A> op;
 	protected final RenderUtils.Progress recorder;
 
-	protected GlyphParallelAggregation(
+	protected TouchesPixel(
 			Glyphset<? extends G, ? extends I> glyphs, 
 			AffineTransform view,
 			Aggregator<I,A> op, 
@@ -58,8 +59,8 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	protected final Aggregates<A> split() {
 		long mid = Util.mean(low, high);
 
-		GlyphParallelAggregation<I,G,A> top = this.subTask(low, mid);
-		GlyphParallelAggregation<I,G,A> bottom = this.subTask(mid, high);
+		TouchesPixel<I,G,A> top = this.subTask(low, mid);
+		TouchesPixel<I,G,A> bottom = this.subTask(mid, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
@@ -78,7 +79,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	/**Discretize each glyph into an aggregates set.**/
 	protected abstract Aggregates<A> local();
 	
-	protected abstract GlyphParallelAggregation<I,G,A> subTask(long low, long high);
+	protected abstract TouchesPixel<I,G,A> subTask(long low, long high);
 	
 	protected Aggregates<A> allocateAggregates(Glyphset<? extends G, ? extends I> subset) {
 		//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
@@ -97,7 +98,7 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 				op.identity());
 	}
 
-	private static final class Points<I, A> extends GlyphParallelAggregation<I,Point2D,A> {
+	private static final class Points<I, A> extends TouchesPixel<I,Point2D,A> {
 		public Points(
 				Glyphset<? extends Point2D, ? extends I> glyphs, 
 				AffineTransform view,
@@ -130,12 +131,12 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		}
 
 		@Override
-		protected GlyphParallelAggregation<I, Point2D, A> subTask(long low, long high) {
+		protected TouchesPixel<I, Point2D, A> subTask(long low, long high) {
 			return new Points<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
 		}
 	}
 
-	private static final class Lines<I, A> extends GlyphParallelAggregation<I,Line2D,A> {
+	private static final class Lines<I, A> extends TouchesPixel<I,Line2D,A> {
 		public Lines(
 				Glyphset<? extends Line2D, ? extends I> glyphs, 
 				AffineTransform view,
@@ -215,13 +216,13 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		}
 		
 		@Override
-		protected GlyphParallelAggregation<I, Line2D, A> subTask(long low, long high) {
+		protected TouchesPixel<I, Line2D, A> subTask(long low, long high) {
 			return new Lines<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
 		}
 
 	}
 	
-	private static final class Rectangles<I,A> extends GlyphParallelAggregation<I,Rectangle2D,A> {
+	private static final class Rectangles<I,A> extends TouchesPixel<I,Rectangle2D,A> {
 		public Rectangles(
 				Glyphset<? extends Rectangle2D, ? extends I> glyphs, 
 				AffineTransform view,
@@ -271,12 +272,12 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		}
 		
 		@Override
-		protected GlyphParallelAggregation<I, Rectangle2D, A> subTask(long low, long high) {
+		protected TouchesPixel<I, Rectangle2D, A> subTask(long low, long high) {
 			return new Rectangles<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
 		}
 	}
 
-	private static final class Shapes<I, A> extends GlyphParallelAggregation<I,Shape,A> {
+	private static final class Shapes<I, A> extends TouchesPixel<I,Shape,A> {
 		public Shapes(
 				Glyphset<? extends Shape, ? extends I> glyphs, 
 				AffineTransform view,
@@ -329,13 +330,13 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 		}
 		
 		@Override
-		protected GlyphParallelAggregation<I, Shape, A> subTask(long low, long high) {
+		protected TouchesPixel<I, Shape, A> subTask(long low, long high) {
 			return new Shapes<>(glyphs, view, op, viewport, taskSize, recorder, low, high);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <I,G,A> GlyphParallelAggregation<I,G,A> make(
+	public static <I,G,A> TouchesPixel<I,G,A> make(
 			Class<?> geometryType,
 			Glyphset<? extends G, ? extends I> glyphs, 
 			AffineTransform view,
@@ -346,13 +347,13 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 			long low, long high) {
 
 		if (Point2D.class.isAssignableFrom(geometryType)) {
-			return (GlyphParallelAggregation<I, G, A>) new Points<>((Glyphset<Point2D,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);			
+			return (TouchesPixel<I, G, A>) new Points<>((Glyphset<Point2D,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);			
 		} else if (Rectangle2D.class.isAssignableFrom(geometryType)) {
-			return  (GlyphParallelAggregation<I, G, A>) new Rectangles<>((Glyphset<Rectangle2D,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);
+			return  (TouchesPixel<I, G, A>) new Rectangles<>((Glyphset<Rectangle2D,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);
 		} else if (Line2D.class.isAssignableFrom(geometryType)) {
-			return (GlyphParallelAggregation<I, G, A>) new Lines<>((Glyphset<Line2D,I>)glyphs, view, op, viewport, taskSize, recorder, low, high);
+			return (TouchesPixel<I, G, A>) new Lines<>((Glyphset<Line2D,I>)glyphs, view, op, viewport, taskSize, recorder, low, high);
 		} else if (Shape.class.isAssignableFrom(geometryType)){
-			return (GlyphParallelAggregation<I, G, A>) new Shapes<>((Glyphset<Shape,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);
+			return (TouchesPixel<I, G, A>) new Shapes<>((Glyphset<Shape,I>) glyphs, view, op, viewport, taskSize, recorder, low, high);
 		} else {
 			throw new IllegalArgumentException("Could not construct aggregator for geometry type: " + geometryType.getName());
 		}

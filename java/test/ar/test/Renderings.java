@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -42,7 +43,7 @@ public class Renderings {
 		assertThat(res.getHeight(), is(ref.getHeight()));
 		for (int x = 0; x<res.getWidth(); x++) {
 			for (int y=0; y<res.getHeight(); y++) {
-				assertThat(String.format(msg + " (%d,%d)", x, y), res.getRGB(x, y), is(ref.getRGB(x, y)));
+				assertThat(String.format(msg + " (%d,%d)", x, y), new Color(res.getRGB(x, y),true), is(new Color(ref.getRGB(x, y) ,true)));
 			}
 		}
 	}
@@ -97,12 +98,12 @@ public class Renderings {
 	
 	@Test
 	public void CirclepointsMemMap() throws Exception {
-		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(
+		Glyphset<Point2D, Object> glyphs = GlyphsetUtils.autoLoad(
 				new File("../data/circlepoints.hbin"), 
 				.001, 
-				new MemMapList<Rectangle2D, Object>(
+				new MemMapList<Point2D, Object>(
 						null, 
-						new Indexed.ToRect(.01, 0, 1), 
+						new Indexed.ToPoint(false, 0, 1), 
 						new Valuer.Constant<Indexed, Object>(1)));
 		
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();

@@ -10,8 +10,7 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.selectors.GlyphParallelAggregation;
-import ar.selectors.PixelParallelTransfer;
+import ar.selectors.TouchesPixel;
 
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
@@ -60,7 +59,7 @@ public class ParallelRenderer implements Renderer {
 		Class<?> geometryType = this.geometryType;
 		if (geometryType == null) {geometryType = glyphs.iterator().next().shape().getClass();}
 
-		GlyphParallelAggregation<I,G,A> t = GlyphParallelAggregation.make(
+		TouchesPixel<I,G,A> t = TouchesPixel.make(
 				geometryType,
 				glyphs, 
 				view, 
