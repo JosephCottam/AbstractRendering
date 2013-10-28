@@ -82,9 +82,10 @@ public abstract class GlyphParallelAggregation<I,G,A> extends RecursiveTask<Aggr
 	
 	protected Aggregates<A> allocateAggregates(Rectangle2D bounds) {
 		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
-		return new TouchedBoundsWrapper<>(AggregateUtils.make(fullBounds.x, fullBounds.y,
+		Aggregates<A> aggs = AggregateUtils.make(fullBounds.x, fullBounds.y,
 				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
-				op.identity()), false);
+				op.identity());
+		return new TouchedBoundsWrapper<>(aggs, false);
 	}
 
 	private static final class Points<I, A> extends GlyphParallelAggregation<I,Point2D,A> {
