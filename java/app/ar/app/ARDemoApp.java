@@ -95,7 +95,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		
 		frame.add(display, BorderLayout.CENTER);
 
-		frame.setSize(500, 500);
+		frame.setSize(800, 800);
 		frame.validate();
 		frame.setVisible(true);
 		final ARComponent.Aggregating img = display;

@@ -106,7 +106,7 @@ public class ARApp implements ARComponent.Holder {
 		frame.add(display, BorderLayout.CENTER);
 		
 		frame.setLocation(0,0);
-		frame.setSize(500, 500);
+		frame.setSize(800, 800);
 		frame.invalidate();
 		frame.setVisible(true);
 		display.zoomFit();
