@@ -83,6 +83,8 @@ public class AggregateUtils {
 		return aggs;
 	}
 
+	/**Grid-style printing of the aggregates.  
+	 * Useful for debugging with small aggregate sets...**/
 	public static String toString(Aggregates<?> aggs) {
 		StringBuilder b = new StringBuilder();
 		b.append(String.format("%d-%d by %d-%d\n", aggs.lowX(), aggs.highX(), aggs.lowY(), aggs.highY()));
@@ -97,5 +99,11 @@ public class AggregateUtils {
 		}
 		return b.toString();
 	}
+	
+	/**How many aggregate values are present here?**/
+	public static final long size(Aggregates<?> aggs) {
+		return ((long) (aggs.highX()-aggs.lowX())) * ((long) (aggs.highY()-aggs.lowY()));
+	}
+
 	
 }

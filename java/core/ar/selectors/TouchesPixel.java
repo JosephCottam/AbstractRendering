@@ -18,7 +18,7 @@ public abstract class TouchesPixel {
 	/**DESTRUCTIVELY updates the target at x/y with the value passed and the target operation.**/
 	protected static final <A,I> void update(Aggregates<A> target, I v, int x, int y, Aggregator<I,A> op) {
 		A existing = target.get(x,y);
-		A update = op.combine(x,y,existing, v);
+		A update = op.combine(x,y,existing,v);
 		target.set(x, y, update);
 	}
 		
@@ -116,7 +116,9 @@ public abstract class TouchesPixel {
 	public static final class Rectangles implements Selector<Rectangle2D> {
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Rectangle2D, ? extends I> subset,
-				AffineTransform view, Aggregates<A> target, Aggregator<I, A> op) {
+				AffineTransform view, 
+				Aggregates<A> target, 
+				Aggregator<I, A> op) {
 
 			Point2D lowP = new Point2D.Double();
 			Point2D highP = new Point2D.Double();

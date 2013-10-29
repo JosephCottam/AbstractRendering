@@ -43,15 +43,15 @@ public class AvroAggregatesTest {
 	public static void load() throws Exception {
 		Glyphset<Rectangle2D, Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make());
 		Renderer r = new ParallelRenderer();
-		AffineTransform ivt = new AffineTransform(241.4615556310524, 
+		AffineTransform vt = new AffineTransform(241.4615556310524, 
 				0.0, 
 				0.0, 
 				241.4615556310524,
 				238.49100176586487, 
-				236.13546883394775).createInverse();
+				236.13546883394775);
 		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
-		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), ivt, 500,500);
-		rles = r.aggregate(glyphs, s, new Categories.RunLengthEncode<Color>(), ivt, 500,500);
+		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt, 500,500);
+		rles = r.aggregate(glyphs, s, new Categories.RunLengthEncode<Color>(), vt, 500,500);
 	}
 	
 	@Test

@@ -46,9 +46,8 @@ public class RenderSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		int task = Integer.parseInt(arg(args, "-task", "100000"));
 		String config = arg(args, "-config", "USPopulation");
-		String rend = arg(args, "-rend", "glyph").toUpperCase();
+		String rend = arg(args, "-rend", "parallel").toUpperCase();
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
@@ -77,9 +76,9 @@ public class RenderSpeed {
 		ParallelRenderer.THREAD_POOL_SIZE = cores;
 		
 		Renderer render;
-		if (rend.startsWith("GLYPH")) {
-			render = new ParallelRenderer(task);
-		} else if (rend.startsWith("SPIXEL")) {
+		if (rend.startsWith("PARALLEL")) {
+			render = new ParallelRenderer();
+		} else if (rend.startsWith("SERIAL")) {
 			render = new SerialRenderer();
 		} else {
 			throw new IllegalArgumentException("Renderer type not known: " + rend);
@@ -89,7 +88,7 @@ public class RenderSpeed {
 		Selector s = TouchesPixel.make(glyphs);
 		
 		if (header) {
-			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, task-size");
+			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores");
 		}
 		
 		try {
@@ -107,7 +106,7 @@ public class RenderSpeed {
 
 				aggs.get(0, 0);
 				colors.get(0, 0);
-				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d, %d\n", source, aggTime, transTime, i, width, height, rend, cores, task);
+				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d\n", source, aggTime, transTime, i, width, height, rend, cores);
 				System.out.flush();
 			}
 		} catch (Exception e) {

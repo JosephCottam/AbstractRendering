@@ -22,29 +22,20 @@ import ar.renderers.tasks.PixelParallelTransfer;
 public class ParallelRenderer implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
 	
-	/**Default task size for parallel operations.**/ 
-	public static int DEFAULT_TASK_SIZE = 100000;
-
 	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool;
 
-	private final int taskSize;
 	private final ProgressReporter recorder = RenderUtils.recorder();
 	
-	public ParallelRenderer() {this(DEFAULT_TASK_SIZE);}
-	public ParallelRenderer(int taskSize) {this(taskSize, null);}
-
-	/**Render with task-size determined by the passed parameter and use the given thread pool for parallel operations.
+	public ParallelRenderer() {this(null);}
+	
+	/**Render that uses the given thread pool for parallel operations.
 	 * 
-	 * @param geometryType -- The geometry type renderers should expect to us.  Null means "auto detect from passed glyphs"...which may fail at runtime.
-	 * @param taskSize -- Granularity of tasks 
 	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
 	 * **/
-	public ParallelRenderer(int taskSize, ForkJoinPool pool) {
+	public ParallelRenderer(ForkJoinPool pool) {
 		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_SIZE);}
- 
-		this.taskSize = taskSize;
 		this.pool = pool;
 	}
 
@@ -55,6 +46,7 @@ public class ParallelRenderer implements Renderer {
 			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
 		
+		long taskSize = glyphs.segments()/THREAD_POOL_SIZE;
 		recorder.reset(glyphs.size());
 
 		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(
@@ -75,10 +67,13 @@ public class ParallelRenderer implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
+		
+		long taskSize = AggregateUtils.size(aggregates)/THREAD_POOL_SIZE;
+		
 		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;
-	}
+	}	
 	
 	public ProgressReporter progress() {return recorder;}
 }

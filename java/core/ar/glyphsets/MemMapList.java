@@ -199,7 +199,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override
 	public Glyphset<G,I> segment(long bottom, long top)
 			throws IllegalArgumentException {
-		Glyphset<G,I> subset = GlyphSubset.make(this, bottom, top, true);
+		Glyphset<G,I> subset = GlyphSubset.make(this, bottom, top, false);
 		return subset;
 	}
 

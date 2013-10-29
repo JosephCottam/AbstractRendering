@@ -2,6 +2,7 @@ package ar.renderers.tasks;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RecursiveTask;
 
@@ -10,14 +11,14 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Selector;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.ConstantAggregates;
+import ar.aggregates.TouchedBoundsWrapper;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
 import ar.util.Util;
 
 public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>> {
 	private static final long serialVersionUID = 705015978061576950L;
-	protected final int taskSize;
+	protected final long taskSize;
 	protected final long low;
 	protected final long high;
 	protected final Glyphset<? extends G, ? extends I> glyphs;
@@ -33,7 +34,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregator<I,A> op,
 		AffineTransform view,
 		Rectangle viewport,
-		int taskSize,
+		long taskSize,
 		ProgressReporter recorder,
 		long low, long high) {
 
@@ -55,7 +56,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	
 	protected final Aggregates<A> local() {
 		Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
-		Aggregates<A> target = allocateAggregates(subset);
+		Aggregates<A> target = allocateAggregates(glyphs.bounds());
 		selector.processSubset(subset, view, target, op);
 		recorder.update(high-low);
 		return target;
@@ -81,23 +82,12 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		target.set(x, y, update);
 	}
 	
-	protected Aggregates<A> allocateAggregates(Glyphset<? extends G, ? extends I> subset) {
-		//Intersect the subset data with the region to be rendered; skip rendering if there is nothing to render
-		Rectangle bounds = view.createTransformedShape(subset.bounds()).getBounds();
-		bounds = bounds.intersection(viewport);
-		if (bounds.isEmpty()) {
-			int x2 = bounds.x+bounds.width;
-			int y2 = bounds.y+bounds.height;
-			recorder.update(high-low);
-			return new ConstantAggregates<A>(Math.min(x2, bounds.x), Math.min(y2, bounds.y),
-					Math.max(x2, bounds.x), Math.min(y2, bounds.y),
-					op.identity());
-		}				
-		return AggregateUtils.make(bounds.x, bounds.y,
-				bounds.x+bounds.width, bounds.y+bounds.height, 
+
+	protected Aggregates<A> allocateAggregates(Rectangle2D bounds) {
+		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
+		Aggregates<A> aggs = AggregateUtils.make(fullBounds.x, fullBounds.y,
+				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
 				op.identity());
-	}
-
-
-
+		return new TouchedBoundsWrapper<>(aggs, false);
+	}	
 }

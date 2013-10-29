@@ -86,10 +86,12 @@ public class AggregateSerializer {
 	/**Emit to binary format.  Does a schema-included output.**/
 	public static void emitBinary(GenericRecord aggregates, Schema schema, OutputStream out) throws IOException {
 		DatumWriter<GenericRecord> writer=new GenericDatumWriter<GenericRecord>(schema);
-		DataFileWriter<GenericRecord> dataFileWriter=new DataFileWriter<GenericRecord>(writer);
-		dataFileWriter.create(schema, out);
-		dataFileWriter.append(aggregates);
-		dataFileWriter.close();
+		
+		try (DataFileWriter<GenericRecord> dataFileWriter=new DataFileWriter<GenericRecord>(writer)) {
+			dataFileWriter.create(schema, out);
+			dataFileWriter.append(aggregates);
+			dataFileWriter.close();
+		}
 	}
 
 
@@ -161,8 +163,8 @@ public class AggregateSerializer {
 	
 	public static <A> Aggregates<A> deserialize(InputStream stream, Valuer<GenericRecord, A> converter) {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
-		try {
-			DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr);
+		try (DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr)) {
+			
 			GenericRecord r = fr.next();
 
 			int lowX = (Integer) r.get("xOffset");
@@ -199,11 +201,10 @@ public class AggregateSerializer {
 			String filename, Valuer<GenericRecord, A> converter, 
 			int lowX, int lowY, int highX, int highY) {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
-		try {
-			InputStream stream = new FileInputStream(filename);
-			DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr);
+		try (InputStream stream = new FileInputStream(filename);
+			 DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr)) {
+			
 			GenericRecord r = fr.next();
-
 			A defVal = converter.value((GenericRecord) r.get("default"));			
 			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
 					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
