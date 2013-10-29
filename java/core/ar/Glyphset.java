@@ -1,7 +1,6 @@
 package ar;
 
 import java.awt.geom.Rectangle2D;
-import java.util.Collection;
 
 /**
  * A collection of glyphs for rendering. 
@@ -10,10 +9,12 @@ import java.util.Collection;
  * Segmentation
  * ------------
  * 
- * To support parallelization, the glyphset interface also supports
+ * To support parallelization, the glyphset interface supports
  * "segmentation".  This enables sub-setting without the implication of
- * precise divisions.  The segmentation system is made up of the "limit" 
- * and "segment" methods.
+ * precise divisions.  The basic idea is that a glyphset can report how many
+ * divisions it can easily provide, and supports returning a subset of those divisions.
+ * The number of divisions is returned by "segments" and the "segment" method
+ * returns a subset of those divisions.  
  * 
  * Some parallel processing strategies work best on a subset of the data. The
  * simplest way to subset data is to find out how much data there is and exactly
@@ -39,10 +40,7 @@ import java.util.Collection;
  * 
  * @param <I> The type of the information associated with a glyph entry.
  */
-public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
-	/**Return all glyphs that intersect the passed rectangle.**/
-	public Collection<Glyph<G,I>> intersects(Rectangle2D r);
-	
+public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {	
 	/**Is this glyphset empty?*/
 	public boolean isEmpty();
 	
@@ -69,7 +67,7 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * be followed. (Old top becomes new bottom.) Similarly, the highest
 	 * valid value from top is returned by the "segments" method.
 	 * 
-	 * Bottom must be lower than top. A value above "segments" should be an
+	 * Bottom must be lower than top. A value equal to or above "segments" should be an
 	 * exception.
 	 * 
 	 * Equally spaced bottom/top pairs **do not** need to return subsets of
@@ -84,7 +82,10 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	
 	
 	/**Glyphsets that support random access.
-	 * This interface is largely to support parallel execution.
+	 * 
+	 * Random-access glyphsets should return 'segments' equal to size and
+	 * return contiguous chunks from segment.  This is not a requirement,
+	 * but a suggestion.
 	 */
 	public static interface RandomAccess<G,I> extends Glyphset<G,I> {
 		/**Return the item at the specified index.**/

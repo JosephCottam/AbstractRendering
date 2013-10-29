@@ -36,13 +36,11 @@ import ar.util.Util;
  *
  */
 public class Renderings {
-	private final int width = 15;
-	private final int height = 15;
+	private final int width = 100;
+	private final int height = 100;
 
 	/**Check image equality**/ 
 	public static void assertImageEquals(String msg, BufferedImage ref, BufferedImage res) {
-		assertThat(res.getWidth(), is(ref.getWidth()));
-		assertThat(res.getHeight(), is(ref.getHeight()));
 		for (int x = 0; x<res.getWidth(); x++) {
 			for (int y=0; y<res.getHeight(); y++) {
 				assertThat(String.format(msg + " (%d,%d)", x, y), new Color(res.getRGB(x, y),true), is(new Color(ref.getRGB(x, y) ,true)));
@@ -62,19 +60,16 @@ public class Renderings {
 	}
 	
 	public <G,V,A> void testWith(String test, Glyphset<G,V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
-		//Has LOWER value aggregates
 		RenderUtils.RECORD_PROGRESS = true;
 		Renderer r = new SerialRenderer();
 		BufferedImage ref_img =image(r, glyphs, agg, t);
-		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));
+		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));		
 		
 		r = new SerialRenderer();
 		BufferedImage ser_img = image(r, glyphs, agg, t);
 		Util.writeImage(ser_img, new File(String.format("./testResults/%s/ser.png", test)));
 		assertImageEquals("Serial", ref_img, ser_img);
 		
-		
-		//Has HIGHER valued aggregates
 		r = new ParallelRenderer();
 		BufferedImage pg_img = image(r, glyphs, agg, t);
 		Util.writeImage(pg_img, new File(String.format("./testResults/%s/pg.png", test)));
@@ -82,13 +77,13 @@ public class Renderings {
 	}
 	
 
-//	@Test
-//	public void CheckerboardQuad() throws Exception {
-//		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
-//		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-//		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
-//		testWith("checker_quad", glyphs, agg, t);
-//	}
+	@Test
+	public void CheckerboardQuad() throws Exception {
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
+		testWith("checker_quad", glyphs, agg, t);
+	}
 
 
 	@Test
@@ -98,22 +93,22 @@ public class Renderings {
 		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
 		testWith("circle_quad", glyphs, agg, t);
 	}
-//
-//	
-//	@Test
-//	public void CirclepointsMemMap() throws Exception {
-//		Glyphset<Point2D, Object> glyphs = GlyphsetUtils.autoLoad(
-//				new File("../data/circlepoints.hbin"), 
-//				.001, 
-//				new MemMapList<Point2D, Object>(
-//						null, 
-//						new Indexed.ToPoint(false, 0, 1), 
-//						new Valuer.Constant<Indexed, Object>(1)));
-//		
-//		Aggregator<Object, Integer> agg = new Numbers.Count<>();
-//		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
-//		testWith("circle_mem", glyphs, agg, t);
-//	}
+
+	
+	@Test
+	public void CirclepointsMemMap() throws Exception {
+		Glyphset<Point2D, Object> glyphs = GlyphsetUtils.autoLoad(
+				new File("../data/circlepoints.hbin"), 
+				.001, 
+				new MemMapList<Point2D, Object>(
+						null, 
+						new Indexed.ToPoint(false, 0, 1), 
+						new Valuer.Constant<Indexed, Object>(1)));
+		
+		Aggregator<Object, Integer> agg = new Numbers.Count<>();
+		Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);
+		testWith("circle_mem", glyphs, agg, t);
+	}
 
 	
 }

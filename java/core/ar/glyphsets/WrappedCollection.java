@@ -1,7 +1,6 @@
 package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -35,14 +34,6 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		this.valuer = valuer;
 	}
 
-	public Collection<ar.Glyph<G,I>> intersects(Rectangle2D r) {
-		ArrayList<ar.Glyph<G,I>> hits = new ArrayList<ar.Glyph<G,I>>();
-		for (Glyph<G,I> g: this) {
-			if (Util.intersects(r, g.shape())) {hits.add(g);}
-		}
-		return hits;
-	}
-	
 	public boolean isEmpty() {return values == null || values.isEmpty();}
 	public long size() {return values==null ? 0 : values.size();}
 	public Rectangle2D bounds() {return Util.bounds(this);}

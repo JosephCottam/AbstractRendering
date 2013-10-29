@@ -42,10 +42,4 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 			throws IllegalArgumentException {
 		return new GlyphSubset.Uncached<G,I>(this, bottom, top);
 	}
-
-	  public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<G,I>> contained = new ArrayList<>();
-		for (Glyph<G,I> g: glyphs) {if (Util.intersects(r, g.shape())) {contained.add(g);}}
-		return contained;
-	  }
 }

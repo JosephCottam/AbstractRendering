@@ -65,7 +65,7 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 	private static int SW = 2;
 	private static int SE = 3;
 
-	/**Structure to represent the bounds of the sub-quardants of a node**/
+	/**Structure to represent the bounds of the sub-quadrants of a node**/
 	private static final class Subs {
 		public final Rectangle2D[] quads = new Rectangle2D[4];
 		public Subs (final Rectangle2D current) {

@@ -60,7 +60,6 @@ public class ParallelRenderer implements Renderer {
 				0, glyphs.segments());
 		
 		Aggregates<A> a= pool.invoke(t);
-
 		return a;
 	}
 	

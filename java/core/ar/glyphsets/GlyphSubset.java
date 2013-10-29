@@ -1,8 +1,6 @@
 package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -31,17 +29,6 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 			throws IllegalArgumentException {
 		return new Cached<>(glyphs, bottom + this.low, top + this.low);
 	}
-
-	public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<G,I>> contained = new ArrayList<>();
-		for (Glyph<G,I> g : this) {
-			if (Util.intersects(r, g.shape())) {
-				contained.add(g);
-			}
-		}
-		return contained;
-	}
-	
 	
 	/**Subset where glyphs are cached in the subset.
 	 *   

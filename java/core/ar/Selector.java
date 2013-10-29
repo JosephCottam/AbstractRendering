@@ -10,13 +10,28 @@ import java.awt.geom.AffineTransform;
  * a glyph to a set of bins.  This alternative arrangement
  * is driven by the data-parallel and aggregate-reduction based
  * execution model this implementation actually uses.
- * 
- * TODO: G/I/A required???
  */
 public interface Selector<G> {
+	/**Process all items in a glyphset towards a given aggregates target.
+	 * 
+	 * @param subset
+	 * @param view
+	 * @param target
+	 * @param op
+	 * @return
+	 */
 	public <I,A> Aggregates<A> processSubset(
-			Glyphset<? extends G, ? extends I> subset, 
+			Glyphset<? extends G, ? extends I> glyphset, 
 			AffineTransform view,
 			Aggregates<A> target, 
 			Aggregator<I,A> op);
+	
+	/***
+	 * @param glyph Glyph to consider
+	 * @param view Under this view transform
+	 * @param x X Location of the bin
+	 * @param y Y Location of the bin
+	 * @return Does the glyph impact the indicated bin?
+	 */
+	public boolean hitsBin(Glyph<? extends G, ?> glyph, AffineTransform view, int x, int y);
 }

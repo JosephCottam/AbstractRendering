@@ -1,9 +1,12 @@
 package ar.renderers;
 
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Glyph;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Selector;
@@ -26,15 +29,21 @@ public final class SerialRenderer implements Renderer {
 		
 		recorder.reset(width*height);
 		Aggregates<A> aggregates = AggregateUtils.make(width, height, op.identity());
-
-		AffineTransform inverseView;
-		try {inverseView = view.createInverse();}
-		catch (Exception e) {throw new IllegalArgumentException(e);}
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-				A val = AggregationStrategies.pixel(aggregates, op, glyphs, inverseView, x, y);
-				aggregates.set(x, y, val);
+				A acc = aggregates.get(x, y);
+				Collection<Glyph<? extends G, ? extends I>>  subset = new ArrayList<>();
+				for (Glyph<? extends G, ? extends I> g: glyphs) {
+					if (selector.hitsBin(g, view, x, y)) {subset.add(g);}
+				}
+
+				for (Glyph<? extends G, ? extends I> g: subset) {
+					I val = g.info();
+					acc = op.combine(x, y, acc, val);
+				}
+				
+				aggregates.set(x, y, acc);
 				recorder.update(1);
 			}
 		}

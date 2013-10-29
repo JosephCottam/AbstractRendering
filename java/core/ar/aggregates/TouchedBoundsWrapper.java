@@ -32,6 +32,9 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 		
 	}
 	
+	/**Return the backing aggregate set that this class wraps.**/
+	public Aggregates<A> base() {return base;}
+	
 	public Iterator<A> iterator() {return base.iterator();}
 
 	public A get(int x, int y) {return base.get(x, y);}
@@ -46,6 +49,7 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	}
 
 	public A defaultValue() {return base.defaultValue();}
+	
 	public int lowX() {return Math.max(lowX, base.lowX());}
 	public int lowY() {return Math.max(lowY, base.lowY());}
 	public int highX() {return Math.min(highX, base.highX());}

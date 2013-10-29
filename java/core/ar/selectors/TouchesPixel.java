@@ -22,7 +22,7 @@ public abstract class TouchesPixel {
 		target.set(x, y, update);
 	}
 		
-	public static final class Point implements Selector<Point2D> {
+	public static final class Points implements Selector<Point2D> {
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Point2D, ? extends I> subset,
 				AffineTransform view, 
@@ -42,6 +42,14 @@ public abstract class TouchesPixel {
 
 			return target;		
 		}
+
+		@Override
+		public boolean hitsBin(Glyph<? extends Point2D, ?> glyph, AffineTransform view, int x, int y) {
+			Point2D p = view.transform(glyph.shape(), null);
+			int px = (int) p.getX();
+			int py = (int) p.getY();
+			return px == x && py == y;
+		}
 	}
 
 	public static final class Lines implements Selector<Line2D> {
@@ -56,7 +64,15 @@ public abstract class TouchesPixel {
 			}
 
 			return target;
-		}		
+		}	
+		
+
+		@Override
+		public boolean hitsBin(Glyph<? extends Line2D, ?> glyph, AffineTransform view, int x, int y) {
+			Shape s = view.createTransformedShape(glyph.shape());
+			return s.intersects(x, y, 1, 1);
+		}
+		
 		//based on 'optimized' version at http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 		private static <I,A> void bressenham(Aggregates<A> canvas, Aggregator<I,A> aggregator, Line2D line, I val) {
 			int x0 = (int) line.getX1(); //TODO: Not sure if the rounding should happen here or later....
@@ -108,9 +124,6 @@ public abstract class TouchesPixel {
 			    }
 			  }
 		}
-	
-		
-
 	}
 	
 	public static final class Rectangles implements Selector<Rectangle2D> {
@@ -145,6 +158,12 @@ public abstract class TouchesPixel {
 				}
 			}
 			return target;
+		}
+		
+		@Override
+		public boolean hitsBin(Glyph<? extends Rectangle2D, ?> glyph, AffineTransform view, int x, int y) {
+			Shape s = view.createTransformedShape(glyph.shape());
+			return s.intersects(x, y, 1, 1);
 		}
 	}
 
@@ -185,6 +204,12 @@ public abstract class TouchesPixel {
 
 			return target;
 		}
+		
+		@Override
+		public boolean hitsBin(Glyph<? extends Shape, ?> glyph, AffineTransform view, int x, int y) {
+			Shape s = view.createTransformedShape(glyph.shape());
+			return s.intersects(x, y, 1, 1);
+		}
 	}
 	
 
@@ -202,7 +227,7 @@ public abstract class TouchesPixel {
 	/**Construct a selector based on the expected geometry type.**/
 	public static <G> Selector<G> make(Class<? extends G> geometryType) {
 		if (Point2D.class.isAssignableFrom(geometryType)) {
-			return (Selector<G>) new Point();			
+			return (Selector<G>) new Points();			
 		} else if (Rectangle2D.class.isAssignableFrom(geometryType)) {
 			return (Selector<G>) new Rectangles();
 		} else if (Line2D.class.isAssignableFrom(geometryType)) {

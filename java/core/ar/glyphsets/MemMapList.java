@@ -2,8 +2,6 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
@@ -115,13 +113,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	}
 
 	protected void finalize() {pool.shutdownNow();}
-
-	@Override
-	public Collection<Glyph<G,I>> intersects(Rectangle2D r) {
-		ArrayList<Glyph<G,I>> contained = new ArrayList<Glyph<G,I>>();
-		for (Glyph<G,I> g: this) {if (Util.intersects(r, g.shape())) {contained.add(g);}}
-		return contained;
-	}
 
 	@Override
 	public Glyph<G,I> get(long i) {

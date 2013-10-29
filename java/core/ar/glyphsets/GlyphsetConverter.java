@@ -1,8 +1,6 @@
 package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 import ar.Glyph;
@@ -49,14 +47,6 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 			}
 
 		};
-	}
-
-	@Override
-	public Collection<Glyph<G,V>> intersects(Rectangle2D r) {
-		Collection<Glyph<G,I>> subs = base.intersects(r);
-		ArrayList<Glyph<G,V>> a = new ArrayList<>(subs.size());
-		for (Glyph<G,I> g: subs) {a.add(wrap(g));}
-		return a;
 	}
 
 	public boolean isEmpty() {return base.isEmpty();}
