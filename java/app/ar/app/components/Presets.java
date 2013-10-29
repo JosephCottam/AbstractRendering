@@ -325,7 +325,7 @@ public class Presets extends JPanel implements HasViewTransform {
 					rekey,
 					stratAlpha);
 		}
-		public String name() {return "US Ratial Distribution";}
+		public String name() {return "US Racial Distribution";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
@@ -354,7 +354,7 @@ public class Presets extends JPanel implements HasViewTransform {
 					rekey,
 					lift);
 		}
-		public String name() {return "US Ratial Distribution (highlight 'other')";}
+		public String name() {return "US Racial Distribution (highlight 'other')";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
