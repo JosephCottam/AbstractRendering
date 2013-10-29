@@ -32,7 +32,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	protected volatile boolean renderAgain = false;
 	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
-	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"ARPanel Render Thread");//TODO: Redoing painting to use futures...
+	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"FullDisplay Render Thread");//TODO: Redoing painting to use futures...
 		
 	protected final Renderer renderer;
 

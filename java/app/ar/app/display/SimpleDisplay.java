@@ -36,7 +36,7 @@ public class SimpleDisplay extends ARComponent {
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
 
-	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "ARDisplay Render Thread");
+	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "SimpleDisplay Render Thread");
 	
 	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
 		this(aggregates, transfer, new SerialRenderer());

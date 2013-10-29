@@ -42,7 +42,6 @@ import java.nio.channels.FileChannel;
  * TODO: Investigate ensureTo...it seems to overlap a lot with ensure and position...
  *   
  * **/
-@SuppressWarnings("javadoc")
 public class BigFileByteBuffer {
 	private final RandomAccessFile inputFile;
 	private final FileChannel.MapMode mode;
@@ -61,7 +60,7 @@ public class BigFileByteBuffer {
 	 * @param source File to read
 	 * @param margin Proximity to the end of the buffer that will trigger a window slide
 	 *               (essentially a guess at how many bytes will be needed from a reposition forward) 
-	 * @param bufferSize Size of memory map buffer to create
+	 * @param bufferSize Maximum size of memory map buffer to create 
 	 * @throws IOException Thrown when file stream creation or memory mapping fails.
 	 */
 	public BigFileByteBuffer(File source, int margin, int bufferSize, FileChannel.MapMode mode) throws IOException {
@@ -99,7 +98,7 @@ public class BigFileByteBuffer {
 	public int getInt() {return ensure(4).getInt();}
 	public long getLong() {return ensure(8).getLong();}
 	public char getChar() {return ensure(2).getChar();}
-	public double getFloat() {return ensure(4).getFloat();}
+	public float getFloat() {return ensure(4).getFloat();}
 	public double getDouble() {return ensure(8).getDouble();}
 	
 	public void get(byte[] target, long offset, int length) {

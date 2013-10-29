@@ -47,8 +47,10 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	/**Flag field indicating the binary file encoding (hbin) version understood by the parser.**/
 	public static final int VERSION_UNDERSTOOD = -1;
 	
-	/**How large should backing read buffer be?**/
-	public static int BUFFER_BYTES = Integer.MAX_VALUE; //Integer.MAX_VALUE added appreciable latency to thread creation, while this smaller number didn't add appreciable latency to runtime...perhaps because multi-threading hid the latency
+	/**How large should backing read buffer be?
+	 * Reducing this number tends to result in faster thread startup times, but slower overall run-times.
+	 * **/
+	public static int BUFFER_BYTES = Integer.MAX_VALUE;
 	
 	/**Thread-pool size for parallel operations.**/
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
