@@ -2,6 +2,7 @@ package ar.test;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import org.junit.Test;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
@@ -9,8 +10,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-
-import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
