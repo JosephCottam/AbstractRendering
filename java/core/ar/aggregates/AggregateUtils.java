@@ -89,10 +89,11 @@ public class AggregateUtils {
 		StringBuilder b = new StringBuilder();
 		b.append(String.format("%d-%d by %d-%d\n", aggs.lowX(), aggs.highX(), aggs.lowY(), aggs.highY()));
 		int len = 0;
-		for (Object o: aggs) {len = Math.max(len, o.toString().length());}
 		
-		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+		for (Object o: aggs) {len = Math.max(len, o.toString().length());}
+
+		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				b.append(String.format("%" + len + "s, ", aggs.get(x, y)));
 			}
 			b.deleteCharAt(b.length()-1);
