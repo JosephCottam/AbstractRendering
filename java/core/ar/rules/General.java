@@ -15,6 +15,23 @@ import ar.util.Util;
 
 /**Tools that don't apply to a particular data type.**/
 public class General {
+
+	/**Wrap a valuer in a transfer function.**/
+	public static final class ValuerTransfer<IN,OUT> implements Transfer.Specialized<IN, OUT> {
+		private final Valuer<IN,OUT> valuer;
+		private final OUT empty;
+		public ValuerTransfer(Valuer<IN,OUT> valuer, OUT empty) {
+			this.valuer = valuer;
+			this.empty = empty;
+		}
+
+		public OUT emptyValue() {return empty;}
+		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+			return valuer.value(aggregates.get(x,y));
+		}
+		
+	}
 	
 	public static class Spread<V> implements Transfer<V,V> {
 		final V empty;
