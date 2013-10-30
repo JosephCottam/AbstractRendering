@@ -55,30 +55,6 @@
   </target>
 
 
-  <target name="onesix" depends="clean" description="Build for java 1.6">
-    <!--Variant of the core libraries that does not include
-         any java 1.7 items...hopefully.-->
-    <mkdir dir="${coreBin}"/>
-    
-    <javac destdir="${coreBin}" source="1.6" target="1.6" includeantruntime="false"
-      sourcepath="" srcdir="${coreSrc}:${extSrc}">
-      <exclude name="**/ARServer*"/> 
-      <exclude name="**/Parallel*"/>
-      <exclude name="**/MemMapList*"/> 
-      <exclude name="**/tiles/**"/>
-      <classpath>
-        <fileset dir="${lib}" includes="*.jar"/>
-      </classpath>
-    </javac>
-    
-    <antcall target="package">
-      <param name="file" value="${coreJar}"/>
-      <param name="bin" value="${coreBin}"/>
-      <param name="main" value="ar.ext.server.ARServer"/>
-    </antcall>
-  </target>
-
-
   <target name="ext" 
     description="Build the extensions libraries with the core system; this is core-plus.">
     <!--Include extensions with the core library.-->
