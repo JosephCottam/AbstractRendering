@@ -44,9 +44,9 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 			GeneralPath s = assembleContours(classified, isoDivided);
 			contour = new SimpleGlyph<>(s, threshold);
 			
-			System.out.println(AggregateUtils.toString(aggregates));
-			System.out.println(AggregateUtils.toString(isoDivided));
-			System.out.println(AggregateUtils.toString(classified));
+//			System.out.println(AggregateUtils.toString(aggregates));
+//			System.out.println(AggregateUtils.toString(isoDivided));
+//			System.out.println(AggregateUtils.toString(classified));
 
 		}
 		
@@ -117,7 +117,7 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 
 		        curCell = isoData.get(r,c);
 		        prevSide = nextSide;
-	        } while (r != startRow && c != startCol);
+	        } while (r != startRow || c != startCol);
 	        iso.closePath();
 	    }
 	}

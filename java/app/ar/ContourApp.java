@@ -47,8 +47,8 @@ public class ContourApp {
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Rectangle2D> selector = TouchesPixel.make(dataset);
 
-		final int width = 10;
-		final int height = 10;
+		final int width = 500;
+		final int height = 500;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 

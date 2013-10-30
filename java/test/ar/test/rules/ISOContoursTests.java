@@ -3,6 +3,12 @@ package ar.test.rules;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
+import java.awt.Point;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import ar.Aggregates;
@@ -52,8 +58,57 @@ public class ISOContoursTests {
 	}
 	
 	@Test
-	public void ClassifyAggs() {
+	public void BuildContours() {
+		int threshold = 3;
+		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
+		for (int x=source.lowX()+1; x<source.highX()-2; x++) {
+			for (int y=source.lowY()+1; y<source.highY()-2; y++) {
+				source.set(x,y,5);
+			}
+		}
+		
+		ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold, 0, source);
+		GeneralPath p = contour.contours().shape();
 
+		GeneralPath p2 = (GeneralPath) p.clone();
+		p2.closePath();
+		assertEquals("Unequal bounding after closing.", p.getBounds2D(), p2.getBounds2D());
+
+		PathIterator it = p.getPathIterator(new AffineTransform());
+		float[] coords = new float[6]; 
+		while (!it.isDone()) {
+			int type = it.currentSegment(coords);
+			System.out.println(typeString(type) + ":" + deepToString(coords));
+			it.next();
+		}
+
+		
+		for (int x=source.lowX()+2; x<source.highX()-3; x++) {
+			for (int y=source.lowX()+2; y<source.highX()-3; y++) {
+				assertTrue(String.format("Uncontained point at %d,%d", x,y), p.contains(new Point(x,y)));
+			}
+		}
+	}
+	
+	private static String typeString(int type) {
+		if (type == PathIterator.SEG_CLOSE) {return "close";}
+		if (type == PathIterator.SEG_LINETO) {return "line to";}
+		if (type == PathIterator.SEG_MOVETO) {return "move to";}
+		return "other";
+	}
+	
+	private static String deepToString(float[] coords) {
+		StringBuilder b=new StringBuilder();
+		for(int i=0; i<coords.length; i++) {
+			b.append(coords[i]);
+			b.append(", ");
+		}
+		return b.toString();
+	}
+	
+	
+	@Test
+	public void ClassifyAggs() {
 		int threshold = 3;
 		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
 		for (int x=source.lowX()+1; x<source.highX()-2; x++) {
@@ -65,10 +120,7 @@ public class ISOContoursTests {
 		ISOContours.ISOBelow<Integer> trans = new ISOContours.ISOBelow<>(threshold);
 		Aggregates<Boolean> isoDivided = RENDERER.transfer(source, trans);
 		Aggregates<ISOContours.MC_TYPE> classified = RENDERER.transfer(isoDivided, new ISOContours.MCClassifier());
-		
-		System.out.println(AggregateUtils.toString(isoDivided));
-		System.out.println(AggregateUtils.toString(classified));
-		
+				
 		for (int x=source.lowX(); x<source.highX(); x++) {
 			for (int y=source.lowY(); y<source.highY(); y++) {
 				if (x == source.lowX()
