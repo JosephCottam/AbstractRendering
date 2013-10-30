@@ -10,38 +10,48 @@ import ar.Aggregates;
 import ar.Glyph;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SimpleGlyph;
 import ar.renderers.ParallelRenderer;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
 //Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares/IsoCell.java
 
-public class ISOContours implements Transfer<Number, Number> {
-	private final Number threshold;
+public class ISOContours<N extends Number> implements Transfer<N, N> {
+	private final N threshold;
+	private final N empty;
 	
-	public ISOContours(Number threshold) {this.threshold = threshold;}
+	public ISOContours(N threshold, N empty) {
+		this.threshold = threshold;
+		this.empty = empty;
+	}
 	
-	public Number emptyValue() {return 0;}
-	public Transfer.Specialized<Number, Number> specialize(Aggregates<? extends Number> aggregates) {
-		return new Specialized(threshold, aggregates);
+	public N emptyValue() {return empty;}
+	public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
+		return new Specialized<>(threshold, empty, aggregates);
 	}
 	
 	
-	public static final class Specialized extends ISOContours implements Transfer.Specialized<Number, Number> { 
+	public static final class Specialized<N extends Number> extends ISOContours<N> implements Transfer.Specialized<N,N> { 
 		private final Renderer renderer = new ParallelRenderer();
-		private final Glyph<GeneralPath, Number> contour;
+		private final Glyph<GeneralPath, N> contour;
 
-		public Specialized(Number threshold, Aggregates<? extends Number> aggregates) {
-			super(threshold);
+		public Specialized(N threshold, N empty, Aggregates<? extends N> aggregates) {
+			super(threshold, empty);
 
-			Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow(threshold));
+			Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow<>(threshold));
 			Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 			GeneralPath s = assembleContours(classified, isoDivided);
 			contour = new SimpleGlyph<>(s, threshold);
+			
+			System.out.println(AggregateUtils.toString(aggregates));
+			System.out.println(AggregateUtils.toString(isoDivided));
+			System.out.println(AggregateUtils.toString(classified));
+
 		}
 		
-		public Number at(int x, int y, Aggregates<? extends Number> aggregates) {return aggregates.get(x,y);}
-		public Glyph<GeneralPath, Number> contours() {return contour;}
+		public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
+		public Glyph<GeneralPath, N> contours() {return contour;}
 		
 		/** Build a single path from all of the contour parts.  
 		 * 
@@ -61,8 +71,8 @@ public class ISOContours implements Transfer<Number, Number> {
 	            	MC_TYPE type = classified.get(x, y);
 	                if (type != MC_TYPE.empty 
 	                		&& type != MC_TYPE.surround
-	                		&& type != MC_TYPE.down_left_diag
-	                		&& type != MC_TYPE.up__left_diag) {
+	                		&& type != MC_TYPE.diag_one
+	                		&& type != MC_TYPE.diag_two) {
 	                	stichContour(classified, isoDivided, isoPath, x, y);
 	                }
 	            }
@@ -115,7 +125,7 @@ public class ISOContours implements Transfer<Number, Number> {
 	/**Classifies each cell as above or below the given ISO value
 	 *TODO: Are doubles enough?  Should there be number-type-specific implementations?
      **/
-	public static final class ISOBelow implements Transfer.Specialized<Number, Boolean> {
+	public static final class ISOBelow<N extends Number> implements Transfer.Specialized<N, Boolean> {
 		private final Number threshold;
 
 		public ISOBelow(Number threshold) {
@@ -123,11 +133,11 @@ public class ISOContours implements Transfer<Number, Number> {
 		}
 		
 		public Boolean emptyValue() {return Boolean.FALSE;}
-		public Specialized<Number, Boolean> specialize(Aggregates<? extends Number> aggregates) {return this;}
+		public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
 		public Boolean at(int x, int y,
-				Aggregates<? extends Number> aggregates) {
+				Aggregates<? extends N> aggregates) {
 			Number v = aggregates.get(x,y);
-			double delta = Math.abs(threshold.doubleValue() - v.doubleValue());
+			double delta = threshold.doubleValue() - v.doubleValue();
 			return delta < 0;
 		}
 	}
@@ -146,23 +156,26 @@ public class ISOContours implements Transfer<Number, Number> {
 	    }
 	}
 
+	//Named according to scan-line convention
+	//ui is "up index" which is lower on the screen
+	//di is "down index" which is higher on the screen 
 	public static enum MC_TYPE {
 		empty(0b0000),
 		surround(0b1111),
-		bl_out(0b1110),
-		br_out(0b1101),
-		tr_out(0b1011),
-		tl_out(0b0111),
-		bl_in(0b0001),
-		br_in(0b0010),
-		tr_in(0b0100),
-		tl_in(0b1000),
-		top_in(0b1100),
-		left_in(0b1001),
-		top_out(0b0011),
-		left_out(0b0110),
-		down_left_diag(0b1010),  //Ambiguous case
-		up__left_diag(0b0101);   //Ambiguous case
+		ui_l_out(0b1110),
+		ui_r_out(0b1101),
+		di_r_out(0b1011),
+		di_l_out(0b0111),
+		ui_l_in(0b0001),
+		ui_r_in(0b0010),
+		di_r_in(0b0100),
+		di_l_in(0b1000),
+		di_in(0b1100),
+		l_in(0b1001),
+		ui_in(0b0011),
+		r_in(0b0110),
+		diag_one(0b1010),  //Ambiguous case
+		diag_two(0b0101);   //Ambiguous case
 		
 		public final int idx;
 		MC_TYPE(int idx) {this.idx = idx;}
@@ -239,10 +252,10 @@ public class ISOContours implements Transfer<Number, Number> {
 	}
 	
 	public static final class MCClassifier implements Transfer.Specialized<Boolean, MC_TYPE> {
-		private final int TOP_LEFT = 0b1000;
-		private final int TOP_RIGHT = 0b0100;
-		private final int BOTTOM_LEFT = 0b0010;
-		private final int BOTTOM_RIGHT = 0b0001;
+		private final int DOWN_INDEX_LEFT  = 0b1000;
+		private final int DOWN_INDEX_RIGHT = 0b0100;
+		private final int UP_INDEX_RIGHT   = 0b0010;
+		private final int UP_INDEX_LEFT    = 0b0001;
 		
 		public MC_TYPE emptyValue() {return MC_TYPE.empty;}
 
@@ -250,12 +263,12 @@ public class ISOContours implements Transfer<Number, Number> {
 		public Specialized<Boolean, MC_TYPE> specialize(Aggregates<? extends Boolean> aggregates) {return this;}
 
 		@Override
-		public MC_TYPE at(int x, int y,Aggregates<? extends Boolean> aggregates) {			
+		public MC_TYPE at(int x, int y, Aggregates<? extends Boolean> aggregates) {			
 			int code = 0;
-			if (aggregates.get(x-1,y-1)) {code = code | TOP_LEFT;}
-			if (aggregates.get(x,y-1)) {code = code | TOP_RIGHT;}
-			if (aggregates.get(x-1,y)) {code = code | BOTTOM_LEFT;}
-			if (aggregates.get(x,y)) {code = code | BOTTOM_RIGHT;}
+			if (aggregates.get(x-1,y-1)) {code = code | DOWN_INDEX_LEFT;}
+			if (aggregates.get(x,y-1)) {code = code | DOWN_INDEX_RIGHT;}
+			if (aggregates.get(x-1,y)) {code = code | UP_INDEX_LEFT;}
+			if (aggregates.get(x,y)) {code = code | UP_INDEX_RIGHT;}
 			return MC_TYPE.get(code);
 		}
 	}
