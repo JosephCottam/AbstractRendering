@@ -21,6 +21,7 @@ import ar.renderers.tasks.PixelParallelTransfer;
  */
 public class ParallelRenderer implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
+	private static final long MIN_TASK_SIZE = 100000;
 	
 	/**Thread pool size used for parallel operations.**/ 
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
@@ -67,7 +68,7 @@ public class ParallelRenderer implements Renderer {
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
 		
-		long taskSize = AggregateUtils.size(aggregates)/THREAD_POOL_SIZE;
+		long taskSize = Math.max(MIN_TASK_SIZE, AggregateUtils.size(aggregates)/THREAD_POOL_SIZE);
 		
 		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);

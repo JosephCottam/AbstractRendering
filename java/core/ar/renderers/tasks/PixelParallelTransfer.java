@@ -19,8 +19,7 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 			Aggregates<? extends IN> input, Aggregates<OUT> result, 
 			Transfer.Specialized<IN, OUT> t,
 			long taskSize,
-			int lowX, int lowY, int highX, int highY
-			) {
+			int lowX, int lowY, int highX, int highY) {
 		
 		this.lowx=lowX;
 		this.lowy=lowY;
@@ -35,7 +34,7 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 	protected void compute() {
 		int width = highx-lowx;
 		int height = highy-lowy;
-		if (width * height > taskSize) {
+		if (width * height >= taskSize) {
 			int centerx = Util.mean(lowx, highx);
 			int centery = Util.mean(lowy, highy);
 			PixelParallelTransfer<IN, OUT> SW = new PixelParallelTransfer<>(in, out, t, taskSize, lowx,    lowy,    centerx, centery);
