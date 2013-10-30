@@ -10,66 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
-import ar.Glyph;
-import ar.Renderer;
 import ar.Transfer;
-import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts.CoC;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
 /**Shape-aware transfer functions.**/
 public class Shapes {
-	public static class Contours implements Transfer<Number, Number> {
-		private enum MCTypes {empty}
-		private final int tollerance;
-
-		public Contours(int tollerance) {this.tollerance = tollerance;}
-		public Number emptyValue() {return 0;}
-		public ar.Transfer.Specialized<Number, Number> specialize(Aggregates<? extends Number> aggregates) {return new Specialized(tollerance, aggregates);}
-		
-		public static final class Specialized extends Contours implements Transfer.Specialized<Number, Number> { 
-			private final Renderer renderer = new ParallelRenderer();
-			private final List<Glyph<? extends Shape, Number>> contours;
-
-			public Specialized(int tollerance, Aggregates<? extends Number> aggregates) {
-				super(tollerance);
-
-				Aggregates<MCTypes> mctypes = renderer.transfer(aggregates, new MCClassifier(tollerance));
-				contours = assembleContours(mctypes);
-			}
-			
-			private final List<Glyph<? extends Shape, Number>> assembleContours(Aggregates<MCTypes> aggregates) {
-				List<Glyph<? extends Shape, Number>> contours = new ArrayList<>();
-				
-				
-				
-				return contours;
-			}
-			
-			public Number at(int x, int y, Aggregates<? extends Number> aggregates) {return aggregates.get(x,y);}
-			public List<Glyph<? extends Shape, Number>> contours() {return contours;}
-		}
-		
-		public static final class MCClassifier implements Transfer.Specialized<Number, MCTypes> {
-			private final int tollerance;
-			public MCClassifier(int tollerance) {this.tollerance = tollerance;}
-			public MCTypes emptyValue() {return MCTypes.empty;}
-
-			@Override
-			public ar.Transfer.Specialized<Number, MCTypes> specialize(
-					Aggregates<? extends Number> aggregates) {return this;}
-
-			@Override
-			public MCTypes at(int x, int y,
-					Aggregates<? extends Number> aggregates) {
-				return emptyValue();
-			}
-			
-		}
-		
-	}
-	
 	
 	/**Given a set of regions, combine all aggregates that are in that region and make that combined
 	 * value the value of any point in the region.
