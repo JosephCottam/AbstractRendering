@@ -299,6 +299,7 @@ public class MemMapEncoder {
 		byte[] rslt = new byte[recordLength];
 		int offset=0;
 		for (int i=0; i<nums.length;i++) {
+			if (types[i] == TYPE.CHAR) {continue;}
 			byte[] nb = encode(nums[i], types[i]);
 			System.arraycopy(nb, 0, rslt, offset, nb.length);
 			offset+=nb.length;
