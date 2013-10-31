@@ -10,7 +10,6 @@ import ar.Aggregates;
 import ar.Glyph;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SimpleGlyph;
 import ar.renderers.ParallelRenderer;
 
@@ -43,11 +42,6 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 			Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 			GeneralPath s = assembleContours(classified, isoDivided);
 			contour = new SimpleGlyph<>(s, threshold);
-			
-//			System.out.println(AggregateUtils.toString(aggregates));
-//			System.out.println(AggregateUtils.toString(isoDivided));
-//			System.out.println(AggregateUtils.toString(classified));
-
 		}
 		
 		public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
@@ -90,34 +84,37 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	     * @param r Start row of the contour
 	     * @param c Start column of the contour
 	     */
-	    private static void stichContour(Aggregates<MC_TYPE> isoData, Aggregates<Boolean> isoDivided, GeneralPath iso, int r, int c) {
-	    	int startRow = r, startCol = c;
+	    private static void stichContour(Aggregates<MC_TYPE> isoData, Aggregates<Boolean> isoDivided, GeneralPath iso, int x, int y) {
+	    	int startX = x, startY = y;
 	    	
 	        SIDE prevSide = SIDE.NONE;
 
 	        // Found an unambiguous iso line at [r][c], so start there.
-	        MC_TYPE curCell = isoData.get(r,c);
-	        Point2D pt = curCell.firstSide(prevSide).nextPoint(r,c);
+	        MC_TYPE startCell = isoData.get(x,y);
+	        Point2D pt = startCell.firstSide(prevSide).nextPoint(x,y);
 	        iso.moveTo(pt.getX(), pt.getY());
 	        
-	        prevSide = curCell.secondSide(prevSide, isoDivided.get(r,c));
+	        prevSide = isoData.get(x,y).secondSide(prevSide, isoDivided.get(x,y));
 
 	        do {
-	        	pt = curCell.secondSide(prevSide, isoDivided.get(r,c)).nextPoint(r,c);
+	        	//Process current cell
+	        	MC_TYPE curCell = isoData.get(x,y);
+	        	pt = curCell.secondSide(prevSide, isoDivided.get(x,y)).nextPoint(x,y);
 	            iso.lineTo(pt.getX(), pt.getY());
-	            SIDE nextSide = curCell.secondSide(prevSide, isoDivided.get(r,c));
+	            SIDE nextSide = curCell.secondSide(prevSide, isoDivided.get(x,y));
+		        isoData.set(x,y, MC_TYPE.empty); // Erase this marching cube line entry
+		        
+		        //Advance for next cell
+		        prevSide = nextSide;
 	            switch (nextSide) {
-		            case BOTTOM: r -= 1; break;
-		            case LEFT: c -= 1; break;
-		            case RIGHT: c += 1; break;
-		            case TOP: r += 1; break;
+		            case LEFT: x -= 1; break;
+		            case RIGHT: x += 1; break;
+		            case BOTTOM: y += 1; break;
+		            case TOP: y -= 1; break;
 		            case NONE: throw new IllegalArgumentException("Encountered side NONE after starting contour line.");
 	            }
-		        isoData.set(r, c, MC_TYPE.empty); // Erase this iso line entry
-
-		        curCell = isoData.get(r,c);
-		        prevSide = nextSide;
-	        } while (r != startRow || c != startCol);
+		        
+	        } while (x != startX || y != startY);
 	        iso.closePath();
 	    }
 	}
@@ -145,12 +142,12 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	public static enum SIDE {
 		NONE, LEFT, RIGHT, BOTTOM, TOP;
 		
-	    public Point2D nextPoint( int r, int c) {
+	    public Point2D nextPoint(int x, int y) {
 	        switch (this) {
-	        	case LEFT: return new Point2D.Double(r, c-1);
-	        	case RIGHT: return new Point2D.Double(r, c+1);
-	            case BOTTOM: return new Point2D.Double(r+1, c);
-	            case TOP: return new Point2D.Double(r-1, c);
+	        	case LEFT: return new Point2D.Double(x-1, y);
+	        	case RIGHT: return new Point2D.Double(x+1, y);
+	            case BOTTOM: return new Point2D.Double(x, y+1);
+	            case TOP: return new Point2D.Double(x, y-1);
 	            default: throw new IllegalArgumentException("No 'nextPoint' defiend for NONE.");
 	        }
 	    }
@@ -181,16 +178,21 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		MC_TYPE(int idx) {this.idx = idx;}
 		
 		public SIDE firstSide(SIDE prev) {
-			 switch (idx) {
-	            case 1: case 3: case 7:
+			 switch (this) {
+			 case ui_l_in: case ui_in: case di_l_out:
+	            //case 1: case 3: case 7:
 	                return SIDE.LEFT;
-	            case 2: case 6: case 14:
+			 case ui_r_in: case r_in: case ui_l_out:
+	            //case 2: case 6: case 14:
 	                return SIDE.BOTTOM;
-	            case 4: case 12: case 13:
+			 case di_r_in: case di_in: case ui_r_out:
+	            //case 4: case 12: case 13:
 	                return SIDE.RIGHT;
-	            case 8: case 9: case 11:
+			 case di_l_in: case l_in: case di_r_out:
+	            //case 8: case 9: case 11:
 	                return SIDE.TOP;
-	            case 5:
+			 	case diag_one:
+	            //case 5:
 	                switch (prev) {
 	                    case LEFT:
 	                        return SIDE.RIGHT;
@@ -199,7 +201,8 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	                    default:
 	                    	throw new RuntimeException("Illegal previous case for current case of " + this.name());
 	                }
-	            case 10:
+			 	case diag_two:
+	            //case 10:
 	                switch (prev) {
 	                    case BOTTOM:
 	                        return SIDE.TOP;
@@ -214,16 +217,21 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		}
 		
 		public SIDE secondSide(SIDE prev, boolean flipped) {
-			switch (idx) {
-            	case 8: case 12: case 14:
-            		return SIDE.LEFT;
-            	case 1: case 9: case 13:
-            		return SIDE.BOTTOM;
-            	case 2: case 3: case 11:
-            		return SIDE.RIGHT;
-            	case 4: case 6: case 7:
-            		return SIDE.TOP;
-            	case 5:
+			switch (this) {
+				case di_l_in: case di_in: case ui_l_out:
+	        	//case 8: case 12: case 14:
+	        		return SIDE.LEFT;
+				case ui_l_in: case l_in: case ui_r_out:
+	          	//case 1: case 9: case 13:
+	          	    return SIDE.BOTTOM;
+				case ui_r_in: case ui_in: case di_r_out:
+	        	//case 2: case 3: case 11:
+	        		return SIDE.RIGHT;
+				case di_r_in: case r_in: case di_l_out:
+	          	//case 4: case 6: case 7:
+          	          return SIDE.TOP;
+	        	case diag_one:
+          	    //case 5:
             		switch (prev) {
                     	case LEFT: 
                     		return flipped ? SIDE.BOTTOM : SIDE.TOP;
@@ -232,7 +240,8 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
                     	default:
 	                    	throw new RuntimeException("Illegal previous case for current case of " + this.name());
             		}
-            	case 10:
+	        	case diag_two:
+            	//case 10:
             		switch (prev) {
                     	case BOTTOM: 
                     		return flipped ? SIDE.RIGHT : SIDE.LEFT;
