@@ -60,7 +60,7 @@ public class ISOContoursTests {
 		source.set(1,1,5);
 		source.set(2,2,5);
 		
-		ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold, 0, threshold-1, source);
+		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(threshold, 0, threshold-1, source);
 		GeneralPath p = contour.contours().shape();
 
 		GeneralPath p2 = (GeneralPath) p.clone();
@@ -84,7 +84,7 @@ public class ISOContoursTests {
 			}
 		}
 		
-		ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold, 0, threshold-1, source);
+		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(threshold, 0, threshold-1, source);
 		GeneralPath p = contour.contours().shape();
 
 		GeneralPath p2 = (GeneralPath) p.clone();
