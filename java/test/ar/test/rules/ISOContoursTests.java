@@ -4,16 +4,12 @@ import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.PathIterator;
-import java.util.Arrays;
 
 import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.aggregates.AggregateUtils;
 import ar.aggregates.FlatAggregates;
 import ar.renderers.ParallelRenderer;
 import ar.rules.ISOContours;
@@ -58,7 +54,27 @@ public class ISOContoursTests {
 	}
 	
 	@Test
-	public void BuildContours() {
+	public void SaddleContour() {
+		int threshold = 3;
+		Aggregates<Integer> source = new FlatAggregates<>(0,0,2,2,0);
+		source.set(0,0,5);
+		source.set(1,1,5);
+		
+		ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold, 0, source);
+		GeneralPath p = contour.contours().shape();
+
+		GeneralPath p2 = (GeneralPath) p.clone();
+		p2.closePath();
+		assertEquals("Unequal bounding after closing.", p.getBounds2D(), p2.getBounds2D());
+		
+		assertTrue(p.contains(new Point(0,0)));
+		assertTrue(p.contains(new Point(1,1)));
+		assertFalse(p.contains(new Point(0,1)));
+		assertFalse(p.contains(new Point(1,0)));
+	}
+	
+	@Test
+	public void SimpleContours() {
 		int threshold = 3;
 		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
 		for (int x=source.lowX()+1; x<source.highX()-2; x++) {
@@ -73,38 +89,17 @@ public class ISOContoursTests {
 		GeneralPath p2 = (GeneralPath) p.clone();
 		p2.closePath();
 		assertEquals("Unequal bounding after closing.", p.getBounds2D(), p2.getBounds2D());
-
-		PathIterator it = p.getPathIterator(new AffineTransform());
-		float[] coords = new float[6]; 
-		while (!it.isDone()) {
-			int type = it.currentSegment(coords);
-			System.out.println(typeString(type) + ":" + deepToString(coords));
-			it.next();
-		}
-
 		
 		for (int x=source.lowX()+2; x<source.highX()-3; x++) {
 			for (int y=source.lowX()+2; y<source.highX()-3; y++) {
 				assertTrue(String.format("Uncontained point at %d,%d", x,y), p.contains(new Point(x,y)));
 			}
 		}
+		assertFalse(p.contains(new Point(0,0)));
+		assertFalse(p.contains(new Point(source.highX()-1, source.highY()-1)));
 	}
 	
-	private static String typeString(int type) {
-		if (type == PathIterator.SEG_CLOSE) {return "close";}
-		if (type == PathIterator.SEG_LINETO) {return "line to";}
-		if (type == PathIterator.SEG_MOVETO) {return "move to";}
-		return "other";
-	}
-	
-	private static String deepToString(float[] coords) {
-		StringBuilder b=new StringBuilder();
-		for(int i=0; i<coords.length; i++) {
-			b.append(coords[i]);
-			b.append(", ");
-		}
-		return b.toString();
-	}
+
 	
 	
 	@Test
