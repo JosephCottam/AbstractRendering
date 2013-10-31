@@ -54,10 +54,11 @@ public class ContourApp {
 
 		final int width = 800;
 		final int height = 800;
+		final int threshold = 20;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
-		final ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(20,0, aggregates);
+		final ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold,0, threshold-1, aggregates);
 		r.transfer(aggregates, contour);
 		
 		JFrame f = new JFrame();

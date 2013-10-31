@@ -4,6 +4,7 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -19,15 +20,17 @@ import ar.renderers.ParallelRenderer;
 public class ISOContours<N extends Number> implements Transfer<N, N> {
 	private final N threshold;
 	private final N empty;
+	private final N pad;
 	
-	public ISOContours(N threshold, N empty) {
+	public ISOContours(N threshold, N empty, N pad) {
 		this.threshold = threshold;
 		this.empty = empty;
+		this.pad=pad;
 	}
 	
 	public N emptyValue() {return empty;}
 	public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-		return new Specialized<>(threshold, empty, aggregates);
+		return new Specialized<>(threshold, empty, pad, aggregates);
 	}
 	
 	
@@ -35,9 +38,11 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		private final Renderer renderer = new ParallelRenderer();
 		private final Glyph<GeneralPath, N> contour;
 
-		public Specialized(N threshold, N empty, Aggregates<? extends N> aggregates) {
-			super(threshold, empty);
-
+		public Specialized(N threshold, N empty, N pad, Aggregates<? extends N> aggregates) {
+			super(threshold, empty, pad);
+			
+			//Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty); 
+			
 			Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow<>(threshold));
 			Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 			GeneralPath s = assembleContours(classified, isoDivided);
@@ -289,5 +294,44 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 			if (aggregates.get(x,y)) {code = code | UP_INDEX_RIGHT;}
 			return MC_TYPE.get(code);
 		}
+	}
+	
+	/**Adds a row and column to each side of an aggregate set filled with a specific value.  
+	 * 
+	 * Only the original range remains set-able.**/
+	public static final class PadAggregates<A> implements Aggregates<A> {
+		private final Aggregates<? extends A> base;
+		private final A pad;
+		
+		public PadAggregates(Aggregates<? extends A> base, A pad) {
+			this.base = base;
+			this.pad =pad;
+		}
+		
+		@Override
+		public Iterator<A> iterator() {throw new UnsupportedOperationException();}
+
+		@Override
+		public A get(int x, int y) {
+			if ((x >= base.lowX() && x < base.highX())
+					&& (y >= base.highY() && y < base.highY())) {
+				return base.get(x,y); //Its inside
+			} else if ((x == base.lowX()-1 || x== base.highX()+1) 
+					&& (y >= base.lowY() && y < base.highY())) {
+				return pad; //Its immediate above or below
+			} else if ((y == base.lowY()-1 || y == base.highY()+1) 
+					&& (x >= base.lowX() && x < base.lowX())) {
+				return pad; //Its immediately left or right
+			} else {
+				return base.defaultValue();
+			}
+		}
+
+		public void set(int x, int y, A val) {throw new UnsupportedOperationException();}
+		public A defaultValue() {return base.defaultValue();}
+		public int lowX() {return base.lowX()-1;}
+		public int lowY() {return base.lowY()-1;}
+		public int highX() {return base.highX()+1;}
+		public int highY() {return base.highY()+1;}		
 	}
 }
