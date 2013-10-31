@@ -170,4 +170,34 @@ public class ISOContoursTests {
 			}
 		}
 	}
+	
+	@Test
+	public void PadAggregates() {
+		int pad = 3;
+		Aggregates<Integer> base = new FlatAggregates<>(0,0,10,10,5);
+		Aggregates<Integer> padded = new ISOContours.PadAggregates<Integer>(base, pad);
+		
+		assertThat(padded.lowX(), is(base.lowX()-1));
+		assertThat(padded.lowY(), is(base.lowY()-1));
+		assertThat(padded.highX(), is(base.highX()+1));
+		assertThat(padded.highY(), is(base.highY()+1));
+		
+		for (int x=base.lowX(); x<base.highX(); x++) {
+			for (int y=base.lowY(); y<base.highY(); y++) {
+				assertThat(padded.get(x+1, y+1), is(base.get(x, y)));
+			}
+		}
+		for (int y=padded.lowY(); y<padded.highY(); y++) {
+			assertThat("Error at y of " + y, padded.get(base.lowX()-1,y), is(pad));
+			assertThat("Error at y of " + y, padded.get(base.highX()+1,y), is(pad));
+		}
+
+		
+		for (int x=padded.lowX(); x<padded.highX(); x++) {
+			assertThat("Error at x of " + x, padded.get(x,base.lowY()-1), is(pad));
+			assertThat("Error at x of " + x, padded.get(x,base.highY()+1), is(pad));
+		}
+		
+		
+	}
 }

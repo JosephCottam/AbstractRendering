@@ -11,6 +11,7 @@ import ar.Aggregates;
 import ar.Glyph;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SimpleGlyph;
 import ar.renderers.ParallelRenderer;
 
@@ -41,9 +42,9 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		public Specialized(N threshold, N empty, N pad, Aggregates<? extends N> aggregates) {
 			super(threshold, empty, pad);
 			
-			//Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty); 
+			Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty); 
 			
-			Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow<>(threshold));
+			Aggregates<Boolean> isoDivided = renderer.transfer(padAggs, new ISOBelow<>(threshold));
 			Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 			GeneralPath s = assembleContours(classified, isoDivided);
 			contour = new SimpleGlyph<>(s, threshold);
@@ -314,13 +315,13 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		@Override
 		public A get(int x, int y) {
 			if ((x >= base.lowX() && x < base.highX())
-					&& (y >= base.highY() && y < base.highY())) {
+					&& (y >= base.lowY() && y < base.highY())) {
 				return base.get(x,y); //Its inside
 			} else if ((x == base.lowX()-1 || x== base.highX()+1) 
-					&& (y >= base.lowY() && y < base.highY())) {
+					&& (y >= base.lowY()-1 && y < base.highY()+1)) {
 				return pad; //Its immediate above or below
 			} else if ((y == base.lowY()-1 || y == base.highY()+1) 
-					&& (x >= base.lowX() && x < base.lowX())) {
+					&& (x >= base.lowX()-1 && x < base.highX()+1)) {
 				return pad; //Its immediately left or right
 			} else {
 				return base.defaultValue();
