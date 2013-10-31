@@ -59,6 +59,7 @@ public class MemMapEncoder {
 			else if (t=='d') {return TYPE.DOUBLE;} 
 			else if (t=='f') {return TYPE.FLOAT;}
 			else if (t=='b') {return TYPE.BYTE;}
+			else if (t=='c') {return TYPE.CHAR;}
 			else if (t=='x') {return TYPE.X;}
 			else {throw new RuntimeException(String.format("Unknown type indicator '%s'", t));}
 		}
@@ -298,6 +299,7 @@ public class MemMapEncoder {
 		byte[] rslt = new byte[recordLength];
 		int offset=0;
 		for (int i=0; i<nums.length;i++) {
+			if (types[i] == TYPE.CHAR) {continue;}
 			byte[] nb = encode(nums[i], types[i]);
 			System.arraycopy(nb, 0, rslt, offset, nb.length);
 			offset+=nb.length;
