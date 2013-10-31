@@ -90,7 +90,7 @@ public class BigFileByteBuffer {
 	public int getInt(long pos) {return ensure(pos, 4).getInt(rawOffset(pos));}
 	public long getLong(long pos) {return ensure(pos, 8).getLong(rawOffset(pos));}
 	public char getChar(long pos) {return ensure(pos, 2).getChar(rawOffset(pos));}
-	public double getFloat(long pos) {return ensure(pos, 4).getFloat(rawOffset(pos));}
+	public float getFloat(long pos) {return ensure(pos, 4).getFloat(rawOffset(pos));}
 	public double getDouble(long pos) {return ensure(pos, 8).getDouble(rawOffset(pos));}
 	
 	public byte get() {return ensure(1).get();}
