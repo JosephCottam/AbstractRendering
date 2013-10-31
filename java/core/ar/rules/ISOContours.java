@@ -14,7 +14,7 @@ import ar.glyphsets.SimpleGlyph;
 import ar.renderers.ParallelRenderer;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
-//Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares/IsoCell.java
+//Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares
 
 public class ISOContours<N extends Number> implements Transfer<N, N> {
 	private final N threshold;
@@ -92,17 +92,19 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	        // Found an unambiguous iso line at [r][c], so start there.
 	        MC_TYPE startCell = isoData.get(x,y);
 	        Point2D pt = startCell.firstSide(prevSide).nextPoint(x,y);
-	        iso.moveTo(pt.getX(), pt.getY());
-	        
+	        iso.moveTo(pt.getX(), pt.getY());	        
 	        prevSide = isoData.get(x,y).secondSide(prevSide, isoDivided.get(x,y));
+
+	        //System.out.printf("-------------------\n);
 
 	        do {
 	        	//Process current cell
 	        	MC_TYPE curCell = isoData.get(x,y);
 	        	pt = curCell.secondSide(prevSide, isoDivided.get(x,y)).nextPoint(x,y);
+	        	//System.out.printf("%d,%d: %s\n",x,y,curCell.secondSide(prevSide, isoDivided.get(x,y)));
 	            iso.lineTo(pt.getX(), pt.getY());
 	            SIDE nextSide = curCell.secondSide(prevSide, isoDivided.get(x,y));
-		        isoData.set(x,y, MC_TYPE.empty); // Erase this marching cube line entry
+		        isoData.set(x,y, curCell.clearWith()); // Erase this marching cube line entry
 		        
 		        //Advance for next cell
 		        prevSide = nextSide;
@@ -171,11 +173,18 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 		l_in(0b1001),
 		ui_in(0b0011),
 		r_in(0b0110),
-		diag_one(0b1010),  //Ambiguous case
-		diag_two(0b0101);   //Ambiguous case
+		diag_two(0b1010),  //Ambiguous case
+		diag_one(0b0101);   //Ambiguous case
 		
 		public final int idx;
 		MC_TYPE(int idx) {this.idx = idx;}
+		
+		public MC_TYPE clearWith() {
+			switch (this) {
+				case empty: case surround: case diag_two: case diag_one: return this;
+				default: return MC_TYPE.empty;
+			}
+		}
 		
 		public SIDE firstSide(SIDE prev) {
 			 switch (this) {
@@ -199,7 +208,7 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	                    case RIGHT:
 	                        return SIDE.LEFT;
 	                    default:
-	                    	throw new RuntimeException("Illegal previous case for current case of " + this.name());
+	                    	throw new RuntimeException(String.format("Illegal previous (%s) case for current case (%s)", prev.name(), this.name()));
 	                }
 			 	case diag_two:
 	            //case 10:
@@ -209,7 +218,7 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
 	                    case TOP:
 	                        return SIDE.BOTTOM;
 	                    default:
-	                    	throw new RuntimeException("Illegal previous case for current case of " + this.name());
+	                    	throw new RuntimeException(String.format("Illegal previous (%s) case for current case (%s)", prev.name(), this.name()));
 	                }
 	            default:
                 	throw new RuntimeException("Cannot determine side for case of " + this.name());
@@ -238,7 +247,7 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
                     	case RIGHT: 
                     		return flipped ? SIDE.TOP : SIDE.BOTTOM;
                     	default:
-	                    	throw new RuntimeException("Illegal previous case for current case of " + this.name());
+	                    	throw new RuntimeException(String.format("Illegal previous (%s) case for current case (%s)", prev.name(), this.name()));
             		}
 	        	case diag_two:
             	//case 10:
@@ -248,9 +257,9 @@ public class ISOContours<N extends Number> implements Transfer<N, N> {
                     	case TOP: 
                     		return flipped ? SIDE.LEFT : SIDE.RIGHT;
                     	default:
-                    		throw new RuntimeException("Illegal previous case for current case of " + this.name());
+                    		throw new RuntimeException(String.format("Illegal previous (%s) case for current case (%s)", prev.name(), this.name()));
             		}
-            	default:
+	        	default:
             		throw new RuntimeException("Cannot determine side for case of " + this.name());
 			}
 		}

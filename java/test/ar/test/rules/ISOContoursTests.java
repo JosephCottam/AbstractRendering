@@ -34,8 +34,8 @@ public class ISOContoursTests {
 		
 		assertThat("Emtpy",       classifier.at(1, 1, make(false,false,false,false)), is(MC_TYPE.empty));
 		assertThat("surround",     classifier.at(1, 1, make(true,true,true,true)), is(MC_TYPE.surround));
-		assertThat("diag one", classifier.at(1, 1, make(true,false,false,true)), is(MC_TYPE.diag_one));
-		assertThat("diag two", classifier.at(1, 1, make(false,true,true,false)), is(MC_TYPE.diag_two));
+		assertThat("diag two", classifier.at(1, 1, make(true,false,false,true)), is(MC_TYPE.diag_two));
+		assertThat("diag one", classifier.at(1, 1, make(false,true,true,false)), is(MC_TYPE.diag_one));
 
 		assertThat(classifier.at(1, 1, make(false,false,true,true)), is(MC_TYPE.ui_in));
 		assertThat(classifier.at(1, 1, make(true,true,false,false)), is(MC_TYPE.di_in));
@@ -56,9 +56,9 @@ public class ISOContoursTests {
 	@Test
 	public void SaddleContour() {
 		int threshold = 3;
-		Aggregates<Integer> source = new FlatAggregates<>(0,0,2,2,0);
-		source.set(0,0,5);
+		Aggregates<Integer> source = new FlatAggregates<>(0,0,4,4,0);
 		source.set(1,1,5);
+		source.set(2,2,5);
 		
 		ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(threshold, 0, source);
 		GeneralPath p = contour.contours().shape();
@@ -67,10 +67,11 @@ public class ISOContoursTests {
 		p2.closePath();
 		assertEquals("Unequal bounding after closing.", p.getBounds2D(), p2.getBounds2D());
 		
-		assertTrue(p.contains(new Point(0,0)));
-		assertTrue(p.contains(new Point(1,1)));
-		assertFalse(p.contains(new Point(0,1)));
-		assertFalse(p.contains(new Point(1,0)));
+		assertFalse(p.contains(new Point(0,0)));
+		assertTrue(p.contains(new Point(2,2)));
+		assertFalse(p.contains(new Point(2,3)));
+		assertFalse(p.contains(new Point(3,2)));
+		assertFalse(p.contains(new Point(3,3)));
 	}
 	
 	@Test

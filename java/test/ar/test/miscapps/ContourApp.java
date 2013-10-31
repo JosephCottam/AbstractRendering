@@ -1,4 +1,4 @@
-package ar;
+package ar.test.miscapps;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -13,6 +13,11 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import ar.Aggregates;
+import ar.Aggregator;
+import ar.Glyphset;
+import ar.Renderer;
+import ar.Selector;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelRenderer;
@@ -47,12 +52,12 @@ public class ContourApp {
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Rectangle2D> selector = TouchesPixel.make(dataset);
 
-		final int width = 500;
-		final int height = 500;
+		final int width = 800;
+		final int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
-		final ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(30,0, aggregates);
+		final ISOContours.Specialized<Integer> contour = new ISOContours.Specialized<Integer>(20,0, aggregates);
 		r.transfer(aggregates, contour);
 		
 		JFrame f = new JFrame();
