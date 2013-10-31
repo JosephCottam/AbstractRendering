@@ -1,4 +1,4 @@
-package ar.test.miscapps;
+package ar.test.testApps;
 
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;

@@ -1,4 +1,4 @@
-package ar.test.miscapps;
+package ar.test.testApps;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
