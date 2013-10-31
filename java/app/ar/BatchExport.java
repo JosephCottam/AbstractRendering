@@ -19,23 +19,18 @@ import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
+import static ar.util.Util.argKey;
 
 @SuppressWarnings("unused")
 public class BatchExport {
-	private static String arg(String[] args, String flag, String def) {
-		flag = flag.toUpperCase();
-		for (int i=0; i<args.length; i++) {
-			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
-		}
-		return def;
-	}
+	
 	
 	public static void main(String[] args) throws Exception {
-		String[] widths = arg(args, "-width", "400").split(",");
-		String[] heights = arg(args, "-height", "400").split(",");
-		String source = arg(args, "-data", "../data/circlepoints.hbin");
-		String outPattern = arg(args, "-out", "./result%s.csv");
-		double size = Double.parseDouble(arg(args, "-size", ".1"));
+		String[] widths = argKey(args, "-width", "400").split(",");
+		String[] heights = argKey(args, "-height", "400").split(",");
+		String source = argKey(args, "-data", "../data/circlepoints.hbin");
+		String outPattern = argKey(args, "-out", "./result%s.csv");
+		double size = Double.parseDouble(argKey(args, "-size", ".1"));
 		
 		if (widths.length != heights.length) {
 			System.err.println("Must provide same number of widths as heights\n"); 

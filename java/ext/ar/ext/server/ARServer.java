@@ -39,9 +39,9 @@ import ar.Glyphset;
 
 
 public class ARServer extends NanoHTTPD {
-	private static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
-	private static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
-	private static Map<String, Glyphset<?,?>> DATASETS = new HashMap<String, Glyphset<?,?>>();
+	public static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
+	public static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
+	public static Map<String, Glyphset<?,?>> DATASETS = new HashMap<String, Glyphset<?,?>>();
 	
 	static {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -196,18 +196,9 @@ public class ARServer extends NanoHTTPD {
 	/**@return collection of known transfer names**/
 	public Collection<String> getTransfers() {return TRANSFERS.keySet();}
 	
-	
-	private static String arg(String[] args, String flag, String def) {
-		flag = flag.toUpperCase();
-		for (int i=0; i<args.length; i++) {
-			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
-		}
-		return def;
-	}
-	
 	public static void main(String[] args) throws Exception {
-		String host = arg(args, "-host", "localhost");
-		int port = Integer.parseInt(arg(args, "-port", "8080"));
+		String host = ar.util.Util.argKey(args, "-host", "localhost");
+		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", "8080"));
 		ARServer server = new ARServer(host, port);
 		
 		server.start();

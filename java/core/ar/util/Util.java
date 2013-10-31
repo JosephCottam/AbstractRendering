@@ -32,6 +32,16 @@ public final class Util {
 
 	private Util() {}
 	
+	/**Lookup a key/value pair in an argument list.**/
+	public static String argKey(String[] args, String flag, String def) {
+		flag = flag.toUpperCase();
+		for (int i=0; i<args.length; i++) {
+			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
+		}
+		return def;
+	}
+	
+	
 	/**Convert from the types understood by the memory mappers to the types understood by this system.**/
 	public static final Converter.TYPE[] transcodeTypes(TYPE... types) {
 		Converter.TYPE[] newTypes = new Converter.TYPE[types.length];
