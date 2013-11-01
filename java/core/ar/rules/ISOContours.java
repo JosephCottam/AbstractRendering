@@ -3,10 +3,13 @@ package ar.rules;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -20,9 +23,8 @@ import ar.aggregates.Iterator2D;
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
 //Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares
 
-public abstract class ISOContours<N> {
-	
-	public abstract Collection<Glyph<Shape, ? extends N>> contours();
+public interface ISOContours<N> {
+	public Collection<? extends Glyph<Shape, N>> contours();
 
 	public static class SpacedContours<N extends Number> implements Transfer<N,N> {
 
@@ -73,9 +75,9 @@ public abstract class ISOContours<N> {
 		}
 
 
-		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N> { 
+		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
 			private final Renderer renderer = new ParallelRenderer();
-			private final Glyph<GeneralPath, N> contour;
+			private final List<? extends Glyph<Shape, N>> contour;
 
 			public Specialized(N threshold, N empty, N pad, Aggregates<? extends N> aggregates) {
 				super(threshold, empty, pad);
@@ -84,89 +86,89 @@ public abstract class ISOContours<N> {
 
 				Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow<>(threshold));
 				Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
-				GeneralPath s = assembleContours(classified, isoDivided);
-				contour = new SimpleGlyph<>(s, threshold);
+				Shape s = Assembler.assembleContours(classified, isoDivided);
+				contour = Arrays.asList(new SimpleGlyph<>(s, threshold));
 			}
 
 			//TODO: Convert to not being a pass-through.  Instead returns an indicator of the iso contour containing the point...
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
-			public Glyph<GeneralPath, N> contours() {return contour;}
+			public List<? extends Glyph<Shape, N>> contours() {return contour;}
 		}
 	}
 
-	/** Build a single path from all of the contour parts.  
-	 * 
-	 * May be disjoint and have holes (thus GeneralPath).
-	 * 
-	 * @param classified The line-segment classifiers
-	 * @param isoDivided Original classification, used to disambiguate saddle conditions
-	 * @return
-	 */
-	private static final GeneralPath assembleContours(Aggregates<MC_TYPE> classified, Aggregates<Boolean> isoDivided) {
-		GeneralPath isoPath = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
-
-		//Find an unambiguous case of an actual line, follow it around and build the line.  
-		//Stitching sets the line segments that have been "consumed" to MC_TYPE.empty, so segments are only processed once.
-		for (int x = classified.lowX(); x < classified.highX(); x++) {
-			for (int y = classified.lowY(); y < classified.highY(); y++) {
-				MC_TYPE type = classified.get(x, y);
-				if (type != MC_TYPE.empty 
-						&& type != MC_TYPE.surround
-						&& type != MC_TYPE.diag_one
-						&& type != MC_TYPE.diag_two) {
-					stichContour(classified, isoDivided, isoPath, x, y);
+	
+	public static final class Assembler {
+		/** Build a single path from all of the contour parts.  
+		 * 
+		 * May be disjoint and have holes (thus GeneralPath).
+		 * 
+		 * @param classified The line-segment classifiers
+		 * @param isoDivided Original classification, used to disambiguate saddle conditions
+		 * @return
+		 */
+		public static final GeneralPath assembleContours(Aggregates<MC_TYPE> classified, Aggregates<Boolean> isoDivided) {
+			GeneralPath isoPath = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
+	
+			//Find an unambiguous case of an actual line, follow it around and build the line.  
+			//Stitching sets the line segments that have been "consumed" to MC_TYPE.empty, so segments are only processed once.
+			for (int x = classified.lowX(); x < classified.highX(); x++) {
+				for (int y = classified.lowY(); y < classified.highY(); y++) {
+					MC_TYPE type = classified.get(x, y);
+					if (type != MC_TYPE.empty 
+							&& type != MC_TYPE.surround
+							&& type != MC_TYPE.diag_one
+							&& type != MC_TYPE.diag_two) {
+						stichContour(classified, isoDivided, isoPath, x, y);
+					}
 				}
 			}
+			return isoPath;
 		}
-		return isoPath;
+
+		/**An iso level can be made of multiple regions with holes in them.
+		 * This builds one path (into the passed GeneralPath) that represents one
+		 * connected contour.
+		 *
+		 * @param isoData Marching-cubes classification at each cell
+		 * @param isoDivided The boolean above/below classification for each cell (to disambiguate saddles)
+		 * @param iso The path to build into
+		 */
+		public static void stichContour(Aggregates<MC_TYPE> isoData, Aggregates<Boolean> isoDivided, GeneralPath iso, int startX, int startY) {
+			int x=startX, y=startY;
+	
+			SIDE prevSide = SIDE.NONE;
+	
+			// Found an unambiguous iso line at [r][c], so start there.
+			MC_TYPE startCell = isoData.get(x,y);
+			Point2D nextPoint = startCell.firstSide(prevSide).nextPoint(x,y);
+			iso.moveTo(nextPoint.getX(), nextPoint.getY());	        
+			prevSide = isoData.get(x,y).secondSide(prevSide, isoDivided.get(x,y));
+	
+			//System.out.printf("-------------------\n);
+	
+			do {
+				//Process current cell
+				MC_TYPE curCell = isoData.get(x,y);
+				nextPoint = curCell.secondSide(prevSide, isoDivided.get(x,y)).nextPoint(x,y);
+				//System.out.printf("%d,%d: %s\n",x,y,curCell.secondSide(prevSide, isoDivided.get(x,y)));
+				iso.lineTo(nextPoint.getX(), nextPoint.getY());
+				SIDE nextSide = curCell.secondSide(prevSide, isoDivided.get(x,y));
+				isoData.set(x,y, curCell.clearWith()); // Erase this marching cube line entry
+	
+				//Advance for next cell
+				prevSide = nextSide;
+				switch (nextSide) {
+					case LEFT: x -= 1; break;
+					case RIGHT: x += 1; break;
+					case BOTTOM: y += 1; break;
+					case TOP: y -= 1; break;
+					case NONE: throw new IllegalArgumentException("Encountered side NONE after starting contour line.");
+				}
+	
+			} while (x != startX || y != startY);
+			iso.closePath();
+		}
 	}
-
-	/**An iso level can be made of multiple regions with holes in them.
-	 * This builds one path (into the passed GeneralPath) that represents one
-	 * connected contour.
-	 *
-	 * @param isoData Marching-cubes classification at each cell
-	 * @param isoDivided The boolean above/below classification for each cell (to disambiguate saddles)
-	 * @param iso The path to build into
-	 * @param r Start row of the contour
-	 * @param c Start column of the contour
-	 */
-	private static void stichContour(Aggregates<MC_TYPE> isoData, Aggregates<Boolean> isoDivided, GeneralPath iso, int x, int y) {
-		int startX = x, startY = y;
-
-		SIDE prevSide = SIDE.NONE;
-
-		// Found an unambiguous iso line at [r][c], so start there.
-		MC_TYPE startCell = isoData.get(x,y);
-		Point2D nextPoint = startCell.firstSide(prevSide).nextPoint(x,y);
-		iso.moveTo(nextPoint.getX(), nextPoint.getY());	        
-		prevSide = isoData.get(x,y).secondSide(prevSide, isoDivided.get(x,y));
-
-		//System.out.printf("-------------------\n);
-
-		do {
-			//Process current cell
-			MC_TYPE curCell = isoData.get(x,y);
-			nextPoint = curCell.secondSide(prevSide, isoDivided.get(x,y)).nextPoint(x,y);
-			//System.out.printf("%d,%d: %s\n",x,y,curCell.secondSide(prevSide, isoDivided.get(x,y)));
-			iso.lineTo(nextPoint.getX(), nextPoint.getY());
-			SIDE nextSide = curCell.secondSide(prevSide, isoDivided.get(x,y));
-			isoData.set(x,y, curCell.clearWith()); // Erase this marching cube line entry
-
-			//Advance for next cell
-			prevSide = nextSide;
-			switch (nextSide) {
-				case LEFT: x -= 1; break;
-				case RIGHT: x += 1; break;
-				case BOTTOM: y += 1; break;
-				case TOP: y -= 1; break;
-				case NONE: throw new IllegalArgumentException("Encountered side NONE after starting contour line.");
-			}
-
-		} while (x != startX || y != startY);
-		iso.closePath();
-	}
-
 	/**Classifies each cell as above or below the given ISO value
 	 *TODO: Are doubles enough?  Should there be number-type-specific implementations?
 	 **/
