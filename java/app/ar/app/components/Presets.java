@@ -179,16 +179,6 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class KivaRects implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
-		public Glyphset<?,?> glyphset() {return KIVA_ADJ_RECTS;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
-		public String name() {return "Kiva: HDAlpha (Rectangles)";}
-		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
-	}
-	
 	public static class Kiva implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
@@ -212,7 +202,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USPopMinAlpha implements Preset {
+	public static class USCensusPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -229,7 +219,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	}
 	
 
-	public static class USPop10Pct implements Preset {
+	public static class USCensusPop10Pct implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -245,7 +235,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USPopulation implements Preset {
+	public static class USCensusPopulation implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -261,11 +251,11 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USPopulationWeave implements Preset {
+	public static class USCensusPopulationWeave implements Preset {
 		HasViewTransform transformProvider = null;
 		private final List<Shape> shapes;
 		
-		public USPopulationWeave() {
+		public USCensusPopulationWeave() {
 			try {
 				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
 				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
@@ -304,7 +294,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 
 	
-	public static class USRaces implements Preset {
+	public static class USCensusRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -331,7 +321,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	}
 	
 
-	public static class USRacesLift implements Preset {
+	public static class USCensusRacesLift implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -359,16 +349,32 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
+	
+
+	public static class USPopulation implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+					return new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255));
+		}
+		public String name() {return "US Synthetic Population";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+	
 	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
-	private static final Glyphset<Rectangle2D, Color> KIVA_ADJ_RECTS; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
+	private static final Glyphset<Point2D, Character> CENSUS_SYN_PEOPLE;
+	
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
-	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
+	private static String CENSUS_TRACTS = "../data/2010Census_RaceTract.hbin";
+	private static String CENSUS_SYN_PEOPLE_BIN = "../data/2010Census_RacePersonPoints.hbin";
 	
 	static {
 		//Glyphset<Rectangle2D, Color> boost_temp = null;
@@ -386,14 +392,25 @@ public class Presets extends JPanel implements HasViewTransform {
 		
 		Glyphset<Point2D, CoC<String>> census_temp = null;
 		try {census_temp = GlyphsetUtils.memMap(
-				"US Census", CENSUS, 
+				"US Census Tracts", CENSUS_TRACTS, 
 				new Indexed.ToPoint(true, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS_TRACTS);
 		}
 		CENSUS_MM = census_temp;
+		
+		Glyphset<Point2D, Character> census_temp2 = null;
+		try {census_temp2 = GlyphsetUtils.memMap(
+				"US Census Synthetic People", CENSUS_SYN_PEOPLE_BIN, 
+				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToValue<Indexed,Character>(2),
+				1, null);
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS_TRACTS);
+		}
+		CENSUS_SYN_PEOPLE = census_temp2;
 
 		
 		Glyphset<Rectangle2D, Color> circle_temp = null;
@@ -413,18 +430,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		} catch (Exception e) {
 			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
-		KIVA_ADJ = kiva_temp;
-		
-		Glyphset<Rectangle2D, Color> kiva_temp2 = null;
-		try {kiva_temp2 = GlyphsetUtils.memMap(
-						"Kiva", KIVA_BIN, 
-						new Indexed.ToRect(Double.MIN_VALUE, Double.MIN_VALUE, false, 0, 1),
-						new Valuer.Constant<Indexed, Color>(Color.RED), 
-						1, null);
-		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
-		}
-		KIVA_ADJ_RECTS = kiva_temp2;
+		KIVA_ADJ = kiva_temp;		
 	}
 	
 	

@@ -52,13 +52,13 @@ public class Utils {
 				aggs.set(x, y, x);
 			}
 		}
-		Util.Stats s1 = Util.stats(aggs, false);
-		Util.Stats s2 = Util.stats(aggs, true);
+		Util.Stats<Integer> s1 = Util.stats(aggs, false);
+		Util.Stats<Integer> s2 = Util.stats(aggs, true);
 
-		assertThat(s1.max, is((double) aggs.highX()-1));
-		assertThat(s2.max, is((double) aggs.highX()-1));
-		assertThat(s1.min, is((double) 0));
-		assertThat(s2.min, is((double) 1));
+		assertThat(s1.max.doubleValue(), is((double) aggs.highX()-1));
+		assertThat(s2.max.doubleValue(), is((double) aggs.highX()-1));
+		assertThat(s1.min.doubleValue(), is((double) 0));
+		assertThat(s2.min.doubleValue(), is((double) 1));
 	}
 	
 }

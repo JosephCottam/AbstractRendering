@@ -262,18 +262,19 @@ public final class Util {
 	 * NaN's are skipped.
 	 * 
 	 * **/
-	public static Stats stats(Aggregates<? extends Number> aggregates, boolean ignoreZeros) {
+	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreZeros) {
 		//Single-pass std. dev: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods 
-		double count=0;
-		double min = Double.POSITIVE_INFINITY, max=Double.NEGATIVE_INFINITY;
+		long count=0;
+		N min = null;
+		N max = null;
 		double sum=0;
 
-		for (Number n: aggregates) {
+		for (N n: aggregates) {
 			double v = n.doubleValue();
 			if (ignoreZeros && v == 0) {continue;}
 			if (n.doubleValue() == Double.NaN) {continue;}
-			if (min > v) {min = v;}
-			if (max < v) {max = v;}
+			if (min == null || min.doubleValue() > v) {min = n;}
+			if (max == null || max.doubleValue() < v) {max = n;}
 			sum += v;
 			count++;
 		}
@@ -286,18 +287,19 @@ public final class Util {
 			acc = Math.pow((v-mean),2);
 		}
 		double stdev = Math.sqrt(acc/count);
-		return new Stats(min,max,mean,stdev);
+		
+		return new Stats<>(min,max,mean,stdev);
 	}
 
 
 	/**Wrapper class for statistical values derived from a common source.**/
 	@SuppressWarnings("javadoc")
-	public static final class Stats {
-		public final double min;
-		public final double max;
+	public static final class Stats<N extends Number> {
+		public final N min;
+		public final N max;
 		public final double mean;
 		public final double stdev;
-		public Stats(double min, double max, double mean, double stdev) {
+		public Stats(N min, N max, double mean, double stdev) {
 			this.min = min; 
 			this.max=max;
 			this.mean=mean;

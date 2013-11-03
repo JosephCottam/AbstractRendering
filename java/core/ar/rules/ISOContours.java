@@ -3,7 +3,6 @@ package ar.rules;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -18,74 +17,136 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.SimpleGlyph;
 import ar.renderers.ParallelRenderer;
+import ar.util.Util;
 import ar.aggregates.Iterator2D;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
 //Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares
 
+//TODO: have 'at' return the iso-contour-value at the location.  Need to resolve inside/outsideness
 public interface ISOContours<N> {
+	static final Renderer RENDERER = new ParallelRenderer();
+
 	public Collection<? extends Glyph<Shape, N>> contours();
 
 	public static class SpacedContours<N extends Number> implements Transfer<N,N> {
+		final N empty;
+		final double spacing;
+		
+		public SpacedContours(N empty, double spacing) {
+			this.empty = empty;
+			this.spacing = spacing;
+		}
+		
+		public N emptyValue() {return empty;}
 
 		@Override
-		public N emptyValue() {
-			// TODO Auto-generated method stub
-			return null;
+		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
+			return new Specialized<>(empty, spacing, aggregates);
 		}
+		
+		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
+			List<Glyph<Shape, N>> contours;
+			
+			public Specialized(N empty, double spacing, Aggregates<? extends N> aggregates) {
+				super(empty, spacing);
+				Util.Stats<N> stats = Util.stats(aggregates, false);
+				
+				int i=0;
+				N threshold;
+				do {
+					threshold = AddTo.ex(stats.min, i*spacing);
+					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
+					this.contours.addAll(t.contours());
+					i++;
+				} while (threshold.doubleValue() < stats.max.doubleValue());		
+			}
 
-		@Override
-		public ar.Transfer.Specialized<N, N> specialize(
-				Aggregates<? extends N> aggregates) {
-			// TODO Auto-generated method stub
-			return null;
+			@Override
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
+
+
+			@Override
+			public Collection<? extends Glyph<Shape, N>> contours() {return contours;}
 		}
+		
 	}
 
 	public static class NContours<N extends Number> implements Transfer<N,N> {
-
-		@Override
-		public N emptyValue() {
-			// TODO Auto-generated method stub
-			return null;
+		final N empty;
+		final int n;
+		public NContours(N empty, int n) {
+			this.empty = empty;
+			this.n = n;
 		}
+		public N emptyValue() {return empty;}
 
 		@Override
-		public ar.Transfer.Specialized<N, N> specialize(
-				Aggregates<? extends N> aggregates) {
-			// TODO Auto-generated method stub
-			return null;
+		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {return new NContours.Specialized<>(empty, n, aggregates);}
+		
+		public static final class Specialized<N extends Number> extends NContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
+			List<Glyph<Shape, N>> contours;
+			
+			public Specialized(N empty, int n, Aggregates<? extends N> aggregates) {
+				super(empty, n);
+				Util.Stats<N> stats = Util.stats(aggregates, false);
+				
+				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
+				for (int i=0;i<n;i++) {
+					N threshold = AddTo.ex(stats.min, (step*i));
+					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
+					this.contours.addAll(t.contours());
+				}				
+			}
+
+			@Override
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
+
+
+			@Override
+			public Collection<? extends Glyph<Shape, N>> contours() {return contours;}
 		}
 	}
+	
+	
+	public static final class AddTo {
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> N ex(N val, double more) {
+			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
+			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+more);}
+			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
+			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+more));}
+			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
+			throw new IllegalArgumentException("Cannot subtract from " + val.getClass().getName());
+		}
+	}
+
+	
 	
 	public static class Single<N extends Number> implements Transfer<N, N> {
 		private final N threshold;
 		private final N empty;
-		private final N pad;
 
-		public Single(N threshold, N empty, N pad) {
+		public Single(N empty, N threshold) {
 			this.threshold = threshold;
 			this.empty = empty;
-			this.pad=pad;
 		}
 
 		public N emptyValue() {return empty;}
 		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(threshold, empty, pad, aggregates);
+			return new Specialized<>(empty, threshold, aggregates);
 		}
 
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
-			private final Renderer renderer = new ParallelRenderer();
 			private final List<? extends Glyph<Shape, N>> contour;
 
-			public Specialized(N threshold, N empty, N pad, Aggregates<? extends N> aggregates) {
-				super(threshold, empty, pad);
+			public Specialized(N empty, N threshold, Aggregates<? extends N> aggregates) {
+				super(empty, threshold);
+				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty);  //TODO: Can we pad with empty?  
 
-				//Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty); 
-
-				Aggregates<Boolean> isoDivided = renderer.transfer(aggregates, new ISOBelow<>(threshold));
-				Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
+				Aggregates<Boolean> isoDivided = RENDERER.transfer(padAggs, new ISOBelow<>(threshold));
+				Aggregates<MC_TYPE> classified = RENDERER.transfer(isoDivided, new MCClassifier());
 				Shape s = Assembler.assembleContours(classified, isoDivided);
 				contour = Arrays.asList(new SimpleGlyph<>(s, threshold));
 			}
@@ -95,7 +156,6 @@ public interface ISOContours<N> {
 			public List<? extends Glyph<Shape, N>> contours() {return contour;}
 		}
 	}
-
 	
 	public static final class Assembler {
 		/** Build a single path from all of the contour parts.  
