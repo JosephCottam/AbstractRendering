@@ -212,6 +212,19 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
+	public static class WikipediaAdj implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return WIKIPEDIA;}
+		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
+		public String name() {return "Wikipedia Adjacency (BFS Error layout): HDAlpha";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {
+			return glyphset() != null;
+		}
+	}
+	
+	
 	public static class USPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
@@ -364,11 +377,13 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static final Glyphset<Rectangle2D, Color> KIVA_ADJ_RECTS; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
+	private static final Glyphset<Point2D, Color> WIKIPEDIA;
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
 	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
+	private static String WIKIPEDIA_BFS= "../data/wiki-adj.hbin";
 	
 	static {
 		//Glyphset<Rectangle2D, Color> boost_temp = null;
@@ -425,6 +440,17 @@ public class Presets extends JPanel implements HasViewTransform {
 			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		KIVA_ADJ_RECTS = kiva_temp2;
+		
+		Glyphset<Point2D, Color> wiki_temp = null;
+		try {wiki_temp = GlyphsetUtils.memMap(
+						"Wikipedia BFS adjacnecy", WIKIPEDIA_BFS, 
+						new Indexed.ToPoint(false, 0, 1),
+						new Valuer.Constant<Indexed, Color>(Color.RED), 
+						1, null);
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+		}
+		WIKIPEDIA = wiki_temp;
 	}
 	
 	
