@@ -35,7 +35,8 @@
 
   <target name="core" description="Build core system.">
     <mkdir dir="${coreBin}"/>
-    <javac destdir="${coreBin}" target="1.7" includeantruntime="false"
+    <javac destdir="${coreBin}" target="1.7"
+      includeantruntime="false" debug="true" debuglevel="lines,source"
       sourcepath="" srcdir="${coreSrc}">
     </javac>
     
@@ -60,7 +61,9 @@
     <!--Include extensions with the core library.-->
 
     <mkdir dir="${coreBin}"/>
-    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" includeantruntime="false">
+    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" 
+      includeantruntime="false" debug="true" debuglevel="lines,source">
+
       <exclude name="**/spark/**" if="spark.absent"/>
       <classpath>
         <fileset dir="${lib}" includes="*.jar"/>
@@ -99,7 +102,7 @@
   <target name="app" depends="core" description="Build the demo app.  Parallel to core (or ext).">
     <mkdir dir="${appBin}"/>
     <javac destdir="${appBin}" sourcepath="" srcdir="${appSrc}"
-      includeantruntime="false">
+      includeantruntime="false" debug="true" debuglevel="lines,source">
       <classpath>
         <fileset dir="." includes="*.jar"/>
         <fileset dir="${lib}" includes="*.jar"/>
@@ -143,7 +146,7 @@
     <mkdir dir="${testBin}"/>
     
     <javac destdir="${testBin}" sourcepath="" srcdir="${testSrc}"
-      includeantruntime="false">
+      includeantruntime="false" debug="true" debuglevel="lines,source">
       <classpath>
         <fileset dir="." includes="*.jar"/>
         <fileset dir="${lib}" includes="*.jar"/>

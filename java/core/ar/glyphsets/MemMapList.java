@@ -50,7 +50,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	/**How large should backing read buffer be?
 	 * Reducing this number tends to result in faster thread startup times, but slower overall run-times.
 	 * **/
-	public static int BUFFER_BYTES = 30000;
+	public static int BUFFER_BYTES = Integer.MAX_VALUE;
 	
 	/**Thread-pool size for parallel operations.**/
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
