@@ -395,7 +395,7 @@ public class Presets extends JPanel implements HasViewTransform {
 				new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
 				1, "ddi");
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", MEM_VIS_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", MEM_VIS_BIN);
 		}
 		BOOST_MEMORY_MM = boost_temp;
 		
@@ -406,7 +406,7 @@ public class Presets extends JPanel implements HasViewTransform {
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
 		}
 		CENSUS_MM = census_temp;
 
@@ -415,7 +415,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		try {
 			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Rectangle2D, Color>make());
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
 		}
 		CIRCLE_SCATTER = circle_temp;
 		
@@ -426,7 +426,7 @@ public class Presets extends JPanel implements HasViewTransform {
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		KIVA_ADJ = kiva_temp;
 		
@@ -437,7 +437,7 @@ public class Presets extends JPanel implements HasViewTransform {
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		KIVA_ADJ_RECTS = kiva_temp2;
 		
@@ -448,7 +448,7 @@ public class Presets extends JPanel implements HasViewTransform {
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		WIKIPEDIA = wiki_temp;
 	}
