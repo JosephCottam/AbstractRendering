@@ -3,8 +3,8 @@ package ar.rules;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,38 +24,48 @@ import ar.aggregates.Iterator2D;
 //Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares
 
 //TODO: have 'at' return the iso-contour-value at the location.  Need to resolve inside/outsideness
+//TODO: Better ISO contour picking (round numbers?)
 public interface ISOContours<N> {
 	static final Renderer RENDERER = new ParallelRenderer();
 
-	public Collection<? extends Glyph<Shape, N>> contours();
+	/**List of contours from smallest value to largest value.**/
+	public List<? extends Glyph<Shape, N>> contours();
 
+	/**Produce a set of ISO contours that are spaced at the given interval.**/
 	public static class SpacedContours<N extends Number> implements Transfer<N,N> {
 		final N empty;
 		final double spacing;
+		final N floor;
 		
-		public SpacedContours(N empty, double spacing) {
+		/**@param spacing How far apart to place contours
+		 * @param floor Lowest contour value (if omitted, will be the min value in the input)
+		 */
+		public SpacedContours(N empty, double spacing, N floor) {
 			this.empty = empty;
 			this.spacing = spacing;
+			this.floor = floor;
 		}
 		
 		public N emptyValue() {return empty;}
 
 		@Override
 		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(empty, spacing, aggregates);
+			return new Specialized<>(empty, spacing, floor, aggregates);
 		}
 		
 		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			List<Glyph<Shape, N>> contours;
 			
-			public Specialized(N empty, double spacing, Aggregates<? extends N> aggregates) {
-				super(empty, spacing);
+			public Specialized(N empty, double spacing, N floor, Aggregates<? extends N> aggregates) {
+				super(empty, spacing, floor);
 				Util.Stats<N> stats = Util.stats(aggregates, false);
+				contours = new ArrayList<>();
 				
 				int i=0;
 				N threshold;
+				N bottom = floor == null ? stats.min : floor;
 				do {
-					threshold = AddTo.ex(stats.min, i*spacing);
+					threshold = AddTo.ex(bottom, i*spacing);
 					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 					i++;
@@ -67,11 +77,12 @@ public interface ISOContours<N> {
 
 
 			@Override
-			public Collection<? extends Glyph<Shape, N>> contours() {return contours;}
+			public List<? extends Glyph<Shape, N>> contours() {return contours;}
 		}
 		
 	}
 
+	/**Produce N contours, evenly spaced between max and min.**/
 	public static class NContours<N extends Number> implements Transfer<N,N> {
 		final N empty;
 		final int n;
@@ -90,6 +101,7 @@ public interface ISOContours<N> {
 			public Specialized(N empty, int n, Aggregates<? extends N> aggregates) {
 				super(empty, n);
 				Util.Stats<N> stats = Util.stats(aggregates, false);
+				contours = new ArrayList<>();
 				
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				for (int i=0;i<n;i++) {
@@ -104,7 +116,7 @@ public interface ISOContours<N> {
 
 
 			@Override
-			public Collection<? extends Glyph<Shape, N>> contours() {return contours;}
+			public List<? extends Glyph<Shape, N>> contours() {return contours;}
 		}
 	}
 	
@@ -123,6 +135,7 @@ public interface ISOContours<N> {
 
 	
 	
+	/**PRoduce a single ISO contour at the given division point.**/
 	public static class Single<N extends Number> implements Transfer<N, N> {
 		private final N threshold;
 		private final N empty;
