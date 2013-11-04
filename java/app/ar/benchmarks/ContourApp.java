@@ -1,4 +1,4 @@
-package ar.test.testApps;
+package ar.benchmarks;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

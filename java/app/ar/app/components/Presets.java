@@ -202,7 +202,20 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USCensusPopMinAlpha implements Preset {
+	public static class WikipediaAdj implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return WIKIPEDIA;}
+		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
+		public String name() {return "Wikipedia Adjacency (BFS Error layout): HDAlpha";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {
+			return glyphset() != null;
+		}
+	}
+	
+	
+	public static class USPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -368,13 +381,15 @@ public class Presets extends JPanel implements HasViewTransform {
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
 	private static final Glyphset<Point2D, Character> CENSUS_SYN_PEOPLE;
-	
+	private static final Glyphset<Point2D, Color> WIKIPEDIA;
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
 	private static String CENSUS_TRACTS = "../data/2010Census_RaceTract.hbin";
 	private static String CENSUS_SYN_PEOPLE_BIN = "../data/2010Census_RacePersonPoints.hbin";
+	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
+	private static String WIKIPEDIA_BFS= "../data/wiki-adj.hbin";
 	
 	static {
 		//Glyphset<Rectangle2D, Color> boost_temp = null;
@@ -386,7 +401,7 @@ public class Presets extends JPanel implements HasViewTransform {
 				new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)), 
 				1, "ddi");
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", MEM_VIS_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", MEM_VIS_BIN);
 		}
 		BOOST_MEMORY_MM = boost_temp;
 		
@@ -397,7 +412,7 @@ public class Presets extends JPanel implements HasViewTransform {
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS_TRACTS);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
 		}
 		CENSUS_MM = census_temp;
 		
@@ -417,7 +432,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		try {
 			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Rectangle2D, Color>make());
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
 		}
 		CIRCLE_SCATTER = circle_temp;
 		
@@ -428,9 +443,20 @@ public class Presets extends JPanel implements HasViewTransform {
 						new Valuer.Constant<Indexed, Color>(Color.RED), 
 						1, null);
 		} catch (Exception e) {
-			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
 		KIVA_ADJ = kiva_temp;		
+		
+		Glyphset<Point2D, Color> wiki_temp = null;
+		try {wiki_temp = GlyphsetUtils.memMap(
+						"Wikipedia BFS adjacnecy", WIKIPEDIA_BFS, 
+						new Indexed.ToPoint(false, 0, 1),
+						new Valuer.Constant<Indexed, Color>(Color.RED), 
+						1, null);
+		} catch (Exception e) {
+			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
+		}
+		WIKIPEDIA = wiki_temp;
 	}
 	
 	

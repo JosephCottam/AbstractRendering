@@ -1,4 +1,4 @@
-package ar.test.testApps;
+package ar.benchmarks;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
@@ -73,7 +73,7 @@ public class RenderSpeed {
 		Transfer transfer = source.transfer();
 		Glyphset glyphs = source.glyphset();
 	
-		ParallelRenderer.THREAD_POOL_SIZE = cores;
+		ParallelRenderer.THREAD_POOL_SIZE = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_SIZE;
 		
 		Renderer render;
 		if (rend.startsWith("PARALLEL")) {
