@@ -108,7 +108,7 @@ public class GlyphsetUtils {
 					return new MemMapList<>(f, shaper, valuer);
 				} else {throw e;}
 			} catch (Exception ex) {
-				System.err.println("## Faield to load data.");
+				System.err.println("## Failed to load data.");
 				return null;
 			}
 		}

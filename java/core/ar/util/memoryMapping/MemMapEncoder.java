@@ -73,16 +73,14 @@ public class MemMapEncoder {
 	public static final class Header {
 		public final int version;
 		public final long dataTableOffset;
-		public final long stringTableOffset;
 		public final TYPE[] types;
 		public final int recordLength;
 		public final long maximaRecordOffset;
 		public final long minimaRecordOffset;
 		
-		public Header(int version, TYPE[] types, long dataTableOffset, long stringTableOffset, long infoRecordOffset) {
+		public Header(int version, TYPE[] types, long dataTableOffset, long infoRecordOffset) {
 			this.version = version;
 			this.dataTableOffset = dataTableOffset;
-			this.stringTableOffset = stringTableOffset;
 			this.types = types;
 			this.recordLength = recordLength(types);
 			this.maximaRecordOffset = infoRecordOffset;
@@ -97,7 +95,9 @@ public class MemMapEncoder {
 			}
 
 			long dataTableOffset = buffer.getLong();
-			long stringTableOffset = buffer.getLong();
+			
+			@SuppressWarnings("unused")
+			long stringTableOffset = buffer.getLong(); //Ignored; placed for future expansion
 			
 			int recordEntries = buffer.getInt();
 
@@ -110,7 +110,7 @@ public class MemMapEncoder {
 			long infoRecordOffset = buffer.position();
 			
 			
-			return new Header(version, types, dataTableOffset, stringTableOffset, infoRecordOffset);
+			return new Header(version, types, dataTableOffset, infoRecordOffset);
 		}
 		
 	}
@@ -311,7 +311,7 @@ public class MemMapEncoder {
 	}
 	
 	private static void updateMinMax(File out) throws IOException {
-		final BigFileByteBuffer buffer = new BigFileByteBuffer(out, 100, 1000, FileChannel.MapMode.READ_WRITE);
+		final BigFileByteBuffer buffer = new BigFileByteBuffer(out, 1000, FileChannel.MapMode.READ_WRITE);
 		Header header = Header.from(buffer);
 		
 		final long entries = (buffer.fileSize()-header.dataTableOffset)/header.recordLength;

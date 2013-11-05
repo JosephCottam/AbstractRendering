@@ -45,15 +45,14 @@ import java.nio.channels.FileChannel;
 public class BigFileByteBuffer implements MappedFile {
 	private final RandomAccessFile inputFile;
 	private final FileChannel.MapMode mode;
-	private final int margin;
 	private final int bufferSize;
 	private long fileSize;
 	
 	private ByteBuffer buffer;
 	private long filePos=0;
 
-	public BigFileByteBuffer(File source, int margin, int bufferSize) throws IOException {
-		this(source, margin, bufferSize, FileChannel.MapMode.READ_ONLY);
+	public BigFileByteBuffer(File source, int bufferSize) throws IOException {
+		this(source, bufferSize, FileChannel.MapMode.READ_ONLY);
 	}
 	
 	/**
@@ -63,7 +62,7 @@ public class BigFileByteBuffer implements MappedFile {
 	 * @param bufferSize Maximum size of memory map buffer to create 
 	 * @throws IOException Thrown when file stream creation or memory mapping fails.
 	 */
-	public BigFileByteBuffer(File source, int margin, int bufferSize, FileChannel.MapMode mode) throws IOException {
+	public BigFileByteBuffer(File source, int bufferSize, FileChannel.MapMode mode) throws IOException {
 		String fileMode = mode == FileChannel.MapMode.READ_ONLY ? "r" : "rw";
 		inputFile = new RandomAccessFile(source, fileMode);
 		FileChannel channel =  inputFile.getChannel();
@@ -73,7 +72,6 @@ public class BigFileByteBuffer implements MappedFile {
 		buffer = channel.map(mode, filePos, Math.min(bufferSize, fileSize));
 		
 		this.mode = mode;
-		this.margin=margin;
 		this.bufferSize = bufferSize;
 	}
 	
@@ -100,18 +98,15 @@ public class BigFileByteBuffer implements MappedFile {
 	public float getFloat() {return ensure(4).getFloat();}
 	public double getDouble() {return ensure(8).getDouble();}
 	public void get(byte[] target, long offset, int length) {
-		ensure(offset, length);
-		this.position(offset);
+		ensure(offset, length).position(rawOffset(offset));
 		buffer.get(target);
 	}
-
 
 	public void put(byte[] values) {put(values, position());}
 	
 	/**Write the given byte array at the given file offset.**/
 	public void put(byte[] values, long offset) {
-		ensure(offset, values.length);
-		this.position(offset);
+		ensure(offset, values.length).position(rawOffset(offset));
 		buffer.put(values);
 	}
 	
@@ -137,15 +132,10 @@ public class BigFileByteBuffer implements MappedFile {
 		fileSize = inputFile.getChannel().size();
 		return fileSize;
 	}
-	
-	/**Move the current access cursor to the indicated position.**/
-	public void position(long at) {
-		try {ensure(at, margin).position((int) (at-filePos));}
-		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}
-	}
-	
+		
 	@Override
 	public long position() {return filePos+buffer.position();}
+	public void position(long offset) {buffer.position(rawOffset(offset));}
 	
 	public ByteBuffer ensure(int bytes) {return ensure(filePos+buffer.position(), bytes);}
 	public ByteBuffer ensure(long position, int bytes) {

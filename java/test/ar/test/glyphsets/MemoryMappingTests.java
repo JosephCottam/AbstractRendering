@@ -68,7 +68,7 @@ public class MemoryMappingTests {
 
 	@Test
 	public void minMax() throws Exception {
-		BigFileByteBuffer buffer = new BigFileByteBuffer(new File(hbinName), 100,1000);
+		BigFileByteBuffer buffer = new BigFileByteBuffer(new File(hbinName), 1000);
 		MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer);
 		
 		IndexedEncoding maxEntry = new IndexedEncoding(header.types, header.maximaRecordOffset, buffer);

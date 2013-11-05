@@ -42,4 +42,6 @@ public class FileByteBuffer implements MappedFile {
 	public void get(byte[] target, long offset, int length) {buffer.get(target, bufferPos(offset), length);}
 	public long position() {return buffer.position()+offset;}
 	public long filePosition() {return offset;}
+	
+	public long capacity() {return buffer.capacity();}	
 }
