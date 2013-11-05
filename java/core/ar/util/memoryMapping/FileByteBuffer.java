@@ -12,11 +12,15 @@ public class FileByteBuffer implements MappedFile {
 	private long offset;
 	
 	public FileByteBuffer(File source, long start, long end) throws IOException {
-		this.offset = start;
-		try (FileInputStream fs = new FileInputStream(source)) {
-			buffer = fs.getChannel().map(FileChannel.MapMode.READ_ONLY, start, end-start);
+		this.offset = 0;
+		try (FileInputStream fs = new FileInputStream(source);
+			FileChannel c = fs.getChannel();) {
+			buffer = c.map(FileChannel.MapMode.READ_ONLY, start, end-start);
 		}
+		
 	}
+	
+	
 	
 	public FileByteBuffer(ByteBuffer buffer, long offset) {
 		this.buffer = buffer;

@@ -81,10 +81,10 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		this.shaper = shaper;
 		this.source = source;
 		
-		try {this.buffer = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, -1, -1);}
-		catch (Exception e) {throw new RuntimeException("Error construction buffer for mem-mapped list.", e);}
-		
 		if (source != null) {
+			try {this.buffer = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES);}
+			catch (Exception e) {throw new RuntimeException("Error construction buffer for mem-mapped list.", e);}
+			
 			MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer);
 			if (header.version != VERSION_UNDERSTOOD) {
 				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", header.version, VERSION_UNDERSTOOD));
@@ -102,14 +102,16 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
 			} 
+			entryCount = (source.length()-dataTableOffset)/recordLength;
 		} else {
-			dataTableOffset = -1;
+			this.dataTableOffset = -1;
+			this.buffer = null;
 			this.types = null;
 			this.offsets = new int[0];
 			this.recordLength = -1;
+			this.entryCount=0;
 		}
 		
-		entryCount = buffer == null ? 0 : (source.length()-dataTableOffset)/recordLength;
 	}
 	
 	public MemMapList(MappedFile buffer, File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
@@ -160,7 +162,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 			throws IllegalArgumentException {
 		
 		long offset = recordOffset(bottom);
-		long end = recordOffset(top) + recordLength;
+		long end = recordOffset(top);
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);

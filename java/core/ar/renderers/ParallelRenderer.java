@@ -62,7 +62,9 @@ public class ParallelRenderer implements Renderer {
 			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
 		
-		long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
+		//long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
+		long taskSize = glyphs.size()/(pool.getParallelism());//*AGGREGATE_TASK_MULTIPLIER);
+		//System.out.printf("Anticipated %d tasks of %d items\n", glyphs.size()/taskSize, taskSize);
 		recorder.reset(glyphs.size());
 
 		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(

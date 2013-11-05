@@ -31,6 +31,14 @@ public interface MappedFile {
 	public abstract long filePosition();
 
 	public static final class Util {
+		public static final MappedFile make(File f, FileChannel.MapMode mode, int bufferSize) throws IOException {
+			if (mode == FileChannel.MapMode.READ_ONLY && f != null && f.length() < Integer.MAX_VALUE) {
+				return new FileByteBuffer(f, 0, f.length());
+			} else {
+				return new BigFileByteBuffer(f, bufferSize);
+			}
+		}
+
 		public static final MappedFile make(
 				File f, 
 				FileChannel.MapMode mode, 
@@ -38,7 +46,7 @@ public interface MappedFile {
 				long offset, long end) throws IOException {
 			
 			if (mode == FileChannel.MapMode.READ_ONLY 
-					&& (end > 0 && (end-offset) > Integer.MAX_VALUE)) {
+					&& (end > 0 && (end-offset) < Integer.MAX_VALUE)) {
 				return new FileByteBuffer(f, offset, end);
 			} else {
 				BigFileByteBuffer bf = new BigFileByteBuffer(f, bufferSize);
