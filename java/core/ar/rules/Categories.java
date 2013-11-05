@@ -445,6 +445,17 @@ public class Categories {
 		public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
+	/**Convert a CoC just a set of counts for a specific category.**/
+	public static class Select<IN> implements Transfer.Specialized<CoC<IN>, Integer> {
+		private final IN label;
+		public Select(IN label) {this.label = label;}
+		public Integer emptyValue() {return 0;}
+		public Specialized<CoC<IN>, Integer> specialize(Aggregates<? extends CoC<IN>> aggregates) {return this;}
+		public Integer at(int x, int y, Aggregates<? extends CoC<IN>> aggregates) {
+			return aggregates.get(x, y).count(label);
+		}
+		
+	}
 	
 
 }
