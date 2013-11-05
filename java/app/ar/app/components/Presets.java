@@ -45,6 +45,7 @@ import ar.rules.Shapes;
 import ar.rules.TransferMath;
 import ar.util.MultiStageTransfer;
 import ar.util.Util;
+import ar.glyphsets.SyntheticGlyphset;
 
 public class Presets extends JPanel implements HasViewTransform {
 	private static final long serialVersionUID = -5290930773909190497L;
@@ -124,6 +125,17 @@ public class Presets extends JPanel implements HasViewTransform {
 		}	
 	}		
 
+	public static class SyntheticPoints implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(1_00_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
+		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
+		public String name() {return "Synthetic Points";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+
+	
 	public static class ScatterplotAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
