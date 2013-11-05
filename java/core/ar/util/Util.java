@@ -23,7 +23,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
-import ar.util.MemMapEncoder.TYPE;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {

@@ -1,9 +1,12 @@
-package ar.util;
+package ar.util.memoryMapping;
 
 import java.nio.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.io.*;
+
+import ar.glyphsets.implicitgeometry.IndexedEncoding;
+import ar.util.DelimitedReader;
 
 /**Utility for encoding delimited files into a binary format that
  * can be read by the included memory mapped list.  
@@ -87,7 +90,7 @@ public class MemMapEncoder {
 		}
 		
 		/**Parse a given file, return a Header object.**/
-		public static Header from(BigFileByteBuffer buffer) {
+		public static Header from(MappedFile buffer) {
 			int version = buffer.getInt();
 			if (version != VERSION_ID) {
 				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_ID));

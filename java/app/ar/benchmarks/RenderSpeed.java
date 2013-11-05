@@ -73,7 +73,7 @@ public class RenderSpeed {
 		Transfer transfer = source.transfer();
 		Glyphset glyphs = source.glyphset();
 	
-		ParallelRenderer.THREAD_POOL_SIZE = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_SIZE;
+		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
 		
 		Renderer render;
 		if (rend.startsWith("PARALLEL")) {

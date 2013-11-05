@@ -12,8 +12,8 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.DelimitedReader;
-import ar.util.MemMapEncoder;
 import ar.util.Util;
+import ar.util.memoryMapping.MemMapEncoder;
 
 public class GlyphsetUtils {
 	private static boolean isNumber(String s) {

@@ -9,13 +9,14 @@ import java.util.concurrent.RecursiveTask;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.BigFileByteBuffer;
-import ar.util.MemMapEncoder.TYPE;
-import ar.util.MemMapEncoder;
+import ar.util.memoryMapping.BigFileByteBuffer;
+import ar.util.memoryMapping.MappedFile;
+import ar.util.memoryMapping.MemMapEncoder;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;
-import ar.util.IndexedEncoding;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
  * 
@@ -125,7 +126,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	}
 
 	protected IndexedEncoding entryAt(long recordOffset) {
-		BigFileByteBuffer buffer = this.buffer.get();
+		MappedFile buffer = this.buffer.get();
 		return new IndexedEncoding(types, recordOffset, buffer, offsets);
 	}
 
