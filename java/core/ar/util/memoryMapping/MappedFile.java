@@ -1,10 +1,10 @@
 package ar.util.memoryMapping;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
 public interface MappedFile {
-
-	/**Number of bytes in the file.**/
-	public abstract long fileSize();
-
 	public abstract byte get(long pos);
 
 	public abstract short getShort(long pos);
@@ -41,4 +41,23 @@ public interface MappedFile {
 	/**What byte of the backing file does the zero-buffer position correspond to?*/
 	public abstract long filePosition();
 
+	public static final class Util {
+		public static final MappedFile make(
+				File f, 
+				FileChannel.MapMode mode, 
+				int margin, int bufferSize, 
+				long offset, long end) throws IOException {
+			
+			if (mode == FileChannel.MapMode.READ_ONLY 
+					&& (end > 0 && (end-offset) > Integer.MAX_VALUE)) {
+				return new FileByteBuffer(f, offset, end);
+			} else {
+				BigFileByteBuffer bf = new BigFileByteBuffer(f, margin, bufferSize);
+				if (offset >= 0) {bf.position(offset);}
+				return bf;
+			}
+			
+		}
+	}
+	
 }

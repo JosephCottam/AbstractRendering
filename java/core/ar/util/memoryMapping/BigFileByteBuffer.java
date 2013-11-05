@@ -82,88 +82,23 @@ public class BigFileByteBuffer implements MappedFile {
 		catch (IOException e) {}
 	}
 	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#fileSize()
-	 */
-	@Override
+	/**Number of bytes in the file.**/
 	public long fileSize() {return fileSize;}
 	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#get(long)
-	 */
-	@Override
 	public byte get(long pos) {return ensure(pos, 1).get(rawOffset(pos));}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getShort(long)
-	 */
-	@Override
 	public short getShort(long pos) {return ensure(pos, 2).getShort(rawOffset(pos));}	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getInt(long)
-	 */
-	@Override
 	public int getInt(long pos) {return ensure(pos, 4).getInt(rawOffset(pos));}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getLong(long)
-	 */
-	@Override
 	public long getLong(long pos) {return ensure(pos, 8).getLong(rawOffset(pos));}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getChar(long)
-	 */
-	@Override
 	public char getChar(long pos) {return ensure(pos, 2).getChar(rawOffset(pos));}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getFloat(long)
-	 */
-	@Override
 	public float getFloat(long pos) {return ensure(pos, 4).getFloat(rawOffset(pos));}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getDouble(long)
-	 */
-	@Override
 	public double getDouble(long pos) {return ensure(pos, 8).getDouble(rawOffset(pos));}
-	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#get()
-	 */
-	@Override
 	public byte get() {return ensure(1).get();}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getShort()
-	 */
-	@Override
 	public short getShort() {return ensure(2).getShort();}	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getInt()
-	 */
-	@Override
 	public int getInt() {return ensure(4).getInt();}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getLong()
-	 */
-	@Override
 	public long getLong() {return ensure(8).getLong();}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getChar()
-	 */
-	@Override
 	public char getChar() {return ensure(2).getChar();}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getFloat()
-	 */
-	@Override
 	public float getFloat() {return ensure(4).getFloat();}
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#getDouble()
-	 */
-	@Override
 	public double getDouble() {return ensure(8).getDouble();}
-	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#get(byte[], long, int)
-	 */
-	@Override
 	public void get(byte[] target, long offset, int length) {
 		ensure(offset, length);
 		this.position(offset);
@@ -209,9 +144,6 @@ public class BigFileByteBuffer implements MappedFile {
 		catch (Exception e) {throw new RuntimeException(String.format("Error positioning to %d (base offset %d)", at, filePos), e);}
 	}
 	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#position()
-	 */
 	@Override
 	public long position() {return filePos+buffer.position();}
 	
