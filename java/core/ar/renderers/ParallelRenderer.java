@@ -51,10 +51,14 @@ public class ParallelRenderer implements Renderer {
 	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
 	 * **/
 	public ParallelRenderer(ForkJoinPool pool) {
-		if (pool == null) {pool = new ForkJoinPool();}
+		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_PARALLELISM);}
 		this.pool = pool;
 	}
 
+	public long taskSize(Glyphset<?,?> glyphs) {
+		return glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER);
+	}
+	
 	@Override
 	public <I,G,A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, 
@@ -63,8 +67,7 @@ public class ParallelRenderer implements Renderer {
 			AffineTransform view, int width, int height) {
 		
 		//long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
-		long taskSize = glyphs.size()/(pool.getParallelism());//*AGGREGATE_TASK_MULTIPLIER);
-		//System.out.printf("Anticipated %d tasks of %d items\n", glyphs.size()/taskSize, taskSize);
+		long taskSize = taskSize(glyphs);
 		recorder.reset(glyphs.size());
 
 		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(

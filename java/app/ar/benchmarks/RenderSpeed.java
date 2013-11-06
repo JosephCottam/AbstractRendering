@@ -86,9 +86,10 @@ public class RenderSpeed {
 		
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
 		Selector s = TouchesPixel.make(glyphs);
+		long taskCount = glyphs.size()/render.taskSize(glyphs);
 		
 		if (header) {
-			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores");
+			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, tasks");
 		}
 		
 		try {
@@ -106,7 +107,7 @@ public class RenderSpeed {
 
 				aggs.get(0, 0);
 				colors.get(0, 0);
-				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d\n", source, aggTime, transTime, i, width, height, rend, cores);
+				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d, %d\n", source, aggTime, transTime, i, width, height, rend, cores, taskCount);
 				System.out.flush();
 			}
 		} catch (Exception e) {

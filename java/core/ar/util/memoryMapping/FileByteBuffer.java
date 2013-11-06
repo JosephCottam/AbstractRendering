@@ -8,23 +8,27 @@ import java.nio.channels.FileChannel;
 
 /**Wraps a byte buffer with long-based indexing (ostensibly to file positions).**/
 public class FileByteBuffer implements MappedFile {
-	private ByteBuffer buffer;
-	private long offset;
+	private final ByteBuffer buffer;
+	private final int offset;
+	private final int size;
 	
 	public FileByteBuffer(File source, long start, long end) throws IOException {
+		long len = end-start;
+		if (len > Integer.MAX_VALUE) {throw new IllegalArgumentException("Requested too many bytes.");}
+		
 		this.offset = 0;
+		this.size = (int) len; 
 		try (FileInputStream fs = new FileInputStream(source);
 			FileChannel c = fs.getChannel();) {
-			buffer = c.map(FileChannel.MapMode.READ_ONLY, start, end-start);
+			buffer = c.map(FileChannel.MapMode.READ_ONLY, start, len);
 		}
 		
 	}
 	
-	
-	
-	public FileByteBuffer(ByteBuffer buffer, long offset) {
+	public FileByteBuffer(ByteBuffer buffer, int offset, int end) {
 		this.buffer = buffer;
 		this.offset = offset;
+		this.size = end > 0 ? (end-offset) : buffer.capacity();
 	}
 
 	private final int bufferPos(long pos) {return (int) (pos-offset);}
@@ -47,5 +51,5 @@ public class FileByteBuffer implements MappedFile {
 	public long position() {return buffer.position()+offset;}
 	public long filePosition() {return offset;}
 	
-	public long capacity() {return buffer.capacity();}	
+	public long capacity() {return size;}	
 }

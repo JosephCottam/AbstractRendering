@@ -2,6 +2,7 @@ package ar.util.memoryMapping;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 public interface MappedFile {
@@ -37,6 +38,12 @@ public interface MappedFile {
 			} else {
 				return new BigFileByteBuffer(f, bufferSize);
 			}
+		}
+		
+		public static final MappedFile make(ByteBuffer base, int offset, int end) {
+			base.position(offset);
+			ByteBuffer slice = base.slice();
+			return new FileByteBuffer(slice, 0, end);
 		}
 
 		public static final MappedFile make(
