@@ -22,10 +22,11 @@ import ar.Selector;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ZoomPanHandler;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.renderers.ParallelRenderer;
+import ar.rules.General;
 import ar.rules.ISOContours;
 import ar.rules.Numbers;
-import ar.rules.TransferMath;
 import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
@@ -51,7 +52,7 @@ public class ContourApp {
 		final int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> counts = r.aggregate(dataset, selector, aggregator, vt, width, height);
-		Aggregates<Double> magnitudes = r.transfer(counts, new TransferMath.LogDouble(10, aggregator.identity()));
+		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10), aggregator.identity().doubleValue()));
 
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0, 20, aggregates);
 		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(0d, 5, magnitudes);

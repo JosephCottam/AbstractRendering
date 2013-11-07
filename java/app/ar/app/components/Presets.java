@@ -33,6 +33,7 @@ import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
@@ -42,7 +43,6 @@ import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.Shapes;
-import ar.rules.TransferMath;
 import ar.util.MultiStageTransfer;
 import ar.util.Util;
 
@@ -223,7 +223,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(4000),
+				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
 				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Population (Min Alpha)";}
@@ -240,7 +240,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<>(
 				CHAIN_RENDERER,
 				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(4000),
+				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
 				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
 		}
 		public String name() {return "US Population 10% alpha";}
