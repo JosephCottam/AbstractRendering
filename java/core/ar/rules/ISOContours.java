@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
@@ -65,20 +66,15 @@ public interface ISOContours<N> {
 				N threshold;
 				N bottom = floor == null ? stats.min : floor;
 				do {
-					threshold = AddTo.ex(bottom, i*spacing);
-					System.out.printf("Making contour %f at level %f (max %f)\n", (float) i, threshold.doubleValue(), stats.max.doubleValue());
+					threshold = LocalUtils.addTo(bottom, i*spacing);
 					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 					i++;
 				} while (threshold.doubleValue() < stats.max.doubleValue());		
 			}
-
-			@Override
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
-
-
-			@Override
 			public List<? extends Glyph<Shape, N>> contours() {return contours;}
+
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
 		}
 		
 	}
@@ -106,40 +102,21 @@ public interface ISOContours<N> {
 				
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				for (int i=0;i<n;i++) {
-					N threshold = AddTo.ex(stats.min, (step*i));
+					N threshold = LocalUtils.addTo(stats.min, (step*i));
 					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 				}				
 			}
 
-			@Override
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
-
-
-			@Override
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
 			public List<? extends Glyph<Shape, N>> contours() {return contours;}
 		}
 	}
 	
-	
-	public static final class AddTo {
-		@SuppressWarnings("unchecked")
-		public static <N extends Number> N ex(N val, double more) {
-			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
-			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+more);}
-			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
-			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+more));}
-			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
-			throw new IllegalArgumentException("Cannot subtract from " + val.getClass().getName());
-		}
-	}
-
-	
-	
-	/**PRoduce a single ISO contour at the given division point.**/
+	/**Produce a single ISO contour at the given division point.**/
 	public static class Single<N extends Number> implements Transfer<N, N> {
-		private final N threshold;
-		private final N empty;
+		protected final N threshold;
+		protected final N empty;
 
 		public Single(N empty, N threshold) {
 			this.threshold = threshold;
@@ -153,23 +130,65 @@ public interface ISOContours<N> {
 
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
-			private final List<? extends Glyph<Shape, N>> contour;
+			private final List<? extends Glyph<Shape, N>> contours;
 
 			public Specialized(N empty, N threshold, Aggregates<? extends N> aggregates) {
 				super(empty, threshold);
-				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty);  //TODO: Can we pad with empty?  
+				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty);  
 
 				Aggregates<Boolean> isoDivided = RENDERER.transfer(padAggs, new ISOBelow<>(threshold));
 				Aggregates<MC_TYPE> classified = RENDERER.transfer(isoDivided, new MCClassifier());
 				Shape s = Assembler.assembleContours(classified, isoDivided);
-				contour = Arrays.asList(new SimpleGlyph<>(s, threshold));
+				contours = Arrays.asList(new SimpleGlyph<>(s, LocalUtils.minIncr(threshold)));
 			}
+			public List<? extends Glyph<Shape, N>> contours() {return contours;}
 
-			//TODO: Convert to not being a pass-through.  Instead returns an indicator of the iso contour containing the point...
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return aggregates.get(x,y);}
-			public List<? extends Glyph<Shape, N>> contours() {return contour;}
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
 		}
 	}
+	
+	public static class LocalUtils {
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> N minIncr(N val) {
+			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+Double.MIN_VALUE);}
+			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+Float.MIN_VALUE);}
+			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+1));}
+			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+1));}
+			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+1));}
+			throw new IllegalArgumentException("Cannot increment " + val.getClass().getName());
+		}
+		
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> N addTo(N val, double more) {
+			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
+			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+more);}
+			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
+			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+more));}
+			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
+			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
+		}
+		
+		
+		private static ThreadLocal<Point> point = new ThreadLocal<Point>() {
+			protected Point initialValue() {return new Point();}
+		};
+		
+		/**Search a list of contours, return the highest-indexed contour that contains the given point.
+		 * If no match, return empty.
+		 * 
+		 * TODO: This runs SUPER slow (2min at 800x800).  Should fix that. 
+		 */
+		public static <N> N search(List<? extends Glyph<Shape,N>> contours, int x, int y, N empty) {
+			Point p = point.get();
+			p.setLocation(x,y);
+			for (int i=contours.size()-1; i>=0;i--) {
+				Glyph<Shape, N> g = contours.get(i); 
+				if (g.shape().contains(p)) {return g.info();}
+			}
+			return empty;
+		}
+	}
+
 	
 	public static final class Assembler {
 		/** Build a single path from all of the contour parts.  

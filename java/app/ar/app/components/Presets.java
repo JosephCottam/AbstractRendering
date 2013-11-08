@@ -39,6 +39,7 @@ import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
+import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
@@ -362,9 +363,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	
-
-	public static class USPopulation implements Preset {
+	public static class USSynPopulation implements Preset {
 		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
@@ -375,6 +374,24 @@ public class Presets extends JPanel implements HasViewTransform {
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
 		}
 		public String name() {return "US Synthetic Population";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+	
+
+	public static class USSynPopulationContours implements Preset {
+		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
+					new ISOContours.NContours<>(0d,3),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					);
+		}
+		public String name() {return "US Synthetic Population (Contour)";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}

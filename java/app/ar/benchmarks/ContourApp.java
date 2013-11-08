@@ -53,7 +53,7 @@ public class ContourApp {
 		Selector<Point2D> selector = TouchesPixel.make(dataset);
 
 		
-		final int width = 1280;
+		final int width = 800;
 		final int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> counts = r.aggregate(dataset, selector, aggregator, vt, width, height);
@@ -61,21 +61,18 @@ public class ContourApp {
 //		final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(0, 5, counts);
 //		final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(0, 5, counts);
 //		final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, null, counts);
-//		r.transfer(counts, contour);
 		
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
 		Util.Stats<Double> stats = Util.stats(magnitudes, false);
-		System.out.println(stats);
-
 		
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
 		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(0d, 3, magnitudes);
 		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
-		r.transfer(magnitudes, contour);
 		
-		BufferedImage img = new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB);
-		renderTo(contour.contours(), (Graphics2D) img.getGraphics(), width, height);
-		Util.writeImage(img, new File("Contours.png"));
+		//Write an image....
+//		BufferedImage img = new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB);
+//		renderTo(contour.contours(), (Graphics2D) img.getGraphics(), width, height);
+//		Util.writeImage(img, new File("Contours.png"));
 		
 		JFrame f = new JFrame();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
