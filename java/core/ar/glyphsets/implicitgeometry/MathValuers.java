@@ -53,24 +53,26 @@ public class MathValuers {
 		public MultiplyDouble(double multiplier) {this.multiplier = multiplier;}
 		public Double value(A from) {return from.doubleValue()*multiplier;}
 	}
-	
-	
+		
 	/**Perform log based on the double-value of the input.  
 	 * If basis is set to 0, will just echo input values (convenient with interactive tools).
 	 */
 	public static final class Log<A extends Number> implements Valuer<A,Double> {
 		final double base;
 		final boolean add1;
+		final boolean ignoreZeros;
 		
-		public Log(double base) {this(base, false);}
-		public Log(double base, boolean add1) {
+		public Log(double base) {this(base, false, false);}
+		public Log(double base, boolean add1, boolean ignoreZeros) {
 			this.base = base; 
 			this.add1=add1;
+			this.ignoreZeros = ignoreZeros;
 		}
 
 		public Double value(A from) {
 			double val = from.doubleValue();
 			if (base == 0) {return val;}
+			else if (val == 0d && ignoreZeros) {return 0d;}
 			else if (add1 && base == Math.E) {return Math.log1p(val);}
 			else if (add1) {return Math.log1p(val)/Math.log(base);}
 			else if (base == Math.E) {return Math.log(val);}

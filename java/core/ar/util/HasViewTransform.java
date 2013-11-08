@@ -10,4 +10,6 @@ public interface HasViewTransform {
 	
 	/**Set a new view transform.  Should make a copy on acceptance.**/
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
+	
+	//TODO: Add support for zoom-fit...somehow. 
 }

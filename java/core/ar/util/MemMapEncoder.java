@@ -362,28 +362,41 @@ public class MemMapEncoder {
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
 		boolean direct = !entry(args, "-direct", "FALSE").toUpperCase().equals("FALSE");
-		
-		if (direct) {temp =out;}
-		
-		else {
-			temp = File.createTempFile("hbinEncoder", "hbin");
-			temp.deleteOnExit();
+		boolean justHeader = !entry(args, "-headeronly", "FALSE").toUpperCase().equals("FALSE");
+
+		if (justHeader) {
+			updateMinMax(out);
+		} else {
+			if (direct) {
+				temp =out;
+				if (out.exists()) {
+					System.out.println("Confirm replace file in direct mode (y/Y to proceed; anything else to cancel): ");
+					char read = (char) System.in.read();
+					String s = Character.toString(read);
+					if (!s.toUpperCase().equals("Y")) {System.exit(0);}
+				}
+			} else {
+				temp = File.createTempFile("hbinEncoder", "hbin");
+				temp.deleteOnExit();
+			}
+			
+			
+			int skip = Integer.parseInt(entry(args, "-skip", null));
+			char[] types = entry(args, "-types", "").toCharArray();
+			
+			write(in, skip, temp, types);
+			
+			if (!direct) {
+				try {
+					out.delete();
+					boolean moved = temp.renameTo(out);
+					if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
+				} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
+				if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
+			}
 		}
 		
 		
-		int skip = Integer.parseInt(entry(args, "-skip", null));
-		char[] types = entry(args, "-types", "").toCharArray();
-		
-		write(in, skip, temp, types);
-		
-		if (!direct) {
-			try {
-				out.delete();
-				boolean moved = temp.renameTo(out);
-				if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
-			} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
-			if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
-		}
 	}
 }
 

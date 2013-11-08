@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Point;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -33,6 +34,59 @@ public class General {
 		
 	}
 	
+	/**Fill in empty values based on a function of nearby values.
+	 *
+	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
+	 * TODO: Add support for a searching function...
+	 ***/ 
+	public static class Smear<V> implements Transfer.Specialized<V,V> {
+		final V empty;
+		public Smear(V empty) {
+			this.empty = empty;
+		}
+
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		
+		@Override
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			Point p = new Point(x,y);
+			for (int i=0; outOfBounds(p, aggregates); i++) {
+				spiralFrom(x,y,i,p);
+				V val = aggregates.get(p.x, p.y);
+				if (!Util.isEqual(val, empty)) {return val;}
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+
+		public Point spiralFrom(int X, int Y, int n, Point into) {
+			int x=0,y=0;
+			int dx = 0;
+			int dy = -1;
+			for (int i=0; i<n; i++) {
+				if ((-X/2 < x) && (x <= X/2) && (-Y/2 < y) && (y <= Y/2)) {
+					into.setLocation(x,y);
+					return into;
+				}
+
+				if ((x == y) || (x < 0 && x == -y) || (x > 0 && x == 1-y)) {
+					int temp = dx;
+					dx = -dy;
+					dy = temp;
+				}
+				x = x+dx;
+				y = y+dy;
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+		
+		public boolean outOfBounds(Point p, Aggregates<?> aggregates) {
+			return p.x >= aggregates.lowX() && p.x < aggregates.highX()
+					&& p.y >= aggregates.lowY() && p.y < aggregates.highY();
+		}
+	}
+	
+	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer<V,V> {
 		final V empty;
 		final Spreader<V> spreader;

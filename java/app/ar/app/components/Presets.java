@@ -365,11 +365,14 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 
 	public static class USPopulation implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<>();}
+		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-					return new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255));
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
 		}
 		public String name() {return "US Synthetic Population";}
 		public String toString() {return fullName(this);}

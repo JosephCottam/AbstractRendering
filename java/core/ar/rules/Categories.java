@@ -33,7 +33,10 @@ public class Categories {
 		public int hashCode() {return First.class.hashCode();}
 	}
 
-	/**What is the last item in the given pixel (an over-plotting strategy)**/
+	/**What is the last item in the given pixel (an over-plotting strategy).
+	 * 
+	 * TODO: This may actually belong in 'general'...
+	 * **/
 	public static final class Last implements Aggregator<Color, Color> {
 		private static final long serialVersionUID = -3640093539839073637L;
 		public Color combine(long x, long y, Color left, Color update) {return update;}

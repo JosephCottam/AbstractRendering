@@ -66,6 +66,7 @@ public interface ISOContours<N> {
 				N bottom = floor == null ? stats.min : floor;
 				do {
 					threshold = AddTo.ex(bottom, i*spacing);
+					System.out.printf("Making contour %f at level %f (max %f)\n", (float) i, threshold.doubleValue(), stats.max.doubleValue());
 					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 					i++;
