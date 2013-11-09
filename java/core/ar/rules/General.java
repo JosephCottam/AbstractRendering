@@ -34,6 +34,30 @@ public class General {
 		
 	}
 	
+	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
+	public static class Simplify<V> implements Transfer.Specialized<V, V> {
+		private final V empty;
+		public Simplify(V empty) {this.empty = empty;}
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			V val = aggregates.get(x,y);
+			if (Util.isEqual(val, aggregates.get(x-1,y-1))
+					&& Util.isEqual(val, aggregates.get(x,y-1))
+					&& Util.isEqual(val, aggregates.get(x+1,y-1))
+					&& Util.isEqual(val, aggregates.get(x-1,y))
+					&& Util.isEqual(val, aggregates.get(x+1,y))
+					&& Util.isEqual(val, aggregates.get(x-1,y+1))
+					&& Util.isEqual(val, aggregates.get(x,y+1))
+					&& Util.isEqual(val, aggregates.get(x+1,y+1))) {
+				return empty;
+			}
+			
+			return val;
+		}
+		
+	}
+	
 	/**Fill in empty values based on a function of nearby values.
 	 *
 	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
