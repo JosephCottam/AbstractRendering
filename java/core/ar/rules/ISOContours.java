@@ -1,6 +1,5 @@
 package ar.rules;
 
-import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
@@ -168,22 +167,15 @@ public interface ISOContours<N> {
 			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
 		}
 		
-		
-		private static ThreadLocal<Point> point = new ThreadLocal<Point>() {
-			protected Point initialValue() {return new Point();}
-		};
-		
 		/**Search a list of contours, return the highest-indexed contour that contains the given point.
 		 * If no match, return empty.
 		 * 
-		 * TODO: This runs SUPER slow (2min at 800x800).  Should fix that. 
+		 * TODO: This runs SUPER slow (2min at 800x800).  Should fix that...probably by doing an aggregation into a cached aggregate set on first access 
 		 */
 		public static <N> N search(List<? extends Glyph<Shape,N>> contours, int x, int y, N empty) {
-			Point p = point.get();
-			p.setLocation(x,y);
 			for (int i=contours.size()-1; i>=0;i--) {
-				Glyph<Shape, N> g = contours.get(i); 
-				if (g.shape().contains(p)) {return g.info();}
+				Glyph<Shape, N> g = contours.get(i);
+				if (g.shape().contains(x,y)) {return g.info();}
 			}
 			return empty;
 		}
