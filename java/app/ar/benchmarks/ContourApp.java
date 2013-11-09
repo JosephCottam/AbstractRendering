@@ -63,10 +63,9 @@ public class ContourApp {
 //		final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, null, counts);
 		
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
-		Util.Stats<Double> stats = Util.stats(magnitudes, false);
 		
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
-		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(0d, 3, magnitudes);
+		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 0d, 3, magnitudes);
 		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
 		
 		//Write an image....
@@ -84,7 +83,7 @@ public class ContourApp {
 		f.setVisible(true);
 	}
 	
-	public static <S extends Shape,N extends Number> void renderTo(List<? extends Glyph<S,N>> contours, Graphics2D g2, int width, int height) {
+	public static <S extends Shape,N extends Number> void renderTo(Glyphset.RandomAccess<? extends S, ? extends N> contours, Graphics2D g2, int width, int height) {
 		//g2.setColor(new Color(240,240,255));
 		g2.setColor(Color.white);
 		g2.fill(new Rectangle2D.Double(0,0,width, height));
@@ -95,7 +94,7 @@ public class ContourApp {
 		Number min = contours.get(0).info();
 		Number max = contours.get(contours.size()-1).info();
 		
-		for (Glyph<S, N> glyph: contours) {
+		for (Glyph<? extends S, ? extends N> glyph: contours) {
 			Color c = Util.interpolate(new Color(254, 229, 217), new Color(165, 15, 21), min.doubleValue(), max.doubleValue(), glyph.info().doubleValue());
 			Shape s = glyph.shape();
 //			g2.setColor(c);

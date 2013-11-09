@@ -387,7 +387,7 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<Object,Object>(
 					CHAIN_RENDERER,
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
-					new ISOContours.NContours<>(0d,3),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 0d,3),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}

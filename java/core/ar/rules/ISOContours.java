@@ -1,10 +1,9 @@
 package ar.rules;
 
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,10 +12,15 @@ import java.util.Map;
 
 import ar.Aggregates;
 import ar.Glyph;
+import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
+import ar.glyphsets.implicitgeometry.MathValuers;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 import ar.aggregates.Iterator2D;
 
@@ -29,51 +33,56 @@ public interface ISOContours<N> {
 	static final Renderer RENDERER = new ParallelRenderer();
 
 	/**List of contours from smallest value to largest value.**/
-	public List<? extends Glyph<Shape, N>> contours();
+	public Glyphset.RandomAccess<Shape, N> contours();
 
 	/**Produce a set of ISO contours that are spaced at the given interval.**/
 	public static class SpacedContours<N extends Number> implements Transfer<N,N> {
 		final N empty;
 		final double spacing;
 		final N floor;
+		final Renderer renderer;
 		
 		/**@param spacing How far apart to place contours
 		 * @param floor Lowest contour value (if omitted, will be the min value in the input)
 		 */
-		public SpacedContours(N empty, double spacing, N floor) {
+		public SpacedContours(Renderer renderer, N empty, double spacing, N floor) {
 			this.empty = empty;
 			this.spacing = spacing;
 			this.floor = floor;
+			this.renderer = renderer;
 		}
 		
 		public N emptyValue() {return empty;}
 
 		@Override
 		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(empty, spacing, floor, aggregates);
+			return new Specialized<>(renderer, empty, spacing, floor, aggregates);
 		}
 		
 		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
-			List<Glyph<Shape, N>> contours;
+			final GlyphList<Shape, N> contours;
+			final Aggregates<N> cached;
 			
-			public Specialized(N empty, double spacing, N floor, Aggregates<? extends N> aggregates) {
-				super(empty, spacing, floor);
+			public Specialized(Renderer renderer, N empty, double spacing, N floor, Aggregates<? extends N> aggregates) {
+				super(renderer, empty, spacing, floor);
 				Util.Stats<N> stats = Util.stats(aggregates, false);
-				contours = new ArrayList<>();
+				contours = new GlyphList<>();
 				
 				int i=0;
 				N threshold;
 				N bottom = floor == null ? stats.min : floor;
 				do {
 					threshold = LocalUtils.addTo(bottom, i*spacing);
-					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
+					ISOContours<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 					i++;
-				} while (threshold.doubleValue() < stats.max.doubleValue());		
+				} while (threshold.doubleValue() < stats.max.doubleValue());
+				cached = LocalUtils.renderContours(renderer, contours, aggregates);
 			}
-			public List<? extends Glyph<Shape, N>> contours() {return contours;}
+			
+			public GlyphList<Shape, N> contours() {return contours;}
 
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 		
 	}
@@ -82,33 +91,39 @@ public interface ISOContours<N> {
 	public static class NContours<N extends Number> implements Transfer<N,N> {
 		final N empty;
 		final int n;
-		public NContours(N empty, int n) {
+		final Renderer renderer;
+		
+		public NContours(Renderer r, N empty, int n) {
 			this.empty = empty;
 			this.n = n;
+			this.renderer = r;
 		}
 		public N emptyValue() {return empty;}
 
 		@Override
-		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {return new NContours.Specialized<>(empty, n, aggregates);}
+		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
+			return new NContours.Specialized<>(renderer, empty, n, aggregates);
+		}
 		
 		public static final class Specialized<N extends Number> extends NContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
-			List<Glyph<Shape, N>> contours;
+			final GlyphList<Shape, N> contours;
+			final Aggregates<N> cached;
 			
-			public Specialized(N empty, int n, Aggregates<? extends N> aggregates) {
-				super(empty, n);
+			public Specialized(Renderer r, N empty, int n, Aggregates<? extends N> aggregates) {
+				super(r, empty, n);
 				Util.Stats<N> stats = Util.stats(aggregates, false);
-				contours = new ArrayList<>();
+				contours = new GlyphList<>();
 				
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				for (int i=0;i<n;i++) {
 					N threshold = LocalUtils.addTo(stats.min, (step*i));
-					ISOContours<N> t = new Single.Specialized<>(empty, threshold, aggregates);
+					ISOContours<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
 				}				
+				cached = LocalUtils.renderContours(renderer, contours, aggregates);
 			}
-
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
-			public List<? extends Glyph<Shape, N>> contours() {return contours;}
+			public GlyphList<Shape, N> contours() {return contours;}
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 	}
 	
@@ -116,33 +131,37 @@ public interface ISOContours<N> {
 	public static class Single<N extends Number> implements Transfer<N, N> {
 		protected final N threshold;
 		protected final N empty;
+		protected final Renderer renderer;
 
-		public Single(N empty, N threshold) {
+		public Single(Renderer r, N empty, N threshold) {
 			this.threshold = threshold;
 			this.empty = empty;
+			this.renderer = r;
 		}
 
 		public N emptyValue() {return empty;}
 		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(empty, threshold, aggregates);
+			return new Specialized<>(renderer, empty, threshold, aggregates);
 		}
 
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
-			private final List<? extends Glyph<Shape, N>> contours;
+			private final GlyphList<Shape, N> contours;
+			private final Aggregates<N> cached;
 
-			public Specialized(N empty, N threshold, Aggregates<? extends N> aggregates) {
-				super(empty, threshold);
+			public Specialized(Renderer renderer, N empty, N threshold, Aggregates<? extends N> aggregates) {
+				super(renderer, empty, threshold);
 				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty);  
 
 				Aggregates<Boolean> isoDivided = RENDERER.transfer(padAggs, new ISOBelow<>(threshold));
 				Aggregates<MC_TYPE> classified = RENDERER.transfer(isoDivided, new MCClassifier());
 				Shape s = Assembler.assembleContours(classified, isoDivided);
-				contours = Arrays.asList(new SimpleGlyph<>(s, LocalUtils.minIncr(threshold)));
+				contours = new GlyphList<>();
+				contours.add(new SimpleGlyph<>(s, LocalUtils.minIncr(threshold)));
+				cached = LocalUtils.renderContours(renderer, contours, aggregates);
 			}
-			public List<? extends Glyph<Shape, N>> contours() {return contours;}
-
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return LocalUtils.search(contours, x,y, empty);}
+			public GlyphList<Shape, N> contours() {return contours;}
+			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 	}
 	
@@ -151,8 +170,8 @@ public interface ISOContours<N> {
 		public static <N extends Number> N minIncr(N val) {
 			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+Double.MIN_VALUE);}
 			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+Float.MIN_VALUE);}
-			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+1));}
 			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+1));}
+			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+1));}
 			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+1));}
 			throw new IllegalArgumentException("Cannot increment " + val.getClass().getName());
 		}
@@ -161,10 +180,36 @@ public interface ISOContours<N> {
 		public static <N extends Number> N addTo(N val, double more) {
 			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
 			if (val instanceof Float) {return (N) new Float(((Float) val).floatValue()+more);}
-			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
 			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+more));}
+			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
 			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
 			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
+		}
+		
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> Valuer<Double, N> wrapperFor(N val) {
+			if (val == null) {throw new NullPointerException("Cannot infer type for null value.");}
+			if (val instanceof Double) {return (Valuer<Double, N>) new MathValuers.DoubleWrapper();}
+			if (val instanceof Float) {return (Valuer<Double, N>) new MathValuers.FloatWrapper();}
+			if (val instanceof Long) {return (Valuer<Double, N>) new MathValuers.LongWrapper();}
+			if (val instanceof Integer) {return (Valuer<Double, N>) new MathValuers.IntegerWrapper();}
+			if (val instanceof Short) {return (Valuer<Double, N>) new MathValuers.ShortWrapper();}
+			throw new IllegalArgumentException("Cannot infer numeric wrapper for " + val.getClass().getName());
+		}
+		
+		public static <N extends Number> Aggregates<N> renderContours(
+				Renderer r, 
+				GlyphList<? extends Shape, ? extends N> glyphs,
+				Aggregates<? extends N> base) {
+			int width = base.highX() - base.lowX();
+			int height = base.highY() - base.lowY();
+			Valuer<Double, N> wrapper = (Valuer<Double,N>) wrapperFor(glyphs.get(0).info());
+			return r.aggregate(
+					glyphs, 
+					new TouchesPixel.Shapes(), 
+					new Numbers.Max<>(wrapper), 
+					new AffineTransform(), 
+					width, height);
 		}
 		
 		/**Search a list of contours, return the highest-indexed contour that contains the given point.

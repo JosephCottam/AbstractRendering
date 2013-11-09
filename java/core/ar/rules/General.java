@@ -31,7 +31,6 @@ public class General {
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return valuer.value(aggregates.get(x,y));
 		}
-		
 	}
 	
 	/**Changes a cell to empty if it and all of its neighbors are the same value.**/

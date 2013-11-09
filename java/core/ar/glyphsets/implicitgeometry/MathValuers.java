@@ -186,6 +186,19 @@ public class MathValuers {
 		public Double value(A from) {return Math.ulp(from.doubleValue());}
 	}
 	
-	
-	
+	public static final class DoubleWrapper implements Valuer<Double, Double> {
+		public Double value(Double d) {return d;}
+	}
+	public static final class FloatWrapper implements Valuer<Double, Float> {
+		public Float value(Double d) {return d.floatValue();}
+	}
+	public static final class LongWrapper implements Valuer<Double, Long> {
+		public Long value(Double d) {return d.longValue();}
+	}
+	public static final class IntegerWrapper implements Valuer<Double, Integer> {
+		public Integer value(Double d) {return d.intValue();}
+	}
+	public static final class ShortWrapper implements Valuer<Double, Short> {
+		public Short value(Double d) {return d.shortValue();}
+	}	
 }

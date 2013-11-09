@@ -5,6 +5,7 @@ import java.awt.Color;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 /**Aggregators and Transfers that work with scalar numbers.**/
@@ -23,6 +24,26 @@ public final class Numbers {
 		public Integer identity() {return 0;}
 		public boolean equals(Object other) {return other instanceof Count;}
 		public int hashCode() {return Count.class.hashCode();}
+	}
+	
+	
+	/**Retain the largest value seen.
+	 * 
+	 * TODO: Is there a general way to provide for two-argument operators?
+	 */
+	public static final class Max<N extends Number> implements Aggregator<N, N> {
+		private final Valuer<Double,N> wrapper;
+		public Max(Valuer<Double,N> wrapper) {this.wrapper = wrapper;}
+
+		public N combine(long x, long y, N current, N update) {
+			 return wrapper.value(Math.max(current.doubleValue(), update.doubleValue()));
+		}
+		
+		public N rollup(N left, N right) {
+			return wrapper.value(Math.max(left.doubleValue(), right.doubleValue()));
+		}
+		
+		public N identity() {return wrapper.value(0d);}
 	}
 	
 	/**Interpolate between two colors with fixed upper and lower bounds.

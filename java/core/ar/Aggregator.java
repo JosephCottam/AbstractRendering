@@ -24,6 +24,8 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * The x and y position are provided as arguments so position-sensitive
 	 * aggregation can be performed.  Any other contextual information
 	 * needs to be provided through the class in some other way.
+	 *
+	 * TODO: With selectors in place...do we still need x/y?
 	 * 
 	 * @param x The x-position being operated on
 	 * @param y The y-position being operated on
