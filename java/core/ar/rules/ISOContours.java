@@ -1,9 +1,9 @@
 package ar.rules;
 
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
-import ar.Glyph;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
@@ -19,19 +18,15 @@ import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
-import ar.selectors.TouchesPixel;
 import ar.util.Util;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.Iterator2D;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
 //Another implementation that does sub-cell interpolation for smoother contours: http://udel.edu/~mm/code/marchingSquares
 
-//TODO: have 'at' return the iso-contour-value at the location.  Need to resolve inside/outsideness
 //TODO: Better ISO contour picking (round numbers?)
 public interface ISOContours<N> {
-	static final Renderer RENDERER = new ParallelRenderer();
-
 	/**List of contours from smallest value to largest value.**/
 	public Glyphset.RandomAccess<Shape, N> contours();
 
@@ -67,17 +62,19 @@ public interface ISOContours<N> {
 				super(renderer, empty, spacing, floor);
 				Util.Stats<N> stats = Util.stats(aggregates, false);
 				contours = new GlyphList<>();
+				ArrayList<Aggregates<N>> cachedAggregates = new ArrayList<>();
 				
 				int i=0;
 				N threshold;
 				N bottom = floor == null ? stats.min : floor;
 				do {
 					threshold = LocalUtils.addTo(bottom, i*spacing);
-					ISOContours<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
+					Single.Specialized<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
+					cachedAggregates.add(t.cached);
 					i++;
 				} while (threshold.doubleValue() < stats.max.doubleValue());
-				cached = LocalUtils.renderContours(renderer, contours, aggregates);
+				cached = LocalUtils.flatten(cachedAggregates);
 			}
 			
 			public GlyphList<Shape, N> contours() {return contours;}
@@ -114,13 +111,15 @@ public interface ISOContours<N> {
 				Util.Stats<N> stats = Util.stats(aggregates, false);
 				contours = new GlyphList<>();
 				
+				ArrayList<Aggregates<N>> cachedAggregates = new ArrayList<>();
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				for (int i=0;i<n;i++) {
 					N threshold = LocalUtils.addTo(stats.min, (step*i));
-					ISOContours<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
+					Single.Specialized<N> t = new Single.Specialized<>(renderer, empty, threshold, aggregates);
 					this.contours.addAll(t.contours());
-				}				
-				cached = LocalUtils.renderContours(renderer, contours, aggregates);
+					cachedAggregates.add(t.cached);
+				}
+				cached = LocalUtils.flatten(cachedAggregates);
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
@@ -147,18 +146,20 @@ public interface ISOContours<N> {
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
 			private final GlyphList<Shape, N> contours;
-			private final Aggregates<N> cached;
+			protected final Aggregates<N> cached;
 
 			public Specialized(Renderer renderer, N empty, N threshold, Aggregates<? extends N> aggregates) {
 				super(renderer, empty, threshold);
 				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, empty);  
 
-				Aggregates<Boolean> isoDivided = RENDERER.transfer(padAggs, new ISOBelow<>(threshold));
-				Aggregates<MC_TYPE> classified = RENDERER.transfer(isoDivided, new MCClassifier());
+				Aggregates<Boolean> isoDivided = renderer.transfer(padAggs, new ISOBelow<>(threshold));
+				Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 				Shape s = Assembler.assembleContours(classified, isoDivided);
 				contours = new GlyphList<>();
-				contours.add(new SimpleGlyph<>(s, LocalUtils.minIncr(threshold)));
-				cached = LocalUtils.renderContours(renderer, contours, aggregates);
+
+				N val = LocalUtils.minIncr(threshold);
+				contours.add(new SimpleGlyph<>(s, val));
+				cached = renderer.transfer(isoDivided, new General.Replace<>(true, val, threshold));
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
@@ -175,7 +176,7 @@ public interface ISOContours<N> {
 			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+1));}
 			throw new IllegalArgumentException("Cannot increment " + val.getClass().getName());
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		public static <N extends Number> N addTo(N val, double more) {
 			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
@@ -197,32 +198,24 @@ public interface ISOContours<N> {
 			throw new IllegalArgumentException("Cannot infer numeric wrapper for " + val.getClass().getName());
 		}
 		
-		public static <N extends Number> Aggregates<N> renderContours(
-				Renderer r, 
-				GlyphList<? extends Shape, ? extends N> glyphs,
-				Aggregates<? extends N> base) {
-			int width = base.highX() - base.lowX();
-			int height = base.highY() - base.lowY();
-			Valuer<Double, N> wrapper = (Valuer<Double,N>) wrapperFor(glyphs.get(0).info());
-			return r.aggregate(
-					glyphs, 
-					new TouchesPixel.Shapes(), 
-					new Numbers.Max<>(wrapper), 
-					new AffineTransform(), 
-					width, height);
-		}
-		
-		/**Search a list of contours, return the highest-indexed contour that contains the given point.
-		 * If no match, return empty.
-		 * 
-		 * TODO: This runs SUPER slow (2min at 800x800).  Should fix that...probably by doing an aggregation into a cached aggregate set on first access 
-		 */
-		public static <N> N search(List<? extends Glyph<Shape,N>> contours, int x, int y, N empty) {
-			for (int i=contours.size()-1; i>=0;i--) {
-				Glyph<Shape, N> g = contours.get(i);
-				if (g.shape().contains(x,y)) {return g.info();}
+		public static <N> Aggregates<N> flatten(List<Aggregates<N>> cascade) {
+			if (cascade.size() == 1) {return cascade.get(0);}
+			Aggregates<N> exemplar = cascade.get(0);
+			final Aggregates<N> target = AggregateUtils.make(exemplar, exemplar.defaultValue());
+			for (int x=target.lowX(); x<target.highX(); x++) {
+				for (int y=target.lowY(); y< target.highY(); y++) {
+					for (int i=cascade.size()-1; i>=0; i--) {
+						exemplar = cascade.get(i);
+						N def = exemplar.defaultValue();
+						N val = exemplar.get(x, y);
+						if (!Util.isEqual(def, val)) {
+							target.set(x, y, val);
+							break;
+						} 
+					}
+				}
 			}
-			return empty;
+			return target;
 		}
 	}
 

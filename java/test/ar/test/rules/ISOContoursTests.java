@@ -5,6 +5,8 @@ import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Point;
 import java.awt.geom.GeneralPath;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -19,7 +21,7 @@ import ar.rules.ISOContours.MC_TYPE;
 public class ISOContoursTests {
 	private static final Renderer RENDERER = new ParallelRenderer();
 	
-	public Aggregates<Boolean> make(boolean zz, boolean oz, boolean zo, boolean oo) {
+	public Aggregates<Boolean> makeMarchingSquareCase(boolean zz, boolean oz, boolean zo, boolean oo) {
 		Aggregates<Boolean> source = new FlatAggregates<>(0,0,2,2,false);
 		source.set(0, 0, zz);
 		source.set(1, 0, oz);
@@ -32,25 +34,25 @@ public class ISOContoursTests {
 	public void ClassifyIndividuals() {
 		ISOContours.MCClassifier classifier = new ISOContours.MCClassifier();
 		
-		assertThat("Emtpy",       classifier.at(1, 1, make(false,false,false,false)), is(MC_TYPE.empty));
-		assertThat("surround",     classifier.at(1, 1, make(true,true,true,true)), is(MC_TYPE.surround));
-		assertThat("diag two", classifier.at(1, 1, make(true,false,false,true)), is(MC_TYPE.diag_two));
-		assertThat("diag one", classifier.at(1, 1, make(false,true,true,false)), is(MC_TYPE.diag_one));
+		assertThat("Emtpy",       classifier.at(1, 1, makeMarchingSquareCase(false,false,false,false)), is(MC_TYPE.empty));
+		assertThat("surround",     classifier.at(1, 1, makeMarchingSquareCase(true,true,true,true)), is(MC_TYPE.surround));
+		assertThat("diag two", classifier.at(1, 1, makeMarchingSquareCase(true,false,false,true)), is(MC_TYPE.diag_two));
+		assertThat("diag one", classifier.at(1, 1, makeMarchingSquareCase(false,true,true,false)), is(MC_TYPE.diag_one));
 
-		assertThat(classifier.at(1, 1, make(false,false,true,true)), is(MC_TYPE.ui_in));
-		assertThat(classifier.at(1, 1, make(true,true,false,false)), is(MC_TYPE.di_in));
-		assertThat(classifier.at(1, 1, make(true,false,true,false)), is(MC_TYPE.l_in));
-		assertThat(classifier.at(1, 1, make(false,true,false,true)), is(MC_TYPE.r_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,false,true,true)), is(MC_TYPE.ui_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,true,false,false)), is(MC_TYPE.di_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,false,true,false)), is(MC_TYPE.l_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,true,false,true)), is(MC_TYPE.r_in));
 		
-		assertThat(classifier.at(1, 1, make(false,false,false,true)), is(MC_TYPE.ui_r_in));
-		assertThat(classifier.at(1, 1, make(false,false,true,false)), is(MC_TYPE.ui_l_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,false,false,true)), is(MC_TYPE.ui_r_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,false,true,false)), is(MC_TYPE.ui_l_in));
 
-		assertThat(classifier.at(1, 1, make(false,true,false,false)), is(MC_TYPE.di_r_in));
-		assertThat(classifier.at(1, 1, make(true,false,false,false)), is(MC_TYPE.di_l_in));
-		assertThat(classifier.at(1, 1, make(true,false,true,true)), is(MC_TYPE.di_r_out));
-		assertThat(classifier.at(1, 1, make(false,true,true,true)), is(MC_TYPE.di_l_out));
-		assertThat(classifier.at(1, 1, make(true,true,false,true)), is(MC_TYPE.ui_l_out));
-		assertThat(classifier.at(1, 1, make(true,true,true,false)), is(MC_TYPE.ui_r_out));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,true,false,false)), is(MC_TYPE.di_r_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,false,false,false)), is(MC_TYPE.di_l_in));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,false,true,true)), is(MC_TYPE.di_r_out));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(false,true,true,true)), is(MC_TYPE.di_l_out));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,true,false,true)), is(MC_TYPE.ui_l_out));
+		assertThat(classifier.at(1, 1, makeMarchingSquareCase(true,true,true,false)), is(MC_TYPE.ui_r_out));
 	}
 	
 	@Test
@@ -197,7 +199,36 @@ public class ISOContoursTests {
 			assertThat("Error at x of " + x, padded.get(x,base.lowY()-1), is(pad));
 			assertThat("Error at x of " + x, padded.get(x,base.highY()+1), is(pad));
 		}
+	}
+	
+	@Test
+	public void Flatten() {
+		Aggregates<Integer> ones = new FlatAggregates<>(5,5,-1);
+		Aggregates<Integer> zeros = new FlatAggregates<>(5,5,-1);
+		for (int x=ones.lowX(); x< ones.highX(); x++) {
+			for (int y=ones.lowY(); y< ones.highY(); y++) {
+				ones.set(x, y, 1);
+				zeros.set(x,y, 0);
+			}
+		}
 		
+		
+		List<Aggregates<Integer>> aggs = Arrays.asList(ones,zeros);
+		Aggregates<Integer> combined = ISOContours.LocalUtils.flatten(aggs);
+		for (int x=combined.lowX(); x< combined.highX(); x++) {
+			for (int y=combined.lowY(); y< combined.highY(); y++) {
+				assertEquals(String.format("Error at %d x %d", x,y), (Integer) 0, combined.get(x, y));
+			}
+		}
+
+		List<Aggregates<Integer>> aggs2 = Arrays.asList(zeros,ones);
+		Aggregates<Integer> combined2 = ISOContours.LocalUtils.flatten(aggs2);
+		for (int x=combined2.lowX(); x< combined2.highX(); x++) {
+			for (int y=combined2.lowY(); y< combined2.highY(); y++) {
+				assertEquals(String.format("Error at %d x %d", x,y), (Integer) 1, combined2.get(x, y));
+			}
+		}
+
 		
 	}
 }

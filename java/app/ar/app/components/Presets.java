@@ -396,6 +396,25 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
+	public static class ScatterplotContours implements Preset {
+		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new ISOContours.NContours<>(CHAIN_RENDERER, 0d,5),
+					new General.Simplify<>(0),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					);
+		}
+		public String name() {return "Scatterplot (Contours)";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+
+	
+	
 	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 

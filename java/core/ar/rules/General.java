@@ -33,6 +33,30 @@ public class General {
 		}
 	}
 	
+	public static class Replace<IN,OUT> implements Transfer.Specialized<IN,OUT> {
+		private final Map<IN,OUT> mapping;
+		private final OUT empty;
+		
+		public Replace(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
+		public Replace(Map<IN,OUT> mapping, OUT empty) {
+			this.mapping = mapping;
+			this.empty = empty;
+		}
+		private static <IN,OUT> Map<IN,OUT> map(IN in, OUT out) {
+			Map<IN,OUT> m = new HashMap<>();
+			m.put(in, out);
+			return m;
+		}
+		
+		public OUT emptyValue() {return empty;}
+		public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+			IN val = aggregates.get(x,y);
+			if (mapping.containsKey(val)) {return mapping.get(val);}
+			return empty;
+		}
+	}
+	
 	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
 	public static class Simplify<V> implements Transfer.Specialized<V, V> {
 		private final V empty;
