@@ -55,7 +55,7 @@ public class AggregateUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> make(int lowX, int lowY, int highX, int highY, A defVal) {
-		if (defVal instanceof Color) {
+		if (defVal != null && defVal instanceof Color) {
 			return (Aggregates<A>) new ImageAggregates(lowX, lowY, highX, highY, (Color) defVal);
 		} else {
 			return new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
@@ -90,7 +90,10 @@ public class AggregateUtils {
 		b.append(String.format("%d-%d by %d-%d\n", aggs.lowX(), aggs.highX(), aggs.lowY(), aggs.highY()));
 		int len = 0;
 		
-		for (Object o: aggs) {len = Math.max(len, o.toString().length());}
+		for (Object o: aggs) {
+			if (o==null) {continue;}
+			len = Math.max(len, o.toString().length());
+		}
 
 		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {

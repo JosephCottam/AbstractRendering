@@ -45,20 +45,28 @@ public class Utils {
 	
 	@Test
 	public void stats() {
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(10,10,-1);
+		Aggregates<Double> aggs = new FlatAggregates<Double>(10,10,-1d);
 		
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
-				aggs.set(x, y, x);
+				if (x==y) {aggs.set(x, y, null);}
+				else if (x+y==10) {aggs.set(x,y, Double.NaN);}
+				else {aggs.set(x, y, new Double(x));}
 			}
 		}
-		Util.Stats<Integer> s1 = Util.stats(aggs, false);
-		Util.Stats<Integer> s2 = Util.stats(aggs, true);
+		Util.Stats<Double> s1 = Util.stats(aggs, true,true);
+		Util.Stats<Double> s2 = Util.stats(aggs, false,false);
 
 		assertThat(s1.max.doubleValue(), is((double) aggs.highX()-1));
 		assertThat(s2.max.doubleValue(), is((double) aggs.highX()-1));
 		assertThat(s1.min.doubleValue(), is((double) 0));
-		assertThat(s2.min.doubleValue(), is((double) 1));
+		assertThat(s2.min.doubleValue(), is((double) 0));
+		assertThat(s1.nullCount, is(10l));
+		assertThat(s2.nullCount, is(10l));
+		assertThat(s1.nanCount, is(8l));
+		assertThat(s2.nanCount, is(8l));
+		assertThat(s1.mean, is (4.451219512195122d));
+		assertThat(s2.mean, is (3.65d));
 	}
 	
 }

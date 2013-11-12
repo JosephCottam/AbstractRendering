@@ -112,7 +112,7 @@ public final class Numbers {
 		
 
 		public Transfer.Specialized<Number,Color> specialize(Aggregates<? extends Number> aggregates) {
-			Util.Stats<? extends Number> stats = Util.stats(aggregates, false);
+			Util.Stats<? extends Number> stats = Util.stats(aggregates, false, false);
 			if (logBasis <=1) {
 				return new SpecializedLinear(stats, low, high, empty, logBasis);
 			} else {
@@ -133,7 +133,7 @@ public final class Numbers {
 
 			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 				Number v = aggregates.get(x,y);
-				if (v.equals(aggregates.defaultValue())) {return empty;}
+				if (Util.isEqual(v, aggregates.defaultValue())) {return empty;}
 				return interpolate(v);
 			}
 			

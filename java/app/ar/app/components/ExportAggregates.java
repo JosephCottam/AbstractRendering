@@ -16,7 +16,7 @@ public class ExportAggregates extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private final JButton export = new JButton("Export Aggregates");
-	private final JFileChooser fc = new JFileChooser("./data");
+	private final JFileChooser fc = new JFileChooser("../data");
 
 	private File inputFile=null;
 	private final ARComponent.Holder holder;

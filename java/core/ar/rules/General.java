@@ -33,12 +33,37 @@ public class General {
 		}
 	}
 	
-	public static class Replace<IN,OUT> implements Transfer.Specialized<IN,OUT> {
+	
+	/**Performs a type-preserving replacement.  Specificed values are replaced, others as passed through.**/
+	public static class Replace<T> implements Transfer.Specialized<T,T> {
+		private final Map<T,T> mapping;
+		private final T empty;
+		
+		public Replace(T in, T out, T empty) {this(Retype.map(in,out), empty);}
+		public Replace(Map<T,T> mapping, T empty) {
+			this.mapping = mapping;
+			this.empty = empty;
+		}
+		
+		public T emptyValue() {return empty;}
+		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		public T at(int x, int y, Aggregates<? extends T> aggregates) {
+			T val = aggregates.get(x,y);
+			if (mapping.containsKey(val)) {return mapping.get(val);}
+			return val;
+		}
+	}
+	
+	/**Performs a type-changing replacement.  Because it is type-changing,
+	 * values cannot just pass-through.  Therefore, values not explicitly accounted
+	 * for in the mapping are replaced with the empty value.
+	 */
+	public static class Retype<IN,OUT> implements Transfer.Specialized<IN,OUT> {
 		private final Map<IN,OUT> mapping;
 		private final OUT empty;
 		
-		public Replace(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
-		public Replace(Map<IN,OUT> mapping, OUT empty) {
+		public Retype(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
+		public Retype(Map<IN,OUT> mapping, OUT empty) {
 			this.mapping = mapping;
 			this.empty = empty;
 		}
