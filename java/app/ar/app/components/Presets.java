@@ -249,7 +249,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
 	
-	public static class USCensusPopulation implements Preset {
+	public static class USCensusPopulationLinear implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -257,10 +257,36 @@ public class Presets extends JPanel implements HasViewTransform {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(), 
-//					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255), Util.CLEAR, 2));
 					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
-		public String name() {return "US Population";}
+		public String name() {return "US Population (Linear)";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+	
+
+	public static class USCensusPopulationOpaque implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {return new General.Present<>(Color.RED, Color.white);}
+		public String name() {return "US Population (Opaque)";}
+		public String toString() {return fullName(this);}
+		public boolean init(Presets panel) {return glyphset() != null;}
+	}
+	
+	public static class USCensusPopulationExp implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<>(
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(), 
+					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
+					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+		}
+		public String name() {return "US Population (Exp)";}
 		public String toString() {return fullName(this);}
 		public boolean init(Presets panel) {return glyphset() != null;}
 	}
