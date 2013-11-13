@@ -47,25 +47,23 @@ import ar.rules.Shapes;
 import ar.util.MultiStageTransfer;
 import ar.util.Util;
 
-public class Presets extends JPanel implements HasViewTransform {
+public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
 	private final ActionProvider actionProvider = new ActionProvider();
 	private static final Renderer CHAIN_RENDERER = new ParallelRenderer();
 	private static final ForkJoinPool RENDER_POOL = new ForkJoinPool();  
 
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
-	private final HasViewTransform transformSource;
 	
 	public Presets(HasViewTransform transformSource) {
 		this.add(new LabeledItem("Presets:", presets));
-		this.transformSource = transformSource;
 		presets.addActionListener(actionProvider.delegateListener());
 		
 		ar.app.util.AppUtil.loadInstances(presets, Presets.class, Presets.Preset.class, "");
 
 		for (int i=0; i<presets.getItemCount(); i++) {
 			Preset item = presets.getItemAt(i);
-			boolean success = item.init(this);
+			boolean success = item.init(transformSource);
 			if (!success) {
 				presets.removeItem(item); 
 				i--;
@@ -111,7 +109,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer();
 		public Glyphset<?,?> glyphset();
 		public String name();
-		public boolean init(Presets panel);
+		public boolean init(HasViewTransform panel);
 	}
 	
 	/**Generate a descriptive name from the parts of the preset instance.**/
@@ -132,7 +130,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	public static class ScatterplotHDALphaLin implements Preset {
@@ -142,7 +140,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class ScatterplotHDALpha implements Preset {
@@ -152,7 +150,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
@@ -162,7 +160,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
@@ -177,7 +175,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class Kiva implements Preset {
@@ -187,7 +185,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -200,7 +198,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "Kiva: DrawDark";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class WikipediaAdj implements Preset {
@@ -210,9 +208,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Wikipedia Adjacency (BFS Error layout): HDAlpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {
-			return glyphset() != null;
-		}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	
@@ -229,7 +225,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population (Min Alpha)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -246,7 +242,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population 10% alpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class USCensusPopulationLinear implements Preset {
@@ -261,7 +257,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population (Linear)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -272,7 +268,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new General.Present<>(Color.RED, Color.white);}
 		public String name() {return "US Population (Opaque)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class USCensusPopulationExp implements Preset {
@@ -288,7 +284,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Population (Exp)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class USCensusPopulationWeave implements Preset {
@@ -303,7 +299,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 
 		/**Provide the viewTransform-access pathway.**/
-		public boolean init(Presets provider) {
+		public boolean init(HasViewTransform provider) {
 			this.transformProvider = provider;
 			return glyphset() != null;
 		}
@@ -357,7 +353,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Racial Distribution";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -386,7 +382,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Racial Distribution (highlight 'other')";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class USSynPopulation implements Preset {
@@ -401,7 +397,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Synthetic Population";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -419,7 +415,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Synthetic Population (Contour)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	public static class USSynPopulationContourLines implements Preset {
@@ -438,7 +434,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Synthetic Population (Contour Lines)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	
@@ -457,7 +453,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "Scatterplot (Contour Lines)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	
@@ -581,11 +577,4 @@ public class Presets extends JPanel implements HasViewTransform {
 		
 	}
 
-	@Override
-	public AffineTransform viewTransform() {return transformSource.viewTransform();}
-
-	@Override
-	public void viewTransform(AffineTransform vt)
-			throws NoninvertibleTransformException {transformSource.viewTransform(vt);}
-	
 }

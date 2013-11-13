@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
@@ -70,7 +71,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		c.gridwidth = 1;
 		controls.add(export,c);
 		
-		JLabel instructions = new JLabel("Double-click to zoom extends and/or force refresh.", JLabel.CENTER);
+		JLabel instructions = new JLabel("Double-click zooms to fit.", JLabel.CENTER);
 		c.gridx=0;
 		c.gridy=3;
 		c.weightx=2;
@@ -143,6 +144,8 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	
 	public ARComponent getARComponent() {return display;}
 	public AffineTransform viewTransform() {return display.viewTransform();}
+	public void zoomFit() {display.zoomFit();}
+	public Rectangle2D dataBounds() {return display.dataBounds();}
 
 	@Override
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {display.viewTransform(vt);}

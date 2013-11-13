@@ -167,6 +167,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public AffineTransform viewTransform() {return hosted.viewTransform();}
 	public AffineTransform renderTransform() {return hosted.renderTransform();}
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {hosted.viewTransform(vt);}
+	public Rectangle2D dataBounds() {return hosted.dataBounds();}
 	
 	
 

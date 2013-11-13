@@ -2,6 +2,7 @@ package ar.aggregates;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
@@ -12,6 +13,13 @@ import ar.Aggregates;
  */
 public class AggregateUtils {
 
+	/**Return a rectangle representing the bounds of this aggregate set.
+	 * Bounds are based on the bounds of concern (low/high X/Y) not values set. 
+	 * **/
+	public static Rectangle bounds(Aggregates<?> aggs) {
+		return new Rectangle(aggs.lowX(), aggs.lowY(), aggs.highX()-aggs.lowX(), aggs.highY()-aggs.lowY());
+	}
+	
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<Color> aggs, int width, int height, Color background) {
 		if (aggs instanceof ImageAggregates) {return ((ImageAggregates) aggs).image();}

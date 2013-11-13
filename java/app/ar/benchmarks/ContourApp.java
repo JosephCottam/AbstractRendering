@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -22,6 +23,7 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Selector;
+import ar.aggregates.AggregateUtils;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ZoomPanHandler;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -109,12 +111,10 @@ public class ContourApp {
 	public static class Display extends JPanel implements HasViewTransform {
 		final ISOContours<? extends Number> contour;
 		AffineTransform transform = new AffineTransform();
-		ZoomPanHandler handler = new ZoomPanHandler();
 
 		public Display(ISOContours<? extends Number> contour) {
 			this.contour = contour;
-			this.addMouseListener(handler);
-			this.addMouseMotionListener(handler);
+			new ZoomPanHandler().register(this);
 		}
 
 		public void paintComponent(Graphics g) {
@@ -138,6 +138,23 @@ public class ContourApp {
 				throws NoninvertibleTransformException {
 			this.transform  =vt;
 			this.repaint();
+		}
+		
+		public Rectangle dataBounds() {
+			Rectangle r = contour.contours().get(0).shape().getBounds();
+			for (Glyph<? extends Shape, ?> g: contour.contours()) {
+				r.add(g.shape().getBounds());
+			}
+			return r;
+		}
+
+		@Override
+		public void zoomFit() {
+			try {
+				viewTransform(Util.zoomFit(dataBounds(), this.getWidth(), this.getHeight()));
+			} catch (NoninvertibleTransformException e) {
+				throw new RuntimeException("Error zooming...");
+			}			
 		}
 	}
 	

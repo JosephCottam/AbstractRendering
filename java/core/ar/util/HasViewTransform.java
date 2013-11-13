@@ -2,6 +2,7 @@ package ar.util;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Rectangle2D;
 
 /**Interface to indicate that there is a view transform associated with this object.**/
 public interface HasViewTransform {
@@ -11,5 +12,6 @@ public interface HasViewTransform {
 	/**Set a new view transform.  Should make a copy on acceptance.**/
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
 	
-	//TODO: Add support for zoom-fit...somehow. 
+	public void zoomFit();
+	public Rectangle2D dataBounds();
 }
