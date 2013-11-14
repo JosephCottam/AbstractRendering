@@ -8,7 +8,9 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
@@ -218,10 +220,11 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
-				CHAIN_RENDERER,
-				new Categories.ToCount<>(),
-				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
-				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Population (Min Alpha)";}
 		public String toString() {return fullName(this);}
@@ -235,10 +238,11 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
-				CHAIN_RENDERER,
-				new Categories.ToCount<>(),
-				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
-				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
 		}
 		public String name() {return "US Population 10% alpha";}
 		public String toString() {return fullName(this);}
@@ -252,8 +256,9 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
-					new Categories.ToCount<>(), 
-					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Linear)";}
 		public String toString() {return fullName(this);}
@@ -265,7 +270,12 @@ public class Presets extends JPanel {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
-		public Transfer<?,?> transfer() {return new General.Present<>(Color.RED, Color.white);}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<>(
+					CHAIN_RENDERER, 
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Present<>(Color.RED, Color.white));
+		}
 		public String name() {return "US Population (Opaque)";}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
@@ -278,7 +288,8 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
-					new Categories.ToCount<>(), 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
 					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
@@ -385,30 +396,123 @@ public class Presets extends JPanel {
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
-	public static class USSynPopulation implements Preset {
-		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
+	public static class USSynPopulationMinAlpha implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object,Object>(
 					CHAIN_RENDERER,
-					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
-					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
+					new Categories.ToCount<>(),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
-		public String name() {return "US Synthetic Population";}
+		public String name() {return "US Synthetic Population (minApha)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	public static class USSynPopulationLinear implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+	  				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(10), 0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+		}
+		public String name() {return "US Synthetic Population (Fractional Linear)";}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
-
-	public static class USSynPopulationContours implements Preset {
-		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
+	public static class USSynPopulationExp implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object,Object>(
 					CHAIN_RENDERER,
-					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
+					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+		}
+		public String name() {return "US Synthetic Population (exp)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USSynPopulationLog implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+	  				new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
+		}
+		public String name() {return "US Synthetic Population (Log 10)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USSynPopulationRaces implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			Map<Object, Color> colors = new HashMap<>();
+			colors.put('w', new Color(0,0,200));	//White
+			colors.put('b', new Color(0,200,0));	//African American
+			colors.put('a', new Color(255,69,0));	//Asian
+			colors.put('h', new Color(255,165,0));	//Hispanic
+			colors.put('o', Color.GRAY);	//Other
+
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
+			return new MultiStageTransfer<Object, Object>(
+					CHAIN_RENDERER,
+					rekey,
+					stratAlpha);
+		}
+		public String name() {return "US Synthetic Population (Races)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class UniqueReport<A extends CategoricalCounts<?>> implements Transfer.Specialized<A,A> {
+		Collection<Object> seen = new HashSet<>();
+		public A emptyValue() {return null;}
+		public Specialized<A,A> specialize(Aggregates<? extends A> aggregates) {return this;}
+		public A at(int x, int y, Aggregates<? extends A> aggregates) {
+			A cc = aggregates.get(x, y);
+			
+			for (int i=0; i<cc.size(); i++) {
+				Object key = cc.key(i);
+				if (!seen.contains(key)) {
+					System.out.println("New key: " + key);
+					seen.add(key);
+				}
+			}
+			
+			return cc;
+		}
+		
+	}
+	
+
+	public static class USSynPopulationContours implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
@@ -419,13 +523,14 @@ public class Presets extends JPanel {
 	}
 
 	public static class USSynPopulationContourLines implements Preset {
-		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<>();}
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object,Object>(
 					CHAIN_RENDERER,
-					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator().identity().doubleValue()),
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
 					new General.Simplify<>(0),
 					new General.Replace<>(null, 0, 0),
