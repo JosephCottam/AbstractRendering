@@ -8,7 +8,9 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
@@ -33,38 +35,37 @@ import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
+import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.Shapes;
-import ar.rules.TransferMath;
 import ar.util.MultiStageTransfer;
 import ar.util.Util;
 
-public class Presets extends JPanel implements HasViewTransform {
+public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
 	private final ActionProvider actionProvider = new ActionProvider();
 	private static final Renderer CHAIN_RENDERER = new ParallelRenderer();
 	private static final ForkJoinPool RENDER_POOL = new ForkJoinPool();  
 
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
-	private final HasViewTransform transformSource;
 	
 	public Presets(HasViewTransform transformSource) {
 		this.add(new LabeledItem("Presets:", presets));
-		this.transformSource = transformSource;
 		presets.addActionListener(actionProvider.delegateListener());
 		
 		ar.app.util.AppUtil.loadInstances(presets, Presets.class, Presets.Preset.class, "");
 
 		for (int i=0; i<presets.getItemCount(); i++) {
 			Preset item = presets.getItemAt(i);
-			boolean success = item.init(this);
+			boolean success = item.init(transformSource);
 			if (!success) {
 				presets.removeItem(item); 
 				i--;
@@ -110,7 +111,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Renderer renderer();
 		public Glyphset<?,?> glyphset();
 		public String name();
-		public boolean init(Presets panel);
+		public boolean init(HasViewTransform panel);
 	}
 	
 	/**Generate a descriptive name from the parts of the preset instance.**/
@@ -131,7 +132,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	public static class ScatterplotHDALphaLin implements Preset {
@@ -141,7 +142,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class ScatterplotHDALpha implements Preset {
@@ -151,7 +152,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
@@ -161,7 +162,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
@@ -176,17 +177,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
-	}
-	
-	public static class KivaRects implements Preset {
-		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
-		public Glyphset<?,?> glyphset() {return KIVA_ADJ_RECTS;}
-		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
-		public String name() {return "Kiva: HDAlpha (Rectangles)";}
-		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class Kiva implements Preset {
@@ -196,7 +187,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
@@ -209,7 +200,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "Kiva: DrawDark";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	public static class WikipediaAdj implements Preset {
@@ -219,9 +210,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Wikipedia Adjacency (BFS Error layout): HDAlpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {
-			return glyphset() != null;
-		}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 	
@@ -231,54 +220,89 @@ public class Presets extends JPanel implements HasViewTransform {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
-				CHAIN_RENDERER,
-				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(4000),
-				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Population (Min Alpha)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
-	public static class USPop10Pct implements Preset {
-		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
-		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
-		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-				CHAIN_RENDERER,
-				new Categories.ToCount<>(),
-				new TransferMath.DivideInt(4000),
-				new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
-		}
-		public String name() {return "US Population 10% alpha";}
-		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
-	}
-	
-	public static class USPopulation implements Preset {
+	public static class USCensusPop10Pct implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
-					new Categories.ToCount<>(), 
-//					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255), Util.CLEAR, 2));
-					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
 		}
-		public String name() {return "US Population";}
+		public String name() {return "US Population 10% alpha";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
-	public static class USPopulationWeave implements Preset {
+	public static class USCensusPopulationLinear implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<>(
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+		}
+		public String name() {return "US Population (Linear)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+
+	public static class USCensusPopulationOpaque implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<>(
+					CHAIN_RENDERER, 
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Present<>(Color.RED, Color.white));
+		}
+		public String name() {return "US Population (Opaque)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USCensusPopulationExp implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<>(
+					CHAIN_RENDERER, 
+					new Categories.ToCount<>(),
+					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
+					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+		}
+		public String name() {return "US Population (Exp)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USCensusPopulationWeave implements Preset {
 		HasViewTransform transformProvider = null;
 		private final List<Shape> shapes;
 		
-		public USPopulationWeave() {
+		public USCensusPopulationWeave() {
 			try {
 				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
 				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
@@ -286,7 +310,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 
 		/**Provide the viewTransform-access pathway.**/
-		public boolean init(Presets provider) {
+		public boolean init(HasViewTransform provider) {
 			this.transformProvider = provider;
 			return glyphset() != null;
 		}
@@ -317,7 +341,7 @@ public class Presets extends JPanel implements HasViewTransform {
 	
 
 	
-	public static class USRaces implements Preset {
+	public static class USCensusRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -340,11 +364,11 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Racial Distribution";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 	
 
-	public static class USRacesLift implements Preset {
+	public static class USCensusRacesLift implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
@@ -369,19 +393,188 @@ public class Presets extends JPanel implements HasViewTransform {
 		}
 		public String name() {return "US Racial Distribution (highlight 'other')";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
+	
+	public static class USSynPopulationMinAlpha implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+		}
+		public String name() {return "US Synthetic Population (minApha)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	public static class USSynPopulationLinear implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+	  				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(10), 0),
+					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+		}
+		public String name() {return "US Synthetic Population (Fractional Linear)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USSynPopulationExp implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
+					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+		}
+		public String name() {return "US Synthetic Population (exp)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USSynPopulationLog implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+	  				new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
+		}
+		public String name() {return "US Synthetic Population (Log 10)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class USSynPopulationRaces implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			Map<Object, Color> colors = new HashMap<>();
+			colors.put('w', new Color(0,0,200));	//White
+			colors.put('b', new Color(0,200,0));	//African American
+			colors.put('a', new Color(255,69,0));	//Asian
+			colors.put('h', new Color(255,165,0));	//Hispanic
+			colors.put('o', Color.GRAY);	//Other
+
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
+			return new MultiStageTransfer<Object, Object>(
+					CHAIN_RENDERER,
+					rekey,
+					stratAlpha);
+		}
+		public String name() {return "US Synthetic Population (Races)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+	
+	public static class UniqueReport<A extends CategoricalCounts<?>> implements Transfer.Specialized<A,A> {
+		Collection<Object> seen = new HashSet<>();
+		public A emptyValue() {return null;}
+		public Specialized<A,A> specialize(Aggregates<? extends A> aggregates) {return this;}
+		public A at(int x, int y, Aggregates<? extends A> aggregates) {
+			A cc = aggregates.get(x, y);
+			
+			for (int i=0; i<cc.size(); i++) {
+				Object key = cc.key(i);
+				if (!seen.contains(key)) {
+					System.out.println("New key: " + key);
+					seen.add(key);
+				}
+			}
+			
+			return cc;
+		}
+		
+	}
+	
+
+	public static class USSynPopulationContours implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					);
+		}
+		public String name() {return "US Synthetic Population (Contour)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	public static class USSynPopulationContourLines implements Preset {
+		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new Categories.ToCount<>(),
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
+					new General.Simplify<>(0),
+					new General.Replace<>(null, 0, 0),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					);
+		}
+		public String name() {return "US Synthetic Population (Contour Lines)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	
+	public static class ScatterplotContours implements Preset {
+		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<Object>();}
+		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
+		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
+		public Transfer<?,?> transfer() {
+			return new MultiStageTransfer<Object,Object>(
+					CHAIN_RENDERER,
+					new ISOContours.NContours<>(CHAIN_RENDERER, 5),
+					new General.Simplify<>(0),
+					new General.Replace<>(null, 0, 0),
+					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					);
+		}
+		public String name() {return "Scatterplot (Contour Lines)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	
 	
 	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
-	private static final Glyphset<Rectangle2D, Color> KIVA_ADJ_RECTS; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
 	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
+	private static final Glyphset<Point2D, Character> CENSUS_SYN_PEOPLE;
 	private static final Glyphset<Point2D, Color> WIKIPEDIA;
 	
 	private static String MEM_VIS_BIN = "../data/MemVisScaled.hbin";
 	private static String CIRCLE_CSV = "../data/circlepoints.csv";
 	private static String KIVA_BIN = "../data/kiva-adj.hbin";
+	private static String CENSUS_TRACTS = "../data/2010Census_RaceTract.hbin";
+	private static String CENSUS_SYN_PEOPLE_BIN = "../data/2010Census_RacePersonPoints.hbin";
 	private static String CENSUS = "../data/2010Census_RaceTract.hbin";
 	private static String WIKIPEDIA_BFS= "../data/wiki-adj.hbin";
 	
@@ -401,7 +594,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		
 		Glyphset<Point2D, CoC<String>> census_temp = null;
 		try {census_temp = GlyphsetUtils.memMap(
-				"US Census", CENSUS, 
+				"US Census Tracts", CENSUS_TRACTS, 
 				new Indexed.ToPoint(true, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				1, null);
@@ -409,6 +602,17 @@ public class Presets extends JPanel implements HasViewTransform {
 			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CENSUS);
 		}
 		CENSUS_MM = census_temp;
+		
+		Glyphset<Point2D, Character> census_temp2 = null;
+		try {census_temp2 = GlyphsetUtils.memMap(
+				"US Census Synthetic People", CENSUS_SYN_PEOPLE_BIN, 
+				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToValue<Indexed,Character>(2),
+				1, null);
+		} catch (Exception e) {
+			System.err.printf("Error loading data from %s.  Related presets are unavailable.\n", CENSUS_TRACTS);
+		}
+		CENSUS_SYN_PEOPLE = census_temp2;
 
 		
 		Glyphset<Rectangle2D, Color> circle_temp = null;
@@ -428,18 +632,7 @@ public class Presets extends JPanel implements HasViewTransform {
 		} catch (Exception e) {
 			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
 		}
-		KIVA_ADJ = kiva_temp;
-		
-		Glyphset<Rectangle2D, Color> kiva_temp2 = null;
-		try {kiva_temp2 = GlyphsetUtils.memMap(
-						"Kiva", KIVA_BIN, 
-						new Indexed.ToRect(Double.MIN_VALUE, Double.MIN_VALUE, false, 0, 1),
-						new Valuer.Constant<Indexed, Color>(Color.RED), 
-						1, null);
-		} catch (Exception e) {
-			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", KIVA_BIN);
-		}
-		KIVA_ADJ_RECTS = kiva_temp2;
+		KIVA_ADJ = kiva_temp;		
 		
 		Glyphset<Point2D, Color> wiki_temp = null;
 		try {wiki_temp = GlyphsetUtils.memMap(
@@ -489,11 +682,4 @@ public class Presets extends JPanel implements HasViewTransform {
 		
 	}
 
-	@Override
-	public AffineTransform viewTransform() {return transformSource.viewTransform();}
-
-	@Override
-	public void viewTransform(AffineTransform vt)
-			throws NoninvertibleTransformException {transformSource.viewTransform(vt);}
-	
 }

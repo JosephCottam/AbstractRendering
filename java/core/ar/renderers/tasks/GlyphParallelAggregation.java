@@ -11,6 +11,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Selector;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.ConstantAggregates;
 import ar.aggregates.TouchedBoundsWrapper;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
@@ -50,6 +51,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 	protected Aggregates<A> compute() {
+		if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
 		Aggregates<A> rslt;
 		if ((high-low) > taskSize) {rslt=split();}
 		else {rslt=local();}

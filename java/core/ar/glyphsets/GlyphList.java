@@ -25,6 +25,11 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
 	public boolean isEmpty() {return glyphs.isEmpty();}
 	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
+	public void addAll(Glyphset<G,I> newGlyphs) {
+		for (Glyph<G,I> g: newGlyphs) {glyphs.add(g);}
+		bounds = null;
+	}
+	
 	public long size() {return glyphs.size();}
 	public Glyph<G,I> get(long i) {
 		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}

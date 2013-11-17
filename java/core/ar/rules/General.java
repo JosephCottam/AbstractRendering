@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Point;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -30,9 +31,134 @@ public class General {
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return valuer.value(aggregates.get(x,y));
 		}
+	}
+	
+	
+	/**Performs a type-preserving replacement.  Specificed values are replaced, others as passed through.**/
+	public static class Replace<T> implements Transfer.Specialized<T,T> {
+		private final Map<T,T> mapping;
+		private final T empty;
+		
+		public Replace(T in, T out, T empty) {this(Retype.map(in,out), empty);}
+		public Replace(Map<T,T> mapping, T empty) {
+			this.mapping = mapping;
+			this.empty = empty;
+		}
+		
+		public T emptyValue() {return empty;}
+		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		public T at(int x, int y, Aggregates<? extends T> aggregates) {
+			T val = aggregates.get(x,y);
+			if (mapping.containsKey(val)) {return mapping.get(val);}
+			return val;
+		}
+	}
+	
+	/**Performs a type-changing replacement.  Because it is type-changing,
+	 * values cannot just pass-through.  Therefore, values not explicitly accounted
+	 * for in the mapping are replaced with the empty value.
+	 */
+	public static class Retype<IN,OUT> implements Transfer.Specialized<IN,OUT> {
+		private final Map<IN,OUT> mapping;
+		private final OUT empty;
+		
+		public Retype(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
+		public Retype(Map<IN,OUT> mapping, OUT empty) {
+			this.mapping = mapping;
+			this.empty = empty;
+		}
+		private static <IN,OUT> Map<IN,OUT> map(IN in, OUT out) {
+			Map<IN,OUT> m = new HashMap<>();
+			m.put(in, out);
+			return m;
+		}
+		
+		public OUT emptyValue() {return empty;}
+		public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+			IN val = aggregates.get(x,y);
+			if (mapping.containsKey(val)) {return mapping.get(val);}
+			return empty;
+		}
+	}
+	
+	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
+	public static class Simplify<V> implements Transfer.Specialized<V, V> {
+		private final V empty;
+		public Simplify(V empty) {this.empty = empty;}
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			V val = aggregates.get(x,y);
+			if (Util.isEqual(val, aggregates.get(x-1,y-1))
+					&& Util.isEqual(val, aggregates.get(x,y-1))
+					&& Util.isEqual(val, aggregates.get(x+1,y-1))
+					&& Util.isEqual(val, aggregates.get(x-1,y))
+					&& Util.isEqual(val, aggregates.get(x+1,y))
+					&& Util.isEqual(val, aggregates.get(x-1,y+1))
+					&& Util.isEqual(val, aggregates.get(x,y+1))
+					&& Util.isEqual(val, aggregates.get(x+1,y+1))) {
+				return empty;
+			}
+			
+			return val;
+		}
 		
 	}
 	
+	/**Fill in empty values based on a function of nearby values.
+	 *
+	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
+	 * TODO: Add support for a searching function...
+	 ***/ 
+	public static class Smear<V> implements Transfer.Specialized<V,V> {
+		final V empty;
+		public Smear(V empty) {
+			this.empty = empty;
+		}
+
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		
+		@Override
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			Point p = new Point(x,y);
+			for (int i=0; outOfBounds(p, aggregates); i++) {
+				spiralFrom(x,y,i,p);
+				V val = aggregates.get(p.x, p.y);
+				if (!Util.isEqual(val, empty)) {return val;}
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+
+		public Point spiralFrom(int X, int Y, int n, Point into) {
+			int x=0,y=0;
+			int dx = 0;
+			int dy = -1;
+			for (int i=0; i<n; i++) {
+				if ((-X/2 < x) && (x <= X/2) && (-Y/2 < y) && (y <= Y/2)) {
+					into.setLocation(x,y);
+					return into;
+				}
+
+				if ((x == y) || (x < 0 && x == -y) || (x > 0 && x == 1-y)) {
+					int temp = dx;
+					dx = -dy;
+					dy = temp;
+				}
+				x = x+dx;
+				y = y+dy;
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+		
+		public boolean outOfBounds(Point p, Aggregates<?> aggregates) {
+			return p.x >= aggregates.lowX() && p.x < aggregates.highX()
+					&& p.y >= aggregates.lowY() && p.y < aggregates.highY();
+		}
+	}
+	
+	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer<V,V> {
 		final V empty;
 		final Spreader<V> spreader;

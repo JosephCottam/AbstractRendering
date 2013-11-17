@@ -52,7 +52,8 @@ public class AggregationStrategies {
 		} else {
 			sources.add(left);
 			sources.add(right);
-			target = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, red.identity());
+			target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 
+					(int) bounds.getMaxX(), (int) bounds.getMaxY(), red.identity());
 		}
 	
 		for (Aggregates<T> source: sources) {
