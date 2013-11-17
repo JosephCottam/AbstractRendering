@@ -1,4 +1,4 @@
-package ar.test.benchmarks;
+package ar.benchmarks;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
@@ -73,7 +73,7 @@ public class RenderSpeed {
 		Transfer transfer = source.transfer();
 		Glyphset glyphs = source.glyphset();
 	
-		ParallelRenderer.THREAD_POOL_SIZE = cores;
+		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
 		
 		Renderer render;
 		if (rend.startsWith("PARALLEL")) {
@@ -86,9 +86,10 @@ public class RenderSpeed {
 		
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
 		Selector s = TouchesPixel.make(glyphs);
+		long taskCount = glyphs.size()/render.taskSize(glyphs);
 		
 		if (header) {
-			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores");
+			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, tasks");
 		}
 		
 		try {
@@ -106,7 +107,7 @@ public class RenderSpeed {
 
 				aggs.get(0, 0);
 				colors.get(0, 0);
-				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d\n", source, aggTime, transTime, i, width, height, rend, cores);
+				System.out.printf("%s, %d, %d, %d, %d, %d, %s, %d, %d\n", source, aggTime, transTime, i, width, height, rend, cores, taskCount);
 				System.out.flush();
 			}
 		} catch (Exception e) {
@@ -146,12 +147,12 @@ public class RenderSpeed {
 			if (v.equals(aggregates.defaultValue())) {
 				return empty;
 			}
-			Util.Stats extrema = Util.stats(aggregates, false);
+			Util.Stats<Number> extrema = Util.stats(aggregates, true, true);
 			
 			if (logBasis <= 1) {
-				return Util.interpolate(low, high, extrema.min, extrema.max, v.doubleValue());
+				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
 			} else {
-				return Util.logInterpolate(low,high, extrema.min, extrema.max, v.doubleValue(), logBasis);
+				return Util.logInterpolate(low,high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue(), logBasis);
 			}
 		}
 

@@ -15,11 +15,10 @@ public class RendererOptions extends JPanel {
 	
 	public RendererOptions() {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		renderers.addItem("Parallel (Spatial)");
+		renderers.addItem("Parallel");
 		renderers.addItem("Serial");
-		renderers.addItem("Parallel (Glyphs)");
 		renderers.addActionListener(actionProvider.delegateListener());
-		renderers.setSelectedItem("Parallel (Glyphs)");
+		renderers.setSelectedItem("Parallel");
 		
 		JPanel upper = new JPanel(); 
 		upper.add(new LabeledItem("Render:" , renderers));

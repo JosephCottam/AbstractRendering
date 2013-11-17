@@ -4,20 +4,23 @@ import static org.junit.Assert.*;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.nio.channels.FileChannel;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.util.BigFileByteBuffer;
+import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.util.DelimitedReader;
-import ar.util.IndexedEncoding;
-import ar.util.MemMapEncoder;
-import ar.util.MemMapEncoder.TYPE;
+import ar.util.memoryMapping.BigFileByteBuffer;
+import ar.util.memoryMapping.MappedFile;
+import ar.util.memoryMapping.MemMapEncoder;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;
 
 public class MemoryMappingTests {
@@ -68,7 +71,7 @@ public class MemoryMappingTests {
 
 	@Test
 	public void minMax() throws Exception {
-		BigFileByteBuffer buffer = new BigFileByteBuffer(new File(hbinName), 100,1000);
+		BigFileByteBuffer buffer = new BigFileByteBuffer(new File(hbinName), 1000);
 		MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer);
 		
 		IndexedEncoding maxEntry = new IndexedEncoding(header.types, header.maximaRecordOffset, buffer);
@@ -86,6 +89,15 @@ public class MemoryMappingTests {
 		
 		assertEquals("Max mismatch", max, maxEntry.get(0));
 		assertEquals("Min mismatch", min, minEntry.get(0));
+		
+	}
+	
+	@Test
+	public void subset() throws Exception {
+		Glyphset<Rectangle2D, Integer> glyphs = mm.segment(0, 10);
+		for (Glyph<Rectangle2D, Integer> g: glyphs) {
+			g.toString();
+		}
 		
 	}
 	

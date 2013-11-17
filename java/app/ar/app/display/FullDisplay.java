@@ -50,9 +50,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 		this.dataset = glyphs;
 		this.renderer = renderer;
 		
-		ZoomPanHandler h = new ZoomPanHandler();
-		super.addMouseListener(h);
-		super.addMouseMotionListener(h);
+		new ZoomPanHandler().register(this);
 	}
 	
 	protected void finalize() {renderPool.shutdown();}
@@ -168,4 +166,6 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 			viewTransform(vt);
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
+	
+	public Rectangle2D dataBounds() {return dataset.bounds();}
 }

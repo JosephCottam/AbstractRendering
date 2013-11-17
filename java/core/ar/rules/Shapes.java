@@ -17,6 +17,7 @@ import ar.util.Util;
 
 /**Shape-aware transfer functions.**/
 public class Shapes {
+	
 	/**Given a set of regions, combine all aggregates that are in that region and make that combined
 	 * value the value of any point in the region.
 	 * 

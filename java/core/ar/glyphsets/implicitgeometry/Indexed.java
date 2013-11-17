@@ -6,8 +6,8 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 
 import ar.util.ColorNames;
-import ar.util.MemMapEncoder;
 import ar.util.Util;
+import ar.util.memoryMapping.MemMapEncoder;
 
 /**Interface designating something has an integer-valued "get" function.
  * This interface is the basis for array-based and file-record conversions

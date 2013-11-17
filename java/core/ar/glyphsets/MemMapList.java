@@ -2,6 +2,8 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
@@ -9,13 +11,13 @@ import java.util.concurrent.RecursiveTask;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.BigFileByteBuffer;
-import ar.util.MemMapEncoder.TYPE;
-import ar.util.MemMapEncoder;
+import ar.util.memoryMapping.MappedFile;
+import ar.util.memoryMapping.MemMapEncoder;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;
-import ar.util.IndexedEncoding;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
  * 
@@ -29,6 +31,9 @@ import ar.util.IndexedEncoding;
  * 
  *  The header, when provided, is an integer indicating how many fields are in each record,
  *  followed by a set of characters (one for each field).  
+ *  
+ *  This is class is NOT thread-safe.  However, subsets are logically independent units 
+ *  so multiple subsets can be safely created and used concurrently (even if they overlap).
  *  
  *  The characters that describe field types are:
  *  
@@ -56,41 +61,36 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
 
-	private final ThreadLocal<BigFileByteBuffer> buffer = 
-			new ThreadLocal<BigFileByteBuffer>() {
-		public BigFileByteBuffer initialValue() {
-			if (source == null) {return null;}
-			try {return new BigFileByteBuffer(source, recordLength, BUFFER_BYTES);}
-			catch (Exception e) {throw new RuntimeException(e);}
-		}
-	};
+	private final MappedFile buffer;
 
-	private final File source;
 	private final TYPE[] types;
 	private final Valuer<Indexed,I> valuer;
 	private final Shaper<G,Indexed> shaper;
 
+	private final File source; //TODO: Remove, make this a general "ByteBackedList" or something like that..
 	private final int recordLength;
 	private final int[] offsets;
 	private final long dataTableOffset;
-	private final long stringTableOffset;
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	/**Create a new memory mapped list, types are read from the source.**/
+	/**Create a new memory mapped list, types are read from the source.
+	 * @throws IOException **/
 	public MemMapList(File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer) {
-		this.source = source;
 		this.valuer = valuer;
 		this.shaper = shaper;
-
+		this.source = source;
+		
 		if (source != null) {
-			MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer.get());
+			try {this.buffer = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES);}
+			catch (Exception e) {throw new RuntimeException("Error construction buffer for mem-mapped list.", e);}
+			
+			MemMapEncoder.Header header = MemMapEncoder.Header.from(buffer);
 			if (header.version != VERSION_UNDERSTOOD) {
 				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", header.version, VERSION_UNDERSTOOD));
 			}
 
 			dataTableOffset = header.dataTableOffset;
-			stringTableOffset = header.stringTableOffset;
 			types = header.types;
 			this.recordLength = header.recordLength;
 			this.offsets = MemMapEncoder.recordOffsets(types);
@@ -102,30 +102,43 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
 			} 
+			entryCount = (source.length()-dataTableOffset)/recordLength;
 		} else {
-			dataTableOffset = -1;
-			stringTableOffset = -1;
+			this.dataTableOffset = -1;
+			this.buffer = null;
 			this.types = null;
 			this.offsets = new int[0];
 			this.recordLength = -1;
+			this.entryCount=0;
 		}
-		if (stringTableOffset >=0) {throw new IllegalArgumentException("Can't handle strings (yet).");}
-		entryCount = buffer.get() == null ? 0 : (buffer.get().fileSize()-dataTableOffset)/recordLength;
-
+		
+	}
+	
+	public MemMapList(MappedFile buffer, File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
+		this.buffer = buffer;
+		this.shaper = shaper;
+		this.valuer = valuer;
+		this.types = types;
+		this.source = source;
+		this.offsets = MemMapEncoder.recordOffsets(types);
+		this.recordLength = MemMapEncoder.recordLength(types);
+		this.entryCount = buffer.capacity()/recordLength;
+		this.dataTableOffset=dataTableOffset;
 	}
 
 	protected void finalize() {pool.shutdownNow();}
 
 	@Override
 	public Glyph<G,I> get(long i) {
-		long recordOffset = (i*recordLength)+dataTableOffset;
-		IndexedEncoding entry = entryAt(recordOffset);
+		IndexedEncoding entry = entryAt(recordOffset(i));
 		Glyph<G,I> g = new SimpleGlyph<G,I>(shaper.shape(entry), valuer.value(entry));
 		return g;
 	}
 
+	protected long recordOffset(long i) {return (i*recordLength)+dataTableOffset;}
+	
 	protected IndexedEncoding entryAt(long recordOffset) {
-		BigFileByteBuffer buffer = this.buffer.get();
+		MappedFile buffer = this.buffer;
 		return new IndexedEncoding(types, recordOffset, buffer, offsets);
 	}
 
@@ -138,10 +151,25 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
 
-	public boolean isEmpty() {return buffer.get() == null || buffer.get().capacity() <= 0;}
+	public boolean isEmpty() {return buffer == null || buffer.capacity() <= 0;}
 	public long size() {return entryCount;}
 	public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
 
+	public long segments() {return size();}
+
+	@Override
+	public Glyphset<G,I> segment(long bottom, long top)
+			throws IllegalArgumentException {
+		
+		long offset = recordOffset(bottom);
+		long end = recordOffset(top);
+		
+		try {
+			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
+		} catch (Exception e) {throw new RuntimeException("Error segmenting glyphset", e);}
+	}
+	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
 			bounds = pool.invoke(new BoundsTask(0, this.size()));
@@ -186,14 +214,4 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		}
 
 	}
-
-	public long segments() {return size();}
-
-	@Override
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {
-		Glyphset<G,I> subset = GlyphSubset.make(this, bottom, top, false);
-		return subset;
-	}
-
 }

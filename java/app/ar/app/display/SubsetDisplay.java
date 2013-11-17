@@ -141,8 +141,9 @@ public class SubsetDisplay extends FullDisplay {
 				
 			} catch (Exception e) {
 				renderError = true;
-				System.err.println(e.getMessage());
-				//e.printStackTrace();
+				String msg = e.getMessage() == null ? e.getClass().getName() : e.getMessage();
+				System.err.println(msg);
+				e.printStackTrace();
 			}
 			
 			SubsetDisplay.this.repaint();

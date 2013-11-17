@@ -1,4 +1,4 @@
-package ar.test.benchmarks;
+package ar.benchmarks;
 
 import java.io.File;
 import java.io.FilenameFilter;

@@ -61,5 +61,7 @@ public final class SerialRenderer implements Renderer {
 		}
 		return out;
 	}
+	
 	public ProgressReporter progress() {return recorder;}
+	public long taskSize(Glyphset<?,?> glyphs) {return glyphs.size();}
 }

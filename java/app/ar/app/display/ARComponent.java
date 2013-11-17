@@ -10,6 +10,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.util.HasViewTransform;
 
 /**Root interactive display interface.**/
 public abstract class ARComponent extends JComponent {	
@@ -32,7 +33,7 @@ public abstract class ARComponent extends JComponent {
 	/**Force a full re-render.**/
 	public abstract void renderAgain();
 	
-	public static abstract class Aggregating extends ARComponent {
+	public static abstract class Aggregating extends ARComponent implements HasViewTransform {
 		private static final long serialVersionUID = 404081973530563354L;
 		public abstract Glyphset<?,?> dataset();
 		public abstract void dataset(Glyphset<?,?> data);
@@ -40,7 +41,6 @@ public abstract class ARComponent extends JComponent {
 		public abstract Aggregator<?, ?> aggregator();
 		public abstract void aggregator(Aggregator<?, ?> aggregator);
 		
-		public abstract void zoomFit();
 		public abstract AffineTransform viewTransform();
 		public abstract AffineTransform renderTransform();
 		public abstract void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;

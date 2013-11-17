@@ -12,8 +12,8 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.DelimitedReader;
-import ar.util.MemMapEncoder;
 import ar.util.Util;
+import ar.util.memoryMapping.MemMapEncoder;
 
 public class GlyphsetUtils {
 	private static boolean isNumber(String s) {
@@ -90,7 +90,7 @@ public class GlyphsetUtils {
 	}
 
 	public static final <G,V> Glyphset<G,V> memMap(String label, String file, Shaper<G,Indexed> shaper, Valuer<Indexed, V> valuer, int skip, String types) {
-		System.out.printf("Memory mapping %s...", label);
+		System.out.printf("## Memory mapping %s...", label);
 		File f = new File(file);
 
 		try {
@@ -102,13 +102,13 @@ public class GlyphsetUtils {
 		} catch (Exception e) {
 			try {
 				if (types != null) {
-					System.out.println("Error loading.  Attempting re-encode...");
+					System.err.println("## Error loading.  Attempting re-encode...");
 					File source = new File(file.replace(".hbin", ".csv"));
 					MemMapEncoder.write(source, skip, f, types.toCharArray());
 					return new MemMapList<>(f, shaper, valuer);
 				} else {throw e;}
 			} catch (Exception ex) {
-				System.out.println("Faield to load data.");
+				System.err.println("## Failed to load data.");
 				return null;
 			}
 		}
