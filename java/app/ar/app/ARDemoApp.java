@@ -13,88 +13,76 @@ import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
+import ar.app.components.sequentialComposer.SequentialComposer;
 import ar.app.display.ARComponent;
 import ar.app.display.EnhanceHost;
 import ar.app.display.SubsetDisplay;
 
+
+//TODO: Add "subset input", useful for contours
+//TODO: Add "Specialize From Here"
 public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private ARComponent.Aggregating display;
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
 	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
-	private final Presets presets = new Presets(this);
 	private final Status status = new Status();
-
-	private final ExportAggregates export;
+	private final SequentialComposer composer = new SequentialComposer();
 	
 	public ARDemoApp() {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
-		export = new ExportAggregates(this);
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());
 		
-		JPanel controls = new JPanel(new GridBagLayout());
+		JPanel topRow = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill =  GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth =1;
 		c.weightx = 1;
-		controls.add(enhanceOptions,c);
+		topRow.add(enhanceOptions,c);
 
 		c.fill =  GridBagConstraints.HORIZONTAL;
 		c.gridx = 1;
 		c.gridy = 0;
 		c.gridwidth =1;
 		c.weightx = 1;
-		controls.add(clipwarnControl,c);
+		topRow.add(clipwarnControl,c);
 
-		
-		c.gridx = 0;
-		c.gridy = 1;
-		c.gridwidth = 2;
+		c.fill =  GridBagConstraints.HORIZONTAL;
+		c.gridx = 2;
+		c.gridy = 0;
+		c.gridwidth = 1;
 		c.weightx = 1;
-		controls.add(presets, c);
-		
-		c.gridx = 0;
-		c.gridy = 2;
-		c.weightx = 0.5;
-		c.gridwidth = 1;
-		controls.add(status,c);
+		topRow.add(status,c);
+				
 
-		c.gridx = 1;
-		c.gridy = 2;		
-		c.weightx = 0.5;
-		c.gridwidth = 1;
-		controls.add(export,c);
+		JPanel controls = new JPanel();
+		controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
+		controls.add(topRow);
+		controls.add(composer);
 		
-		JLabel instructions = new JLabel("Double-click zooms to fit.", JLabel.CENTER);
-		c.gridx=0;
-		c.gridy=3;
-		c.weightx=2;
-		c.weightx=1;
-		controls.add(instructions,c);
-
 		frame.add(controls, BorderLayout.SOUTH);
+
 		
-		
-		final ARDemoApp app = this;
-		presets.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				boolean rezoom = presets.doZoomWith(app.display);
-				app.changeDisplay(presets.update(app.display));
-				if (rezoom) {
-					display.zoomFit();
-				}
-			}
-		});
-		
-		app.changeDisplay(presets.update(app.display));
-		
-		frame.add(display, BorderLayout.CENTER);
+//		final ARDemoApp app = this;
+//		presets.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				boolean rezoom = presets.doZoomWith(app.display);
+//				app.changeDisplay(presets.update(app.display));
+//				if (rezoom) {
+//					display.zoomFit();
+//				}
+//			}
+//		});
+//		
+//		app.changeDisplay(presets.update(app.display));
+//		
+//		frame.add(display, BorderLayout.CENTER);
 
 		frame.setSize(800, 800);
 		frame.validate();
