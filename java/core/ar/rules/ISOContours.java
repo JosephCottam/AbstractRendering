@@ -35,29 +35,31 @@ public interface ISOContours<N> {
 		final double spacing;
 		final N floor;
 		final Renderer renderer;
+		final boolean fill;
 		
 		/**@param spacing How far apart to place contours
 		 * @param floor Lowest contour value (if omitted, will be the min value in the input)
 		 */
-		public SpacedContours(Renderer renderer, double spacing, N floor) {
+		public SpacedContours(Renderer renderer, double spacing, N floor, boolean fill) {
 			this.spacing = spacing;
 			this.floor = floor;
 			this.renderer = renderer;
+			this.fill = fill;
 		}
 		
 		public N emptyValue() {return null;}
 
 		@Override
 		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(renderer, spacing, floor, aggregates);
+			return new Specialized<>(renderer, spacing, floor, fill, aggregates);
 		}
 		
 		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
 			final Aggregates<N> cached;
 			
-			public Specialized(Renderer renderer, double spacing, N floor, Aggregates<? extends N> aggregates) {
-				super(renderer, spacing, floor);
+			public Specialized(Renderer renderer, double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
+				super(renderer, spacing, floor, fill);
 				Util.Stats<N> stats = Util.stats(aggregates, true, true);
 				contours = new GlyphList<>();
 				ArrayList<Aggregates<N>> cachedAggregates = new ArrayList<>();
@@ -67,7 +69,7 @@ public interface ISOContours<N> {
 				N bottom = floor == null ? stats.min : floor;
 				do {
 					threshold = LocalUtils.addTo(bottom, i*spacing);
-					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, aggregates);
+					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, fill, aggregates);
 					this.contours.addAll(t.contours());
 					cachedAggregates.add(t.cached);
 					i++;
@@ -86,24 +88,27 @@ public interface ISOContours<N> {
 	public static class NContours<N extends Number> implements Transfer<N,N> {
 		final int n;
 		final Renderer renderer;
+		final boolean fill;
 		
-		public NContours(Renderer r, int n) {
+		public NContours(Renderer r, int n, boolean fill) {
 			this.n = n;
 			this.renderer = r;
+			this.fill = fill;
 		}
+		
 		public N emptyValue() {return null;}
 
 		@Override
 		public ar.Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new NContours.Specialized<>(renderer, n, aggregates);
+			return new NContours.Specialized<>(renderer, n, fill, aggregates);
 		}
 		
 		public static final class Specialized<N extends Number> extends NContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
 			final Aggregates<N> cached;
 			
-			public Specialized(Renderer r, int n, Aggregates<? extends N> aggregates) {
-				super(r, n);
+			public Specialized(Renderer r, int n, boolean fill, Aggregates<? extends N> aggregates) {
+				super(r, n, fill);
 				Util.Stats<N> stats = Util.stats(aggregates, true, true);
 				contours = new GlyphList<>();
 				
@@ -111,7 +116,7 @@ public interface ISOContours<N> {
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				for (int i=0;i<n;i++) {
 					N threshold = LocalUtils.addTo(stats.min, (step*i));
-					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, aggregates);
+					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, fill, aggregates);
 					this.contours.addAll(t.contours());
 					cachedAggregates.add(t.cached);
 				}
@@ -126,15 +131,17 @@ public interface ISOContours<N> {
 	public static class Single<N extends Number> implements Transfer<N, N> {
 		protected final N threshold;
 		protected final Renderer renderer;
+		protected final boolean fill;
 
-		public Single(Renderer r, N threshold) {
+		public Single(Renderer r, N threshold, boolean fill) {
 			this.threshold = threshold;
 			this.renderer = r;
+			this.fill = fill;
 		}
 
 		public N emptyValue() {return null;}
 		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(renderer, threshold, aggregates);
+			return new Specialized<>(renderer, threshold, fill,  aggregates);
 		}
 
 
@@ -142,8 +149,8 @@ public interface ISOContours<N> {
 			private final GlyphList<Shape, N> contours;
 			protected final Aggregates<N> cached;
 
-			public Specialized(Renderer renderer, N threshold, Aggregates<? extends N> aggregates) {
-				super(renderer, threshold);
+			public Specialized(Renderer renderer, N threshold, boolean fill, Aggregates<? extends N> aggregates) {
+				super(renderer, threshold, fill);
 				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, null);  
 
 				Aggregates<Boolean> isoDivided = renderer.transfer(padAggs, new ISOBelow<>(threshold));
@@ -152,6 +159,7 @@ public interface ISOContours<N> {
 				contours = new GlyphList<>();
 
 				contours.add(new SimpleGlyph<>(s, threshold));
+				if (fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
 				cached = renderer.transfer(isoDivided, new General.Retype<>(true, threshold, null));
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
