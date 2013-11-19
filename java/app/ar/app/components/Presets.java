@@ -222,7 +222,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(),
-					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
 					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
@@ -240,7 +240,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(),
-					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
 					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25));
 		}
@@ -257,7 +257,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(),
-					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Linear)";}
@@ -273,7 +273,8 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
-					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new Categories.ToCount<>(),
+					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.Present<>(Color.RED, Color.white));
 		}
 		public String name() {return "US Population (Opaque)";}
@@ -289,7 +290,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<>(
 					CHAIN_RENDERER, 
 					new Categories.ToCount<>(),
-					new General.Spread<>(0, new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
+					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
 					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
@@ -329,9 +330,10 @@ public class Presets extends JPanel {
 				colors.put(8, Color.GRAY);	//Mixed
 				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 
-				Transfer<CategoricalCounts<Color>, CoC<Color>> gather = new Shapes.ShapeGather(shapes, transformProvider);
-				Transfer<CoC<Color>, Color> weave = new Categories.RandomWeave();
-				Transfer<?, ?> chain = new MultiStageTransfer<>(CHAIN_RENDERER, rekey, gather, weave);
+				Transfer<?, ?> chain = new MultiStageTransfer<>(CHAIN_RENDERER, 
+						rekey, 
+						new Shapes.ShapeGather(shapes, transformProvider),
+						new Categories.RandomWeave());
 				return chain;
 			} catch (Exception e) {throw new RuntimeException("Error creating transfer.",e);}
 		}
@@ -360,6 +362,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
+					new General.Spread<>(new General.Spread.UnitSquare<CoC<Object>>(1), new Categories.MergeCategories<>()),
 					stratAlpha);
 		}
 		public String name() {return "US Racial Distribution";}
@@ -389,6 +392,7 @@ public class Presets extends JPanel {
 			return new MultiStageTransfer<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
+					new General.Spread<>(new General.Spread.UnitSquare<CoC<Object>>(1), new Categories.MergeCategories<>()),
 					lift);
 		}
 		public String name() {return "US Racial Distribution (highlight 'other')";}

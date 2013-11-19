@@ -160,39 +160,56 @@ public class General {
 	
 	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer<V,V> {
-		final V empty;
 		final Spreader<V> spreader;
 		final Aggregator<V,V> combiner;
 		
-		public Spread(V empty, Spreader<V> spreader, Aggregator<V,V> combiner) {
-			this.empty = empty;
+		public Spread(Spreader<V> spreader, Aggregator<V,V> combiner) {
 			this.spreader = spreader;
 			this.combiner = combiner;
 		}
 
-		public V emptyValue() {return empty;}
+		public V emptyValue() {return combiner.identity();}
 		
 		/**Calculations are done at specialization time, so transfer is fast but specialization is slow.**/
 		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {
-			return new Specialized<>(empty, spreader, aggregates, combiner);
+			return new Specialized<>(spreader, aggregates, combiner);
 		}
 		
 		public static class Specialized<V> extends Spread<V> implements Transfer.Specialized<V, V>  {
-			private final Aggregates<V> cached;
-			public Specialized(V empty, Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
-				super(empty, spreader, combiner);
-				cached = ar.aggregates.AggregateUtils.make(base, empty);
-				
-				for (int x=base.lowX(); x<base.highX(); x++) {
-					for (int y=base.lowY(); y<base.highY(); y++) {
-						V baseVal = base.get(x,y);
-						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
-						spreader.spread(cached, x,y, baseVal, combiner);
-					}
+			private Object cacheGuard = new Object(){};
+			private Aggregates<?> cacheKey;
+			private Aggregates<V> cachedAggs;
+
+			public Specialized(Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
+				super(spreader, combiner);
+				synchronized(cacheGuard) {
+					cacheKey =base;
+					cachedAggs = spread(base);
 				}
 			}
 
-			public V at(int x, int y, Aggregates<? extends V> aggregates) {return cached.get(x, y);}			
+			private Aggregates<V> spread(Aggregates<? extends V> aggregates) {
+				Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
+			
+				for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+					for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+						V baseVal = aggregates.get(x,y);
+						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
+						super.spreader.spread(target , x,y, baseVal, combiner);
+					}
+				}
+				return target;
+			}
+			
+			public V at(int x, int y, Aggregates<? extends V> aggregates) {
+				synchronized(cacheGuard) {
+					if (cacheKey != aggregates || aggregates == null) {
+						cachedAggs = spread(aggregates);
+						cacheKey = aggregates;
+					}
+				}
+
+				return cachedAggs.get(x, y);}			
 		}
 		
 		/**Spreader takes a type argument in case the spreading depends on the value.
