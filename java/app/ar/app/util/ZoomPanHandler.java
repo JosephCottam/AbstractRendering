@@ -145,12 +145,13 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 	 */
 	public void keyTyped(KeyEvent e) {
 		char c = e.getKeyChar();
+		HasViewTransform canvas = (HasViewTransform) e.getComponent();
+		JComponent comp = (JComponent) e.getComponent();
+		AffineTransform vt = canvas.viewTransform();
+
 		if (c == 'c' || c == 'C') {
-			HasViewTransform canvas = (HasViewTransform) e.getComponent();
-			JComponent comp = (JComponent) e.getComponent();
 			Rectangle vb = comp.getBounds();
 			Rectangle2D db = canvas.dataBounds();
-			AffineTransform vt = canvas.viewTransform();
 
 			double xmargin = vb.width/vt.getScaleX()-db.getWidth();
 			double ymargin = vb.height/vt.getScaleY()-db.getHeight();
@@ -161,18 +162,16 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 			t.translate(-tx,-ty);
 			try {canvas.viewTransform(t);}
 			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
-		} else if (c == '+') {
-			HasViewTransform canvas = (HasViewTransform) e.getComponent();
-			AffineTransform t = canvas.viewTransform();
-			t.scale(2, 2);
-			try {canvas.viewTransform(t);}
+		} else if (c == '+' || c == '=') {
+			vt.scale(2, 2);
+			try {canvas.viewTransform(vt);}
 			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
-		} else if (c == '-') {
-			HasViewTransform canvas = (HasViewTransform) e.getComponent();
-			AffineTransform t = canvas.viewTransform();
-			t.scale(.5,.5);
-			try {canvas.viewTransform(t);}
+		} else if (c == '-' || c == '_') {
+			vt.scale(.5,.5);
+			try {canvas.viewTransform(vt);}
 			catch (NoninvertibleTransformException e1) {/*Ignored.*/}			
+		} else if (c == 'z') {
+			canvas.zoomFit();
 		}
 	}
 
