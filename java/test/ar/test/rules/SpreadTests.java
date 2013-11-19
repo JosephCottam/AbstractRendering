@@ -24,7 +24,7 @@ public class SpreadTests {
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread4 = new General.Spread.UnitSquare<>(4);
-		General.Spread<Integer> transfer4 = new General.Spread<Integer>(0, spread4 , combiner);
+		General.Spread<Integer> transfer4 = new General.Spread<Integer>(spread4 , combiner);
 		Specialized<Integer,Integer> s4 = transfer4.specialize(aggs);
 		
 		Aggregates<Integer> rslt = r.transfer(aggs, s4);
@@ -43,7 +43,7 @@ public class SpreadTests {
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread2 = new General.Spread.UnitSquare<>(2);
-		General.Spread<Integer> transfer2 = new General.Spread<Integer>(0, spread2, combiner);
+		General.Spread<Integer> transfer2 = new General.Spread<Integer>(spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);
 		
@@ -65,7 +65,7 @@ public class SpreadTests {
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread2 = new General.Spread.UnitCircle<>(4);
-		General.Spread<Integer> transfer2 = new General.Spread<Integer>(0, spread2, combiner);
+		General.Spread<Integer> transfer2 = new General.Spread<Integer>(spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);
 		
@@ -88,7 +88,7 @@ public class SpreadTests {
 		aggs.set(4, 4, 4);
 		
 		Spreader<Integer> spread2 = new General.Spread.ValueCircle<>();
-		General.Spread<Integer> transfer2 = new General.Spread<Integer>(0, spread2, combiner);
+		General.Spread<Integer> transfer2 = new General.Spread<Integer>(spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);
 		
@@ -111,7 +111,7 @@ public class SpreadTests {
 		aggs.set(4, 4, 2);
 		
 		Spreader<Integer> spread2 = new General.Spread.ValueCircle<>();
-		General.Spread<Integer> transfer2 = new General.Spread<Integer>(0, spread2, combiner);
+		General.Spread<Integer> transfer2 = new General.Spread<Integer>(spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);
 		
