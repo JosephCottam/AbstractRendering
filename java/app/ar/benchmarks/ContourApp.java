@@ -67,7 +67,7 @@ public class ContourApp {
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
 		
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
-		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, magnitudes);
+		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, true, magnitudes);
 		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
 		
 		//Write an image....
