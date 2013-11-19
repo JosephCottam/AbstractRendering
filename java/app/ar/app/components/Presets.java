@@ -379,12 +379,14 @@ public class Presets extends JPanel {
 			Map<Object, Color> colors = new HashMap<>();
 			colors.put(2, new Color(0,0,200));	//White
 			colors.put(3, new Color(0,200,0));	//African American
-			colors.put(4, new Color(220,0,0));	//Native American
-			colors.put(5, Color.GRAY);	//Asian
-			colors.put(6, Color.GRAY);	//Hawaiian
-			colors.put(7, Color.GRAY);	//Other
-			colors.put(8, Color.GRAY);	//Mixed
+			colors.put(4, new Color(136,90,68));	//Native American
+			colors.put(5, new Color(255,69,0));	//Asian
+			colors.put(6, new Color(136,90,68));	//Hawaiian
+			colors.put(7, new Color(136,90,68));	//Other
+			colors.put(8, new Color(136,90,68));	//Mixed
 
+			
+			
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
@@ -473,7 +475,7 @@ public class Presets extends JPanel {
 			colors.put('b', new Color(0,200,0));	//African American
 			colors.put('a', new Color(255,69,0));	//Asian
 			colors.put('h', new Color(255,165,0));	//Hispanic
-			colors.put('o', Color.GRAY);	//Other
+			colors.put('o', new Color(136,90,68));	//Other
 
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
@@ -517,7 +519,7 @@ public class Presets extends JPanel {
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
-					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 3, true),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
@@ -535,8 +537,7 @@ public class Presets extends JPanel {
 					CHAIN_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
-					new ISOContours.NContours<>(CHAIN_RENDERER, 3),
-					new General.Simplify<>(0),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 3, false),
 					new General.Replace<>(null, 0, 0),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
@@ -554,7 +555,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return new MultiStageTransfer<Object,Object>(
 					CHAIN_RENDERER,
-					new ISOContours.NContours<>(CHAIN_RENDERER, 5),
+					new ISOContours.NContours<>(CHAIN_RENDERER, 5, true),
 					new General.Simplify<>(0),
 					new General.Replace<>(null, 0, 0),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
