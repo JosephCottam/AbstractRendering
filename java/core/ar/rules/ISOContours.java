@@ -159,8 +159,8 @@ public interface ISOContours<N> {
 				contours = new GlyphList<>();
 
 				contours.add(new SimpleGlyph<>(s, threshold));
-				if (fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
-				cached = renderer.transfer(isoDivided, new General.Retype<>(true, threshold, null));
+				if (!fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
+				cached = renderer.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}

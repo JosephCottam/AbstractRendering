@@ -33,13 +33,15 @@ public class General {
 		}
 	}
 	
-	
-	/**Performs a type-preserving replacement.  Specificed values are replaced, others as passed through.**/
+	/**Performs a type-preserving replacement.  
+	 * Specified values are replaced, others as passed through.
+	 * For more control or type-converting replace, use MapWrapper instead.
+	 * **/
 	public static class Replace<T> implements Transfer.Specialized<T,T> {
 		private final Map<T,T> mapping;
 		private final T empty;
 		
-		public Replace(T in, T out, T empty) {this(Retype.map(in,out), empty);}
+		public Replace(T in, T out, T empty) {this(MapWrapper.map(in,out), empty);}
 		public Replace(Map<T,T> mapping, T empty) {
 			this.mapping = mapping;
 			this.empty = empty;
@@ -54,33 +56,7 @@ public class General {
 		}
 	}
 	
-	/**Performs a type-changing replacement.  Because it is type-changing,
-	 * values cannot just test-through.  Therefore, values not explicitly accounted
-	 * for in the mapping are replaced with the empty value.
-	 */
-	public static class Retype<IN,OUT> implements Transfer.Specialized<IN,OUT> {
-		private final Map<IN,OUT> mapping;
-		private final OUT empty;
-		
-		public Retype(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
-		public Retype(Map<IN,OUT> mapping, OUT empty) {
-			this.mapping = mapping;
-			this.empty = empty;
-		}
-		private static <IN,OUT> Map<IN,OUT> map(IN in, OUT out) {
-			Map<IN,OUT> m = new HashMap<>();
-			m.put(in, out);
-			return m;
-		}
-		
-		public OUT emptyValue() {return empty;}
-		public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-			IN val = aggregates.get(x,y);
-			if (mapping.containsKey(val)) {return mapping.get(val);}
-			return empty;
-		}
-	}
+	
 	
 	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
 	public static class Simplify<V> implements Transfer.Specialized<V, V> {
@@ -347,21 +323,29 @@ public class General {
 		public OUT emptyValue() {return absent;}
 	}
 	
-	/**Transfer function that wraps a java.util.map.**/
+	/**Transfer function that wraps a java.util.map.
+	 * The empty value is returned if the input value is not found in the mapping.
+	 * **/
 	public static class MapWrapper<IN,OUT> implements Transfer.Specialized<IN,OUT> {
 		private static final long serialVersionUID = -4326656735271228944L;
 		private final Map<IN, OUT> mappings;
-		private final boolean nullIsValue;
 		private final OUT other; 
 
+		
+		public MapWrapper(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
+		private static <IN,OUT> Map<IN,OUT> map(IN in, OUT out) {
+			Map<IN,OUT> m = new HashMap<>();
+			m.put(in, out);
+			return m;
+		}
+		
 		/**
 		 * @param mappings Backing map
 		 * @param other Value to return if the backing map does not include a requested key
 		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
 		 */
-		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue) {
+		public MapWrapper(Map<IN, OUT> mappings, OUT other) {
 			this.mappings=mappings;
-			this.nullIsValue = nullIsValue;
 			this.other = other;
 		}
 
@@ -369,9 +353,7 @@ public class General {
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			IN key = aggregates.get(x, y);
 			if (!mappings.containsKey(key)) {return other;}
-			OUT val = mappings.get(key);
-			if (val==null && !nullIsValue) {return other;}
-			return val;
+			return mappings.get(key);
 		}
 
 		public OUT emptyValue() {return other;}
@@ -400,89 +382,7 @@ public class General {
 				dict.put(keyer.value(line), valuer.value(line));
 			}
 
-			return new MapWrapper<K,V>(dict,other,nullIsValue);
+			return new MapWrapper<K,V>(dict,other);
 		}
 	}
-	
-
-	/**Implements "if" in a transfer function.  Applies one transfer if the predicate is true, another if it is false.
-	 * 
-	 * TODO: Merge with ar.util.combinators.If...investigate the difference between the two predicate representations
-	 * **/
-	public static class Switch<IN,OUT> implements Transfer<IN,OUT> {
-		private static final long serialVersionUID = 9066005967376232334L;
-
-		private final Predicate<IN> predicate;
-		private final Transfer<IN,OUT> pass;
-		private final Transfer<IN,OUT> fail;
-		private final OUT empty;
-		
-		@SuppressWarnings("javadoc")
-		public Switch(Predicate<IN> predicate,
-						Transfer<IN,OUT> pass,
-						Transfer<IN,OUT> fail,
-						OUT empty) {
-			this.predicate = predicate;
-			this.pass = pass;
-			this.fail = fail;
-			this.empty = empty;
-		}
-
-		@Override
-		public OUT emptyValue() {return empty;}
-
-		@Override
-		public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-			
-			Transfer.Specialized<IN,OUT> ps= pass.specialize(aggregates);
-			Transfer.Specialized<IN, OUT> fs = fail.specialize(aggregates);
-			Predicate.Specialized<IN> preds = predicate.specialize(aggregates);
-			return new Specialized<>(preds, ps, fs, empty);
-		}
-		
-		protected static class Specialized<IN, OUT> extends Switch<IN, OUT> implements Transfer.Specialized<IN, OUT> {
-			final Predicate.Specialized<IN> predicate;
-			final Transfer.Specialized<IN, OUT> pass;
-			final Transfer.Specialized<IN, OUT> fail;
-
-			public Specialized(
-					Predicate.Specialized<IN> predicate,
-					Transfer.Specialized<IN, OUT> pass, 
-					Transfer.Specialized<IN, OUT> fail, 
-					OUT empty) {
-				super(predicate, pass, fail, empty);
-				this.predicate = predicate;
-				this.pass = pass;
-				this.fail = fail;
-			}
-
-
-			@Override
-			public OUT at(int x, int y,Aggregates<? extends IN> aggregates) {
-				if (predicate.test(x, y, aggregates)) {
-					return pass.at(x, y, aggregates);
-				} else {
-					return fail.at(x, y, aggregates);
-				}
-			}
-		}
-		
-		/**Test on a specific location in a set of aggregates.**/
-		public static interface Predicate<IN> {
-			/**
-			 * @param aggs Aggregates to specialize this predicate to.  Specialized predicates
-			 * are ready to be invoked.  The specialization process mirrors that of the
-			 * transfer-function specialization.
-			 */
-			public Predicate.Specialized<IN> specialize(Aggregates<? extends IN> aggs);
-			
-			/**Interface to indicate a predicate is ready to be used.**/
-			public interface Specialized<IN> extends Predicate<IN> {
-				
-				/**Execute the encoded test on the given data.**/
-				public boolean test(int x, int y, Aggregates<? extends IN> aggs);
-			}
-		}
-	}
-	
 }

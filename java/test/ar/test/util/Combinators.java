@@ -14,7 +14,7 @@ import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.General;
 import ar.rules.Numbers;
-import ar.util.combinators.*;
+import ar.rules.combinators.*;
 
 public class Combinators {
 	@Test
@@ -62,7 +62,6 @@ public class Combinators {
 		}
 		
 		Transfer.Specialized<Boolean,Color> t = new If<>(new Predicate.True(), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
-		
 		Aggregates<Color> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
 		for (int x=a.lowX(); x < a.highX(); x++) {

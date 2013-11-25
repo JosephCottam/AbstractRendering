@@ -1,9 +1,7 @@
-package ar.util.combinators;
+package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Transfer;
-
-//TODO: Merge with ar.rules.General.Switch...investigate the difference between the two predicate representations
 
 public class If<IN,OUT> implements Transfer<IN,OUT> {
     protected final Predicate<IN> pred;
@@ -41,7 +39,7 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
 
             super(pred,pass,fail,empty);
             this.pass = pass.specialize(aggregates);
-            this.fail = pass.specialize(aggregates);
+            this.fail = fail.specialize(aggregates);
         }
 
         @Override

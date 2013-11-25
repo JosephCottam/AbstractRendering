@@ -1,4 +1,4 @@
-package ar.util.combinators;
+package ar.rules.combinators;
 
 import ar.renderers.ParallelRenderer;
 import ar.Renderer;

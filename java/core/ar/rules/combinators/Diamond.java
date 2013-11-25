@@ -1,4 +1,4 @@
-package ar.util.combinators;
+package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Aggregator;

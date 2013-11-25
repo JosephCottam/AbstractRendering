@@ -45,8 +45,10 @@ import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
+import ar.rules.combinators.Chain;
+import ar.rules.combinators.If;
+import ar.rules.combinators.Predicate;
 import ar.rules.Shapes;
-import ar.util.combinators.Chain;
 import ar.util.Util;
 
 public class Presets extends JPanel {
@@ -376,21 +378,34 @@ public class Presets extends JPanel {
 		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
+			final Color other = new Color(136,90,68);
 			Map<Object, Color> colors = new HashMap<>();
 			colors.put(2, new Color(0,0,200));	//White
 			colors.put(3, new Color(0,200,0));	//African American
-			colors.put(4, new Color(136,90,68));//Native American
+			colors.put(4, other);//Native American
 			colors.put(5, new Color(255,69,0));	//Asian
-			colors.put(6, new Color(136,90,68));//Hawaiian
-			colors.put(7, new Color(136,90,68));//Other
-			colors.put(8, new Color(136,90,68));//Mixed
-
-			
+			colors.put(6, other);//Hawaiian
+			colors.put(7, other);//Other
+			colors.put(8, other);//Mixed
 			
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
-
+			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
+			
+			Predicate<CategoricalCounts<Color>> p = new Predicate<CategoricalCounts<Color>>() {
+				public boolean test(CategoricalCounts<Color> val) {
+					if (val.hasKey(other)) {
+						double ratio = val.count(other)/((double) val.fullSize());
+						return ratio > .1;
+					} else {
+						return false;
+					}
+				}
+			};
+			
+			Transfer<CategoricalCounts<Color>, Color> lift = new If<>(p, black, stratAlpha);
+			
+			
 			return new Chain<Object, Object>(
 					CHAIN_RENDERER,
 					rekey,
@@ -538,7 +553,6 @@ public class Presets extends JPanel {
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new ISOContours.NContours<>(CHAIN_RENDERER, 3, false),
-					new General.Replace<>(null, 0, 0),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
@@ -653,38 +667,5 @@ public class Presets extends JPanel {
 	
 	
 
-	///Predicate to lift the 'other' category to the front...
-	private static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
-			super(
-				new Pred(cutoff), 
-				new General.Const(Color.black), 
-				baseline, 
-				baseline.emptyValue());
-		}
-		
-		private static final class Pred implements General.Switch.Predicate.Specialized<CategoricalCounts<Color>> {
-			private final double cutoff;
-			public Pred(double cutoff) {this.cutoff = cutoff;}
-         
-			public boolean test(int x, int y,
-					Aggregates<? extends CategoricalCounts<Color>> aggs) {
-				
-				CategoricalCounts<Color> val = aggs.get(x, y);				
-				int keyIdx=-1;
-				for (int i=0; i< val.size(); i++) {
-					if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
-				}
-				return (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > cutoff);
-			}
-
-			public ar.rules.General.Switch.Predicate.Specialized<CategoricalCounts<Color>> 
-				specialize(Aggregates<? extends CategoricalCounts<Color>> aggs) {
-				return this;
-			}
-		}
-		
-	}
 
 }

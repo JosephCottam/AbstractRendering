@@ -1,4 +1,4 @@
-package ar.util.combinators;
+package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -17,7 +17,9 @@ public interface Predicate<IN> {
     public static final class VPred<IN> implements Predicate<IN> {
     	private final Valuer<IN,Boolean> valuer;
     	public VPred(Valuer<IN,Boolean> valuer) {this.valuer = valuer;}
-    	public boolean test(IN arg) {return valuer.value(arg);}    	
+    	public boolean test(IN arg) {return valuer.value(arg);}
+    	
+    	public static <IN> VPred<IN> m(Valuer<IN, Boolean> pred) {return new VPred<>(pred);}
     }
     
     /**Check if a predicate is true for all items in an aggregate set.**/
