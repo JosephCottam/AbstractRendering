@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import ar.rules.CategoricalCounts;
+import ar.util.Util;
 
 /**Converts values from one type to another.
  * The common scenario is to select a single field from a
@@ -88,6 +89,13 @@ public interface Valuer<I,V> extends Serializable {
 			int val = ((Integer) from.get(valIdx)).intValue();
 			return new CategoricalCounts.CoC<>(comp, key, val); 
 		}
+	}
+	
+	/**Convert a value to a true/false based on equality to a reference value.**/
+	public static final class Equals<IN> implements Valuer<IN, Boolean> {
+		private final IN ref;
+		public Equals(IN ref) {this.ref = ref;}
+		public Boolean value(IN from) {return Util.isEqual(ref, from);}		
 	}
 	
 }

@@ -398,7 +398,10 @@ public class General {
 	}
 	
 
-	/**Implents "if" in a transfer function.  Applies one transfer if the predicate is true, another if it is false.**/
+	/**Implements "if" in a transfer function.  Applies one transfer if the predicate is true, another if it is false.
+	 * 
+	 * TODO: Merge with ar.util.combinators.If...investigate the difference between the two predicate representations
+	 * **/
 	public static class Switch<IN,OUT> implements Transfer<IN,OUT> {
 		private static final long serialVersionUID = 9066005967376232334L;
 

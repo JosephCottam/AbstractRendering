@@ -40,7 +40,7 @@ public class Fix<IN> implements Transfer<IN,IN> {
 
         public Specialized(Renderer renderer, Transfer<IN,IN> base, Predicate<Aggregates<? extends IN>> pred, Aggregates<? extends IN> aggs) {
             super(renderer, base, pred);
-            this.cache = new CacheProvider(this);
+            this.cache = new CacheProvider<>(this);
             op = base.specialize(aggs);
         }
 

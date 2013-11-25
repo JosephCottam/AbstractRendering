@@ -24,7 +24,7 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
         return new Specialized<>(renderer, first, second, aggregates);
     }
 
-    public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT>,CacheProvider.CacheTarget {
+    public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT>,CacheProvider.CacheTarget<IN,OUT> {
         protected final Transfer.Specialized<IN,MID> first;
         protected final Transfer.Specialized<MID,OUT> second;
         protected final CacheProvider<IN,OUT> cache;
@@ -35,7 +35,7 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
                            final Aggregates<? extends IN> aggs) {
             super(renderer, first, second);
             this.first = first.specialize(aggs);
-            cache = new CacheProvider(this);
+            cache = new CacheProvider<>(this);
 
             Aggregates<MID> tempAggs = renderer.transfer(aggs, this.first);
             this.second = second.specialize(tempAggs);
@@ -49,7 +49,7 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
         }
 
         @Override
-        public Aggregates build(Aggregates aggs) {
+        public Aggregates<OUT> build(Aggregates<? extends IN> aggs) {
             Aggregates<MID> tempAggs1 = renderer.transfer(aggs, first);
             Aggregates<OUT> tempAggs2 = renderer.transfer(tempAggs1, second);
             return tempAggs2;

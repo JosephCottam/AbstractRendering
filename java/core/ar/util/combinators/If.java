@@ -3,6 +3,8 @@ package ar.util.combinators;
 import ar.Aggregates;
 import ar.Transfer;
 
+//TODO: Merge with ar.rules.General.Switch...investigate the difference between the two predicate representations
+
 public class If<IN,OUT> implements Transfer<IN,OUT> {
     protected final Predicate<IN> pred;
     protected final Transfer<IN,OUT> pass;

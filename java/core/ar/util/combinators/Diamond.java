@@ -30,7 +30,7 @@ public class Diamond<IN,OUT> implements Transfer<IN,OUT> {
 
     @Override
     public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized(renderer, left, right, merge, aggregates);
+        return new Specialized<>(renderer, left, right, merge, aggregates);
     }
 
     public static class Specialized<IN,OUT> extends Diamond<IN,OUT> implements Transfer.Specialized<IN,OUT>, CacheProvider.CacheTarget<IN,OUT> {
@@ -47,7 +47,7 @@ public class Diamond<IN,OUT> implements Transfer<IN,OUT> {
             super(renderer, left, right, merge);
             this.left = left.specialize(aggs);
             this.right = right.specialize(aggs);
-            this.cache = new CacheProvider(this);
+            this.cache = new CacheProvider<>(this);
         }
 
         @Override
