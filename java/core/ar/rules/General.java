@@ -55,7 +55,7 @@ public class General {
 	}
 	
 	/**Performs a type-changing replacement.  Because it is type-changing,
-	 * values cannot just pass-through.  Therefore, values not explicitly accounted
+	 * values cannot just test-through.  Therefore, values not explicitly accounted
 	 * for in the mapping are replaced with the empty value.
 	 */
 	public static class Retype<IN,OUT> implements Transfer.Specialized<IN,OUT> {

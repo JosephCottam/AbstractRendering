@@ -31,7 +31,7 @@ import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
-import ar.util.MultiStageTransfer;
+import ar.util.combinators.Chain;
 import ar.util.DelimitedReader;
 import ar.util.Util;
 import ar.Glyphset;
@@ -128,7 +128,7 @@ public class ARServer extends NanoHTTPD {
 		
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
-		Transfer transfer = new MultiStageTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
+		Transfer transfer = new Chain(r, transfers.toArray(new Transfer[transfers.size()]));
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;
