@@ -73,7 +73,7 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
 		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
 						
-		AGGREGATORS.put("Blue",new General.Const<Color>(Color.BLUE));
+		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));
 		AGGREGATORS.put("Gradient", new Debug.Gradient(500, 500));
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new Categories.Last());

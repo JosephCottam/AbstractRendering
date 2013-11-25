@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
-import java.nio.channels.FileChannel;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +16,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.util.DelimitedReader;
 import ar.util.memoryMapping.BigFileByteBuffer;
-import ar.util.memoryMapping.MappedFile;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;

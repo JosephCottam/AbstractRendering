@@ -7,7 +7,10 @@ import ar.Transfer;
 import ar.renderers.AggregationStrategies;
 import ar.util.CacheProvider;
 
-/**Split, then merge...**/
+/**Split, then merge...
+ * 
+ * TODO: To faciliate easier ad-hoc merge, have a single-method "combiner" interface instead of "Aggregator".  All Aggregator are combiners. 
+ * **/
 public class Diamond<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT> left;
     protected final Transfer<IN,OUT> right;

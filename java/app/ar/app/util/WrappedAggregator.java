@@ -14,7 +14,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	public Aggregator<G,A> op();
 	
 	public class SolidBlue implements WrappedAggregator<Object, Color> {
-		public Aggregator<Object, Color> op() {return new General.Const<Color>(Color.BLUE);}
+		public Aggregator<Object, Color> op() {return new General.Const<>(Color.BLUE);}
 		public String toString() {return "Blue (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 		public int hashCode() {return this.getClass().hashCode();}

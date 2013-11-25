@@ -19,7 +19,7 @@ public class Fix<IN> implements Transfer<IN,IN> {
     protected final Predicate<Aggregates<? extends IN>> pred;
     protected final Renderer renderer;
 
-    public Fix(Transfer<IN,IN> base, Predicate<Aggregates<? extends IN>> pred) {
+    public Fix(Predicate<Aggregates<? extends IN>> pred, Transfer<IN,IN> base) {
         this(Resources.DEFAULT_RENDERER, base, pred);
     }
 

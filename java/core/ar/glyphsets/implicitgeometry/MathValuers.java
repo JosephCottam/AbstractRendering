@@ -200,5 +200,36 @@ public class MathValuers {
 	}
 	public static final class ShortWrapper implements Valuer<Double, Short> {
 		public Short value(Double d) {return d.shortValue();}
-	}	
+	}
+	
+	
+	public static final class GT<N extends Number> implements Valuer<N, Boolean> {
+		final double ref;
+		public GT(double ref) {this.ref = ref;} 
+		public Boolean value(N from) {return from.doubleValue() > ref;}
+	}
+	
+	public static final class GTE<N extends Number> implements Valuer<N, Boolean> {
+		final double ref;
+		public GTE(double ref) {this.ref = ref;} 
+		public Boolean value(N from) {return from.doubleValue() >= ref;}
+	}
+	
+	public static final class LT<N extends Number> implements Valuer<N, Boolean> {
+		final double ref;
+		public LT(double ref) {this.ref = ref;} 
+		public Boolean value(N from) {return from.doubleValue() < ref;}
+	}
+	
+	public static final class LTE<N extends Number> implements Valuer<N, Boolean> {
+		final double ref;
+		public LTE(double ref) {this.ref = ref;} 
+		public Boolean value(N from) {return from.doubleValue() <= ref;}
+	}
+	
+	public static final class EQ<N extends Number> implements Valuer<N, Boolean> {
+		final Number ref;
+		public EQ(Number ref) {this.ref = ref;} 
+		public Boolean value(N from) {return ref.equals(from);}
+	}
 }

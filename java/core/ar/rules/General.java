@@ -280,17 +280,24 @@ public class General {
 	}
 	
 	/**Aggregator and Transfer that always returns the same value.**/
-	public static final class Const<OUT> implements Aggregator<Object,OUT>, Transfer.Specialized<Object, OUT> {
+	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.Specialized<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
+		
+		/**Two-argument version to help type inference.
+		 * 
+		 * @param val Value to always return
+		 * @param ref Input value that matches type of expected input.  THIS VALUE IS IGNORED.
+		 */
+		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
-		public OUT combine(long x, long y, OUT left, Object update) {return val;}
+		public OUT combine(long x, long y, OUT left, A update) {return val;}
 		public OUT rollup(OUT left, OUT right) {return val;}
 		public OUT identity() {return val;}
 		public OUT emptyValue() {return val;}
-		public ar.Transfer.Specialized<Object, OUT> specialize(Aggregates<? extends Object> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends Object> aggregates) {return val;}
+		public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
 	}
 
 

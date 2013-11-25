@@ -55,4 +55,9 @@ public interface Predicate<IN> {
     	public Not(Predicate<IN> base) {this.base = base;}
 		public boolean test(IN arg) {return !base.test(arg);}
     }
+    
+    /**Echo for boolean values.**/
+    public static final class True implements Predicate<Boolean> {
+		public boolean test(Boolean arg) {return arg;}
+    }
 }
