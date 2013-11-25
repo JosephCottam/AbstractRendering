@@ -24,31 +24,31 @@ public class Combinators {
 		Aggregates<Boolean> m = AggregateUtils.make(11,20, true);
 		m.set(10, 10, false);
 		
-		Predicate<Boolean> isTrue = new Predicate.VPred<>(new Valuer.Equals<>(true));
-		Predicate<Boolean> isFalse = new Predicate.Not<>(isTrue);
+		Valuer<Boolean, Boolean> isTrue = new Valuer.Equals<>(true);
+		Valuer<Boolean, Boolean> isFalse = new Predicates.Not<>(isTrue);
 		
-		assertTrue(isTrue.test(t.get(0, 0)));
-		assertTrue(isFalse.test(f.get(0, 0)));
+		assertTrue(isTrue.value(t.get(0, 0)));
+		assertTrue(isFalse.value(f.get(0, 0)));
 		
-		Predicate<Aggregates<? extends Boolean>> someTrue = new Predicate.Some<>(isTrue);		
-		assertTrue(someTrue.test(t));
-		assertFalse(someTrue.test(f));
-		assertTrue(someTrue.test(m));
+		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Some<>(isTrue);		
+		assertTrue(someTrue.value(t));
+		assertFalse(someTrue.value(f));
+		assertTrue(someTrue.value(m));
 
-		Predicate<Aggregates<? extends Boolean>> allTrue = new Predicate.All<>(isTrue);
-		assertTrue(allTrue.test(t));
-		assertFalse(allTrue.test(f));
-		assertFalse(allTrue.test(m));
+		Valuer<Aggregates<? extends Boolean>, Boolean> allTrue = new Predicates.All<>(isTrue);
+		assertTrue(allTrue.value(t));
+		assertFalse(allTrue.value(f));
+		assertFalse(allTrue.value(m));
 		
-		Predicate<Aggregates<? extends Boolean>> someFalse = new Predicate.Some<>(isFalse);
-		assertFalse(someFalse.test(t));
-		assertTrue(someFalse.test(f));
-		assertTrue(someFalse.test(m));
+		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Some<>(isFalse);
+		assertFalse(someFalse.value(t));
+		assertTrue(someFalse.value(f));
+		assertTrue(someFalse.value(m));
 
-		Predicate<Aggregates<? extends Boolean>> allFalse = new Predicate.All<>(isFalse);
-		assertFalse(allFalse.test(t));
-		assertTrue(allFalse.test(f));
-		assertFalse(allFalse.test(m));
+		Valuer<Aggregates<? extends Boolean>, Boolean>  allFalse = new Predicates.All<>(isFalse);
+		assertFalse(allFalse.value(t));
+		assertTrue(allFalse.value(f));
+		assertFalse(allFalse.value(m));
 	}
 	
 
@@ -61,7 +61,7 @@ public class Combinators {
 			}
 		}
 		
-		Transfer.Specialized<Boolean,Color> t = new If<>(new Predicate.True(), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
+		Transfer.Specialized<Boolean,Color> t = new If<>(new Valuer.Constant<Boolean, Boolean>(true), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
 		Aggregates<Color> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
 		for (int x=a.lowX(); x < a.highX(); x++) {
@@ -77,12 +77,12 @@ public class Combinators {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 1);
 		
 		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);
-		Predicate<Aggregates<? extends Integer>> p = new Predicate.All<>(new Predicate.VPred<>(new MathValuers.GT<Integer>(10)));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10));
 		Transfer.Specialized<Integer,Integer> t = new Fix<>(p, t1).specialize(a);
 		
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
-		assertTrue("Bluk test", p.test(rslt));
+		assertTrue("Bluk test", p.value(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
 				assertThat(String.format("Error at (%d,%d)", x,y), rslt.get(x,y), is(11));
@@ -100,8 +100,8 @@ public class Combinators {
 		Transfer.Specialized<Integer, Integer> t = new Diamond<>(t1,t2, new Numbers.Count<>()).specialize(a);
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
-		Predicate<Aggregates<? extends Integer>> p = new Predicate.All<>(new Predicate.VPred<>(new MathValuers.EQ<Integer>(3)));
-		assertTrue("Bluk test", p.test(rslt));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
+		assertTrue("Bluk test", p.value(rslt));
 	}
 
 	@Test
@@ -114,7 +114,7 @@ public class Combinators {
 		
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
-		Predicate<Aggregates<? extends Integer>> p = new Predicate.All<>(new Predicate.VPred<>(new MathValuers.EQ<Integer>(3)));
-		assertTrue("Bluk test", p.test(rslt));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
+		assertTrue("Bluk test", p.value(rslt));
 	}
 }

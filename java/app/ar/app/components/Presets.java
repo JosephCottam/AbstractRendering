@@ -47,7 +47,6 @@ import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.combinators.Chain;
 import ar.rules.combinators.If;
-import ar.rules.combinators.Predicate;
 import ar.rules.Shapes;
 import ar.util.Util;
 
@@ -392,8 +391,8 @@ public class Presets extends JPanel {
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
 			
-			Predicate<CategoricalCounts<Color>> p = new Predicate<CategoricalCounts<Color>>() {
-				public boolean test(CategoricalCounts<Color> val) {
+			Valuer<CategoricalCounts<Color>, Boolean> p = new Valuer<CategoricalCounts<Color>, Boolean>() {
+				public Boolean value(CategoricalCounts<Color> val) {
 					if (val.hasKey(other)) {
 						double ratio = val.count(other)/((double) val.fullSize());
 						return ratio > .1;

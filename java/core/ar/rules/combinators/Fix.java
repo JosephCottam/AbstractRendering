@@ -3,6 +3,7 @@ package ar.rules.combinators;
 import ar.Aggregates;
 import ar.Transfer;
 import ar.Renderer;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.CacheProvider;
 
 /** Calculate a fixed point by repeatedly applying a function
@@ -16,14 +17,14 @@ import ar.util.CacheProvider;
  */
 public class Fix<IN> implements Transfer<IN,IN> {
     protected final Transfer<IN,IN> base;
-    protected final Predicate<Aggregates<? extends IN>> pred;
+    protected final Valuer<Aggregates<? extends IN>, Boolean> pred;
     protected final Renderer renderer;
 
-    public Fix(Predicate<Aggregates<? extends IN>> pred, Transfer<IN,IN> base) {
-        this(Resources.DEFAULT_RENDERER, base, pred);
+    public Fix(Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
+        this(Resources.DEFAULT_RENDERER, pred, base);
     }
 
-    public Fix(Renderer renderer, Transfer<IN,IN> base, Predicate<Aggregates<? extends IN>> pred) {
+    public Fix(Renderer renderer, Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
         this.renderer=renderer;
         this.base=base;
         this.pred=pred;
@@ -38,14 +39,14 @@ public class Fix<IN> implements Transfer<IN,IN> {
         protected final Transfer.Specialized<IN,IN> op;
 
 
-        public Specialized(Renderer renderer, Transfer<IN,IN> base, Predicate<Aggregates<? extends IN>> pred, Aggregates<? extends IN> aggs) {
-            super(renderer, base, pred);
+        public Specialized(Renderer renderer, Transfer<IN,IN> base, Valuer<Aggregates<? extends IN>, Boolean> pred, Aggregates<? extends IN> aggs) {
+            super(renderer, pred, base);
             this.cache = new CacheProvider<>(this);
             op = base.specialize(aggs);
         }
 
         public Aggregates<? extends IN> build(Aggregates<? extends IN> aggs) {
-            while (!pred.test(aggs)) {aggs = renderer.transfer(aggs, op);}
+            while (!pred.value(aggs)) {aggs = renderer.transfer(aggs, op);}
             return aggs;
         }
 

@@ -2,18 +2,23 @@ package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Transfer;
+import ar.glyphsets.implicitgeometry.Valuer;
 
+/**If/Then/Else implementation.
+ * 
+ * Unless otherwise specified, the empty value will be taken from either pass or fail.
+ * **/
 public class If<IN,OUT> implements Transfer<IN,OUT> {
-    protected final Predicate<IN> pred;
+    protected final Valuer<IN, Boolean> pred;
     protected final Transfer<IN,OUT> pass;
     protected final Transfer<IN,OUT> fail;
     protected final OUT empty;
 
-    public If(Predicate<IN> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {
+    public If(Valuer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {
         this(pred, pass, fail, pass.emptyValue());
     }
 
-    public If(Predicate<IN> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail, OUT empty) {
+    public If(Valuer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail, OUT empty) {
         this.pred = pred;
         this.pass = pass;
         this.fail = fail;
@@ -31,7 +36,7 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
         final Transfer.Specialized<IN,OUT> fail;
 
         public Specialized(
-                Predicate<IN> pred,
+        		Valuer<IN, Boolean> pred,
                 Transfer<IN,OUT> pass,
                 Transfer<IN,OUT> fail,
                 OUT empty,
@@ -45,7 +50,7 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
         @Override
         public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
             IN val = aggregates.get(x,y);
-            if (pred.test(val)) {return pass.at(x,y,aggregates);}
+            if (pred.value(val)) {return pass.at(x,y,aggregates);}
             else {return fail.at(x,y,aggregates);}
         }
     }
