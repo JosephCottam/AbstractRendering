@@ -268,7 +268,7 @@ public class General {
 		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
-		public OUT combine(long x, long y, OUT left, A update) {return val;}
+		public OUT combine(OUT left, A update) {return val;}
 		public OUT rollup(OUT left, OUT right) {return val;}
 		public OUT identity() {return val;}
 		public OUT emptyValue() {return val;}
@@ -288,7 +288,7 @@ public class General {
 
 		public T emptyValue() {return empty;}
 		
-		public T combine(long x, long y, T left, T update) {return update;}
+		public T combine(T left, T update) {return update;}
 		public T rollup(T left, T right) {
 			if (left != null) {return left;}
 			if (right != null) {return right;}

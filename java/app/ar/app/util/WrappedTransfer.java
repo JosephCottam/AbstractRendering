@@ -12,6 +12,7 @@ import ar.app.components.ScatterControl;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
+import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
 
@@ -83,6 +84,13 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		}
 	}
 
+
+	public class Gradient implements WrappedTransfer<Object, Color> {
+		public Transfer<Object, Color> op() {return new Debug.Gradient();}
+		public String toString() {return "Gradient 500 (color)";}
+		public void selected(ARApp app) {}
+		public void deselected() {}
+	} 
 	
 	public class RedWhiteLinear implements WrappedTransfer<Number,Color> {
 		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}

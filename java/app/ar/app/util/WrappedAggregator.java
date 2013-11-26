@@ -4,7 +4,6 @@ import java.awt.Color;
 
 import ar.Aggregator;
 import ar.rules.CategoricalCounts;
-import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Categories;
 import ar.rules.Numbers;
@@ -16,13 +15,6 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	public class SolidBlue implements WrappedAggregator<Object, Color> {
 		public Aggregator<Object, Color> op() {return new General.Const<>(Color.BLUE);}
 		public String toString() {return "Blue (color)";}
-		public boolean equals(Object other) {return other.toString().equals(this.toString());}
-		public int hashCode() {return this.getClass().hashCode();}
-	} 
-
-	public class Gradient implements WrappedAggregator<Object, Color> {
-		public Aggregator<Object, Color> op() {return new Debug.Gradient(500, 500);}
-		public String toString() {return "Gradient 500 (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 		public int hashCode() {return this.getClass().hashCode();}
 	} 

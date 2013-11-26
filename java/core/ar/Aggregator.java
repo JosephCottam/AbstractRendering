@@ -7,9 +7,8 @@ import java.io.Serializable;
  * The aggregator is defined such that it may be used in a fold-like operation
  * where agg.combine(x,y, agg.combine(...), V) is a valid construction.
  * 
- * The intended usagage model is to instantiate an aggregator once per glyphset
+ * The intended usage model is to instantiate an aggregator once per glyphset
  * and repeatedly apply the aggregator to each pixel in the space.
- * 
  * 
  * IN -- The type of the data element on the glyph
  * OUT -- The type of aggregates produced
@@ -25,7 +24,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * aggregation can be performed.  Any other contextual information
 	 * needs to be provided through the class in some other way.
 	 *
-	 * TODO: With selectors in place...do we still need x/y?
+	 * TODO: With selectors in place...do we still need x/y?  If they are removed, then rollup and combine are the same!
 	 * 
 	 * @param x The x-position being operated on
 	 * @param y The y-position being operated on
@@ -33,7 +32,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * @param update A new input value
 	 * @return The aggregate value
 	 */
-	public OUT combine(long x, long y, OUT current, IN update);
+	public OUT combine(OUT current, IN update);
 	
 	
 	/**Reduce aggregate values into a single value.

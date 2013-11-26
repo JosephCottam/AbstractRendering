@@ -18,7 +18,7 @@ public final class Numbers {
 	 ***/
 	public static final class Count<V> implements Aggregator<V, Integer> {
 		private static final long serialVersionUID = 5984959309743633510L;
-		public Integer combine(long x, long y, Integer left, V update) {return left+1;}
+		public Integer combine(Integer left, V update) {return left+1;}
 		public Integer rollup(Integer left, Integer right) {return left+right;}
 		
 		public Integer identity() {return 0;}
@@ -35,7 +35,7 @@ public final class Numbers {
 		private final Valuer<Double,N> wrapper;
 		public Max(Valuer<Double,N> wrapper) {this.wrapper = wrapper;}
 
-		public N combine(long x, long y, N current, N update) {
+		public N combine(N current, N update) {
 			 return wrapper.value(Math.max(current.doubleValue(), update.doubleValue()));
 		}
 		
