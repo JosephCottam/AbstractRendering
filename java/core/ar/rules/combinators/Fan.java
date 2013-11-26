@@ -3,6 +3,7 @@ package ar.rules.combinators;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
+import ar.Resources;
 import ar.Transfer;
 import ar.renderers.AggregationStrategies;
 import ar.util.CacheProvider;

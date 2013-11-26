@@ -8,6 +8,7 @@ import java.awt.Color;
 import org.junit.Test;
 
 import ar.Aggregates;
+import ar.Resources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.MathValuers;

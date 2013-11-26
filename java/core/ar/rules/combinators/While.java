@@ -1,6 +1,7 @@
 package ar.rules.combinators;
 
 import ar.Aggregates;
+import ar.Resources;
 import ar.Transfer;
 import ar.Renderer;
 import ar.glyphsets.implicitgeometry.Valuer;

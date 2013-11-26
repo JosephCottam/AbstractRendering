@@ -2,6 +2,7 @@ package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Renderer;
+import ar.Resources;
 import ar.Transfer;
 import ar.util.CacheProvider;
 
