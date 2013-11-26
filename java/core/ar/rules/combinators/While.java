@@ -6,10 +6,9 @@ import ar.Renderer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.CacheProvider;
 
-/** Calculate a fixed point by repeatedly applying a function
- *  until the predicate returns true.
+/** Repeatedly apply a transfer function until a predicate passes.
  *
- *  The actual fixed-point calculation is done for the entire set of aggregates,
+ *  The actual iterative calculations are done on the entire set of aggregates,
  *  so the work is done once and cached.  Specialization is only done ONCE.
  *
  * TODO: Develop a specialize-on-each-iteration variant

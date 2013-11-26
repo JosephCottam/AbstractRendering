@@ -1,8 +1,8 @@
 package ar.ext.tiles;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -54,9 +54,9 @@ public class TileUtils {
 				
 				File target = extend(levelRoot, Integer.toString(col), Integer.toString(row), ".avro");
 				target.getParentFile().mkdirs();
-				OutputStream out = new FileOutputStream(target);
-				
-				AggregateSerializer.serialize(subset, out);
+				try (OutputStream out = new FileOutputStream(target)) {
+					AggregateSerializer.serialize(subset, out);
+				}
 				
 			}
 		}
@@ -85,7 +85,7 @@ public class TileUtils {
 	
 	/**Reload a specified subset of tiles into a single set of aggregates.**/
 	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, Class<A> type, File... files) 
-			throws FileNotFoundException {
+			throws IOException {
 		
 		Aggregates<A> acc = null;
 		Aggregator<A,A> red = new General.Echo<A>(null);

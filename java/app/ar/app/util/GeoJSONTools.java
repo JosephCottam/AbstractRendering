@@ -40,9 +40,8 @@ public class GeoJSONTools {
 	/**Load shape from the given file. 
 	 * Contents of the file are assumed to be GeoJSON.**/
 	public static Shape loadShapeJSON(File source) {
-		try {
-			FeatureCollection fc = 
-					new ObjectMapper().readValue(new FileInputStream(source), FeatureCollection.class);
+		try (FileInputStream fs = new FileInputStream(source)){
+			FeatureCollection fc = new ObjectMapper().readValue(fs, FeatureCollection.class);
 			Feature feature = fc.getFeatures().get(0);
 			@SuppressWarnings("rawtypes")
 

@@ -3,7 +3,6 @@ package ar.ext.avro;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -152,14 +151,11 @@ public class AggregateSerializer {
 	}
 
 
-	public static <A> Aggregates<A> deserialize(File file, Valuer<GenericRecord, A> converter) throws FileNotFoundException {
-		return deserialize(new FileInputStream(file), converter);
+	public static <A> Aggregates<A> deserialize(File file, Valuer<GenericRecord, A> converter) throws IOException {
+		try (FileInputStream fs = new FileInputStream(file)) {
+			return deserialize(fs, converter);
+		}
 	}
-	
-	public static <A> Aggregates<A> deserialize(String filename, Valuer<GenericRecord, A> converter) throws FileNotFoundException {
-		return deserialize(new FileInputStream(filename), converter);
-	}
-	
 	
 	public static <A> Aggregates<A> deserialize(InputStream stream, Valuer<GenericRecord, A> converter) {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
