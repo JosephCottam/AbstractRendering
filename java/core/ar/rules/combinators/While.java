@@ -15,16 +15,16 @@ import ar.util.CacheProvider;
  * TODO: Develop a specialize-on-each-iteration variant
  * @param <IN>
  */
-public class Fix<IN> implements Transfer<IN,IN> {
+public class While<IN> implements Transfer<IN,IN> {
     protected final Transfer<IN,IN> base;
     protected final Valuer<Aggregates<? extends IN>, Boolean> pred;
     protected final Renderer renderer;
 
-    public Fix(Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
+    public While(Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
         this(Resources.DEFAULT_RENDERER, pred, base);
     }
 
-    public Fix(Renderer renderer, Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
+    public While(Renderer renderer, Valuer<Aggregates<? extends IN>, Boolean> pred, Transfer<IN,IN> base) {
         this.renderer=renderer;
         this.base=base;
         this.pred=pred;
@@ -34,7 +34,7 @@ public class Fix<IN> implements Transfer<IN,IN> {
         return new Specialized<>(renderer, base, pred, aggregates);
     }
 
-    public static class Specialized<IN> extends Fix<IN> implements Transfer.Specialized<IN,IN>, CacheProvider.CacheTarget<IN,IN> {
+    public static class Specialized<IN> extends While<IN> implements Transfer.Specialized<IN,IN>, CacheProvider.CacheTarget<IN,IN> {
         protected final CacheProvider<IN,IN> cache;
         protected final Transfer.Specialized<IN,IN> op;
 

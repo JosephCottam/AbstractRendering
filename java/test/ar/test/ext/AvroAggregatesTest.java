@@ -64,19 +64,20 @@ public class AvroAggregatesTest {
 		
 		String filename ="./testResults/counts.avro";
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
-		OutputStream out = new FileOutputStream(filename);
-		AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
-		Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
-
-		assertEquals(ref.lowX(), res.lowX());
-		assertEquals(ref.lowY(), res.lowY());
-		assertEquals(ref.highX(), res.highX());
-		assertEquals(ref.highY(), res.highY());
-		assertEquals(ref.defaultValue(), res.defaultValue());
-		
-		for (int x=ref.lowX(); x<ref.highX(); x++) {
-			for (int y=ref.lowY(); y<ref.highY(); y++)
-				assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+		try (OutputStream out = new FileOutputStream(filename)) {
+			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
+			Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
+	
+			assertEquals(ref.lowX(), res.lowX());
+			assertEquals(ref.lowY(), res.lowY());
+			assertEquals(ref.highX(), res.highX());
+			assertEquals(ref.highY(), res.highY());
+			assertEquals(ref.defaultValue(), res.defaultValue());
+			
+			for (int x=ref.lowX(); x<ref.highX(); x++) {
+				for (int y=ref.lowY(); y<ref.highY(); y++)
+					assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+			}
 		}
 	}
 	
@@ -86,19 +87,21 @@ public class AvroAggregatesTest {
 		Aggregates<Integer> ref = count;
 		String filename ="./testResults/counts.avro";
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
-		OutputStream out = new FileOutputStream(filename);
-		AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
-		Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
-
-		assertEquals(ref.lowX(), res.lowX());
-		assertEquals(ref.lowY(), res.lowY());
-		assertEquals(ref.highX(), res.highX());
-		assertEquals(ref.highY(), res.highY());
-		assertEquals(ref.defaultValue(), res.defaultValue());
 		
-		for (int x=ref.lowX(); x<ref.highX(); x++) {
-			for (int y=ref.lowY(); y<ref.highY(); y++)
-				assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+		try (OutputStream out = new FileOutputStream(filename)) {
+			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
+			Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
+		
+			assertEquals(ref.lowX(), res.lowX());
+			assertEquals(ref.lowY(), res.lowY());
+			assertEquals(ref.highX(), res.highX());
+			assertEquals(ref.highY(), res.highY());
+			assertEquals(ref.defaultValue(), res.defaultValue());
+			
+			for (int x=ref.lowX(); x<ref.highX(); x++) {
+				for (int y=ref.lowY(); y<ref.highY(); y++)
+					assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+			}
 		}
 	}
 	
@@ -109,15 +112,16 @@ public class AvroAggregatesTest {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		AggregateSerializer.serialize(ref, baos, s, FORMAT.JSON, new Converters.FromCount(s));
 		String output = new String(baos.toByteArray(), "UTF-8");
-		JsonParser p = new JsonFactory().createJsonParser(output);		
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode n = mapper.readTree(p);
-		
-		
-		assertEquals(ref.lowX(), n.get("xOffset").getIntValue());
-		assertEquals(ref.lowY(), n.get("yOffset").getIntValue());
-		assertEquals(ref.highX(), n.get("xBinCount").getIntValue());
-		assertEquals(ref.highY(), n.get("yBinCount").getIntValue());
+		try (JsonParser p = new JsonFactory().createJsonParser(output)) {		
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode n = mapper.readTree(p);
+			
+			
+			assertEquals(ref.lowX(), n.get("xOffset").getIntValue());
+			assertEquals(ref.lowY(), n.get("yOffset").getIntValue());
+			assertEquals(ref.highX(), n.get("xBinCount").getIntValue());
+			assertEquals(ref.highY(), n.get("yBinCount").getIntValue());
+		}
 	}
 	
 	
@@ -127,29 +131,30 @@ public class AvroAggregatesTest {
 		Aggregates<CategoricalCounts.RLE<Color>> ref = rles;
 		
 		String filename = "./testResults/rle.avro";
-		OutputStream out = new FileOutputStream(filename);
-		Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
-		AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
-		Aggregates<CategoricalCounts.RLE<String>> res 
-			= AggregateSerializer.deserialize(filename, new Converters.ToRLE());
-
-		assertEquals(ref.lowX(), res.lowX());
-		assertEquals(ref.lowY(), res.lowY());
-		assertEquals(ref.highX(), res.highX());
-		assertEquals(ref.highY(), res.highY());
-		assertEquals(ref.defaultValue(), res.defaultValue());
-		
-		for (int x=ref.lowX(); x<ref.highX(); x++) {
-			for (int y=ref.lowY(); y<ref.highY(); y++) {
-				CategoricalCounts.RLE<Color> rref = ref.get(x,y);
-				CategoricalCounts.RLE<String> rres = res.get(x,y);
-				assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), rres.size());
-				
-				for (int i=0; i<rres.size();i++) {
-					//HACK: Must test string-equality because generic serialization is based on string category key
-					assertEquals(String.format("Unequal key at %d",i), rref.key(i).toString(), rres.key(i));					
-					assertEquals(String.format("Unequal count at %d",i), rref.count(i), rres.count(i));					
-				}				
+		try (OutputStream out = new FileOutputStream(filename)) {
+			Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
+			AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
+			Aggregates<CategoricalCounts.RLE<String>> res 
+				= AggregateSerializer.deserialize(filename, new Converters.ToRLE());
+	
+			assertEquals(ref.lowX(), res.lowX());
+			assertEquals(ref.lowY(), res.lowY());
+			assertEquals(ref.highX(), res.highX());
+			assertEquals(ref.highY(), res.highY());
+			assertEquals(ref.defaultValue(), res.defaultValue());
+			
+			for (int x=ref.lowX(); x<ref.highX(); x++) {
+				for (int y=ref.lowY(); y<ref.highY(); y++) {
+					CategoricalCounts.RLE<Color> rref = ref.get(x,y);
+					CategoricalCounts.RLE<String> rres = res.get(x,y);
+					assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), rres.size());
+					
+					for (int i=0; i<rres.size();i++) {
+						//HACK: Must test string-equality because generic serialization is based on string category key
+						assertEquals(String.format("Unequal key at %d",i), rref.key(i).toString(), rres.key(i));					
+						assertEquals(String.format("Unequal count at %d",i), rref.count(i), rres.count(i));					
+					}				
+				}
 			}
 		}
 	}

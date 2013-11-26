@@ -78,7 +78,7 @@ public class Combinators {
 		
 		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10));
-		Transfer.Specialized<Integer,Integer> t = new Fix<>(p, t1).specialize(a);
+		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
