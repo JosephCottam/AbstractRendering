@@ -11,6 +11,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Selector;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.ConstantAggregates;
 import ar.aggregates.TouchedBoundsWrapper;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
@@ -50,15 +51,19 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 	protected Aggregates<A> compute() {
-		if ((high-low) > taskSize) {return split();}
-		else {return local();}
+		if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
+		Aggregates<A> rslt;
+		if ((high-low) > taskSize) {rslt=split();}
+		else {rslt=local();}
+		recorder.update((high-low)/2);
+		return rslt;
 	}
 	
 	protected final Aggregates<A> local() {
 		Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
 		Aggregates<A> target = allocateAggregates(glyphs.bounds());
 		selector.processSubset(subset, view, target, op);
-		recorder.update(high-low);
+		recorder.update((high-low)/2);
 		return target;
 	}
 	
@@ -78,7 +83,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	/**DESTRUCTIVELY updates the target at x/y with the value passed and the target operation.**/
 	protected final void update(Aggregates<A> target, I v, int x, int y) {
 		A existing = target.get(x,y);
-		A update = op.combine(x,y,existing, v);
+		A update = op.combine(existing, v);
 		target.set(x, y, update);
 	}
 	

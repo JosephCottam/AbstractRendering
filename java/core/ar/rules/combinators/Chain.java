@@ -1,8 +1,9 @@
-package ar.util;
+package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
+import ar.util.CacheProvider;
 
 /**Execute a sequence of transfers.
  * 
@@ -25,7 +26,7 @@ import ar.Transfer;
  * @param <OUT> Output type of the last transfer
  */
 @SuppressWarnings("unchecked")
-public class MultiStageTransfer<IN,OUT> implements Transfer<IN,OUT>{
+public class Chain<IN,OUT> implements Transfer<IN,OUT>{
 	private final Transfer<?,?>[] transfers;
 	protected final Renderer renderer;
 	
@@ -34,7 +35,7 @@ public class MultiStageTransfer<IN,OUT> implements Transfer<IN,OUT>{
 	 * @param renderer Rendering resources used for specialization of intermediate transfers
 	 * @param transfers
 	 */
-	public MultiStageTransfer(Renderer renderer, Transfer<?,?>... transfers) {
+	public Chain(Renderer renderer, Transfer<?, ?>... transfers) {
 		this.transfers=transfers;
 		this.renderer = renderer;
 	}
@@ -51,42 +52,33 @@ public class MultiStageTransfer<IN,OUT> implements Transfer<IN,OUT>{
 
 	
 	@SuppressWarnings("rawtypes")
-	protected static class Specialized<IN,OUT> extends MultiStageTransfer<IN,OUT> implements Transfer.Specialized<IN, OUT>  {
+	protected static class Specialized<IN,OUT> extends Chain<IN,OUT> implements Transfer.Specialized<IN, OUT>,CacheProvider.CacheTarget {
 		private final Transfer.Specialized[] specialized;
-		private final Object cacheGuard = new Object() {};
-		private Aggregates cacheKey;
-		private Aggregates cachedAggs;
+        private final CacheProvider<IN,OUT> cache;
 		
 		public Specialized(Renderer renderer, Aggregates rootAggregates, Transfer... transfers) {
 			super(renderer, transfers);
+            cache = new CacheProvider(this);
+
 			specialized = new Transfer.Specialized[transfers.length];
-			
 			Aggregates tempAggs = rootAggregates;
 			for (int i=0; i<transfers.length; i++) {
 				specialized[i] = transfers[i].specialize(tempAggs);
 				tempAggs = renderer.transfer(tempAggs, specialized[i]);
 			}
-			
-			//Store the results of specialization in case the whole set of aggregates was sent for specialization 
-			synchronized(cacheGuard) {
-				cacheKey = rootAggregates;
-				cachedAggs = tempAggs;
-			}
+            cache.set(rootAggregates, tempAggs);
 		}
 
 		@Override
-		public OUT at(int x, int y, Aggregates<? extends IN> rootAggregates) {
-			synchronized(cacheGuard) {
-				if (cacheKey == null || cacheKey != rootAggregates) {
-					Aggregates tempAggs = rootAggregates;
-					for (Transfer.Specialized ts: specialized) {
-						tempAggs = renderer.transfer(tempAggs, ts);
-					}
-					cachedAggs = tempAggs;
-					cacheKey = rootAggregates;
-				}
-			}
-			return (OUT) cachedAggs.get(x,y);
-		}
-	}
+		public OUT at(int x, int y, Aggregates<? extends IN> aggs) {return cache.get(aggs).get(x,y);}
+
+        @Override
+        public Aggregates build(Aggregates aggs) {
+            Aggregates tempAggs = aggs;
+            for (Transfer.Specialized ts: specialized) {
+                tempAggs = renderer.transfer(tempAggs, ts);
+            }
+            return tempAggs;
+        }
+    }
 }

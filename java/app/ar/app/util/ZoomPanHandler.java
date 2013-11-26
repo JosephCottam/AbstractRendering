@@ -2,31 +2,46 @@ package ar.app.util;
 
 import java.awt.Graphics2D;
 import java.awt.Cursor;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.awt.geom.*;
 
 import javax.swing.JComponent;
 
-import ar.app.display.ARComponent;
 import ar.util.HasViewTransform;
 
 /**Utility for working with zoom/pan on a display component.
  * 
- * This class can only be registered with objects that are both JComponents 
+ * This class should only be registered with objects that are both JComponents 
  * and implement the HasViewTransform interface.
  * **/
-public class ZoomPanHandler implements MouseListener, MouseMotionListener{
+public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyListener {
     private static final int ZOOM_BUTTON = InputEvent.BUTTON2_MASK;
     private static final int PAN_BUTTON = InputEvent.BUTTON1_MASK;
 	
     private Point2D down = new Point2D.Float();
     private int yLast;
     
+    public void register(JComponent target) {
+    	if (target instanceof HasViewTransform) {
+    		target.setFocusable(true);
+    		target.requestFocus();
+    		
+    		target.addMouseListener(this);
+    		target.addMouseMotionListener(this);
+    		target.addKeyListener(this);
+    	} else {
+    		throw new IllegalArgumentException("Target must be *both* a JComponent and implement HasViewTransform");
+    	}
+    }
+    
 	/**
      * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
      */
     @Override
-	public void mousePressed(MouseEvent e) { 	
+	public void mousePressed(MouseEvent e) { 
+		e.getComponent().requestFocus();
+
         if (buttonEquals(e, ZOOM_BUTTON) ) {
         	JComponent canvas = (JComponent) e.getComponent();
 
@@ -117,17 +132,53 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener{
 	@Override
 	public void mouseClicked(MouseEvent e) { 
 		if (e.getClickCount() == 2) {
-			ARComponent.Aggregating canvas = (ARComponent.Aggregating) e.getComponent();
+	    	HasViewTransform canvas = (HasViewTransform) e.getComponent();
 			canvas.zoomFit();
 		}
 	}
 	
 	@Override
+	/**When the 'c' key is pressed, pan so the center of the data is at the center of the screen.
+	 * TODO: When the '+' key is pressed, double the current zoom.
+	 * TODO: When the '-' key is pressed, halve the current zoom.
+	 * 
+	 */
+	public void keyTyped(KeyEvent e) {
+		char c = e.getKeyChar();
+		HasViewTransform canvas = (HasViewTransform) e.getComponent();
+		JComponent comp = (JComponent) e.getComponent();
+		AffineTransform vt = canvas.viewTransform();
+
+		if (c == 'c' || c == 'C') {
+			Rectangle vb = comp.getBounds();
+			Rectangle2D db = canvas.dataBounds();
+
+			double xmargin = vb.width/vt.getScaleX()-db.getWidth();
+			double ymargin = vb.height/vt.getScaleY()-db.getHeight();
+			double tx = db.getMinX()-(xmargin/2);
+			double ty = db.getMinY()-(ymargin/2);
+						
+			AffineTransform t = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY());
+			t.translate(-tx,-ty);
+			try {canvas.viewTransform(t);}
+			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
+		} else if (c == '+' || c == '=') {
+			vt.scale(2, 2);
+			try {canvas.viewTransform(vt);}
+			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
+		} else if (c == '-' || c == '_') {
+			vt.scale(.5,.5);
+			try {canvas.viewTransform(vt);}
+			catch (NoninvertibleTransformException e1) {/*Ignored.*/}			
+		} else if (c == 'z') {
+			canvas.zoomFit();
+		}
+	}
+
+	
 	public void mouseEntered(MouseEvent e) {/*Ignored.*/}
-
-	@Override
 	public void mouseExited(MouseEvent e) {/*Ignored.*/}
-
-	@Override
 	public void mouseMoved(MouseEvent e) {/*Ignored.*/}
+	public void keyPressed(KeyEvent e) {/*Ignored*/}
+	public void keyReleased(KeyEvent e) {/*Ignored*/}
 }

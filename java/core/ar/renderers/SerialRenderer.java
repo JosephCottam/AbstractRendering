@@ -40,7 +40,7 @@ public final class SerialRenderer implements Renderer {
 
 				for (Glyph<? extends G, ? extends I> g: subset) {
 					I val = g.info();
-					acc = op.combine(x, y, acc, val);
+					acc = op.combine(acc, val);
 				}
 				
 				aggregates.set(x, y, acc);
@@ -61,5 +61,7 @@ public final class SerialRenderer implements Renderer {
 		}
 		return out;
 	}
+	
 	public ProgressReporter progress() {return recorder;}
+	public long taskSize(Glyphset<?,?> glyphs) {return glyphs.size();}
 }

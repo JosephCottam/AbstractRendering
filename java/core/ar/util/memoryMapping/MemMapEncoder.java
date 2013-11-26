@@ -1,9 +1,12 @@
-package ar.util;
+package ar.util.memoryMapping;
 
 import java.nio.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.io.*;
+
+import ar.glyphsets.implicitgeometry.IndexedEncoding;
+import ar.util.DelimitedReader;
 
 /**Utility for encoding delimited files into a binary format that
  * can be read by the included memory mapped list.  
@@ -70,16 +73,14 @@ public class MemMapEncoder {
 	public static final class Header {
 		public final int version;
 		public final long dataTableOffset;
-		public final long stringTableOffset;
 		public final TYPE[] types;
 		public final int recordLength;
 		public final long maximaRecordOffset;
 		public final long minimaRecordOffset;
 		
-		public Header(int version, TYPE[] types, long dataTableOffset, long stringTableOffset, long infoRecordOffset) {
+		public Header(int version, TYPE[] types, long dataTableOffset, long infoRecordOffset) {
 			this.version = version;
 			this.dataTableOffset = dataTableOffset;
-			this.stringTableOffset = stringTableOffset;
 			this.types = types;
 			this.recordLength = recordLength(types);
 			this.maximaRecordOffset = infoRecordOffset;
@@ -87,14 +88,16 @@ public class MemMapEncoder {
 		}
 		
 		/**Parse a given file, return a Header object.**/
-		public static Header from(BigFileByteBuffer buffer) {
+		public static Header from(MappedFile buffer) {
 			int version = buffer.getInt();
 			if (version != VERSION_ID) {
 				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_ID));
 			}
 
 			long dataTableOffset = buffer.getLong();
-			long stringTableOffset = buffer.getLong();
+			
+			@SuppressWarnings("unused")
+			long stringTableOffset = buffer.getLong(); //Ignored; placed for future expansion
 			
 			int recordEntries = buffer.getInt();
 
@@ -107,7 +110,7 @@ public class MemMapEncoder {
 			long infoRecordOffset = buffer.position();
 			
 			
-			return new Header(version, types, dataTableOffset, stringTableOffset, infoRecordOffset);
+			return new Header(version, types, dataTableOffset, infoRecordOffset);
 		}
 		
 	}
@@ -308,7 +311,7 @@ public class MemMapEncoder {
 	}
 	
 	private static void updateMinMax(File out) throws IOException {
-		final BigFileByteBuffer buffer = new BigFileByteBuffer(out, 100, 1000, FileChannel.MapMode.READ_WRITE);
+		final BigFileByteBuffer buffer = new BigFileByteBuffer(out, 1000, FileChannel.MapMode.READ_WRITE);
 		Header header = Header.from(buffer);
 		
 		final long entries = (buffer.fileSize()-header.dataTableOffset)/header.recordLength;
@@ -362,28 +365,41 @@ public class MemMapEncoder {
 		File in = new File(entry(args, "-in", null));
 		File out = new File(entry(args, "-out", null));
 		boolean direct = !entry(args, "-direct", "FALSE").toUpperCase().equals("FALSE");
-		
-		if (direct) {temp =out;}
-		
-		else {
-			temp = File.createTempFile("hbinEncoder", "hbin");
-			temp.deleteOnExit();
+		boolean justHeader = !entry(args, "-headeronly", "FALSE").toUpperCase().equals("FALSE");
+
+		if (justHeader) {
+			updateMinMax(out);
+		} else {
+			if (direct) {
+				temp =out;
+				if (out.exists()) {
+					System.out.println("Confirm replace file in direct mode (y/Y to proceed; anything else to cancel): ");
+					char read = (char) System.in.read();
+					String s = Character.toString(read);
+					if (!s.toUpperCase().equals("Y")) {System.exit(0);}
+				}
+			} else {
+				temp = File.createTempFile("hbinEncoder", "hbin");
+				temp.deleteOnExit();
+			}
+			
+			
+			int skip = Integer.parseInt(entry(args, "-skip", null));
+			char[] types = entry(args, "-types", "").toCharArray();
+			
+			write(in, skip, temp, types);
+			
+			if (!direct) {
+				try {
+					out.delete();
+					boolean moved = temp.renameTo(out);
+					if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
+				} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
+				if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
+			}
 		}
 		
 		
-		int skip = Integer.parseInt(entry(args, "-skip", null));
-		char[] types = entry(args, "-types", "").toCharArray();
-		
-		write(in, skip, temp, types);
-		
-		if (!direct) {
-			try {
-				out.delete();
-				boolean moved = temp.renameTo(out);
-				if (!moved) {copy(temp, out);} //Needed because rename doesn't work across file systems
-			} catch (Exception e) {throw new RuntimeException("Error moving temporaries to final destination file.",e);}
-			if (!out.exists()) {throw new RuntimeException("File could not be moved from temporary location to permanent location for unknown reason.");}
-		}
 	}
 }
 

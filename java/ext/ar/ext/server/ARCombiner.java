@@ -113,12 +113,13 @@ public class ARCombiner<A> {
 				running = true;
 				try {
 					finalAccept = serverSocket.accept();
-		            final InputStream inputStream = finalAccept.getInputStream();
-	                if (inputStream == null) {safeClose(finalAccept);}
+		            try(final InputStream inputStream = finalAccept.getInputStream()) {
+		            	if (inputStream == null) {safeClose(finalAccept);}
 	                
-	                //TODO: Lazier deserialization (don't tie up the server here)
-	                Aggregates<A> aggs = AggregateSerializer.deserialize(inputStream, elementConverter);
-	                ARCombiner.this.addToQueue(aggs);
+		            	//TODO: Lazier deserialization (don't tie up the server here)
+		            	Aggregates<A> aggs = AggregateSerializer.deserialize(inputStream, elementConverter);
+		            	ARCombiner.this.addToQueue(aggs);
+		            }
 				} catch (Exception e) {
 					//Ignore all errors if server socket is closed
 					if (!serverSocket.isClosed()) {e.printStackTrace();}

@@ -1,7 +1,8 @@
-package ar.util;
+package ar.glyphsets.implicitgeometry;
 
-import ar.glyphsets.implicitgeometry.Indexed;
-import ar.util.MemMapEncoder.TYPE;
+import ar.util.memoryMapping.MappedFile;
+import ar.util.memoryMapping.MemMapEncoder;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Wrapper to interface items encoded using the MemMapEncoder with the implicit geometry system.
  * **/
@@ -10,18 +11,18 @@ public class IndexedEncoding implements Indexed {
 	
 	private final TYPE[] types;
 	private final int[] offsets;
-	private final BigFileByteBuffer buffer;
+	private final MappedFile buffer;
 	private long recordOffset;
 
 	/**Convenience for working with the BigFileByteBuffer.  
 	 * Performs buffer assurance of the requested content but requires external synchronization for multi-threading.*/
-	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer) {
+	public IndexedEncoding(final TYPE[] types, long recordOffset, MappedFile buffer) {
 		this(types, recordOffset, buffer, MemMapEncoder.recordOffsets(types));
 	}
 
 	/**Convenience for working with the BigFileByteBuffer.  
 	 * Performs buffer assurance of the requested content but requires external synchronization for multi-threading.*/
-	public IndexedEncoding(final TYPE[] types, long recordOffset, BigFileByteBuffer buffer, int[] offsets) {
+	public IndexedEncoding(final TYPE[] types, long recordOffset, MappedFile buffer, int[] offsets) {
 		this.types = types;
 		this.offsets = offsets;
 		this.buffer = buffer;

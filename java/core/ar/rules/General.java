@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.awt.Point;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -30,43 +31,169 @@ public class General {
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return valuer.value(aggregates.get(x,y));
 		}
+	}
+	
+	public static final class Last<IN> implements Aggregator<IN,IN> {
+		private final IN id;
+		public <V extends IN> Last(V id) {this.id = id;}
+		public IN combine(IN current, IN update) {return update;}
+		public IN rollup(IN left, IN right) {return right;}
+		public IN identity() {return id;}
+	}
+	
+	/**Performs a type-preserving replacement.  
+	 * Specified values are replaced, others as passed through.
+	 * For more control or type-converting replace, use MapWrapper instead.
+	 * **/
+	public static class Replace<T> implements Transfer.Specialized<T,T> {
+		private final Map<T,T> mapping;
+		private final T empty;
+		
+		public Replace(T in, T out, T empty) {this(MapWrapper.map(in,out), empty);}
+		public Replace(Map<T,T> mapping, T empty) {
+			this.mapping = mapping;
+			this.empty = empty;
+		}
+		
+		public T emptyValue() {return empty;}
+		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		public T at(int x, int y, Aggregates<? extends T> aggregates) {
+			T val = aggregates.get(x,y);
+			if (mapping.containsKey(val)) {return mapping.get(val);}
+			return val;
+		}
+	}
+	
+	
+	
+	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
+	public static class Simplify<V> implements Transfer.Specialized<V, V> {
+		private final V empty;
+		public Simplify(V empty) {this.empty = empty;}
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			V val = aggregates.get(x,y);
+			if (Util.isEqual(val, aggregates.get(x-1,y-1))
+					&& Util.isEqual(val, aggregates.get(x,y-1))
+					&& Util.isEqual(val, aggregates.get(x+1,y-1))
+					&& Util.isEqual(val, aggregates.get(x-1,y))
+					&& Util.isEqual(val, aggregates.get(x+1,y))
+					&& Util.isEqual(val, aggregates.get(x-1,y+1))
+					&& Util.isEqual(val, aggregates.get(x,y+1))
+					&& Util.isEqual(val, aggregates.get(x+1,y+1))) {
+				return empty;
+			}
+			
+			return val;
+		}
 		
 	}
 	
-	public static class Spread<V> implements Transfer<V,V> {
+	/**Fill in empty values based on a function of nearby values.
+	 *
+	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
+	 * TODO: Add support for a searching function...
+	 ***/ 
+	public static class Smear<V> implements Transfer.Specialized<V,V> {
 		final V empty;
+		public Smear(V empty) {
+			this.empty = empty;
+		}
+
+		public V emptyValue() {return empty;}
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		
+		@Override
+		public V at(int x, int y, Aggregates<? extends V> aggregates) {
+			Point p = new Point(x,y);
+			for (int i=0; outOfBounds(p, aggregates); i++) {
+				spiralFrom(x,y,i,p);
+				V val = aggregates.get(p.x, p.y);
+				if (!Util.isEqual(val, empty)) {return val;}
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+
+		public Point spiralFrom(int X, int Y, int n, Point into) {
+			int x=0,y=0;
+			int dx = 0;
+			int dy = -1;
+			for (int i=0; i<n; i++) {
+				if ((-X/2 < x) && (x <= X/2) && (-Y/2 < y) && (y <= Y/2)) {
+					into.setLocation(x,y);
+					return into;
+				}
+
+				if ((x == y) || (x < 0 && x == -y) || (x > 0 && x == 1-y)) {
+					int temp = dx;
+					dx = -dy;
+					dy = temp;
+				}
+				x = x+dx;
+				y = y+dy;
+			}
+			throw new RuntimeException("Reached illegal state...");
+		}
+		
+		public boolean outOfBounds(Point p, Aggregates<?> aggregates) {
+			return p.x >= aggregates.lowX() && p.x < aggregates.highX()
+					&& p.y >= aggregates.lowY() && p.y < aggregates.highY();
+		}
+	}
+	
+	/**Spread a value out in a general geometric shape.**/
+	public static class Spread<V> implements Transfer<V,V> {
 		final Spreader<V> spreader;
 		final Aggregator<V,V> combiner;
 		
-		public Spread(V empty, Spreader<V> spreader, Aggregator<V,V> combiner) {
-			this.empty = empty;
+		public Spread(Spreader<V> spreader, Aggregator<V,V> combiner) {
 			this.spreader = spreader;
 			this.combiner = combiner;
 		}
 
-		public V emptyValue() {return empty;}
+		public V emptyValue() {return combiner.identity();}
 		
 		/**Calculations are done at specialization time, so transfer is fast but specialization is slow.**/
 		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {
-			return new Specialized<>(empty, spreader, aggregates, combiner);
+			return new Specialized<>(spreader, aggregates, combiner);
 		}
 		
 		public static class Specialized<V> extends Spread<V> implements Transfer.Specialized<V, V>  {
-			private final Aggregates<V> cached;
-			public Specialized(V empty, Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
-				super(empty, spreader, combiner);
-				cached = ar.aggregates.AggregateUtils.make(base, empty);
-				
-				for (int x=base.lowX(); x<base.highX(); x++) {
-					for (int y=base.lowY(); y<base.highY(); y++) {
-						V baseVal = base.get(x,y);
-						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
-						spreader.spread(cached, x,y, baseVal, combiner);
-					}
+			private Object cacheGuard = new Object(){};
+			private Aggregates<?> cacheKey;
+			private Aggregates<V> cachedAggs;
+
+			public Specialized(Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
+				super(spreader, combiner);
+				synchronized(cacheGuard) {
+					cacheKey =base;
+					cachedAggs = spread(base);
 				}
 			}
 
-			public V at(int x, int y, Aggregates<? extends V> aggregates) {return cached.get(x, y);}			
+			private Aggregates<V> spread(Aggregates<? extends V> aggregates) {
+				Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
+			
+				for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+					for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+						V baseVal = aggregates.get(x,y);
+						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
+						super.spreader.spread(target , x,y, baseVal, combiner);
+					}
+				}
+				return target;
+			}
+			
+			public V at(int x, int y, Aggregates<? extends V> aggregates) {
+				synchronized(cacheGuard) {
+					if (cacheKey != aggregates || aggregates == null) {
+						cachedAggs = spread(aggregates);
+						cacheKey = aggregates;
+					}
+				}
+
+				return cachedAggs.get(x, y);}			
 		}
 		
 		/**Spreader takes a type argument in case the spreading depends on the value.
@@ -137,17 +264,24 @@ public class General {
 	}
 	
 	/**Aggregator and Transfer that always returns the same value.**/
-	public static final class Const<OUT> implements Aggregator<Object,OUT>, Transfer.Specialized<Object, OUT> {
+	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.Specialized<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
+		
+		/**Two-argument version to help type inference.
+		 * 
+		 * @param val Value to always return
+		 * @param ref Input value that matches type of expected input.  THIS VALUE IS IGNORED.
+		 */
+		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
-		public OUT combine(long x, long y, OUT left, Object update) {return val;}
+		public OUT combine(OUT left, A update) {return val;}
 		public OUT rollup(OUT left, OUT right) {return val;}
 		public OUT identity() {return val;}
 		public OUT emptyValue() {return val;}
-		public ar.Transfer.Specialized<Object, OUT> specialize(Aggregates<? extends Object> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends Object> aggregates) {return val;}
+		public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
+		public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
 	}
 
 
@@ -162,7 +296,7 @@ public class General {
 
 		public T emptyValue() {return empty;}
 		
-		public T combine(long x, long y, T left, T update) {return update;}
+		public T combine(T left, T update) {return update;}
 		public T rollup(T left, T right) {
 			if (left != null) {return left;}
 			if (right != null) {return right;}
@@ -197,21 +331,29 @@ public class General {
 		public OUT emptyValue() {return absent;}
 	}
 	
-	/**Transfer function that wraps a java.util.map.**/
+	/**Transfer function that wraps a java.util.map.
+	 * The empty value is returned if the input value is not found in the mapping.
+	 * **/
 	public static class MapWrapper<IN,OUT> implements Transfer.Specialized<IN,OUT> {
 		private static final long serialVersionUID = -4326656735271228944L;
 		private final Map<IN, OUT> mappings;
-		private final boolean nullIsValue;
 		private final OUT other; 
 
+		
+		public MapWrapper(IN in, OUT out, OUT empty) {this(map(in,out), empty);}
+		private static <IN,OUT> Map<IN,OUT> map(IN in, OUT out) {
+			Map<IN,OUT> m = new HashMap<>();
+			m.put(in, out);
+			return m;
+		}
+		
 		/**
 		 * @param mappings Backing map
 		 * @param other Value to return if the backing map does not include a requested key
 		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
 		 */
-		public MapWrapper(Map<IN, OUT> mappings, OUT other, boolean nullIsValue) {
+		public MapWrapper(Map<IN, OUT> mappings, OUT other) {
 			this.mappings=mappings;
-			this.nullIsValue = nullIsValue;
 			this.other = other;
 		}
 
@@ -219,9 +361,7 @@ public class General {
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			IN key = aggregates.get(x, y);
 			if (!mappings.containsKey(key)) {return other;}
-			OUT val = mappings.get(key);
-			if (val==null && !nullIsValue) {return other;}
-			return val;
+			return mappings.get(key);
 		}
 
 		public OUT emptyValue() {return other;}
@@ -250,86 +390,7 @@ public class General {
 				dict.put(keyer.value(line), valuer.value(line));
 			}
 
-			return new MapWrapper<K,V>(dict,other,nullIsValue);
+			return new MapWrapper<K,V>(dict,other);
 		}
 	}
-	
-
-	/**Implents "if" in a transfer function.  Applies one transfer if the predicate is true, another if it is false.**/
-	public static class Switch<IN,OUT> implements Transfer<IN,OUT> {
-		private static final long serialVersionUID = 9066005967376232334L;
-
-		private final Predicate<IN> predicate;
-		private final Transfer<IN,OUT> pass;
-		private final Transfer<IN,OUT> fail;
-		private final OUT empty;
-		
-		@SuppressWarnings("javadoc")
-		public Switch(Predicate<IN> predicate,
-						Transfer<IN,OUT> pass,
-						Transfer<IN,OUT> fail,
-						OUT empty) {
-			this.predicate = predicate;
-			this.pass = pass;
-			this.fail = fail;
-			this.empty = empty;
-		}
-
-		@Override
-		public OUT emptyValue() {return empty;}
-
-		@Override
-		public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-			
-			Transfer.Specialized<IN,OUT> ps= pass.specialize(aggregates);
-			Transfer.Specialized<IN, OUT> fs = fail.specialize(aggregates);
-			Predicate.Specialized<IN> preds = predicate.specialize(aggregates);
-			return new Specialized<>(preds, ps, fs, empty);
-		}
-		
-		protected static class Specialized<IN, OUT> extends Switch<IN, OUT> implements Transfer.Specialized<IN, OUT> {
-			final Predicate.Specialized<IN> predicate;
-			final Transfer.Specialized<IN, OUT> pass;
-			final Transfer.Specialized<IN, OUT> fail;
-
-			public Specialized(
-					Predicate.Specialized<IN> predicate,
-					Transfer.Specialized<IN, OUT> pass, 
-					Transfer.Specialized<IN, OUT> fail, 
-					OUT empty) {
-				super(predicate, pass, fail, empty);
-				this.predicate = predicate;
-				this.pass = pass;
-				this.fail = fail;
-			}
-
-
-			@Override
-			public OUT at(int x, int y,Aggregates<? extends IN> aggregates) {
-				if (predicate.test(x, y, aggregates)) {
-					return pass.at(x, y, aggregates);
-				} else {
-					return fail.at(x, y, aggregates);
-				}
-			}
-		}
-		
-		/**Test on a specific location in a set of aggregates.**/
-		public static interface Predicate<IN> {
-			/**
-			 * @param aggs Aggregates to specialize this predicate to.  Specialized predicates
-			 * are ready to be invoked.  The specialization process mirrors that of the
-			 * transfer-function specialization.
-			 */
-			public Predicate.Specialized<IN> specialize(Aggregates<? extends IN> aggs);
-			
-			/**Interface to indicate a predicate is ready to be used.**/
-			public interface Specialized<IN> extends Predicate<IN> {
-				
-				/**Execute the encoded test on the given data.**/
-				public boolean test(int x, int y, Aggregates<? extends IN> aggs);
-			}
-		}
-	}
-	
 }

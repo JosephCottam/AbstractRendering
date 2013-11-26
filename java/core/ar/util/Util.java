@@ -23,7 +23,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
-import ar.util.MemMapEncoder.TYPE;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Collection of various utilities that don't have other homes.**/
 public final class Util {
@@ -259,49 +259,62 @@ public final class Util {
 
 	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers).
 	 * 
-	 * NaN's are skipped.
+	 * By default NaNs and Nulls are fully skipped.  However, if set to false they will be included in the "count" basis 
+	 * and thus influence the mean.
 	 * 
 	 * **/
-	public static Stats stats(Aggregates<? extends Number> aggregates, boolean ignoreZeros) {
-		//Single-pass std. dev: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods 
-		double count=0;
-		double min = Double.POSITIVE_INFINITY, max=Double.NEGATIVE_INFINITY;
+	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreNulls, boolean ignoreNaNs) {
+		//For a single-test std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
+		long count=0;
+		long nullCount=0;
+		long nanCount=0;
+		N min = null;
+		N max = null;
 		double sum=0;
 
-		for (Number n: aggregates) {
+		for (N n: aggregates) {
+			if (n == null) {nullCount++; continue;}
+			
 			double v = n.doubleValue();
-			if (ignoreZeros && v == 0) {continue;}
-			if (n.doubleValue() == Double.NaN) {continue;}
-			if (min > v) {min = v;}
-			if (max < v) {max = v;}
+			if (Double.isNaN(v)) {nanCount++; continue;}
+			if (min == null || min.doubleValue() > v) {min = n;}
+			if (max == null || max.doubleValue() < v) {max = n;}
 			sum += v;
 			count++;
 		}
+		
+		final long fullCount = count + (ignoreNulls ? 0 : nullCount) + (ignoreNaNs ? 0 : nanCount); 
 
-		final double mean = sum/count;
+		final double mean = sum/fullCount;
 		double acc =0;
 
 		for (Number n: aggregates) {
-			final double v = n.doubleValue();
-			acc = Math.pow((v-mean),2);
+			if (n == null || Double.isNaN(n.doubleValue())) {continue;}
+			acc = Math.pow((n.doubleValue()-mean),2);
 		}
-		double stdev = Math.sqrt(acc/count);
-		return new Stats(min,max,mean,stdev);
+		double stdev = Math.sqrt(acc/fullCount);
+		
+		return new Stats<>(min,max,mean,stdev,nullCount,nanCount);
 	}
 
 
 	/**Wrapper class for statistical values derived from a common source.**/
 	@SuppressWarnings("javadoc")
-	public static final class Stats {
-		public final double min;
-		public final double max;
+	public static final class Stats<N extends Number> {
+		public final N min;
+		public final N max;
 		public final double mean;
 		public final double stdev;
-		public Stats(double min, double max, double mean, double stdev) {
+		public final long nullCount;
+		public final long nanCount;
+		
+		public Stats(N min, N max, double mean, double stdev, long nullCount, long nanCount) {
 			this.min = min; 
 			this.max=max;
 			this.mean=mean;
 			this.stdev = stdev;
+			this.nullCount = nullCount;
+			this.nanCount = nanCount;
 		}
 		public String toString() {return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);}
 	}

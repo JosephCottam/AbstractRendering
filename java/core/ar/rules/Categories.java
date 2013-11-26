@@ -17,7 +17,7 @@ public class Categories {
 	/**What is the first item in the given pixel (an over-plotting strategy)**/
 	public static final class First implements Aggregator<Color, Color> {
 		private static final long serialVersionUID = 5899328174090941310L;
-		public Color combine(long x, long y, Color left, Color update) {
+		public Color combine(Color left, Color update) {
 			if (left == Util.CLEAR) {return update;}
 			else {return left;}
 		}
@@ -33,10 +33,13 @@ public class Categories {
 		public int hashCode() {return First.class.hashCode();}
 	}
 
-	/**What is the last item in the given pixel (an over-plotting strategy)**/
+	/**What is the last item in the given pixel (an over-plotting strategy).
+	 * 
+	 * TODO: This may actually belong in 'general'...
+	 * **/
 	public static final class Last implements Aggregator<Color, Color> {
 		private static final long serialVersionUID = -3640093539839073637L;
-		public Color combine(long x, long y, Color left, Color update) {return update;}
+		public Color combine(Color left, Color update) {return update;}
 		public Color rollup(Color left, Color right) {
 			if (right != null) {return right;}
 			if (left != null) {return left;}
@@ -178,7 +181,7 @@ public class Categories {
 	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
 		private static final long serialVersionUID = 1379800289471184022L;
 
-		public RLE<T> combine(long x, long y, RLE<T> left, T update) {
+		public RLE<T> combine(RLE<T> left, T update) {
 			return left.extend(update, 1);
 		}
 
@@ -203,7 +206,7 @@ public class Categories {
 	public static final class MergeCategories<T> implements Aggregator<CoC<T>, CoC<T>> {
 		private static final long serialVersionUID = 1L;
 
-		public CoC<T> combine(long x, long y, CoC<T> current, CoC<T> update) {
+		public CoC<T> combine(CoC<T> current, CoC<T> update) {
 			return CategoricalCounts.CoC.rollupTwo(current, update);
 		}
 
@@ -239,7 +242,7 @@ public class Categories {
 		public CountCategories() {this(null);}
 
 		@Override
-		public CoC<T> combine(long x, long y, CoC<T> left, T update) {
+		public CoC<T> combine(CoC<T> left, T update) {
 			return left.extend(update, 1);
 		}
 
@@ -445,6 +448,17 @@ public class Categories {
 		public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
+	/**Convert a CoC just a set of counts for a specific category.**/
+	public static class Select<IN> implements Transfer.Specialized<CoC<IN>, Integer> {
+		private final IN label;
+		public Select(IN label) {this.label = label;}
+		public Integer emptyValue() {return 0;}
+		public Specialized<CoC<IN>, Integer> specialize(Aggregates<? extends CoC<IN>> aggregates) {return this;}
+		public Integer at(int x, int y, Aggregates<? extends CoC<IN>> aggregates) {
+			return aggregates.get(x, y).count(label);
+		}
+		
+	}
 	
 
 }

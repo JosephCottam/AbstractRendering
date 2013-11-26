@@ -36,6 +36,8 @@ public interface CategoricalCounts<T> extends Comparable<CategoricalCounts<T>> {
 	
 	/**Return a new categorical counts object of the same type, but empty.**/
 	public CategoricalCounts<T> empty();
+	
+	public boolean hasKey(T key);
 
 
 	/**Count categories.  Categories are stored in sorted order (so "nth" makes sense).**/
@@ -96,6 +98,11 @@ public interface CategoricalCounts<T> extends Comparable<CategoricalCounts<T>> {
 		
 		@SuppressWarnings("unchecked")
 		public T key(int i) {return (T) labels[i];}
+		
+		public boolean hasKey(T key) {
+			for (Object k: labels) {if (Util.isEqual(k, key)) {return true;}}
+			return false;
+		}
 		
 		public boolean equals(Object other) {
 			if (!(other instanceof CoC)) {return false;}
@@ -243,6 +250,11 @@ public interface CategoricalCounts<T> extends Comparable<CategoricalCounts<T>> {
 		@Override
 		public int compareTo(CategoricalCounts<T> o) {
 			return Integer.compare(fullSize(), o.fullSize());
+		}
+		
+		public boolean hasKey(T key) {
+			for (Object k: keys) {if (Util.isEqual(k, key)) {return true;}}
+			return false;
 		}
 	}
 }

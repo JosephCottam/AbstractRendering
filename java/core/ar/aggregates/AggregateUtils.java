@@ -2,6 +2,7 @@ package ar.aggregates;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
@@ -12,6 +13,13 @@ import ar.Aggregates;
  */
 public class AggregateUtils {
 
+	/**Return a rectangle representing the bounds of this aggregate set.
+	 * Bounds are based on the bounds of concern (low/high X/Y) not values set. 
+	 * **/
+	public static Rectangle bounds(Aggregates<?> aggs) {
+		return new Rectangle(aggs.lowX(), aggs.lowY(), aggs.highX()-aggs.lowX(), aggs.highY()-aggs.lowY());
+	}
+	
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<Color> aggs, int width, int height, Color background) {
 		if (aggs instanceof ImageAggregates) {return ((ImageAggregates) aggs).image();}
@@ -55,7 +63,7 @@ public class AggregateUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> make(int lowX, int lowY, int highX, int highY, A defVal) {
-		if (defVal instanceof Color) {
+		if (defVal != null && defVal instanceof Color) {
 			return (Aggregates<A>) new ImageAggregates(lowX, lowY, highX, highY, (Color) defVal);
 		} else {
 			return new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
@@ -90,7 +98,10 @@ public class AggregateUtils {
 		b.append(String.format("%d-%d by %d-%d\n", aggs.lowX(), aggs.highX(), aggs.lowY(), aggs.highY()));
 		int len = 0;
 		
-		for (Object o: aggs) {len = Math.max(len, o.toString().length());}
+		for (Object o: aggs) {
+			if (o==null) {continue;}
+			len = Math.max(len, o.toString().length());
+		}
 
 		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {

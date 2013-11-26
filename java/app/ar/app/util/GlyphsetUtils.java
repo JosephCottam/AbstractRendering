@@ -12,8 +12,8 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.DelimitedReader;
-import ar.util.MemMapEncoder;
 import ar.util.Util;
+import ar.util.memoryMapping.MemMapEncoder;
 
 public class GlyphsetUtils {
 	private static boolean isNumber(String s) {
@@ -108,7 +108,7 @@ public class GlyphsetUtils {
 					return new MemMapList<>(f, shaper, valuer);
 				} else {throw e;}
 			} catch (Exception ex) {
-				System.err.println("## Faield to load data.");
+				System.err.println("## Failed to load data.");
 				return null;
 			}
 		}
