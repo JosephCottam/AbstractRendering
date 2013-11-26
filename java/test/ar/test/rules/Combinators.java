@@ -1,4 +1,4 @@
-package ar.test.util;
+package ar.test.rules;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -101,6 +101,21 @@ public class Combinators {
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
+		assertTrue("Bluk test", p.value(rslt));
+	}
+	
+	@Test
+	public void Fan() {
+		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
+		Transfer<Integer,Integer>[] ts = new Transfer[10];
+		for (int i=0; i<ts.length; i++) {
+			ts[i] = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(i),0);
+		}
+				
+		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
+		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
+		
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45));
 		assertTrue("Bluk test", p.value(rslt));
 	}
 
