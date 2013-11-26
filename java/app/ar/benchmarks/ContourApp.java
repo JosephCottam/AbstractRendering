@@ -10,9 +10,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -23,7 +20,6 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Selector;
-import ar.aggregates.AggregateUtils;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ZoomPanHandler;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -69,11 +65,6 @@ public class ContourApp {
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
 		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, true, magnitudes);
 		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
-		
-		//Write an image....
-//		BufferedImage img = new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB);
-//		renderTo(contour.contours(), (Graphics2D) img.getGraphics(), width, height);
-//		Util.writeImage(img, new File("Contours.png"));
 		
 		JFrame f = new JFrame();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

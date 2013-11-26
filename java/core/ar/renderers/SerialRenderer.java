@@ -40,7 +40,7 @@ public final class SerialRenderer implements Renderer {
 
 				for (Glyph<? extends G, ? extends I> g: subset) {
 					I val = g.info();
-					acc = op.combine(x, y, acc, val);
+					acc = op.combine(acc, val);
 				}
 				
 				aggregates.set(x, y, acc);

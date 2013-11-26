@@ -3,11 +3,9 @@ package ar.rules;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -16,10 +14,8 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
-import ar.glyphsets.implicitgeometry.MathValuers;
-import ar.glyphsets.implicitgeometry.Valuer;
+import ar.rules.combinators.Fan;
 import ar.util.Util;
-import ar.aggregates.AggregateUtils;
 import ar.aggregates.Iterator2D;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
@@ -61,20 +57,14 @@ public interface ISOContours<N> {
 			public Specialized(Renderer renderer, double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
 				super(renderer, spacing, floor, fill);
 				Util.Stats<N> stats = Util.stats(aggregates, true, true);
-				contours = new GlyphList<>();
-				ArrayList<Aggregates<N>> cachedAggregates = new ArrayList<>();
 				
-				int i=0;
-				N threshold;
-				N bottom = floor == null ? stats.min : floor;
-				do {
-					threshold = LocalUtils.addTo(bottom, i*spacing);
-					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, fill, aggregates);
-					this.contours.addAll(t.contours());
-					cachedAggregates.add(t.cached);
-					i++;
-				} while (threshold.doubleValue() < stats.max.doubleValue());
-				cached = LocalUtils.flatten(cachedAggregates);
+				N bottom = floor == null ? (N) stats.min : floor;
+				Single.Specialized<N>[] ts = LocalUtils.transfers(bottom, stats.max, spacing, renderer, fill, aggregates);
+				Transfer.Specialized<N,N> t = new Fan<>(new General.Last<N>(aggregates.defaultValue()), ts).specialize(aggregates);
+				cached = renderer.transfer(aggregates, t);
+				
+				contours = new GlyphList<>();
+				for (Single.Specialized<N> ss: ts) {contours.addAll(ss.contours);}
 			}
 			
 			public GlyphList<Shape, N> contours() {return contours;}
@@ -112,15 +102,10 @@ public interface ISOContours<N> {
 				Util.Stats<N> stats = Util.stats(aggregates, true, true);
 				contours = new GlyphList<>();
 				
-				ArrayList<Aggregates<N>> cachedAggregates = new ArrayList<>();
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;
-				for (int i=0;i<n;i++) {
-					N threshold = LocalUtils.addTo(stats.min, (step*i));
-					Single.Specialized<N> t = new Single.Specialized<>(renderer, threshold, fill, aggregates);
-					this.contours.addAll(t.contours());
-					cachedAggregates.add(t.cached);
-				}
-				cached = LocalUtils.flatten(cachedAggregates);
+				Single.Specialized<N>[] ts = LocalUtils.transfers(stats.min, stats.max, step, renderer, fill, aggregates);				
+				Transfer.Specialized<N,N> t = new Fan<>(new General.Last<N>(aggregates.defaultValue()), ts).specialize(aggregates);
+				cached = renderer.transfer(aggregates, t);
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
@@ -159,8 +144,8 @@ public interface ISOContours<N> {
 				contours = new GlyphList<>();
 
 				contours.add(new SimpleGlyph<>(s, threshold));
-				if (fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
-				cached = renderer.transfer(isoDivided, new General.Retype<>(true, threshold, null));
+				if (!fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
+				cached = renderer.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
 			}
 			public GlyphList<Shape, N> contours() {return contours;}
 			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
@@ -168,7 +153,20 @@ public interface ISOContours<N> {
 	}
 	
 	public static class LocalUtils {
+		public static <N extends Number> Single.Specialized<N>[] transfers(N bottom, N top, double spacing, Renderer r, boolean fill, Aggregates<? extends N> aggs) {
+			int stepCount = (int) Math.ceil((top.doubleValue()-bottom.doubleValue())/spacing);
+			
+			@SuppressWarnings("unchecked")
+			Single.Specialized<N>[] ts = new Single.Specialized[stepCount];
 
+			for (int i=0; i<stepCount; i++) {
+				N threshold = LocalUtils.addTo(bottom, (i*spacing));
+				ts[i] = new Single.Specialized<>(r, threshold, fill, aggs);
+			}
+			return ts;
+		}
+		
+		
 		@SuppressWarnings("unchecked")
 		public static <N extends Number> N addTo(N val, double more) {
 			if (val instanceof Double) {return (N) new Double(((Double) val).doubleValue()+more);}
@@ -177,37 +175,6 @@ public interface ISOContours<N> {
 			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
 			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
 			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
-		}
-		
-		@SuppressWarnings("unchecked")
-		public static <N extends Number> Valuer<Double, N> wrapperFor(N val) {
-			if (val == null) {throw new NullPointerException("Cannot infer type for null value.");}
-			if (val instanceof Double) {return (Valuer<Double, N>) new MathValuers.DoubleWrapper();}
-			if (val instanceof Float) {return (Valuer<Double, N>) new MathValuers.FloatWrapper();}
-			if (val instanceof Long) {return (Valuer<Double, N>) new MathValuers.LongWrapper();}
-			if (val instanceof Integer) {return (Valuer<Double, N>) new MathValuers.IntegerWrapper();}
-			if (val instanceof Short) {return (Valuer<Double, N>) new MathValuers.ShortWrapper();}
-			throw new IllegalArgumentException("Cannot infer numeric wrapper for " + val.getClass().getName());
-		}
-		
-		public static <N> Aggregates<N> flatten(List<Aggregates<N>> cascade) {
-			if (cascade.size() == 1) {return cascade.get(0);}
-			Aggregates<N> exemplar = cascade.get(0);
-			final Aggregates<N> target = AggregateUtils.make(exemplar, null);
-			for (int x=target.lowX(); x<target.highX(); x++) {
-				for (int y=target.lowY(); y< target.highY(); y++) {
-					for (int i=cascade.size()-1; i>=0; i--) {
-						exemplar = cascade.get(i);
-						N def = exemplar.defaultValue();
-						N val = exemplar.get(x, y);
-						if (!Util.isEqual(def, val)) {
-							target.set(x, y, val);
-							break;
-						} 
-					}
-				}
-			}
-			return target;
 		}
 	}
 

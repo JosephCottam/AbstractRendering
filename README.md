@@ -48,28 +48,31 @@ The Framework
 
 An abstract rendering program looks like a collection of four functions combined into two equations.
 These equations operate on 'glyphs.'
-Glyphs are geometric descriptions with accompanying non-spatial data.  
-That non-spatial data may be a color or it maybe a category or a source-data value.  
-In many ways, the framework creates a bin for each pixel, aggregates the values from a
+Glyphs are geometric descriptions with accompanying data annotations.  
+The data annotations may be a colors or categories or a source-data values.  
+Conceptually, the framework creates a bin for each pixel, aggregates the values from a
  glyph-set into that bin and then transforms the bin values into pixels.
 
-The first equation is the aggregator (formerly called 'the reducer').
-The aggregator determines a value for a single bin (corresponding to a single pixel).
+The first equation is the reducer.
+The reducer determines a value for a single bin (corresponding to a single pixel).
 Its component functions are:
 * Selector: Determines which glyphs to consider for a particular bin.  The most common
   selector is 'contains the target pixel' (though 'neighbors the target pixel' is also useful).
-* Information: Given a single item from the selected set, return a data value.
+* Info: Given a single glyph from the selected set, return a data value.
   This is often the color or category that accompanies the geometry in the glyph, 
   but for counts it is simply a function that returns the number 1.
-* Reducer: Given a set of information values, produce a single value to place into the aggregates set.
+* Aggregator: Given a set of information values, produce a single value to place into the aggregates set.
 
 
 The second equation in abstract rendering converts the aggregate set into
-an image by transforming the aggregates produced by the aggregator into colors.
+an image by transforming the bin-values produced durring reductino into colors.
 This equation is a direct derivation of the 'transfer function' seen in 
 more traditional scientific visualization, and is also called a 'transfer function.'
-In practice, the transfer function is monolithic and does not benefit from further decomposition.
-However, much of its power is derived from the fact that it has all of the 
+In many cases, there is only one stage to transfer (directly converting from the
+ aggregate values to colors).  However, in other cases it is useful to do several
+ smaller transfermations.  The transfermations after aggregation are collectively 
+ called 'the transfer function' regardless of the number of functions actually applied. 
+Much of the power of the transfer function is derived from the fact that it has all of the 
 aggregates already available.  Therefore, it can perform operations
 with knowledge of the global distribution of values, of a neighborhood of values
 or just a single value.
@@ -101,5 +104,5 @@ the transfer function.  It is a proof-of-concept for one form of distributed
 rendering supported by the Abstract Rendering system.  The readme in that directory
 also describes how to use this demonstration application.
 
-The "python" directory contains an implementation of Abstract Rendering using numpy .  
+The "python" directory contains an implementation of Abstract Rendering using numpy.  
 README.md in that directory provides details on the python implementation.

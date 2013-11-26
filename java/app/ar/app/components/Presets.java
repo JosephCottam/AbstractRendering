@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -21,7 +20,7 @@ import javax.swing.JPanel;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
-import ar.Renderer;
+import ar.Resources;
 import ar.Transfer;
 import ar.app.display.ARComponent;
 import ar.app.display.SubsetDisplay;
@@ -37,7 +36,6 @@ import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
@@ -45,15 +43,15 @@ import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
+import ar.rules.combinators.Chain;
+import ar.rules.combinators.If;
 import ar.rules.Shapes;
-import ar.util.MultiStageTransfer;
 import ar.util.Util;
+import ar.glyphsets.SyntheticGlyphset;
 
 public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
-	private final ActionProvider actionProvider = new ActionProvider();
-	private static final Renderer CHAIN_RENDERER = new ParallelRenderer();
-	private static final ForkJoinPool RENDER_POOL = new ForkJoinPool();  
+	private final ActionProvider actionProvider = new ActionProvider();  
 
 	private final JComboBox<Preset> presets = new JComboBox<Preset>();
 	
@@ -86,7 +84,7 @@ public class Presets extends JPanel {
 	
 	public SubsetDisplay update(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		SubsetDisplay newPanel = new SubsetDisplay(p.aggregator(), p.transfer(), p.glyphset(), p.renderer());
+		SubsetDisplay newPanel = new SubsetDisplay(p.aggregator(), p.transfer(), p.glyphset(), Resources.DEFAULT_RENDERER);
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
@@ -108,7 +106,6 @@ public class Presets extends JPanel {
 	public static interface Preset {
 		public Aggregator<?,?> aggregator();
 		public Transfer<?,?> transfer();
-		public Renderer renderer();
 		public Glyphset<?,?> glyphset();
 		public String name();
 		public boolean init(HasViewTransform panel);
@@ -125,9 +122,18 @@ public class Presets extends JPanel {
 		}	
 	}		
 
+	public static class SyntheticPoints implements Preset {
+		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
+		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(10_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate(Color.white, Color.red);}
+		public String name() {return "Synthetic Points (10M)";}
+		public String toString() {return fullName(this);}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
+	}
+
+	
 	public static class ScatterplotAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
 		public String name() {return "Scatterplot: 10% Alpha";}
@@ -137,7 +143,6 @@ public class Presets extends JPanel {
 
 	public static class ScatterplotHDALphaLin implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
@@ -147,7 +152,6 @@ public class Presets extends JPanel {
 	
 	public static class ScatterplotHDALpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
@@ -157,7 +161,6 @@ public class Presets extends JPanel {
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
@@ -167,11 +170,10 @@ public class Presets extends JPanel {
 	
 	public static class BoostMMAlphaActivity implements Preset {
 		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object, Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object, Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(), 
 					new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Color.white, 10));
 		}
@@ -182,7 +184,6 @@ public class Presets extends JPanel {
 	
 	public static class Kiva implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Kiva: HDAlpha";}
@@ -193,7 +194,6 @@ public class Presets extends JPanel {
 
 	public static class KivaDrawDark implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {
 			return new DrawDark(Color.black, Color.white, 6);
@@ -205,7 +205,6 @@ public class Presets extends JPanel {
 	
 	public static class WikipediaAdj implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return WIKIPEDIA;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.RedWhiteLog().op();}
 		public String name() {return "Wikipedia Adjacency (BFS Error layout): HDAlpha";}
@@ -216,11 +215,10 @@ public class Presets extends JPanel {
 	
 	public static class USPopMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-					CHAIN_RENDERER, 
+			return new Chain<>(
+					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
@@ -234,11 +232,10 @@ public class Presets extends JPanel {
 
 	public static class USCensusPop10Pct implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-					CHAIN_RENDERER, 
+			return new Chain<>(
+					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.DivideInt<>(4000),0),
@@ -251,11 +248,10 @@ public class Presets extends JPanel {
 	
 	public static class USCensusPopulationLinear implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-					CHAIN_RENDERER, 
+			return new Chain<>(
+					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
@@ -268,11 +264,10 @@ public class Presets extends JPanel {
 
 	public static class USCensusPopulationOpaque implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-					CHAIN_RENDERER, 
+			return new Chain<>(
+					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.Present<>(Color.RED, Color.white));
@@ -284,11 +279,10 @@ public class Presets extends JPanel {
 	
 	public static class USCensusPopulationExp implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<>(
-					CHAIN_RENDERER, 
+			return new Chain<>(
+					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
@@ -316,7 +310,6 @@ public class Presets extends JPanel {
 			return glyphset() != null;
 		}
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			try {
@@ -330,7 +323,7 @@ public class Presets extends JPanel {
 				colors.put(8, Color.GRAY);	//Mixed
 				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 
-				Transfer<?, ?> chain = new MultiStageTransfer<>(CHAIN_RENDERER, 
+				Transfer<?, ?> chain = new Chain<>(Resources.DEFAULT_RENDERER,
 						rekey, 
 						new Shapes.ShapeGather(shapes, transformProvider),
 						new Categories.RandomWeave());
@@ -345,7 +338,6 @@ public class Presets extends JPanel {
 	
 	public static class USCensusRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
@@ -359,8 +351,8 @@ public class Presets extends JPanel {
 
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			return new MultiStageTransfer<Object, Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object, Object>(
+					Resources.DEFAULT_RENDERER,
 					rekey,
 					new General.Spread<>(new General.Spread.UnitSquare<CoC<Object>>(1), new Categories.MergeCategories<>()),
 					stratAlpha);
@@ -373,26 +365,38 @@ public class Presets extends JPanel {
 
 	public static class USCensusRacesLift implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.MergeCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
+			final Color other = new Color(136,90,68);
 			Map<Object, Color> colors = new HashMap<>();
 			colors.put(2, new Color(0,0,200));	//White
 			colors.put(3, new Color(0,200,0));	//African American
-			colors.put(4, new Color(136,90,68));//Native American
+			colors.put(4, other);//Native American
 			colors.put(5, new Color(255,69,0));	//Asian
-			colors.put(6, new Color(136,90,68));//Hawaiian
-			colors.put(7, new Color(136,90,68));//Other
-			colors.put(8, new Color(136,90,68));//Mixed
-
-			
+			colors.put(6, other);//Hawaiian
+			colors.put(7, other);//Other
+			colors.put(8, other);//Mixed
 			
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			Transfer<CategoricalCounts<Color>, Color> lift = new LiftIf(.1, stratAlpha);
-
-			return new MultiStageTransfer<Object, Object>(
-					CHAIN_RENDERER,
+			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
+			
+			Valuer<CategoricalCounts<Color>, Boolean> p = new Valuer<CategoricalCounts<Color>, Boolean>() {
+				public Boolean value(CategoricalCounts<Color> val) {
+					if (val.hasKey(other)) {
+						double ratio = val.count(other)/((double) val.fullSize());
+						return ratio > .1;
+					} else {
+						return false;
+					}
+				}
+			};
+			
+			Transfer<CategoricalCounts<Color>, Color> lift = new If<>(p, black, stratAlpha);
+			
+			
+			return new Chain<Object, Object>(
+					Resources.DEFAULT_RENDERER,
 					rekey,
 					new General.Spread<>(new General.Spread.UnitSquare<CoC<Object>>(1), new Categories.MergeCategories<>()),
 					lift);
@@ -404,11 +408,10 @@ public class Presets extends JPanel {
 	
 	public static class USSynPopulationMinAlpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		}
@@ -419,11 +422,10 @@ public class Presets extends JPanel {
 
 	public static class USSynPopulationLinear implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 	  				new General.ValuerTransfer<>(new MathValuers.DivideInt<>(10), 0),
 					new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
@@ -435,11 +437,10 @@ public class Presets extends JPanel {
 	
 	public static class USSynPopulationExp implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
 					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
@@ -451,11 +452,10 @@ public class Presets extends JPanel {
 	
 	public static class USSynPopulationLog implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 	  				new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
@@ -467,7 +467,6 @@ public class Presets extends JPanel {
 	
 	public static class USSynPopulationRaces implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			Map<Object, Color> colors = new HashMap<>();
@@ -479,8 +478,8 @@ public class Presets extends JPanel {
 
 			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
-			return new MultiStageTransfer<Object, Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object, Object>(
+					Resources.DEFAULT_RENDERER,
 					rekey,
 					stratAlpha);
 		}
@@ -512,14 +511,13 @@ public class Presets extends JPanel {
 
 	public static class USSynPopulationContours implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
-					new ISOContours.NContours<>(CHAIN_RENDERER, 3, true),
+					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 3, true),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
@@ -530,15 +528,13 @@ public class Presets extends JPanel {
 
 	public static class USSynPopulationContourLines implements Preset {
 		public Aggregator<?,?> aggregator() {return new Categories.CountCategories<>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
-					new ISOContours.NContours<>(CHAIN_RENDERER, 3, false),
-					new General.Replace<>(null, 0, 0),
+					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 3, false),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
@@ -550,12 +546,11 @@ public class Presets extends JPanel {
 	
 	public static class ScatterplotContours implements Preset {
 		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {
-			return new MultiStageTransfer<Object,Object>(
-					CHAIN_RENDERER,
-					new ISOContours.NContours<>(CHAIN_RENDERER, 5, true),
+			return new Chain<Object,Object>(
+					Resources.DEFAULT_RENDERER,
+					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 5, true),
 					new General.Simplify<>(0),
 					new General.Replace<>(null, 0, 0),
 					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
@@ -653,38 +648,5 @@ public class Presets extends JPanel {
 	
 	
 
-	///Predicate to lift the 'other' category to the front...
-	private static class LiftIf extends General.Switch<CategoricalCounts<Color>, Color> {
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public LiftIf(double cutoff, Transfer<CategoricalCounts<Color>, Color> baseline) {
-			super(
-				new Pred(cutoff), 
-				new General.Const(Color.black), 
-				baseline, 
-				baseline.emptyValue());
-		}
-		
-		private static final class Pred implements General.Switch.Predicate.Specialized<CategoricalCounts<Color>> {
-			private final double cutoff;
-			public Pred(double cutoff) {this.cutoff = cutoff;}
-         
-			public boolean test(int x, int y,
-					Aggregates<? extends CategoricalCounts<Color>> aggs) {
-				
-				CategoricalCounts<Color> val = aggs.get(x, y);				
-				int keyIdx=-1;
-				for (int i=0; i< val.size(); i++) {
-					if (val.key(i) == Color.GRAY) {keyIdx = i; break;}
-				}
-				return (keyIdx >=0 && val.count(keyIdx)/((double) val.fullSize()) > cutoff);
-			}
-
-			public ar.rules.General.Switch.Predicate.Specialized<CategoricalCounts<Color>> 
-				specialize(Aggregates<? extends CategoricalCounts<Color>> aggs) {
-				return this;
-			}
-		}
-		
-	}
 
 }

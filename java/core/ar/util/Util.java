@@ -274,7 +274,7 @@ public final class Util {
 	 * 
 	 * **/
 	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreNulls, boolean ignoreNaNs) {
-		//For a single-pass std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods 
+		//For a single-test std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		long count=0;
 		long nullCount=0;
 		long nanCount=0;

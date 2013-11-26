@@ -7,9 +7,8 @@ import java.io.Serializable;
  * The aggregator is defined such that it may be used in a fold-like operation
  * where agg.combine(x,y, agg.combine(...), V) is a valid construction.
  * 
- * The intended usagage model is to instantiate an aggregator once per glyphset
+ * The intended usage model is to instantiate an aggregator once per glyphset
  * and repeatedly apply the aggregator to each pixel in the space.
- * 
  * 
  * IN -- The type of the data element on the glyph
  * OUT -- The type of aggregates produced
@@ -17,23 +16,18 @@ import java.io.Serializable;
 public interface Aggregator<IN,OUT> extends Serializable {
 	
 	/**
-	 * Compute an aggregate value from an existing aggregate value and a 
+	 * Compute an aggregate value from an existing aggregate values and a 
 	 * new input values.  If the return value is not equal-to "current,"
-	 * the return value must be a distinct object from "current" to ensure correct behavior.
+	 * the return value must be a distinct object from "current" to ensure correct behavior
+	 * (i.e., don't mutate current, even if its possible).
 	 * 
-	 * The x and y position are provided as arguments so position-sensitive
-	 * aggregation can be performed.  Any other contextual information
-	 * needs to be provided through the class in some other way.
+	 * Contextual information needs to be provided to the class through constructor (preferred) or property methods.
 	 *
-	 * TODO: With selectors in place...do we still need x/y?
-	 * 
-	 * @param x The x-position being operated on
-	 * @param y The y-position being operated on
 	 * @param current  An existing aggregate value
 	 * @param update A new input value
 	 * @return The aggregate value
 	 */
-	public OUT combine(long x, long y, OUT current, IN update);
+	public OUT combine(OUT current, IN update);
 	
 	
 	/**Reduce aggregate values into a single value.

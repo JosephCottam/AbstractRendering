@@ -30,8 +30,8 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
+import ar.rules.combinators.Chain;
 import ar.selectors.TouchesPixel;
-import ar.util.MultiStageTransfer;
 import ar.util.DelimitedReader;
 import ar.util.Util;
 import ar.Glyphset;
@@ -72,9 +72,9 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("Echo", new General.Echo<Color>(Util.CLEAR));
 		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
 		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
+		TRANSFERS.put("Gradient", new Debug.Gradient());
 						
-		AGGREGATORS.put("Blue",new General.Const<Color>(Color.BLUE));
-		AGGREGATORS.put("Gradient", new Debug.Gradient(500, 500));
+		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new Categories.Last());
 		AGGREGATORS.put("Count", new Numbers.Count<Object>());
@@ -128,7 +128,7 @@ public class ARServer extends NanoHTTPD {
 		
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
-		Transfer transfer = new MultiStageTransfer(r, transfers.toArray(new Transfer[transfers.size()]));
+		Transfer transfer = new Chain(r, transfers.toArray(new Transfer[transfers.size()]));
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;
