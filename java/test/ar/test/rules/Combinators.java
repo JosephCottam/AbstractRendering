@@ -89,28 +89,17 @@ public class Combinators {
 			}
 		}		
 	}
-
-	@Test
-	public void Diamond() {
-		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
-		
-		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);
-		Transfer<Integer,Integer> t2 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(2),0);
-		
-		Transfer.Specialized<Integer, Integer> t = new Diamond<>(t1,t2, new Numbers.Count<>()).specialize(a);
-		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
-		
-		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
-		assertTrue("Bluk test", p.value(rslt));
-	}
 	
 	@Test
 	public void Fan() {
-		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
+		@SuppressWarnings("unchecked")
 		Transfer<Integer,Integer>[] ts = new Transfer[10];
 		for (int i=0; i<ts.length; i++) {
 			ts[i] = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(i),0);
 		}
+		
+		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
+		
 				
 		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
 		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);

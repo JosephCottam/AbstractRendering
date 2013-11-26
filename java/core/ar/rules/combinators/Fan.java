@@ -7,10 +7,7 @@ import ar.Transfer;
 import ar.renderers.AggregationStrategies;
 import ar.util.CacheProvider;
 
-/**Split (arbitrary width), then merge...
- * 
- * TODO: To faciliate easier ad-hoc merge, have a single-method "combiner" interface instead of "Aggregator".  All Aggregator are combiners. 
- * **/
+/**Split (arbitrary width), then merge...**/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
     protected final Aggregator<?, OUT> merge;
