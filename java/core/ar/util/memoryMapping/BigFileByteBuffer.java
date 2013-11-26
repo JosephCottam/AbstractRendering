@@ -65,15 +65,14 @@ public class BigFileByteBuffer implements MappedFile {
 	public BigFileByteBuffer(File source, int bufferSize, FileChannel.MapMode mode) throws IOException {
 		String fileMode = mode == FileChannel.MapMode.READ_ONLY ? "r" : "rw";
 		inputFile = new RandomAccessFile(source, fileMode);
-		try (FileChannel channel =  inputFile.getChannel()) {
-			fileSize = checkCapacity();
-			
-			filePos = 0;
-			buffer = channel.map(mode, filePos, Math.min(bufferSize, fileSize));
-			
-			this.mode = mode;
-			this.bufferSize = bufferSize;
-		}
+		FileChannel channel =  inputFile.getChannel();
+		fileSize = checkCapacity();
+		
+		filePos = 0;
+		buffer = channel.map(mode, filePos, Math.min(bufferSize, fileSize));
+		
+		this.mode = mode;
+		this.bufferSize = bufferSize;
 	}
 	
 	protected void finalize() {

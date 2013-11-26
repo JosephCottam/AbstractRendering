@@ -5,8 +5,6 @@ import static org.hamcrest.CoreMatchers.*;
 
 import java.awt.Point;
 import java.awt.geom.GeneralPath;
-import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 
@@ -199,36 +197,5 @@ public class ISOContoursTests {
 			assertThat("Error at x of " + x, padded.get(x,base.lowY()-1), is(pad));
 			assertThat("Error at x of " + x, padded.get(x,base.highY()+1), is(pad));
 		}
-	}
-	
-	@Test
-	public void Flatten() {
-		Aggregates<Integer> ones = new FlatAggregates<>(5,5,-1);
-		Aggregates<Integer> zeros = new FlatAggregates<>(5,5,-1);
-		for (int x=ones.lowX(); x< ones.highX(); x++) {
-			for (int y=ones.lowY(); y< ones.highY(); y++) {
-				ones.set(x, y, 1);
-				zeros.set(x,y, 0);
-			}
-		}
-		
-		
-		List<Aggregates<Integer>> aggs = Arrays.asList(ones,zeros);
-		Aggregates<Integer> combined = ISOContours.LocalUtils.flatten(aggs);
-		for (int x=combined.lowX(); x< combined.highX(); x++) {
-			for (int y=combined.lowY(); y< combined.highY(); y++) {
-				assertEquals(String.format("Error at %d x %d", x,y), (Integer) 0, combined.get(x, y));
-			}
-		}
-
-		List<Aggregates<Integer>> aggs2 = Arrays.asList(zeros,ones);
-		Aggregates<Integer> combined2 = ISOContours.LocalUtils.flatten(aggs2);
-		for (int x=combined2.lowX(); x< combined2.highX(); x++) {
-			for (int y=combined2.lowY(); y< combined2.highY(); y++) {
-				assertEquals(String.format("Error at %d x %d", x,y), (Integer) 1, combined2.get(x, y));
-			}
-		}
-
-		
 	}
 }

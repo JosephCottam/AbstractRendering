@@ -33,6 +33,14 @@ public class General {
 		}
 	}
 	
+	public static final class Last<IN> implements Aggregator<IN,IN> {
+		private final IN id;
+		public <V extends IN> Last(V id) {this.id = id;}
+		public IN combine(IN current, IN update) {return update;}
+		public IN rollup(IN left, IN right) {return right;}
+		public IN identity() {return id;}
+	}
+	
 	/**Performs a type-preserving replacement.  
 	 * Specified values are replaced, others as passed through.
 	 * For more control or type-converting replace, use MapWrapper instead.
