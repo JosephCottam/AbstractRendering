@@ -124,12 +124,11 @@ public class Presets extends JPanel {
 
 	public static class SyntheticPoints implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Renderer renderer() {return new ParallelRenderer(RENDER_POOL);}
-		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(1_00_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
-		public Transfer<?,?> transfer() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
-		public String name() {return "Synthetic Points";}
+		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(10_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate(Color.white, Color.red);}
+		public String name() {return "Synthetic Points (10M)";}
 		public String toString() {return fullName(this);}
-		public boolean init(Presets panel) {return glyphset() != null;}
+		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
 
 	
