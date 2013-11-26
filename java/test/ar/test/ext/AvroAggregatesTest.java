@@ -62,11 +62,11 @@ public class AvroAggregatesTest {
 		ref.set(1, 0, 21);
 		ref.set(1, 1, 22);
 		
-		String filename ="./testResults/counts.avro";
+		File file = new File("./testResults/counts.avro");
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
-		try (OutputStream out = new FileOutputStream(filename)) {
+		try (OutputStream out = new FileOutputStream(file)) {
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
-			Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
+			Aggregates<Integer> res = AggregateSerializer.deserialize(file, new Converters.ToCount());
 	
 			assertEquals(ref.lowX(), res.lowX());
 			assertEquals(ref.lowY(), res.lowY());
@@ -85,12 +85,12 @@ public class AvroAggregatesTest {
 	@Test
 	public void countsRoundTrip() throws Exception {
 		Aggregates<Integer> ref = count;
-		String filename ="./testResults/counts.avro";
+		File file = new File("./testResults/counts.avro");
 		Schema s = new SchemaComposer().addResource("ar/ext/avro/count.avsc").resolved();
 		
-		try (OutputStream out = new FileOutputStream(filename)) {
+		try (OutputStream out = new FileOutputStream(file)) {
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
-			Aggregates<Integer> res = AggregateSerializer.deserialize(filename, new Converters.ToCount());
+			Aggregates<Integer> res = AggregateSerializer.deserialize(file, new Converters.ToCount());
 		
 			assertEquals(ref.lowX(), res.lowX());
 			assertEquals(ref.lowY(), res.lowY());
@@ -130,12 +130,12 @@ public class AvroAggregatesTest {
 	public void RLERoundTrip() throws Exception {
 		Aggregates<CategoricalCounts.RLE<Color>> ref = rles;
 		
-		String filename = "./testResults/rle.avro";
-		try (OutputStream out = new FileOutputStream(filename)) {
+		File file =  new File("./testResults/rle.avro");
+		try (OutputStream out = new FileOutputStream(file)) {
 			Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
 			Aggregates<CategoricalCounts.RLE<String>> res 
-				= AggregateSerializer.deserialize(filename, new Converters.ToRLE());
+				= AggregateSerializer.deserialize(file, new Converters.ToRLE());
 	
 			assertEquals(ref.lowX(), res.lowX());
 			assertEquals(ref.lowY(), res.lowY());
