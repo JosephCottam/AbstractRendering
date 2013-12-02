@@ -62,7 +62,9 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public void addAggregatesChangedListener(ActionListener l) {aggregatesChangedProvider.addActionListener(l);}
 
 	public Aggregates<?> refAggregates() {return display.refAggregates();}
-	public void refAggregates(Aggregates<?> aggregates) {display.refAggregates(aggregates);}
+	public void refAggregates(Aggregates<?> aggregates) {
+		display.refAggregates(aggregates);
+	}
 	
 	public Renderer renderer() {return renderer;}
 	
@@ -123,69 +125,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		display.aggregates(aggregates,null);
 		repaint();
 	}
-	
-	private final class SubsetRender implements Runnable {
-		public void run() {
-			long start = System.currentTimeMillis();
-			try {
-				Rectangle viewport = AggregatingDisplay.this.getBounds();				
-				AffineTransform vt = viewTransform();
-				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
-				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
-				
-				Aggregates<?> subset = AggregateUtils.subset(
-						aggregates, 
-						shiftX, shiftY, 
-						shiftX+viewport.width, shiftY+viewport.height);
-				
-				AggregatingDisplay.this.subsetAggregates(subset);
-				if (subset == null) {return;}
-				long end = System.currentTimeMillis();
-				if (PERF_REP) {
-					System.out.printf("%d ms (Subset render)\n",
-							(end-start), subset.highX()-subset.lowX(), subset.highY()-subset.lowY());
-				}
-			} catch (ClassCastException e) {
-				renderError = true;
-				System.err.println(e.getMessage());
-				//e.printStackTrace();
-			}
-			
-			AggregatingDisplay.this.repaint();
-		}	
-	}
-	
-	private final class AggregateRender implements Runnable {
-		
-		public void run() {
-			long start = System.currentTimeMillis();
-			try {
-				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
-				renderTransform = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
-				
-				@SuppressWarnings({"rawtypes"})
-				Selector selector = TouchesPixel.make(dataset);
-				
-				@SuppressWarnings({"unchecked","rawtypes"})
-				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, renderTransform, databounds.width, databounds.height);
-				
-				AggregatingDisplay.this.aggregates(a, renderTransform);
-				long end = System.currentTimeMillis();
-				if (PERF_REP) {
-					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
-							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
-				}
-				
-			} catch (Exception e) {
-				renderError = true;
-				String msg = e.getMessage() == null ? e.getClass().getName() : e.getMessage();
-				System.err.println(msg);
-				e.printStackTrace();
-			}
-			
-			AggregatingDisplay.this.repaint();
-		}
-	}
+
 	
 	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s]", dataset, display.transfer(), aggregator);}
 	
@@ -195,7 +135,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
      * to the screen system.
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
-	public AffineTransform renderTransform() {return new AffineTransform(viewTransformRef);}	
+	public AffineTransform renderTransform() {return new AffineTransform(renderTransform);}	
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
 		//Only force full re-render if the zoom factor changed
 		if (renderTransform == null 
@@ -226,4 +166,70 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	}
 	
 	public Rectangle2D dataBounds() {return dataset.bounds();}
+
+
+	
+	private final class SubsetRender implements Runnable {
+		public void run() {
+			long start = System.currentTimeMillis();
+			try {
+				Rectangle viewport = AggregatingDisplay.this.getBounds();				
+				AffineTransform vt = viewTransform();
+				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
+				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
+				
+				//TODO: This does not need to be a copy....and it does not need to be done in a thread
+				Aggregates<?> subset = AggregateUtils.subset(
+						aggregates, 
+						shiftX, shiftY, 
+						shiftX+viewport.width, shiftY+viewport.height);
+
+				AggregatingDisplay.this.subsetAggregates(subset);
+				if (subset == null) {return;}
+				long end = System.currentTimeMillis();
+				if (PERF_REP) {
+					System.out.printf("%d ms (Subset render)\n",
+							(end-start), subset.highX()-subset.lowX(), subset.highY()-subset.lowY());
+				}
+			} catch (ClassCastException e) {
+				renderError = true;
+				System.err.println(e.getMessage());
+				//e.printStackTrace();
+			}
+			
+			AggregatingDisplay.this.repaint();
+		}	
+	}
+	
+	private final class AggregateRender implements Runnable {
+		
+		public void run() {
+			long start = System.currentTimeMillis();
+			try {
+				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
+				AffineTransform rt = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
+				
+				@SuppressWarnings({"rawtypes"})
+				Selector selector = TouchesPixel.make(dataset);
+				
+				@SuppressWarnings({"unchecked","rawtypes"})
+				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt, databounds.width, databounds.height);
+				
+				AggregatingDisplay.this.aggregates(a, rt);
+				long end = System.currentTimeMillis();
+				if (PERF_REP) {
+					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
+							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
+				}
+				
+			} catch (Exception e) {
+				renderError = true;
+				String msg = e.getMessage() == null ? e.getClass().getName() : e.getMessage();
+				System.err.println(msg);
+				e.printStackTrace();
+			}
+			
+			AggregatingDisplay.this.repaint();
+		}
+	}
 }

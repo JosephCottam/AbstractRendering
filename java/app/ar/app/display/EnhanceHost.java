@@ -101,6 +101,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		int width = highX-lowX;
 		int height = highY-lowY;
 		
+		//TODO: THIS DOES NOT NEED TO BE A COPY!
 		Aggregates<A> subset= AggregateUtils.make(0, 0, width, height, aggs.defaultValue());
 		for (int x=0; x<width; x++) {
 			for (int y=0; y<height; y++) {
