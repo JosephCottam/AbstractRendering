@@ -12,17 +12,16 @@ import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.selectors.TouchesPixel;
-import ar.util.HasViewTransform;
 import ar.util.Util;
 
 /**Render and display exactly what fits on the screen.
  */
-public class FullDisplay extends ARComponent.Aggregating implements HasViewTransform {
+public class FullDisplay extends ARComponent.Aggregating {
 	protected static final long serialVersionUID = 1L;
 
 	protected final ActionProvider aggregatesChangedProvider = new ActionProvider();
 	
-	protected final SimpleDisplay display;
+	protected final TransferDisplay display;
 	
 	protected Aggregator<?,?> aggregator;
 	protected Glyphset<?,?> dataset;
@@ -42,7 +41,7 @@ public class FullDisplay extends ARComponent.Aggregating implements HasViewTrans
 	 */
 	public FullDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?,?> glyphs, Renderer renderer) {
 		super();
-		display = new SimpleDisplay(null, transfer, renderer);
+		display = new TransferDisplay(null, transfer, renderer);
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
 		this.invalidate();

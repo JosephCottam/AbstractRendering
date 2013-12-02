@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 
 import ar.aggregates.AggregateUtils;
 import ar.app.display.FullDisplay;
-import ar.app.display.SimpleDisplay;
+import ar.app.display.TransferDisplay;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelRenderer;
@@ -99,7 +99,7 @@ public class SimpleApp {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new SimpleDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

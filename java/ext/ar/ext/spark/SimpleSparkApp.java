@@ -9,7 +9,7 @@ import spark.api.java.JavaRDD;
 import spark.api.java.JavaSparkContext;
 import ar.Aggregates;
 import ar.Glyph;
-import ar.app.display.SimpleDisplay;
+import ar.app.display.TransferDisplay;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -58,7 +58,7 @@ public class SimpleSparkApp {
 
 		
 		if (outFile == null) {
-			SimpleDisplay.show("", width, height, aggs, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
+			TransferDisplay.show("", width, height, aggs, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
 		} else {
 			AggregatesToCSV.export(aggs, new File(outFile));
 		}
