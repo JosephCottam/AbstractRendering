@@ -12,7 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import ar.aggregates.AggregateUtils;
-import ar.app.display.FullDisplay;
+import ar.app.display.AggregatingDisplay;
 import ar.app.display.TransferDisplay;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -114,7 +114,7 @@ public class SimpleApp {
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);
 		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		final FullDisplay panel = new FullDisplay(aggregator, transfer, dataset, r);
+		final AggregatingDisplay panel = new AggregatingDisplay(aggregator, transfer, dataset, r);
 		frame2.add(panel, BorderLayout.CENTER);
 		frame2.setVisible(true);
 		frame2.revalidate();

@@ -6,12 +6,13 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+
 import ar.Renderer;
 import ar.Glyphset;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
+import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
-import ar.app.display.SubsetDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.AppUtil;
 import ar.app.util.WrappedAggregator;
@@ -114,7 +115,7 @@ public class ARApp implements ARComponent.Holder {
 	
 	
 	public void displayWithRenderer(Renderer renderer) {
-		SubsetDisplay innerDisplay = new SubsetDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
+		AggregatingDisplay innerDisplay = new AggregatingDisplay(((WrappedAggregator<?,?>) aggregators.getSelectedItem()).op(), 
 				((WrappedTransfer<?,?>) transfers.getSelectedItem()).op(), 
 				loadData(),
 				renderer);

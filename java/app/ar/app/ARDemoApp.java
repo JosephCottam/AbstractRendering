@@ -14,8 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import ar.app.components.*;
 import ar.app.display.ARComponent;
+import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
-import ar.app.display.SubsetDisplay;
 
 public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private ARComponent.Aggregating display;
@@ -128,7 +128,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		
 	}
 	
-	public <A,B> void changeDisplay(SubsetDisplay innerDisplay) {
+	public <A,B> void changeDisplay(AggregatingDisplay innerDisplay) {
 		ARComponent old = this.display;
 		if (old != null) {frame.remove(old);}
 		

@@ -39,7 +39,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	
 	private static final Color SHOW_ENHANCED  = new Color(100,149,237);
 	
-	private SubsetDisplay hosted;
+	private AggregatingDisplay hosted;
 	private SelectionOverlay overlay;
 	private EnhancedOverlay enhanced = new EnhancedOverlay();
 	private boolean enhanceEnabled;
@@ -47,7 +47,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private boolean redoRefAggregates = true;
 	
 	/**Host the given component in the overlay.**/
-	public EnhanceHost(SubsetDisplay hosted) {	
+	public EnhanceHost(AggregatingDisplay hosted) {	
 		this.hosted = hosted;
 		this.overlay = new SelectionOverlay(this);
 		this.add(overlay);

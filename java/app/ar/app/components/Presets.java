@@ -23,7 +23,7 @@ import ar.Glyphset;
 import ar.Resources;
 import ar.Transfer;
 import ar.app.display.ARComponent;
-import ar.app.display.SubsetDisplay;
+import ar.app.display.AggregatingDisplay;
 import ar.app.util.GeoJSONTools;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ActionProvider;
@@ -82,9 +82,9 @@ public class Presets extends JPanel {
 				|| !oldPanel.aggregator().equals(p.aggregator());
 	}
 	
-	public SubsetDisplay update(ARComponent.Aggregating oldPanel) {
+	public AggregatingDisplay update(ARComponent.Aggregating oldPanel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		SubsetDisplay newPanel = new SubsetDisplay(p.aggregator(), p.transfer(), p.glyphset(), Resources.DEFAULT_RENDERER);
+		AggregatingDisplay newPanel = new AggregatingDisplay(p.aggregator(), p.transfer(), p.glyphset(), Resources.DEFAULT_RENDERER);
 		if (oldPanel != null 
 				&& newPanel.dataset() == oldPanel.dataset()
 				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
