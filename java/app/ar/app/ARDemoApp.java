@@ -16,9 +16,11 @@ import ar.Resources;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
+import ar.app.display.EnhanceHost;
+import ar.renderers.RenderUtils;
 
 public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
-	private ARComponent.Aggregating display = new AggregatingDisplay(Resources.DEFAULT_RENDERER);
+	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(Resources.DEFAULT_RENDERER));
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
@@ -81,6 +83,11 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		frame.add(controls, BorderLayout.SOUTH);
 		
 		
+		this.status.startMonitoring(display.renderer());
+        clipwarnControl.target(display);
+		enhanceOptions.host(display);
+
+		
 		final ARDemoApp app = this;
 		presets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -135,4 +142,16 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 
 	@Override
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {display.viewTransform(vt);}
+	
+	
+
+	/**
+	 * @param args
+	 * @throws Exception 
+	 */
+	public static void main(String[] args) throws Exception {
+		 ARComponent.PERF_REP = true;
+		 RenderUtils.RECORD_PROGRESS = true;
+		new ARDemoApp();
+	} 
 }

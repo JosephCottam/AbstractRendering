@@ -1,7 +1,7 @@
 package ar.app.util;
 
 import ar.Transfer;
-import ar.app.ARApp;
+import ar.app.display.ARComponent;
 
 /**Lightweight transfer wrapper (for non-display items)**/
 public class TransferWrapper <A,B> implements WrappedTransfer<A,B> {
@@ -14,7 +14,7 @@ public class TransferWrapper <A,B> implements WrappedTransfer<A,B> {
 	}
 	
 	public void deselected() {}
-	public void selected(ARApp app) {}
+	public void selected(ARComponent.Holder app) {}
 	public Transfer<A,B> op() {return transfer;}
 	public Class<?> input() {return in;}
 	public Class<?> output() {return out;}

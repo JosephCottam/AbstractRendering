@@ -86,9 +86,7 @@ public class Presets extends JPanel {
 			&& panel.aggregator().equals(p.aggregator())) {
 		    panel.transfer(p.transfer());
 		} else {
-			panel.dataset(p.glyphset());
-			panel.aggregator(p.aggregator());
-			panel.transfer(p.transfer());
+			panel.dataset(p.glyphset(), p.aggregator(), p.transfer());
 			panel.zoomFit();
 		}
 	}

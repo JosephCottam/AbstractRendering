@@ -154,13 +154,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public Glyphset<?,?> dataset() {return hosted.dataset();}
 	public void renderAgain() {hosted.renderAgain();}
 	
-	public void dataset(Glyphset<?,?> data) {
-		hosted.dataset(data);
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
+		hosted.dataset(data, aggregator, transfer);
 		overlay.clear();
 	}
 	
 	public Aggregator<?, ?> aggregator() {return hosted.aggregator();}
-	public void aggregator(Aggregator<?, ?> aggregator) {hosted.aggregator(aggregator);}
 	public Renderer renderer() {return hosted.renderer();}
 
 	public void zoomFit() {hosted.zoomFit();}

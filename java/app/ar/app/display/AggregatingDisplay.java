@@ -45,7 +45,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
 		
-		
 		new ZoomPanHandler().register(this);	
 	}
 
@@ -68,21 +67,20 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public Renderer renderer() {return renderer;}
 	
 	public Glyphset<?,?> dataset() {return dataset;}
-	public void dataset(Glyphset<?,?> data) {
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
 		this.dataset = data;
+		this.aggregator = aggregator;
+		this.transfer(transfer);
 		this.aggregates = null;
 		this.repaint();
 	}
 	
 	public Transfer<?,?> transfer() {return display.transfer();}
-	public void transfer(Transfer<?,?> t) {display.transfer(t);}
+	public void transfer(Transfer<?,?> t) {
+		display.transfer(t);
+	}
 	
 	public Aggregator<?,?> aggregator() {return aggregator;}
-	public void aggregator(Aggregator<?,?> aggregator) {
-		this.aggregator = aggregator;
-		aggregates(null,null);
-		this.repaint();
-	}
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {

@@ -27,7 +27,6 @@ import javax.swing.event.ChangeListener;
 
 import ar.Aggregates;
 import ar.Transfer;
-import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.rules.Numbers;
 
@@ -73,7 +72,7 @@ public class ScatterControl extends JPanel {
 	}
 	
 	
-	public void setSource(ARApp source) {this.source=source;}
+	public void setSource(ARComponent.Holder source) {this.source=source;}
 
 	public int distance() {return (Integer) distance.getValue();}
 	
