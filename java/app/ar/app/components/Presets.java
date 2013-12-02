@@ -3,8 +3,6 @@ package ar.app.components;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -23,7 +21,6 @@ import ar.Glyphset;
 import ar.Resources;
 import ar.Transfer;
 import ar.app.display.ARComponent;
-import ar.app.display.AggregatingDisplay;
 import ar.app.util.GeoJSONTools;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.ActionProvider;
@@ -82,23 +79,18 @@ public class Presets extends JPanel {
 				|| !oldPanel.aggregator().equals(p.aggregator());
 	}
 	
-	public AggregatingDisplay update(ARComponent.Aggregating oldPanel) {
+	public void update(ARComponent.Aggregating panel) {
 		Preset p = (Preset) presets.getSelectedItem();
-		AggregatingDisplay newPanel = new AggregatingDisplay(p.aggregator(), p.transfer(), p.glyphset(), Resources.DEFAULT_RENDERER);
-		if (oldPanel != null 
-				&& newPanel.dataset() == oldPanel.dataset()
-				&& newPanel.aggregator().equals(oldPanel.aggregator())) {
-			try {
-				newPanel.viewTransform(oldPanel.viewTransform());
-				newPanel.aggregates(oldPanel.aggregates(), oldPanel.renderTransform());
-			} catch (NoninvertibleTransformException e) {
-				try {newPanel.viewTransform(new AffineTransform());}
-				catch (NoninvertibleTransformException e1) {/**(Hopefully) Not possible, identity transform is invertible**/}
-			}
+				
+		if (panel.dataset() == p.glyphset()
+			&& panel.aggregator().equals(p.aggregator())) {
+		    panel.transfer(p.transfer());
 		} else {
-			newPanel.zoomFit();
+			panel.dataset(p.glyphset());
+			panel.aggregator(p.aggregator());
+			panel.transfer(p.transfer());
+			panel.zoomFit();
 		}
-		return newPanel;
 	}
 	
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}

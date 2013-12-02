@@ -38,20 +38,24 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		
 	protected final Renderer renderer;
 
-	/**Create a new instance.
-	 * 
-	 * TODO: Investigate just taking in 'renderer' since that is the only immutable thing.
-	 */
-	public AggregatingDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?,?> glyphs, Renderer renderer) {
+	public AggregatingDisplay(Renderer renderer) {
 		super();
-		display = new TransferDisplay(null, transfer, renderer);
+		this.renderer = renderer;
+		display = new TransferDisplay(null, null, renderer);
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
-		this.invalidate();
-		this.aggregator = aggregator;
-		this.dataset = glyphs;
-		this.renderer = renderer;
 		
+		
+		new ZoomPanHandler().register(this);	
+	}
+
+	/**Create a new instance.
+	 * 
+	 */
+	public AggregatingDisplay(Aggregator<?,?> aggregator, Transfer<?,?> transfer, Glyphset<?,?> glyphs, Renderer renderer) {
+		this(renderer);
+		this.aggregator = aggregator;
+		this.dataset = glyphs;		
 		new ZoomPanHandler().register(this);
 	}
 	

@@ -12,13 +12,13 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 
+import ar.Resources;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
-import ar.app.display.EnhanceHost;
 
 public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
-	private ARComponent.Aggregating display;
+	private ARComponent.Aggregating display = new AggregatingDisplay(Resources.DEFAULT_RENDERER);
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
@@ -85,14 +85,14 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		presets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = presets.doZoomWith(app.display);
-				app.changeDisplay(presets.update(app.display));
+				presets.update(app.display);
 				if (rezoom) {
 					display.zoomFit();
 				}
 			}
 		});
 		
-		app.changeDisplay(presets.update(app.display));
+		presets.update(app.display);
 		
 		frame.add(display, BorderLayout.CENTER);
 
@@ -126,20 +126,6 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 			}
 		}
 		
-	}
-	
-	public <A,B> void changeDisplay(AggregatingDisplay innerDisplay) {
-		ARComponent old = this.display;
-		if (old != null) {frame.remove(old);}
-		
-		EnhanceHost newHost = new EnhanceHost(innerDisplay);
-
-		enhanceOptions.host(newHost);
-		clipwarnControl.target(newHost);
-		frame.add(newHost, BorderLayout.CENTER);
-		this.status.startMonitoring(innerDisplay.renderer());
-		this.display = newHost;
-		frame.revalidate();
 	}
 	
 	public ARComponent getARComponent() {return display;}
