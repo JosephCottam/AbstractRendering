@@ -38,23 +38,6 @@ public class AggregateUtils {
 		return i;
 	}
 
-	/**Create a new aggregate set that is a subset of the old aggregate set.
-	 * 
-	 * The new aggregate set will have the same indices as the old aggregate set
-	 * (so 100,100 in the old one will have the same value as 100,100 in the old),
-	 * however the new aggregate set will not necessarily have the same lowX/lowY or highX/highY
-	 * as the old set.  The new aggregate set will have the same default value as the old.
-	 */
-	public static  <A> Aggregates<A> alignedSubset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		Aggregates<A> target = make(lowX, lowY, highX, highY, source.defaultValue());
-		for (int x=lowX; x<highX; x++) {
-			for (int y=lowY; y<highY; y++) {
-				target.set(x, y, source.get(x, y));
-			}
-		}
-		return target;
-	}
-
 	public static <A> Aggregates<A> make(Aggregates<?> like, A defVal) {return make(like.lowX(), like.lowY(), like.highX(), like.highY(),defVal);}
 
 	public static <A> Aggregates<A> make(int width, int height, A defVal) {return make(0,0,width,height,defVal);}
@@ -68,27 +51,6 @@ public class AggregateUtils {
 		} else {
 			return new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
 		}
-	}
-
-	/**Produce an independent aggregate set that has a lowX/Y value of 0,0 and contains
-	 * values from the source as determined by the passed low/high values.
-	 * 
-	 * On null, returns null.
-	 * **/
-	public static <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		if (source == null) {return null;}
-		
-		int width = highX-lowX;
-		int height = highY-lowY;
-		
-		Aggregates<A> aggs= make(0, 0, width, height, source.defaultValue());
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				A val = source.get(x+lowX,y+lowY);
-				aggs.set(x, y, val);
-			}
-		}
-		return aggs;
 	}
 
 	/**Grid-style printing of the aggregates.  

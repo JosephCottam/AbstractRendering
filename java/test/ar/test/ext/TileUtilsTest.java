@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.ext.tiles.TileUtils;
 import ar.rules.Numbers;
 import ar.test.aggregates.TestAggregates;
@@ -21,7 +21,7 @@ public class TileUtilsTest {
 	public void subset() {
 		Aggregates<Integer> aggs = TestAggregates.simpleAggregates(10, 10, 100, 100, -1);
 		
-		Aggregates<Integer> subset = AggregateUtils.alignedSubset(aggs, 0, 0, 25, 25);
+		Aggregates<Integer> subset = new SubsetWrapper<>(aggs, 0, 0, 25, 25);
 		
 		for (int x=subset.lowX(); x<subset.highX(); x++) {
 			for (int y=subset.lowY(); y<subset.highY(); y++) {

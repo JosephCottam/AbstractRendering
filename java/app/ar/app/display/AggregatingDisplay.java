@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
@@ -178,14 +178,9 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
 				int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
 				
-				//TODO: This does not need to be a copy....and it does not need to be done in a thread
-				Aggregates<?> subset = AggregateUtils.subset(
-						aggregates, 
-						shiftX, shiftY, 
-						shiftX+viewport.width, shiftY+viewport.height);
-
+				Aggregates<?> subset = new SubsetWrapper<>(aggregates, shiftX, shiftY, shiftX+viewport.width, shiftY+viewport.height);
 				AggregatingDisplay.this.subsetAggregates(subset);
-				if (subset == null) {return;}
+
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (Subset render)\n",
