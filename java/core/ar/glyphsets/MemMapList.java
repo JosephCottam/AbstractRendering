@@ -58,8 +58,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public static int BUFFER_BYTES = Integer.MAX_VALUE;
 	
 	/**Thread-pool size for parallel operations.**/
-	public static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
-	private final ForkJoinPool pool = new ForkJoinPool(THREAD_POOL_SIZE);
+	private static final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
 	private final MappedFile buffer;
 
