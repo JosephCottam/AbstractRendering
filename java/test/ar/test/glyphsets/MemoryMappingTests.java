@@ -90,12 +90,17 @@ public class MemoryMappingTests {
 	}
 	
 	@Test
-	public void subset() throws Exception {
+	public void segment() throws Exception {
 		Glyphset<Rectangle2D, Integer> glyphs = mm.segment(0, 10);
+		assertEquals("Subset segment check", glyphs.segments(), 10);
+		assertEquals("Subse size check", glyphs.size(), 10);
 		for (Glyph<Rectangle2D, Integer> g: glyphs) {
 			g.toString();
 		}
 		
+		Glyphset<Rectangle2D, Integer> glyphs2 = glyphs.segment(0, 5);
+		assertEquals("Subset-subset segment check", glyphs2.segments(), 5);
+		assertEquals("Subset-subset size check", glyphs2.size(), 10);
 	}
 	
 }

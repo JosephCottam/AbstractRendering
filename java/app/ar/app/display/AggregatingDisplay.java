@@ -8,10 +8,13 @@ import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.SubsetWrapper;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
+import ar.renderers.AggregationStrategies;
+import ar.renderers.tasks.GlyphParallelAggregation;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
@@ -171,19 +174,39 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public Rectangle2D dataBounds() {return dataset.bounds();}
 	
-	private final class AggregateRender implements Runnable {
-		
+	private final class AggregateRender<G,I,A> implements Runnable {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
 				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
 				AffineTransform rt = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
 				
-				@SuppressWarnings({"rawtypes"})
-				Selector selector = TouchesPixel.make(dataset);
+				@SuppressWarnings("unchecked")
+				Glyphset<G,I> data = (Glyphset<G,I>) dataset;
 				
-				@SuppressWarnings({"unchecked","rawtypes"})
-				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt, databounds.width, databounds.height);
+				@SuppressWarnings("unchecked")
+				Aggregator<I,A> op = (Aggregator<I,A>) aggregator;
+
+				Selector<G> selector = TouchesPixel.make(data);
+				
+//				Aggregates<?> a = renderer.aggregate(data, selector, op, rt, databounds.width, databounds.height);
+
+				Rectangle renderbounds = rt.createTransformedShape(data.bounds()).getBounds();
+				Aggregates<A> a = AggregateUtils.make(renderbounds.x, renderbounds.y,
+						renderbounds.x+renderbounds.width, renderbounds.y+renderbounds.height, 
+						op.identity());
+
+				AggregationStrategies.incremental(
+						a, 
+						renderer,
+						1,
+						data, 
+						selector, 
+						op, 
+						rt, 
+						databounds.width, 
+						databounds.height);
+				
 				
 				AggregatingDisplay.this.aggregates(a, rt);
 				long end = System.currentTimeMillis();

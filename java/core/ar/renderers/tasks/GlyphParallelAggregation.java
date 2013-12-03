@@ -61,7 +61,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	
 	protected final Aggregates<A> local() {
 		long step = recorder.reportStep() <= 0 ? high-low : recorder.reportStep();
-		Aggregates<A> target = allocateAggregates(glyphs.bounds());
+		Aggregates<A> target = allocateAggregates(glyphs.bounds(), view, op);
 		
 		for (long bottom=low; bottom < high; bottom+= step) {
 			long top = Math.min(bottom+step, high);
@@ -80,6 +80,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, selector, op, view, viewport, taskSize, recorder, mid, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
+		
 		try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}
 		return aggs;
@@ -94,7 +95,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 
-	protected Aggregates<A> allocateAggregates(Rectangle2D bounds) {
+	public static <A> Aggregates<A> allocateAggregates(Rectangle2D bounds, AffineTransform view, Aggregator<?,A> op) {
 		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
 		Aggregates<A> aggs = AggregateUtils.make(fullBounds.x, fullBounds.y,
 				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
