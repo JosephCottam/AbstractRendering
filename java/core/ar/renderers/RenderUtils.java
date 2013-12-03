@@ -14,8 +14,14 @@ public class RenderUtils {
 	 */
 	public static boolean RECORD_PROGRESS = false;
 	
+	/**After how many processed items should progress be reported?
+	 * This is a hint to tasks and not a binding item HOWEVER, if set to
+	 * zero or less, then no intermediate reporting is requested. 
+	 */
+	public static long REPORT_STEP = -1;
+	
 	/**Instantiate a progress recorder according to the RECORD_PROGRESS setting.**/
 	public static ProgressReporter recorder() {
-		return RECORD_PROGRESS ? new ProgressReporter.Counter() : new ProgressReporter.NOP();
+		return RECORD_PROGRESS ? new ProgressReporter.Counter(REPORT_STEP) : new ProgressReporter.NOP(REPORT_STEP);
 	}
 }

@@ -153,6 +153,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	public static void main(String[] args) throws Exception {
 		ARComponent.PERF_REP = true;
 		RenderUtils.RECORD_PROGRESS = true;
+		RenderUtils.REPORT_STEP=1_000_000;
 		new ARDemoApp();
 	} 
 }
