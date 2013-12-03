@@ -193,7 +193,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private static class SelectionOverlay extends JComponent implements Selectable {
 		private static final long serialVersionUID = 9079768489874376280L;
 		
-		/**Color to make 'masked off' areas.**/
+		/**Color to show 'delete' in enhancement.**/
 		public Color PROVISIONAL = new Color(200,30,30);
 		
 		private Area selected;
