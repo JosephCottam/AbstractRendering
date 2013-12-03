@@ -24,6 +24,7 @@ import java.io.Serializable;
  * 
  * @author jcottam
  *
+ *
  * @param <A>  Type of the values to be stored in the aggregate set.
  */
 public interface Aggregates<A> extends Serializable, Iterable<A> {

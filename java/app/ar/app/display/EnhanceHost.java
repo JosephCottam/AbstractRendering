@@ -29,7 +29,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.app.components.LabeledItem;
 import ar.util.Util;
 
@@ -98,21 +98,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		int highX = (int) bounds.getMaxX();
 		int highY = (int) bounds.getMaxY();
 		
-		int width = highX-lowX;
-		int height = highY-lowY;
-		
-		//TODO: THIS DOES NOT NEED TO BE A COPY!
-		Aggregates<A> subset= AggregateUtils.make(0, 0, width, height, aggs.defaultValue());
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				if (selection.contains(x+lowX, y+lowY)) {
-					A val = aggs.get(x+lowX,y+lowY);
-					subset.set(x, y, val);
-				}
-			}
-		}
-		return subset;
-
+		return new SubsetWrapper<>(aggs, lowX, lowY, highX, highY);
 	}
 	
 	public void enableEnhance(boolean enable) {
