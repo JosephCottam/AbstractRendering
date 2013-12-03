@@ -149,9 +149,10 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	 * @param args
 	 * @throws Exception 
 	 */
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
-		 ARComponent.PERF_REP = true;
-		 RenderUtils.RECORD_PROGRESS = true;
+		ARComponent.PERF_REP = true;
+		RenderUtils.RECORD_PROGRESS = true;
 		new ARDemoApp();
 	} 
 }

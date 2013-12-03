@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -195,7 +194,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		private static final long serialVersionUID = 9079768489874376280L;
 		
 		/**Color to make 'masked off' areas.**/
-		public Color MASKED = new Color(100,100,100,50);
+		public Color PROVISIONAL = new Color(200,30,30);
 		
 		private Area selected;
 		
@@ -218,26 +217,17 @@ public class EnhanceHost extends ARComponent.Aggregating {
 							new ImageIcon(makeImage(borderSize+2, new Color(255,140,0), Util.CLEAR))));
 		}
 		
-		
-		
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
-			Area a =new Area(this.getBounds());
 			AffineTransform vt = host.viewTransform();
 			
-			if (selected != null) {a.subtract(new Area(vt.createTransformedShape(selected)));}
-			
-			if (provisional != null) {
-				Shape s = vt.createTransformedShape(provisional);
-				if (provisionalRemove) {a.add(new Area(s));}
-				else {a.subtract(new Area(s));}
-			}
-			
-			if (provisional != null || selected != null) {
-				g2.setColor(MASKED);
-				g2.fill(a);
-			}
+
+			g2.setColor(SHOW_ENHANCED);
+			if (selected != null) {g2.draw(vt.createTransformedShape(selected));}
+
+			if (provisionalRemove) {g2.setColor(PROVISIONAL);}
+			if (provisional != null) {g2.draw(vt.createTransformedShape(provisional));}
 		}
 
 		public void clear() {

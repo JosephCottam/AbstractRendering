@@ -139,9 +139,9 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 	
 	@Override
 	/**When the 'c' key is pressed, pan so the center of the data is at the center of the screen.
-	 * TODO: When the '+' key is pressed, double the current zoom.
-	 * TODO: When the '-' key is pressed, halve the current zoom.
-	 * 
+	 * When the '+' key is pressed, doubles the current zoom.
+	 * When the '-' key is pressed, halves the current zoom.
+	 * When the 'z' key is pressed, does a zoom fit.
 	 */
 	public void keyTyped(KeyEvent e) {
 		char c = e.getKeyChar();
@@ -170,7 +170,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 			vt.scale(.5,.5);
 			try {canvas.viewTransform(vt);}
 			catch (NoninvertibleTransformException e1) {/*Ignored.*/}			
-		} else if (c == 'z') {
+		} else if (c == 'z' || c == 'Z') {
 			canvas.zoomFit();
 		}
 	}
