@@ -18,11 +18,6 @@ import java.nio.channels.FileChannel;
  * it is not type-compatible at position-related operations.  This class uses
  * long-valued indices while nio.buffer uses int-valued indices.
  * 
- * To ensure complete values can be read in one operation, a "margin" can be registered.
- * When calling "position", it attempts to ensure that there are margin-number-of-bytes
- * left in mapped region.  It is suggested that margin be set to at the length of a
- * record in the file (if the file is structured as records).
- * 
  * This class is designed for linear scans of the mapped file.  It supports moving backwards,
  * but is less efficient if many backwards moves are requested in a row.
  * This class only supports reading operations (though the principles should work for 
@@ -31,16 +26,11 @@ import java.nio.channels.FileChannel;
  * Where this class shares method names with java.nio.ByteBuffer, the operations 
  * performed are comparable EXCEPT items are indexed by long's instead of ints.
  * 
- * 
  * THIS CLASS IS NOT THREAD SAFE. It uses a stateful cursor and no synchronization...
  * 
  * THIS CLASS ASSUMES THE FILE SIZE DOES NOT CHANGE.  To compensate for files
  * that change size, the checkCapacity method should be called periodically
  * (which updates the internal measure of the file size).
- * 
- * TODO: Investigating working without 'margin'
- * TODO: Investigate ensureTo...it seems to overlap a lot with ensure and position...
- *   
  * **/
 public class BigFileByteBuffer implements MappedFile {
 	private final RandomAccessFile inputFile;
@@ -57,8 +47,6 @@ public class BigFileByteBuffer implements MappedFile {
 	
 	/**
 	 * @param source File to read
-	 * @param margin Proximity to the end of the buffer that will trigger a window slide
-	 *               (essentially a guess at how many bytes will be needed from a reposition forward) 
 	 * @param bufferSize Maximum size of memory map buffer to create 
 	 * @throws IOException Thrown when file stream creation or memory mapping fails.
 	 */
@@ -150,9 +138,5 @@ public class BigFileByteBuffer implements MappedFile {
 	/**What does a given offset correspond to in the raw buffer.**/
 	private int rawOffset(long offset) {return (int) (offset-filePos);}
 	
-	/* (non-Javadoc)
-	 * @see ar.util.MappedFile#filePosition()
-	 */ 
-	@Override
-	public long filePosition() {return filePos;}
+	public long filePosition() {return 0;}
 }

@@ -125,8 +125,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		this.dataTableOffset=dataTableOffset;
 	}
 
-	protected void finalize() {pool.shutdownNow();}
-
 	@Override
 	public Glyph<G,I> get(long i) {
 		IndexedEncoding entry = entryAt(recordOffset(i));
@@ -160,8 +158,10 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Glyphset<G,I> segment(long bottom, long top)
 			throws IllegalArgumentException {
 		
-		long offset = recordOffset(bottom);
-		long end = recordOffset(top);
+		long offset = recordOffset(bottom)+buffer.filePosition();
+		long end = recordOffset(top)+buffer.filePosition();
+		
+		
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
