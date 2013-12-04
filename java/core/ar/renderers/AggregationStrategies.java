@@ -120,4 +120,14 @@ public class AggregationStrategies {
 			horizontalRollup(acc, update, op);
 		}
 	}
+	
+	public static final class IncrementalTask implements Runnable {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 }
