@@ -1,5 +1,7 @@
 package ar.aggregates.implementations;
 
+import java.util.Arrays;
+
 import ar.aggregates.AggregateUtils;
 
 /**Set of color aggregates backed by a buffered image.**/
@@ -17,6 +19,7 @@ abstract class IntegerBackingAggregates {
 		
 		int size = (highX-lowX)*(highY-lowY);
 		this.values = new int[size];
+		Arrays.fill(values, defVal);
 	}
 
 	public Integer getInt(int x, int y) {

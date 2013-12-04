@@ -1,5 +1,6 @@
 package ar.aggregates.implementations;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import ar.Aggregates;
@@ -20,6 +21,7 @@ public class DoubleAggregates implements Aggregates<Double> {
 		
 		int size = (highX-lowX)*(highY-lowY);
 		this.values = new double[size];
+		Arrays.fill(values, defVal);
 	}
 
 	public Double get(int x, int y) {

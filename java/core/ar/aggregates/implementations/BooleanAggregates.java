@@ -1,5 +1,6 @@
 package ar.aggregates.implementations;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import ar.Aggregates;
@@ -20,6 +21,7 @@ public class BooleanAggregates implements Aggregates<Boolean> {
 		
 		int size = (highX-lowX)*(highY-lowY);
 		this.values = new boolean[size];
+		Arrays.fill(values, defVal);
 	}
 
 	public Boolean get(int x, int y) {

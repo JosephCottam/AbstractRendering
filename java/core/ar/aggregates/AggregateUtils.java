@@ -6,11 +6,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
-import ar.aggregates.implementations.BooleanAggregates;
-import ar.aggregates.implementations.DoubleAggregates;
-import ar.aggregates.implementations.ImageAggregates;
-import ar.aggregates.implementations.IntAggregates;
-import ar.aggregates.implementations.RefFlatAggregates;
+import ar.aggregates.implementations.*;
 
 /**Utilities for working with aggregates.
  * 
@@ -58,6 +54,8 @@ public class AggregateUtils {
 			return (Aggregates<A>) new DoubleAggregates(lowX, lowY, highX, highY, (Double) defVal);
 		} else if (defVal instanceof Boolean) {
 			return (Aggregates<A>) new BooleanAggregates(lowX, lowY, highX, highY, (Boolean) defVal);
+		} else if (size(lowX,lowY,highX,highY) > Integer.MAX_VALUE){
+			return new Ref2DAggregates<>(lowX, lowY, highX, highY, defVal);
 		} else {
 			return new RefFlatAggregates<>(lowX, lowY, highX, highY, defVal);
 		}
@@ -87,8 +85,11 @@ public class AggregateUtils {
 	}
 	
 	/**How many aggregate values are present here?**/
-	public static final long size(Aggregates<?> aggs) {
-		return ((long) (aggs.highX()-aggs.lowX())) * ((long) (aggs.highY()-aggs.lowY()));
+	public static final long size(Aggregates<?> aggs) {return size(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY());}
+
+	/**How many aggregate values are present here?**/
+	public static final long size(int lowX, int lowY, int highX, int highY) {
+		return ((long) (highX-lowX)) * ((long) (highY-lowY));
 	}
 	
 	public static final int idx(int x,int y, int lowX, int lowY, int highX, int highY) {
