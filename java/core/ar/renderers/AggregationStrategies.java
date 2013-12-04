@@ -1,15 +1,11 @@
 package ar.renderers;
 
 import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.Glyphset;
-import ar.Renderer;
-import ar.Selector;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.ConstantAggregates;
 import ar.util.Util;
@@ -101,33 +97,5 @@ public class AggregationStrategies {
 			}
 		}
 		return end;
-	}
-	
-	public static <G,I,A> void  incremental(
-			Aggregates<A> acc,
-			Renderer renderer,
-			int steps,
-			final Glyphset<? extends G, ? extends I> glyphs, 
-			final Selector<G> selector,
-			final Aggregator<I,A> op, 
-			final AffineTransform viewTransform, final int width, final int height) {
-		
-		long step = glyphs.segments()/steps;
-		for (long bottom=0; bottom<glyphs.segments(); bottom+=step) {
-			Glyphset<? extends G, ? extends I> subset = glyphs.segment(bottom, Math.min(bottom+step, glyphs.size()));
-			//Glyphset<? extends G, ? extends I> subset = glyphs;
-			Aggregates<A> update = renderer.aggregate(subset, selector, op, viewTransform, width, height);
-			horizontalRollup(acc, update, op);
-		}
-	}
-	
-	public static final class IncrementalTask implements Runnable {
-
-		@Override
-		public void run() {
-			// TODO Auto-generated method stub
-			
-		}
-		
 	}
 }

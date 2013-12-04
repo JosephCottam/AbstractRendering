@@ -14,7 +14,6 @@ import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.renderers.AggregationStrategies;
-import ar.renderers.tasks.GlyphParallelAggregation;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
@@ -99,6 +98,12 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public void renderAgain() {
 		fullRender=true;
+		subsetRender=true;
+		renderError=false;
+		repaint();
+	}
+	
+	public void subsetAgain() {
 		subsetRender=true;
 		renderError=false;
 		repaint();
@@ -196,17 +201,22 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 						renderbounds.x+renderbounds.width, renderbounds.y+renderbounds.height, 
 						op.identity());
 
-				AggregationStrategies.incremental(
-						a, 
-						renderer,
-						1,
-						data, 
-						selector, 
-						op, 
-						rt, 
-						databounds.width, 
-						databounds.height);
-				
+				IncrementalTask<G,I,A> t = 
+					 new IncrementalTask<>(
+							 AggregatingDisplay.this, 
+							a, 
+							renderer,
+							1,
+							data, 
+							selector, 
+							op, 
+							rt, 
+							databounds.width, 
+							databounds.height);
+					 
+				Thread th = new Thread(t, "Incremental");
+				th.setDaemon(true);
+				th.start();
 				
 				AggregatingDisplay.this.aggregates(a, rt);
 				long end = System.currentTimeMillis();
@@ -225,5 +235,53 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			
 			AggregatingDisplay.this.repaint();
 		}
+	}
+	
+
+	public static final class IncrementalTask<G,I,A> implements Runnable {
+		final Aggregates<A> acc;
+		final Renderer renderer;
+		final int steps;
+		final Glyphset<? extends G, ? extends I> glyphs; 
+		final Selector<G> selector;
+		final Aggregator<I,A> op;
+		final AffineTransform viewTransform;
+		final int width;
+		final int height;
+		final AggregatingDisplay target;
+		
+		public IncrementalTask(
+				AggregatingDisplay target,
+				Aggregates<A> acc, Renderer renderer, int steps,
+				Glyphset<? extends G, ? extends I> glyphs,
+				Selector<G> selector, Aggregator<I, A> op,
+				AffineTransform viewTransform, int width, int height) {
+			super();
+			this.target = target;
+			this.acc = acc;
+			this.renderer = renderer;
+			this.steps = steps;
+			this.glyphs = glyphs;
+			this.selector = selector;
+			this.op = op;
+			this.viewTransform = viewTransform;
+			this.width = width;
+			this.height = height;
+		}
+
+
+
+		@Override
+		public void run() {
+			long step = glyphs.segments()/steps;
+			for (long bottom=0; bottom<glyphs.segments(); bottom+=step) {
+				Glyphset<? extends G, ? extends I> subset = glyphs.segment(bottom, Math.min(bottom+step, glyphs.size()));
+				//Glyphset<? extends G, ? extends I> subset = glyphs;
+				Aggregates<A> update = renderer.aggregate(subset, selector, op, viewTransform, width, height);
+				AggregationStrategies.horizontalRollup(acc, update, op);
+				target.subsetAgain();
+			}			
+		}
+		
 	}
 }
