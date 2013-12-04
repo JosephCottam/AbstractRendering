@@ -2,13 +2,14 @@ package ar.test.rules;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+
 import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer.Specialized;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
@@ -20,7 +21,7 @@ public class SpreadTests {
 	public void testFullSquare() {
 		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread4 = new General.Spread.UnitSquare<>(4);
@@ -39,7 +40,7 @@ public class SpreadTests {
 	public void testCenterSquare() {
 		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread2 = new General.Spread.UnitSquare<>(2);
@@ -61,7 +62,7 @@ public class SpreadTests {
 	public void testUnitCircle() {
 		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
 		
 		Spreader<Integer> spread2 = new General.Spread.UnitCircle<>(4);
@@ -84,7 +85,7 @@ public class SpreadTests {
 	public void testValueCircle4() {
 		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 4);
 		
 		Spreader<Integer> spread2 = new General.Spread.ValueCircle<>();
@@ -107,7 +108,7 @@ public class SpreadTests {
 	public void testValueCircle2() {
 		Renderer r = new ParallelRenderer();
 		Aggregator<Integer,Integer> combiner = new Numbers.Count<>();
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(9,9,0);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 2);
 		
 		Spreader<Integer> spread2 = new General.Spread.ValueCircle<>();

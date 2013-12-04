@@ -1,26 +1,28 @@
-package ar.aggregates;
+package ar.aggregates.implementations;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
 import ar.Aggregates;
+import ar.aggregates.AggregateUtils;
+import ar.aggregates.BoundsInversionException;
 
-/** Aggregates implemented as nested arrays.
+/** Aggregates implementation backed by a single array.
  * This class efficiently supports subset regions.
  */
-public class Aggregates2D<A> implements Aggregates<A>{
+public class RefFlatAggregates<A> implements Aggregates<A>{
 	private static final long serialVersionUID = 7143994707761884518L;
-	private final A[][] values;
+	private final A[] values;
 	private final int lowX, lowY;
 	private final int highX,highY;
 	private final A defaultVal;
 	
 	/**Create a an aggregates instance with the same high/low values as the parameter. 
 	 */
-	public Aggregates2D(Aggregates<?> like, A defaultVal) {this(like.lowX(), like.lowY(), like.highX(),  like.highY(), defaultVal);}
+	public RefFlatAggregates(Aggregates<?> like, A defaultVal) {this(like.lowX(), like.lowY(), like.highX(),  like.highY(), defaultVal);}
 	
 	/**Create a region of aggregates from (0,0) to (highX,highY)**/
-	public Aggregates2D (final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
+	public RefFlatAggregates(final int highX, final int highY, A defaultVal) {this(0,0,highX,highY, defaultVal);}
 	
 	/**Create a regional set of aggregates.
 	 * 
@@ -36,7 +38,7 @@ public class Aggregates2D<A> implements Aggregates<A>{
 	 * @param defaultVal 
 	 */
 	@SuppressWarnings("unchecked")
-	public Aggregates2D(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
+	public RefFlatAggregates(final int lowX, final int lowY, final int highX, final int highY, A defaultVal) {
 		if (lowX > highX) {throw new BoundsInversionException(lowX, highX, "X");}
 		if (lowY > highY) {throw new BoundsInversionException(lowY, highY, "Y");}
 		
@@ -45,32 +47,31 @@ public class Aggregates2D<A> implements Aggregates<A>{
 		this.highX = highX;
 		this.highY = highY;
 		this.defaultVal=defaultVal;
-		
-		long width = highX-lowX;
-		long height = highY-lowY;
-		
-		
-		if (width > Integer.MAX_VALUE || height > Integer.MAX_VALUE) {
+		long size = ((long) highX-lowX)*(highY-lowY);
+		if (size > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException(String.format("Aggregates of size %dx%d exceeds the implementation capacity.", (highX-lowX), (highY-lowY)));
 		}
 		
-		values = (A[][]) new Object[(int) width][(int) height];
-		for (A[] row : values) {Arrays.fill(row, defaultVal);}
+		size = Math.max(0, size);
+		values = (A[]) new Object[(int)size];
+		Arrays.fill(values, defaultVal);
 	}
 
 	/**Set the value at the given (x,y).**/
-	public void set(int x, int y, A v) {
-		if (x<lowX || y < lowY || x >= highX || y > highY) {return;}
-		values[x-lowX][y-lowY] = v;
+	public synchronized void set(int x, int y, A v) {
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return;} 
+		int idx = AggregateUtils.idx(x,y, lowX, lowY, highX, highY);
+		values[idx] = v;
 	}
 	
 	
 	/**Get the value at the given (x,y).**/
-	public A get(int x, int y) {
-		if (x<lowX || y < lowY || x >= highX || y >= highY) {return defaultVal;}
-		return values[x-lowX][y-lowY];
+	public synchronized A get(int x, int y) {
+		if (x<lowX || x>=highX || y<lowY || y>=highY) {return defaultVal;} 
+		int idx = AggregateUtils.idx(x,y, lowX, lowY, highX, highY);
+		return values[idx];
 	}
-
+	
 	public A defaultValue() {return defaultVal;}
 
 	/**What are the bounds that can actually be stored in this aggregates object?*/
@@ -79,7 +80,8 @@ public class Aggregates2D<A> implements Aggregates<A>{
 	public int highX() {return highX;}
 	public int highY() {return highY;}
 	
-	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
-	public Iterator<A> iterator() {return new Iterator2D<>(this);};
+	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
+	
+	public String toString() {return String.format("Aggregates from %d,%d to %d,%d.", lowX, lowY, highX,highY);}
 }

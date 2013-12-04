@@ -11,7 +11,7 @@ import ar.Renderer;
 import ar.Selector;
 import ar.Transfer;
 import ar.Transfer.Specialized;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.app.components.Presets;
 import ar.app.util.GlyphsetUtils;
 import ar.app.util.WrappedAggregator;
@@ -46,10 +46,10 @@ public class RenderSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		String config = arg(args, "-config", "USPopulation");
+		String config = arg(args, "-config", "USCensusPopulationLinear");
 		String rend = arg(args, "-rend", "parallel").toUpperCase();
-		int width = Integer.parseInt(arg(args, "-width", "500"));
-		int height = Integer.parseInt(arg(args, "-height", "500"));
+		int width = Integer.parseInt(arg(args, "-width", "800"));
+		int height = Integer.parseInt(arg(args, "-height", "800"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
 		
 		//Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
@@ -189,7 +189,7 @@ public class RenderSpeed {
 		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggs) {return this;}
 
 		public Specialized<Number,Color> specializeTo(Aggregates<? extends Number> aggs) {
-			this.cached = new FlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
+			this.cached = new RefFlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
 			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 					if (aggs.get(x, y).doubleValue() > 0) {

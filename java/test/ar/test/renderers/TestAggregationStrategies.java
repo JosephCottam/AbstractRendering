@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.ConstantAggregates;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.ConstantAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.AggregationStrategies;
 import ar.rules.Numbers;
 
@@ -17,7 +17,7 @@ public class TestAggregationStrategies {
 		int width=100;
 		int height=121;
 		Aggregator<Object,Integer> red = new Numbers.Count<>();
-		Aggregates<Integer> start = new FlatAggregates<Integer>(0,0,width,height,1);
+		Aggregates<Integer> start = new RefFlatAggregates<Integer>(0,0,width,height,1);
 		Aggregates<Integer> end = AggregationStrategies.verticalRollup(start, red,size);
 		
 		assertEquals(0, end.lowX());
@@ -44,7 +44,7 @@ public class TestAggregationStrategies {
 		int width = 10;
 		int height = 10;
 		Aggregator<Object,Integer> red= new Numbers.Count<>();
-		Aggregates<Integer> ten = new FlatAggregates<Integer>(0,0,width,height, 10);
+		Aggregates<Integer> ten = new RefFlatAggregates<Integer>(0,0,width,height, 10);
 		Aggregates<Integer> id = new ConstantAggregates<Integer>(0,0,width,height,red.identity());
 
 		Aggregates<Integer> c1 = AggregationStrategies.horizontalRollup(ten, id, red);

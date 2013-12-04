@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Glyph;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.glyphsets.SimpleGlyph;
 import ar.util.Util;
 
@@ -45,7 +45,7 @@ public class Utils {
 	
 	@Test
 	public void stats() {
-		Aggregates<Double> aggs = new FlatAggregates<Double>(10,10,-1d);
+		Aggregates<Double> aggs = new RefFlatAggregates<Double>(10,10,-1d);
 		
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y = aggs.lowY(); y<aggs.highY(); y++) {

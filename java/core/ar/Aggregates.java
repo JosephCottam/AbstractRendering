@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 /** Store of aggregate values.
  * 
- * Aggergates are the results of rendering geometry into a bin.  They are
+ * Aggregates are the results of rendering geometry into a bin.  They are
  * the core unique conceptual data structure of Abstract Rendering.  In
  * essence, a set of aggregates is a data space derived from a source
  * data space and a set of geometry.  (The source data and geometry
@@ -17,7 +17,10 @@ import java.io.Serializable;
  * is not required of any aggregate sets, only that they accurately
  * report the region that they represent.
  * 
- * Note: The current aggreages implementation is based on Cartesian grids
+ * The preferred means of creating a set of aggregates is through the
+ * AggreagteUtils.make methods.
+ * 
+ * Note: The current aggregates implementation is based on Cartesian grids
  * (notice how all indexing is done via X/Y).  We are exploring alternative 
  * aggregate arrangements and will be updating this interface to reflect a 
  * more general addressing scheme. 

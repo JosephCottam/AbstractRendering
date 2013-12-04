@@ -28,7 +28,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.AggregateSerializer.FORMAT;
@@ -56,7 +56,7 @@ public class AvroAggregatesTest {
 	
 	@Test
 	public void inOrderEqOutOrder() throws Exception {
-		Aggregates<Integer> ref = new FlatAggregates<Integer>(2,2,-1);
+		Aggregates<Integer> ref = new RefFlatAggregates<Integer>(2,2,-1);
 		ref.set(0, 0, 11);
 		ref.set(0, 1, 12);
 		ref.set(1, 0, 21);

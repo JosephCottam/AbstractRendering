@@ -1,13 +1,13 @@
 package ar.test.rules;
 
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 import java.awt.Color;
 
-
 import ar.Aggregates;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.AggregationStrategies;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.Categories;
@@ -22,7 +22,7 @@ public class CategoriesTests {
 		CoC<Color> coc = new CoC<Color>(Util.COLOR_SORTER);
 		coc = coc.extend(Color.BLUE, 1);
 		coc = coc.extend(Color.RED, 2);
-		Aggregates<CoC<Color>> aggs = new FlatAggregates<CoC<Color>>(10,10,coc);
+		Aggregates<CoC<Color>> aggs = new RefFlatAggregates<CoC<Color>>(10,10,coc);
 		
 		aggs = AggregationStrategies.horizontalRollup(aggs, aggs, counter);
 		
