@@ -1,7 +1,6 @@
 package ar.aggregates;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 
@@ -9,7 +8,8 @@ import ar.Aggregates;
 
 /**Set of color aggregates backed by a buffered image.**/
 public class ImageAggregates implements Aggregates<Color> {
-	private final BufferedImage img;
+	private BufferedImage img;
+	private final int[] colors;
 	private final Color background;
 	private final int lowX, lowY, highX, highY;
 
@@ -19,30 +19,28 @@ public class ImageAggregates implements Aggregates<Color> {
 
 	public ImageAggregates(int lowX, int lowY, int highX, int highY, Color background) {
 		this(lowX, lowY, highX, highY, background, new BufferedImage(highX-lowX, highY-lowY, BufferedImage.TYPE_INT_ARGB));
-
-		Graphics g = img.createGraphics();
-		g.setColor(background);
-		g.fillRect(0, 0, img.getWidth(), img.getHeight());
-		g.dispose();
 	}
 
 	private ImageAggregates(int lowX,int lowY, int highX, int highY, Color background, BufferedImage img) {
-		this.img = img;
 		this.background = background;
 		this.lowX = lowX;
 		this.lowY = lowY;
 		this.highX = highX;
 		this.highY = highY;
+		
+		int size = (highX-lowX)*(highY-lowY);
+		this.colors = new int[size];
 	}
 
 	public Color get(int x, int y) {
 		if (x<lowX || x >=highX || y<lowY || y>=highY) {return background;}
-		return new Color(img.getRGB(x-lowX, y-lowY), true);
+		return new Color(colors[idx(x,y)]);
 	}
 
 	public void set(int x, int y, Color val) {
 		if (x<lowX || x >=highX || y<lowY || y>=highY) {return;}
-		img.setRGB(x-lowX, y-lowY, val.getRGB());
+		colors[idx(x,y)] = val.getRGB();
+		img = null;
 	}
 
 	public Iterator<Color> iterator() {return new Iterator2D<>(this);};
@@ -51,5 +49,19 @@ public class ImageAggregates implements Aggregates<Color> {
 	public int lowY() {return lowY;}
 	public int highX() {return highX;}
 	public int highY() {return highY;}
-	public BufferedImage image() {return img;}
+	public BufferedImage image() {
+		if (img != null) {return img;}
+		
+		int w = highX-lowX;
+		int h = highY-lowY;
+		img = new BufferedImage(w,h, BufferedImage.TYPE_INT_ARGB);
+		img.setRGB(0, 0, w, h, colors, 0, w);
+		
+		return img;
+	}
+
+	private final int idx(int x,int y) {
+		int idx = ((highX-lowX)*(y-lowY))+(x-lowX);
+		return idx;
+	}
 }
