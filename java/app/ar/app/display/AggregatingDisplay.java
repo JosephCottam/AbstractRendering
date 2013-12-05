@@ -176,7 +176,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				AggregatingDisplay.this.aggregates(aggs, rt);
 
 				int steps = 10;
-				long step = data.segments()/steps;
+				long step = Math.max(1, data.segments()/steps);
 				for (long bottom=0; bottom<data.segments(); bottom+=step) {
 					Glyphset<? extends G, ? extends I> subset = data.segment(bottom, Math.min(bottom+step, data.size()));
 					Aggregates<A> update = renderer.aggregate(subset, selector, op, rt, databounds.width, databounds.height);
