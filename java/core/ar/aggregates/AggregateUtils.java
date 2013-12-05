@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
+import ar.aggregates.implementations.*;
 
 /**Utilities for working with aggregates.
  * 
@@ -42,14 +43,21 @@ public class AggregateUtils {
 
 	public static <A> Aggregates<A> make(int width, int height, A defVal) {return make(0,0,width,height,defVal);}
 
-	/**Create a set of aggregates for the given type.
-	 */
+	/**Create a set of aggregates for the given type.*/
 	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> make(int lowX, int lowY, int highX, int highY, A defVal) {
 		if (defVal != null && defVal instanceof Color) {
 			return (Aggregates<A>) new ImageAggregates(lowX, lowY, highX, highY, (Color) defVal);
+		} else if (defVal instanceof Integer) {
+			return (Aggregates<A>) new IntAggregates(lowX, lowY, highX, highY, (Integer) defVal);
+		} else if (defVal instanceof Double) {
+			return (Aggregates<A>) new DoubleAggregates(lowX, lowY, highX, highY, (Double) defVal);
+		} else if (defVal instanceof Boolean) {
+			return (Aggregates<A>) new BooleanAggregates(lowX, lowY, highX, highY, (Boolean) defVal);
+		} else if (size(lowX,lowY,highX,highY) > Integer.MAX_VALUE){
+			return new Ref2DAggregates<>(lowX, lowY, highX, highY, defVal);
 		} else {
-			return new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
+			return new RefFlatAggregates<>(lowX, lowY, highX, highY, defVal);
 		}
 	}
 
@@ -77,8 +85,16 @@ public class AggregateUtils {
 	}
 	
 	/**How many aggregate values are present here?**/
-	public static final long size(Aggregates<?> aggs) {
-		return ((long) (aggs.highX()-aggs.lowX())) * ((long) (aggs.highY()-aggs.lowY()));
+	public static final long size(Aggregates<?> aggs) {return size(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY());}
+
+	/**How many aggregate values are present here?**/
+	public static final long size(int lowX, int lowY, int highX, int highY) {
+		return ((long) (highX-lowX)) * ((long) (highY-lowY));
+	}
+	
+	public static final int idx(int x,int y, int lowX, int lowY, int highX, int highY) {
+		int idx = ((highX-lowX)*(y-lowY))+(x-lowX);
+		return idx;
 	}
 
 	

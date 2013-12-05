@@ -3,15 +3,15 @@ package ar.test.aggregates;
 import org.junit.Test;
 
 import ar.Aggregates;
-import ar.aggregates.ConstantAggregates;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.ConstantAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 
 public class TestAggregates {
 	public static Aggregates<Integer> simpleAggregates(int lowX, int lowY, int highX, int highY, int defVal) {
-		Aggregates<Integer> aggs = new FlatAggregates<Integer>(lowX,lowY,highX,highY, defVal);
+		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(lowX,lowY,highX,highY, defVal);
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.highY(); y<aggs.highY(); y++) {
 				aggs.set(x, y, valFor(x,y));
