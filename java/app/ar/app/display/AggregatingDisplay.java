@@ -168,9 +168,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 
 				Selector<G> selector = TouchesPixel.make(data);
 				
-//				Aggregates<?> aggs = renderer.aggregate(data, selector, op, rt, databounds.width, databounds.height);
-//				AggregatingDisplay.this.aggregates(aggs, rt);
-				
 				Rectangle renderbounds = rt.createTransformedShape(data.bounds()).getBounds();
 				Aggregates<A> aggs = AggregateUtils.make(renderbounds.x, renderbounds.y,
 						renderbounds.x+renderbounds.width, renderbounds.y+renderbounds.height, 
@@ -178,16 +175,13 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 
 				AggregatingDisplay.this.aggregates(aggs, rt);
 
-				System.out.println("------------------------");
-				int steps = 1;
+				int steps = 10;
 				long step = data.segments()/steps;
 				for (long bottom=0; bottom<data.segments(); bottom+=step) {
 					Glyphset<? extends G, ? extends I> subset = data.segment(bottom, Math.min(bottom+step, data.size()));
-					//Glyphset<? extends G, ? extends I> subset = data;
 					Aggregates<A> update = renderer.aggregate(subset, selector, op, rt, databounds.width, databounds.height);
 					AggregationStrategies.horizontalRollup(aggs, update, op);
 					subsetAggregates();
-					System.out.printf("Completed %d to %d\n", bottom, Math.min(bottom+step, data.size()));
 				}			
 				
 				long end = System.currentTimeMillis();

@@ -44,7 +44,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		this.op = op;
 		this.view = view;
 		this.viewport =viewport;
-		this.taskSize = taskSize;
+		this.taskSize = taskSize <= 0 ? 1 : taskSize;
 		this.recorder = recorder;
 		this.low = low;
 		this.high = high;

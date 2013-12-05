@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.Iterator;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,11 +104,37 @@ public class MemoryMappingTests {
 		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segment(0, glyphsA.segments());
 		assertEquals(mm.bounds(), glyphsA.bounds());
 		assertEquals(mm.bounds(), glyphsB.bounds());
-
 		
-		Glyphset<Rectangle2D, Integer> glyphs2 = glyphs.segment(0, 5);
-		//assertEquals("Subset-subset segment check", 5, glyphs2.segments());
+		Glyphset<Rectangle2D, Integer> glyphs2 = glyphs.segment(0, 10).segment(0, 5);
+		assertEquals("Subset-subset segment check", 5, glyphs2.segments());
 		assertEquals("Subset-subset size check", 5, glyphs2.size());
+		glyphsEqual("Subset-subset", glyphs, 0, glyphs2);
+		
+		glyphsEqual("Subset-subset", mm, 4, glyphs.segment(1,10).segment(3,9));
+		
+	}
+	
+	/**Check that items in one glyphset equal those in another.
+	 * 
+	 * @param baseMessage Appended to error messages
+	 * @param original Items to be compared to
+	 * @param offset Where to start comparison in the original (will start comparison at the offset-th item)
+	 * @param generated Items to compare to.
+	 */
+	private static <G,I> void glyphsEqual(String baseMessage, final Glyphset<G,I> original, int offset, final Glyphset<G,I> generated) {
+		Iterator<Glyph<G,I>> refItems = original.iterator();
+		Iterator<Glyph<G,I>> resItems = generated.iterator();
+		
+		for (int i=0; i<offset; i++) {refItems.next();}
+		
+		int i=0;
+		while (refItems.hasNext() && resItems.hasNext()) {
+			Glyph<G,I> ref = refItems.next();
+			Glyph<G,I> res = resItems.next();
+			assertEquals(String.format("%s info failed at %d", baseMessage, i), ref.info(), res.info());
+			assertEquals(String.format("%s shape failed at %d", baseMessage, i), ref.shape(), res.shape());
+			i++;
+		}
 	}
 	
 }
