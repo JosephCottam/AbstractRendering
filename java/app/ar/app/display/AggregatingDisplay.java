@@ -8,7 +8,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
-import ar.aggregates.AggregateUtils;
 import ar.aggregates.SubsetWrapper;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
@@ -32,9 +31,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	protected AffineTransform viewTransformRef = new AffineTransform();
 	private AffineTransform renderTransform = new AffineTransform();
 
-	protected volatile boolean fullRender = false;
-	protected volatile boolean subsetRender = false;
-	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
 	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"FullDisplay Render Thread");
 		
@@ -76,7 +72,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.aggregator = aggregator;
 		this.transfer(transfer);
 		this.aggregates = null;
-		this.repaint();
+		renderAgain();
 	}
 	
 	public Transfer<?,?> transfer() {return display.transfer();}
@@ -90,44 +86,40 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		if (aggregates != this.aggregates) {display.refAggregates(null);}
 		this.renderTransform=renderTransform;
-		fullRender=false;
 		this.aggregates = aggregates;
-		this.repaint();
+		subsetAggregates();
 		aggregatesChangedProvider.fireActionListeners();
 	}
 	
 	public void renderAgain() {
-		fullRender=true;
-		subsetRender=true;
-		renderError=false;
-		repaint();
+		if (renderer != null 
+				&& dataset != null 
+				&& !dataset.isEmpty() 
+				&& aggregator != null) {
+			renderPool.execute(new AggregateRender());
+			repaint();
+		}
 	}
 	
-	public void subsetAgain() {
-		subsetRender=true;
-		renderError=false;
-		repaint();
-	}
-	
-	public void paintComponent(Graphics g) {
-		Runnable action = null;
-		if (renderer == null 
-				|| dataset == null ||  dataset.isEmpty() 
-				|| aggregator == null
-				|| renderError == true) {
-			g.setColor(Color.GRAY);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
- 		} else if (fullRender) {
-			action = new AggregateRender();
-			renderPool.execute(action);
-			fullRender = false;
-			subsetRender = false;
-		} else if (subsetRender) {
-			subsetAggregates();
-			subsetRender = false;
-		} 
-
-	}
+//	public void paintComponent(Graphics g) {
+//		Runnable action = null;
+//		if (renderer == null 
+//				|| dataset == null ||  dataset.isEmpty() 
+//				|| aggregator == null
+//				|| renderError == true) {
+//			g.setColor(Color.GRAY);
+//			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+// 		} else if (fullRender) {
+//			action = new AggregateRender();
+//			renderPool.execute(action);
+//			fullRender = false;
+//			subsetRender = false;
+//		} else if (subsetRender) {
+//			System.out.println("Subset again");
+//			subsetAggregates();
+//			subsetRender = false;
+//		} 
+//	}
 		
 	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates() {
@@ -138,7 +130,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		Aggregates<?> subset = new SubsetWrapper<>(aggregates, shiftX, shiftY, shiftX+viewport.width, shiftY+viewport.height);
 
 		display.aggregates(subset,null);
-		repaint();
 	}
 	
 	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s]", dataset, display.transfer(), aggregator);}
@@ -153,18 +144,15 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		if (renderTransform == null 
 				|| vt.getScaleX() != viewTransformRef.getScaleX()
 				|| vt.getScaleY() != viewTransformRef.getScaleY()) {
-			fullRender = true;
-			subsetRender = true;
+			renderAgain();
 		} 
 		
 		if (renderTransform == null
 				|| vt.getTranslateX() != viewTransformRef.getTranslateX()
 				|| vt.getTranslateY() != viewTransformRef.getTranslateY()) {
-			subsetRender=true;
+			subsetAggregates();
 		}
-		
 		this.viewTransformRef = vt;
-		repaint();
 	}
 	
 	public void zoomFit() {
@@ -194,29 +182,28 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 
 				Selector<G> selector = TouchesPixel.make(data);
 				
-//				Aggregates<?> a = renderer.aggregate(data, selector, op, rt, databounds.width, databounds.height);
+				Aggregates<?> a = renderer.aggregate(data, selector, op, rt, databounds.width, databounds.height);
 
-				Rectangle renderbounds = rt.createTransformedShape(data.bounds()).getBounds();
-				Aggregates<A> a = AggregateUtils.make(renderbounds.x, renderbounds.y,
-						renderbounds.x+renderbounds.width, renderbounds.y+renderbounds.height, 
-						op.identity());
-
-				IncrementalTask<G,I,A> t = 
-					 new IncrementalTask<>(
-							 AggregatingDisplay.this, 
-							a, 
-							renderer,
-							1,
-							data, 
-							selector, 
-							op, 
-							rt, 
-							databounds.width, 
-							databounds.height);
-					 
-				Thread th = new Thread(t, "Incremental");
-				th.setDaemon(true);
-				th.start();
+//				Rectangle renderbounds = rt.createTransformedShape(data.bounds()).getBounds();
+//				Aggregates<A> a = AggregateUtils.make(renderbounds.x, renderbounds.y,
+//						renderbounds.x+renderbounds.width, renderbounds.y+renderbounds.height, 
+//						op.identity());
+//
+//				IncrementalTask<G,I,A> t = 
+//					 new IncrementalTask<>(
+//							 AggregatingDisplay.this, 
+//							a, 
+//							renderer,
+//							10,
+//							data, 
+//							selector, 
+//							op, 
+//							rt, 
+//							databounds.width, 
+//							databounds.height);
+//					 
+//				Thread th = new Thread(t, "Incremental");
+//				th.start();
 				
 				AggregatingDisplay.this.aggregates(a, rt);
 				long end = System.currentTimeMillis();
@@ -227,7 +214,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				AggregatingDisplay.this.subsetAggregates();
 				
 			} catch (Exception e) {
-				renderError = true;
 				String msg = e.getMessage() == null ? e.getClass().getName() : e.getMessage();
 				System.err.println(msg);
 				e.printStackTrace();
@@ -237,7 +223,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		}
 	}
 	
-
 	public static final class IncrementalTask<G,I,A> implements Runnable {
 		final Aggregates<A> acc;
 		final Renderer renderer;
@@ -279,7 +264,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				//Glyphset<? extends G, ? extends I> subset = glyphs;
 				Aggregates<A> update = renderer.aggregate(subset, selector, op, viewTransform, width, height);
 				AggregationStrategies.horizontalRollup(acc, update, op);
-				target.subsetAgain();
+				target.subsetAggregates();
+				System.out.println("Updated...");
 			}			
 		}
 		

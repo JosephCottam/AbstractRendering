@@ -23,7 +23,7 @@ public class TransferDisplay extends ARComponent {
 	private Transfer<?,?> transfer;
 	
 	/**Aggregates to render*/
-	private Aggregates<?> aggregates;
+	private volatile Aggregates<?> aggregates;
 	
 	/**Aggregates to use for specialization of the transfer function.
 	 * 
