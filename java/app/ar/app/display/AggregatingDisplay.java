@@ -3,7 +3,6 @@ package ar.app.display;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
@@ -73,6 +72,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.transfer(transfer);
 		this.aggregates = null;
 		renderError = false;
+		renderTransform=new AffineTransform();
+		viewTransform(new AffineTransform());
 		renderAgain();
 	}
 	
@@ -105,6 +106,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			
 	/**Set the subset that will be sent to transfer.**/
 	public void subsetAggregates() {
+		if (aggregates == null) {return;}
+		
 		Rectangle viewport = AggregatingDisplay.this.getBounds();				
 		AffineTransform vt = viewTransform();
 		int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
@@ -121,7 +124,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
      */
 	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
 	public AffineTransform renderTransform() {return new AffineTransform(renderTransform);}	
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+	public void viewTransform(AffineTransform vt) {
 		//Only force full re-render if the zoom factor changed
 		if (renderTransform == null 
 				|| vt.getScaleX() != viewTransformRef.getScaleX()
