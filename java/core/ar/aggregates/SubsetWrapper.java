@@ -18,6 +18,8 @@ public class SubsetWrapper<A> implements Aggregates<A> {
 	private final int lowX, lowY, highX, highY;
 	
 	public SubsetWrapper(Aggregates<A> base, int lowX, int lowY, int highX, int highY) {
+		if (base == null) {throw new IllegalArgumentException("Cannot subset null aggregates");}
+		
 		this.base = base;
 		this.lowX = lowX;
 		this.lowY = lowY;

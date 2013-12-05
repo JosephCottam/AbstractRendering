@@ -36,7 +36,7 @@ public class TransferDisplay extends ARComponent {
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
 
-	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "SimpleDisplay Render Thread");
+	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "TransferDisplay Render Thread");
 	
 	public TransferDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
 		this(aggregates, transfer, new SerialRenderer());
