@@ -86,7 +86,9 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
-		if (aggregates != this.aggregates) {display.refAggregates(null);}
+		if (aggregates != this.aggregates) {
+			display.refAggregates(aggregates);
+		}
 		this.renderTransform=renderTransform;
 		fullRender=false;
 		this.aggregates = aggregates;

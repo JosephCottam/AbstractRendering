@@ -13,17 +13,17 @@ import ar.app.display.EnhanceHost;
 public class EnhanceOptions  extends JPanel {
 	private static final long serialVersionUID = -5359708733083679997L;
 	
-	EnhanceHost.Control showOverlay = new EnhanceHost.Control();
+	EnhanceHost.Control modSelection = new EnhanceHost.Control();
 	JCheckBox enhance = new JCheckBox();
 	
 	public EnhanceOptions() {
-		this.add(showOverlay);
+		this.add(modSelection);
 		this.add(new LabeledItem("Enhance:", enhance));
 		
 		enhance.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JCheckBox b = (JCheckBox) e.getSource();
-				showOverlay.host().enableEnhance(b.isSelected());
+				modSelection.host().enableEnhance(b.isSelected());
 			}
 			
 		});
@@ -32,17 +32,17 @@ public class EnhanceOptions  extends JPanel {
 	/**Is "enhance mode" enabled?*/
 	public boolean enhance() {return enhance.isSelected();}
 	
-	public Aggregates<?> subset() {return showOverlay.host().subset();}
+	public Aggregates<?> subset() {return modSelection.host().subset();}
 	
 	/**Overlay host associated with this control.*/
-	public EnhanceHost host() {return showOverlay.host();}
+	public EnhanceHost host() {return modSelection.host();}
 
 	/**Set the target host control.**/
 	public void host(EnhanceHost host) {
-		if (host != showOverlay.host()) {
-			showOverlay.clear();
+		if (host != modSelection.host()) {
+			modSelection.clear();
 			enhance.setSelected(false);
-			showOverlay.host(host);
+			modSelection.host(host);
 		}
 	}
 }

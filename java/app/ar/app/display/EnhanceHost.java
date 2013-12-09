@@ -114,7 +114,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 				Aggregates<?> subset = subset();
 				hosted.refAggregates(subset);
 			} else {
-				hosted.refAggregates(null);
+				hosted.refAggregates(hosted.aggregates());
 			}
 			redoRefAggregates = false;
 		}
@@ -328,7 +328,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		
 		/**Create a toggle control.  Will have no effect until 'host' is set.**/
 		public Control() {
-			JPanel item = new LabeledItem("Show Overlay:", box);
+			JPanel item = new LabeledItem("Modify Selection:", box);
 			this.add(item);
 			
 			box.addActionListener(new ActionListener() {
