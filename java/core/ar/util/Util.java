@@ -316,7 +316,13 @@ public final class Util {
 			this.nullCount = nullCount;
 			this.nanCount = nanCount;
 		}
-		public String toString() {return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);}
+		public String toString() {
+			if (min instanceof Integer || min instanceof Long) {
+				return String.format("Min: %d; Max: %d; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);
+			} else {
+				return String.format("Min: %.3f; Max: %.3f; Mean: %.3f; Stdev: %.3f", min,max,mean,stdev);
+			}
+		}
 	}
 	
 	/**Null-safe .equals caller.**/
