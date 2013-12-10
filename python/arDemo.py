@@ -37,7 +37,9 @@ def _create_plot_component():
     #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
     glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     #glyphs = ar.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
+    
     glyphs.shapecode = ar.ShapeCodes.LINE
+    #glyphs.shapecode = ar.ShapeCodes.RECT
     
     screen = (800,800)
     ivt = ar.zoom_fit(screen,ar.bounds(glyphs))

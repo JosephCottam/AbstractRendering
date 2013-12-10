@@ -68,7 +68,7 @@ class AbsSegment(ar.Transfer):
 
   def transfer(self, grid):
     outgrid = np.ndarray((grid.width, grid.height, 4), dtype=np.uint8)
-    mask = (grid._projected >= self.divider) 
+    mask = (grid._aggregates >= self.divider) 
     outgrid[mask] = self.high
     outgrid[~mask] = self.low
     return outgrid
