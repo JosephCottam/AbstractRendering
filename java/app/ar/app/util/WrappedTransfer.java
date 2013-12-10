@@ -9,12 +9,14 @@ import ar.Transfer;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
 import ar.app.display.ARComponent;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
+import ar.rules.combinators.Seq;
 
 public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	public void deselected();
@@ -93,14 +95,18 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	} 
 	
 	public class RedWhiteLinear implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
+		public Transfer<Number,Color> op() {return new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red);}
 		public String toString() {return "Red luminance linear (int)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}
 	}
 	
 	public class RedWhiteLog implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Color.white, 10);}
+		public Transfer<Number,Color> op() {
+			return new Seq<Number, Double, Color>(
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d), 
+					new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white));
+		}
 		public String toString() {return "Red luminance log-10 (int)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}

@@ -178,7 +178,7 @@ public class RenderSpeed {
 		 */
 		public CachelessDrawDark(Color low, Color high, int distance) {
 			this.distance=distance;
-			inner = new Numbers.Interpolate(low,high,high,-1);
+			inner = new Numbers.Interpolate<>(low,high,high);
 		}
 	
 		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {

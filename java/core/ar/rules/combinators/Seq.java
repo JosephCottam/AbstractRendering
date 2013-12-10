@@ -25,6 +25,10 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
         return new Specialized<>(renderer, first, second, aggregates);
     }
 
+    //TODO: Put some smarts here about caching.  
+    //TODO: Maybe pair this up with chain (or get rid of chain, or make chain use this...) 
+    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
+
     public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT>,CacheProvider.CacheTarget<IN,OUT> {
         protected final Transfer.Specialized<IN,MID> first;
         protected final Transfer.Specialized<MID,OUT> second;

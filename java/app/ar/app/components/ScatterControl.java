@@ -37,7 +37,7 @@ public class ScatterControl extends JPanel {
 	protected final Plot plot;
 	protected final JSpinner distance = new JSpinner();
 	protected final JButton refresh = new JButton("Refresh");
-	Transfer<Number, Color> basis = new Numbers.Interpolate(new Color(255,200,200), Color.RED); 
+	Transfer<Number, Color> basis = new Numbers.Interpolate<>(new Color(255,200,200), Color.RED); 
 
 	
 	public ScatterControl() {

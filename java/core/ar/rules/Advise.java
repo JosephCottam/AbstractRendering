@@ -227,7 +227,7 @@ public class Advise {
 		 */
 		public DrawDark(Color low, Color high, int distance) {
 			this.distance=distance;
-			inner = new Numbers.Interpolate(low,high,high,-1);
+			inner = new Numbers.Interpolate<>(low,high,high);
 		}
 		
 		/**Draw dark using the given transfer for interpolation of the values.**/ 

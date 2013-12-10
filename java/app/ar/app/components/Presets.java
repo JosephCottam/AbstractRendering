@@ -42,6 +42,7 @@ import ar.rules.Advise.DrawDark;
 import ar.rules.CategoricalCounts.CoC;
 import ar.rules.combinators.Chain;
 import ar.rules.combinators.If;
+import ar.rules.combinators.Seq;
 import ar.rules.Shapes;
 import ar.util.Util;
 import ar.glyphsets.SyntheticGlyphset;
@@ -115,7 +116,7 @@ public class Presets extends JPanel {
 	public static class SyntheticPoints implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(100_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
-		public Transfer<?,?> transfer() {return new Numbers.Interpolate(Color.white, Color.red);}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate<>(Color.white, Color.red);}
 		public String name() {return String.format("Synthetic Points (%d points)", glyphset().size());}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
@@ -134,7 +135,7 @@ public class Presets extends JPanel {
 	public static class ScatterplotHDALphaLin implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,38), Color.red);}
+		public Transfer<?,?> transfer() {return new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red);}
 		public String name() {return "Scatterplot: HDAlpha (Linear)";}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
@@ -143,7 +144,11 @@ public class Presets extends JPanel {
 	public static class ScatterplotHDALpha implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
-		public Transfer<?,?> transfer() {return new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Util.CLEAR, 10);}
+		public Transfer<?,?> transfer() {			
+			return new Seq<Number, Double, Color>(
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d), 
+					new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white));
+		}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
@@ -165,7 +170,8 @@ public class Presets extends JPanel {
 			return new Chain<Object, Object>(
 					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(), 
-					new Numbers.Interpolate(new Color(255,0,0,25), Color.red, Color.white, 10));
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
+					new Numbers.Interpolate<>(new Color(255,0,0,25), Color.red, Color.white));
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
 		public String toString() {return fullName(this);}
@@ -244,7 +250,7 @@ public class Presets extends JPanel {
 					Resources.DEFAULT_RENDERER, 
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
-					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+					new Numbers.Interpolate<>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Linear)";}
 		public String toString() {return fullName(this);}
@@ -276,7 +282,7 @@ public class Presets extends JPanel {
 					new Categories.ToCount<>(),
 					new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
-					new  Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+					new  Numbers.Interpolate<>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Exp)";}
 		public String toString() {return fullName(this);}
@@ -433,7 +439,7 @@ public class Presets extends JPanel {
 					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Raise<>(.333333d), 0d),
-					new Numbers.Interpolate(new Color(255,0,0,30), new Color(255,0,0,255)));
+					new Numbers.Interpolate<>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Synthetic Population (exp)";}
 		public String toString() {return fullName(this);}
@@ -448,7 +454,7 @@ public class Presets extends JPanel {
 					Resources.DEFAULT_RENDERER,
 					new Categories.ToCount<>(),
 	  				new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
-					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21)));
+					new Numbers.Interpolate<>(new Color(254, 229, 217), new Color(165, 15, 21)));
 		}
 		public String name() {return "US Synthetic Population (Log 10)";}
 		public String toString() {return fullName(this);}
@@ -508,7 +514,7 @@ public class Presets extends JPanel {
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 3, true),
-					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					new Numbers.Interpolate<>(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
 		public String name() {return "US Synthetic Population (Contour)";}
@@ -525,7 +531,7 @@ public class Presets extends JPanel {
 					new Categories.ToCount<>(),
 					new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d),
 					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 3, false),
-					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					new Numbers.Interpolate<>(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
 		public String name() {return "US Synthetic Population (Contour Lines)";}
@@ -543,7 +549,7 @@ public class Presets extends JPanel {
 					new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 5, true),
 					new General.Simplify<>(0),
 					new General.Replace<>(null, 0, 0),
-					new Numbers.Interpolate(new Color(254, 229, 217), new Color(165, 15, 21))
+					new Numbers.Interpolate<>(new Color(254, 229, 217), new Color(165, 15, 21))
 					);
 		}
 		public String name() {return "Scatterplot (Contour Lines)";}

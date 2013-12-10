@@ -66,7 +66,7 @@ public class SimpleApp {
 
 		//The transfer function is used to convert one set of aggregates into another.
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
-		Transfer<Number, Color> transfer = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+		Transfer<Number, Color> transfer = new  Numbers.Interpolate<>(new Color(255,0,0,25), new Color(255,0,0,255));
 
 
 		//Selector associates the glyphs individual bins.  

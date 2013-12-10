@@ -22,6 +22,7 @@ import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
@@ -31,6 +32,7 @@ import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.combinators.Chain;
+import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.DelimitedReader;
 import ar.util.Util;
@@ -62,8 +64,10 @@ public class ARServer extends NanoHTTPD {
 		DATASETS.put("BOOST", boost);
 		
 		
-		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate(new Color(255,0,0,38), Color.red));
-		TRANSFERS.put("RedWhiteLog", new Numbers.Interpolate(new Color(255,0,0,38), Color.red, Color.white, 10));
+		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red));
+		TRANSFERS.put("RedWhiteLog", new Seq<Number, Double, Color>(
+											new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d), 
+											new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white)));
 		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5));
 		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
 		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
