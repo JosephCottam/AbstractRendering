@@ -19,7 +19,7 @@ class Count(ar.Aggregator):
     return np.zeros((width, height), dtype=self.out_type)
 
   def combine(self, existing, points, shapecode, val):
-    update = ar.glyphAggregates(points, shapecode, 1, self.identiity)  
+    update = ar.glyphAggregates(points, shapecode, 1, self.identity)  
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):

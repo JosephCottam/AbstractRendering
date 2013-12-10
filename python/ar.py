@@ -307,7 +307,7 @@ def main():
   image = render(glyphs, 
                  infos.id(),
                  numeric.Count(), 
-                 numeric.Segment(Color(0,0,0,0), Color(255,255,255,255), .5),
+                 numeric.AbsSegment(Color(0,0,0,0), Color(255,255,255,255), .5),
                  screen, 
                  ivt)
 
