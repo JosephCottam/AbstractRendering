@@ -67,9 +67,9 @@ public interface ISOContours<N> {
 				for (Single.Specialized<N> ss: ts) {contours.addAll(ss.contours);}
 			}
 			
-			public GlyphList<Shape, N> contours() {return contours;}
-
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public boolean localOnly() {return true;} 
+			@Override public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 		
 	}
@@ -107,8 +107,10 @@ public interface ISOContours<N> {
 				Transfer.Specialized<N,N> t = new Fan<>(new General.Last<N>(aggregates.defaultValue()), ts).specialize(aggregates);
 				cached = renderer.transfer(aggregates, t);
 			}
-			public GlyphList<Shape, N> contours() {return contours;}
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+			
+			@Override public boolean localOnly() {return true;} 
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 	}
 	
@@ -147,8 +149,10 @@ public interface ISOContours<N> {
 				if (!fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
 				cached = renderer.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
 			}
-			public GlyphList<Shape, N> contours() {return contours;}
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+			
+			@Override public boolean localOnly() {return true;} 
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
 		}
 	}
 	
@@ -261,10 +265,12 @@ public interface ISOContours<N> {
 			this.threshold = threshold;
 		}
 
-		public Boolean emptyValue() {return Boolean.FALSE;}
-		public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
-		public Boolean at(int x, int y,
-				Aggregates<? extends N> aggregates) {
+		@Override public boolean localOnly() {return true;} 
+		@Override public Boolean emptyValue() {return Boolean.FALSE;}
+		@Override public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
+		
+		@Override 
+		public Boolean at(int x, int y, Aggregates<? extends N> aggregates) {
 			Number v = aggregates.get(x,y);
 			if (v == null) {return false;}
 			double delta = threshold.doubleValue() - v.doubleValue();
@@ -411,6 +417,8 @@ public interface ISOContours<N> {
 		@Override
 		public Specialized<Boolean, MC_TYPE> specialize(Aggregates<? extends Boolean> aggregates) {return this;}
 
+		@Override public boolean localOnly() {return false;}
+		
 		@Override
 		public MC_TYPE at(int x, int y, Aggregates<? extends Boolean> aggregates) {			
 			int code = 0;

@@ -62,11 +62,9 @@ public class Categories {
 			return aggregates.get(x,y).size();
 		}
 
-		@Override
-		public Integer emptyValue() {return 0;}
-
-		@Override
-		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
+		@Override public Integer emptyValue() {return 0;}
+		@Override public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 	}
 	
 	
@@ -79,11 +77,9 @@ public class Categories {
 			return aggregates.get(x,y).fullSize();
 		}
 
-		@Override
-		public Integer emptyValue() {return 0;}
-
-		@Override
-		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		@Override public Integer emptyValue() {return 0;}
+		@Override public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
 	}
 	
 	/**Replace categories with other categories.
@@ -125,11 +121,9 @@ public class Categories {
 			return acc;
 		}
 
-		@Override
-		public CategoricalCounts<OUT> emptyValue() {return like.empty();}
-
-		@Override
-		public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
+		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
+		@Override public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
 	}
 	
 
@@ -166,11 +160,9 @@ public class Categories {
 			return noMatch;
 		}
 
-		public OUT emptyValue() {return noMatch;}
-
-		@Override
-		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
+		@Override public OUT emptyValue() {return noMatch;}
+		@Override public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}		
 	}
 	
 	/**Create run-length-encodings (RLE objects) for each aggregate value.
@@ -242,17 +234,14 @@ public class Categories {
 		public CountCategories() {this(null);}
 
 		@Override
-		public CoC<T> combine(CoC<T> left, T update) {
-			return left.extend(update, 1);
-		}
+		public CoC<T> combine(CoC<T> left, T update) {return left.extend(update, 1);}
 
 		@Override
 		public CoC<T> rollup(CoC<T> left, CoC<T> right) {
 			return CategoricalCounts.CoC.rollupTwo(left, right);
 		}
 
-		@Override
-		public CoC<T> identity() {return new CoC<T>(comp);}
+		@Override public CoC<T> identity() {return new CoC<T>(comp);}
 		
 		@SuppressWarnings("rawtypes")
 		public boolean equals(Object other) {
@@ -289,9 +278,9 @@ public class Categories {
 			else {return cats.count(n);}
 		}
 		
-		public Integer emptyValue() {return background;}
-		
-		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		@Override public Integer emptyValue() {return background;}
+		@Override public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
 	}
 
 	/**Switch between two colors depending on the percent contribution of
@@ -333,9 +322,10 @@ public class Categories {
 			else {return noMatch;}
 		}
 
-		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
-		
-		public Color emptyValue() {return background;}
+		@Override public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}		
+		@Override public Color emptyValue() {return background;}
+		@Override public boolean localOnly() {return true;}
+
 	}
 	
 	
@@ -366,7 +356,9 @@ public class Categories {
 		}
 		
 
-		public Color emptyValue() {return background;}
+		@Override public Color emptyValue() {return background;}
+
+		@Override
 		public HighAlpha.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			int max=Integer.MIN_VALUE;
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
@@ -382,6 +374,9 @@ public class Categories {
 				this.max = max;
 			}
 
+			@Override public boolean localOnly() {return true;}
+
+			@Override
 			public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 				CategoricalCounts<Color> cats = aggregates.get(x, y);
 				Color c;
@@ -441,23 +436,23 @@ public class Categories {
 			else {return emptyValue();}
 		}
 
-		@Override
-		public Color emptyValue() {return Util.CLEAR;}
-
-		@Override
-		public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
+		@Override public Color emptyValue() {return Util.CLEAR;}
+		@Override public boolean localOnly() {return false;}
+		@Override public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
 	}
 	
 	/**Convert a CoC just a set of counts for a specific category.**/
 	public static class Select<IN> implements Transfer.Specialized<CoC<IN>, Integer> {
 		private final IN label;
 		public Select(IN label) {this.label = label;}
-		public Integer emptyValue() {return 0;}
 		public Specialized<CoC<IN>, Integer> specialize(Aggregates<? extends CoC<IN>> aggregates) {return this;}
 		public Integer at(int x, int y, Aggregates<? extends CoC<IN>> aggregates) {
 			return aggregates.get(x, y).count(label);
 		}
-		
+
+		@Override public Integer emptyValue() {return 0;}
+		@Override public boolean localOnly() {return true;}
+
 	}
 	
 

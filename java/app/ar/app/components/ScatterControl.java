@@ -275,6 +275,8 @@ public class ScatterControl extends JPanel {
 				this.basis = basis;
 			}
 			
+			@Override public boolean localOnly() {return false;} 
+			
 			@Override
 			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 				double v = aggregates.get(x, y).doubleValue();
@@ -298,8 +300,7 @@ public class ScatterControl extends JPanel {
 				}
 				return out;
 			}
-			
-		}
+		}		
 	}
 	
 }

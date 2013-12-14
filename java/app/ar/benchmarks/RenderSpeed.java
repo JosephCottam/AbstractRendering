@@ -156,9 +156,10 @@ public class RenderSpeed {
 			}
 		}
 
+		@Override
 		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggregates) {return this;}
-		
-		public Color emptyValue() {return Color.white;}
+		@Override public boolean localOnly() {return true;}
+		@Override public Color emptyValue() {return Color.white;}
 	}
 	
 	public static class CachelessDrawDark implements Transfer.Specialized<Number, Color> {
@@ -219,8 +220,8 @@ public class RenderSpeed {
 			return surroundingSum/cellCount;
 		}
 
-		public Color emptyValue() {return Color.white;}
+		@Override public Color emptyValue() {return Color.white;}
+		@Override public boolean localOnly() {return true;}
 	}
-	
 }
 

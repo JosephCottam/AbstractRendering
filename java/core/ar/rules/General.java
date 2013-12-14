@@ -26,11 +26,14 @@ public class General {
 			this.empty = empty;
 		}
 
-		public OUT emptyValue() {return empty;}
-		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override 
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return valuer.value(aggregates.get(x,y));
 		}
+
+		@Override public boolean localOnly() {return true;}
+		@Override public OUT emptyValue() {return empty;}
+		@Override public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	public static final class Last<IN> implements Aggregator<IN,IN> {
@@ -55,13 +58,15 @@ public class General {
 			this.empty = empty;
 		}
 		
-		public T emptyValue() {return empty;}
-		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {
 			T val = aggregates.get(x,y);
 			if (mapping.containsKey(val)) {return mapping.get(val);}
 			return val;
 		}
+		
+		@Override public boolean localOnly() {return true;}
+		@Override public T emptyValue() {return empty;}
+		@Override public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
 	}
 	
 	
@@ -70,8 +75,6 @@ public class General {
 	public static class Simplify<V> implements Transfer.Specialized<V, V> {
 		private final V empty;
 		public Simplify(V empty) {this.empty = empty;}
-		public V emptyValue() {return empty;}
-		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		public V at(int x, int y, Aggregates<? extends V> aggregates) {
 			V val = aggregates.get(x,y);
 			if (Util.isEqual(val, aggregates.get(x-1,y-1))
@@ -88,6 +91,9 @@ public class General {
 			return val;
 		}
 		
+		@Override public boolean localOnly() {return false;}
+		@Override public V emptyValue() {return empty;}
+		@Override public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 	}
 	
 	/**Fill in empty values based on a function of nearby values.
@@ -140,6 +146,8 @@ public class General {
 			return p.x >= aggregates.lowX() && p.x < aggregates.highX()
 					&& p.y >= aggregates.lowY() && p.y < aggregates.highY();
 		}
+		
+		@Override public boolean localOnly() {return false;}
 	}
 	
 	/**Spread a value out in a general geometric shape.**/
@@ -193,7 +201,10 @@ public class General {
 					}
 				}
 
-				return cachedAggs.get(x, y);}			
+				return cachedAggs.get(x, y);
+			}
+			
+			@Override public boolean localOnly() {return false;}
 		}
 		
 		/**Spreader takes a type argument in case the spreading depends on the value.
@@ -276,12 +287,13 @@ public class General {
 		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
-		public OUT combine(OUT left, A update) {return val;}
-		public OUT rollup(OUT left, OUT right) {return val;}
-		public OUT identity() {return val;}
-		public OUT emptyValue() {return val;}
-		public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
+		@Override public OUT combine(OUT left, A update) {return val;}
+		@Override public OUT rollup(OUT left, OUT right) {return val;}
+		@Override public OUT identity() {return val;}
+		@Override public OUT emptyValue() {return val;}
+		@Override public Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
+		@Override public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
+		@Override public boolean localOnly() {return true;}
 	}
 
 
@@ -292,18 +304,19 @@ public class General {
 		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
 		 *               but some methods need an empty value independent of the aggregates set.**/
 		public Echo(T empty) {this.empty = empty;}
-		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 
-		public T emptyValue() {return empty;}
-		
-		public T combine(T left, T update) {return update;}
-		public T rollup(T left, T right) {
+		@Override public T rollup(T left, T right) {
 			if (left != null) {return left;}
 			if (right != null) {return right;}
 			return emptyValue();
 		}
-		public T identity() {return emptyValue();}
-		public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		
+		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
+		@Override public T emptyValue() {return empty;}		
+		@Override public T combine(T left, T update) {return update;}
+		@Override public T identity() {return emptyValue();}
+		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
 	}
 
 	/**Return the given value when presented with a non-empty value.**/
@@ -326,9 +339,9 @@ public class General {
 			return absent;
 		}
 		
-		public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
-		public OUT emptyValue() {return absent;}
+		@Override public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public OUT emptyValue() {return absent;}
+		@Override public boolean localOnly() {return true;}
 	}
 	
 	/**Transfer function that wraps a java.util.map.
@@ -364,8 +377,9 @@ public class General {
 			return mappings.get(key);
 		}
 
-		public OUT emptyValue() {return other;}
-		public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
+		@Override public OUT emptyValue() {return other;}
+		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 
 		/**From a reader, make a map wrapper.  
 		 * 

@@ -87,6 +87,7 @@ public class Shapes {
 				return regionVals.get(region);
 			}
 			
+			@Override public boolean localOnly() {return true;}
 
 			protected Shape touches(int x, int y) {
 				Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
