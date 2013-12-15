@@ -67,6 +67,15 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
         	}
         	return left;
         }
+        
+        @Override
+        public boolean localOnly() {
+        	boolean rv = true;
+        	for (Transfer.Specialized<?,?> t: specialized) {
+        		rv = rv && t.localOnly();
+        	}
+        	return rv;
+        }
     }
 
 

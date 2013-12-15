@@ -59,5 +59,10 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
             Aggregates<OUT> tempAggs2 = renderer.transfer(tempAggs1, second);
             return tempAggs2;
         }
+
+        @Override
+        public boolean localOnly() {
+        	return first.localOnly() && second.localOnly();
+        }
     }
 }

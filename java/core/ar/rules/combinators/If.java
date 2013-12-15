@@ -53,5 +53,10 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
             if (pred.value(val)) {return pass.at(x,y,aggregates);}
             else {return fail.at(x,y,aggregates);}
         }
+        
+        @Override
+        public boolean localOnly() {
+        	return false; //TODO: Always false on account of the predicate.  Re-examine... 
+        }
     }
 }
