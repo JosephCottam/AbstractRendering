@@ -35,9 +35,9 @@ public class SeamCarving {
 		@Override public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 		@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
 		
-		
 		public void horizontal(boolean horizontal) {this.horizontal = horizontal;}
 
+		@Override
 		public Aggregates<? extends A> build(Aggregates<? extends A> aggs) {
 			if (horizontal) {return horizontal(aggs);}
 			else {return vertical(aggs);}
