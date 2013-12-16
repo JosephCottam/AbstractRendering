@@ -7,6 +7,7 @@ import ar.Aggregates;
 import ar.Resources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.TransposeWrapper;
 import ar.rules.combinators.Seq;
 import ar.util.CacheProvider;
 
@@ -21,19 +22,32 @@ public class SeamCarving {
 		final Delta<A> delta;
 		final A empty;
 		final CacheProvider<A,A> cache;
+		boolean horizontal = false;
 		
-		public Carve(Delta<A> delta, A empty)  {
+		public Carve(Delta<A> delta, boolean horizontal, A empty)  {
 			this.delta = delta;
 			this.empty = empty;
+			this.horizontal=horizontal;
 			cache = new CacheProvider<>(this);
 		}
 		
 		@Override public A emptyValue() {return empty;}
 		@Override public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 		@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
+		
+		
+		public void horizontal(boolean horizontal) {this.horizontal = horizontal;}
 
-		@Override
 		public Aggregates<? extends A> build(Aggregates<? extends A> aggs) {
+			if (horizontal) {return horizontal(aggs);}
+			else {return vertical(aggs);}
+		}
+		
+		public Aggregates<? extends A> horizontal(Aggregates<? extends A> aggs) {
+			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs)));
+		}
+		
+		public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
 			Transfer<A, Double> t = new Seq<>(new Energy<>(delta), new CumulativeEnergy());			
 			Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, t.specialize(aggs));
 			
@@ -61,8 +75,8 @@ public class SeamCarving {
 			}
 			
 			Aggregates<A> rslt = 
-					//AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-					AggregateUtils.make(aggs, (A) aggs.defaultValue());
+					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
+					//AggregateUtils.make(aggs, (A) aggs.defaultValue());
 			
 			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
 				int split = vseam[y-aggs.lowY()];
@@ -70,7 +84,7 @@ public class SeamCarving {
 				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
 			}
 			return rslt;
-		}
+		}		
 	}
 	
 	/**Computes the energy of a set of aggregates.

@@ -44,11 +44,11 @@ public class CarveApp {
 
 		
 		Transfer<Integer, Color> color = new  Numbers.Interpolate<>(new Color(255,0,0,25), new Color(255,0,0,255));
-		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(), 0);
-		final Transfer<Integer, Color> transfer = new Seq<>(new NTimes<>(400, carve), color);
+		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(),true, 0);
+		final Transfer<Integer, Color> transfer = new Seq<>(new NTimes<>(300, carve), color);
 		
 		int width = 800;
-		int height = 800;
+		int height = 375;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 		
