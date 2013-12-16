@@ -486,8 +486,12 @@ public class Presets extends JPanel {
 	
 	public static class UniqueReport<A extends CategoricalCounts<?>> implements Transfer.Specialized<A,A> {
 		Collection<Object> seen = new HashSet<>();
-		public A emptyValue() {return null;}
-		public Specialized<A,A> specialize(Aggregates<? extends A> aggregates) {return this;}
+		
+		@Override public boolean localOnly() {return false;} 
+		@Override public A emptyValue() {return null;}
+		@Override public Specialized<A,A> specialize(Aggregates<? extends A> aggregates) {return this;}
+		
+		@Override 
 		public A at(int x, int y, Aggregates<? extends A> aggregates) {
 			A cc = aggregates.get(x, y);
 			

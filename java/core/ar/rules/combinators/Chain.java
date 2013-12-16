@@ -80,5 +80,7 @@ public class Chain<IN,OUT> implements Transfer<IN,OUT>{
             }
             return tempAggs;
         }
+        
+        public boolean localOnly() {return false;}
     }
 }

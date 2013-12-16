@@ -59,5 +59,13 @@ public interface Transfer<IN,OUT> extends Serializable {
 		 * a single thread, so implementations must provide for thread safety.
 		 */
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
+		
+		/**If true, indicates that only the X/Y values passed to 'at' will be
+		 * accessed in the aggregates.  This method is used in the method combinators
+		 * framework to implement efficient caching behavior. 
+		 */
+		public boolean localOnly();
 	}
+	
+
 }

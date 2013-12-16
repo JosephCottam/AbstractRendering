@@ -83,6 +83,7 @@ public final class Numbers {
 
 		public Color emptyValue() {return background;}
 		public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
+		public boolean localOnly() {return true;}
 	}
 	
 	/**HD interpolation between two colors.**/
@@ -128,6 +129,7 @@ public final class Numbers {
 				if (Util.isEqual(v, aggregates.defaultValue())) {return empty;}
 				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
 			}
+			public boolean localOnly() {return true;}
 		}
 	}
 	

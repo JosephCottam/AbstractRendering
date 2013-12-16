@@ -22,14 +22,14 @@ public class Debug {
 		public boolean equals(Object other) {return other instanceof Gradient;}
 		public int hashCode() {return Gradient.class.hashCode();}
 
-		@Override
-		public Color emptyValue() {return Util.CLEAR;}
+		@Override public Color emptyValue() {return Util.CLEAR;}
 
 		@Override
 		public ar.Transfer.Specialized<Object, Color> specialize(
 				Aggregates<? extends Object> aggregates) {
 			return new Specialized(aggregates);
 		}
+		
 		public static class Specialized extends Gradient implements Transfer.Specialized<Object, Color> {
 			private final float width,height;
 
@@ -43,6 +43,7 @@ public class Debug {
 				return new Color(x/width, y/height,.5f ,1.0f); 
 			}
 			
+			@Override public boolean localOnly() {return true;}
 		}
 
 	}
@@ -83,7 +84,8 @@ public class Debug {
 				if (phase == PHASE.AT) {throw toThrow;}
 				return base.at(x,y, aggregates);
 			}
-			
+
+			@Override public boolean localOnly() {return true;}			
 		}
 	}
 	

@@ -36,7 +36,7 @@ public class Advise {
 		/**What is the maximum distance two items can be apart and still considered the same.**/
 		public double tolerance() {return tolerance;}
 		
-		public Boolean emptyValue() {return Boolean.FALSE;}
+		@Override public Boolean emptyValue() {return Boolean.FALSE;}
 		public UnderSaturate.Specialized<A> specialize(Aggregates<? extends A> aggregates) {
 			return new Specialized<>(ref.specialize(aggregates), comp, tolerance);
 		}
@@ -50,6 +50,7 @@ public class Advise {
 				this.ref = ref;
 			}
 			
+			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
@@ -65,7 +66,8 @@ public class Advise {
 				double b = Math.pow(c1.getBlue()-c2.getBlue(),2);
 				return Math.sqrt(r+g+b);
 			}
-
+			
+			@Override public boolean localOnly() {return true;}
 		}
 	}
 	
@@ -85,8 +87,6 @@ public class Advise {
 		}
 
 		public Boolean emptyValue() {return Boolean.FALSE;}
-
-		
 		
 		@Override
 		public Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
@@ -110,6 +110,7 @@ public class Advise {
 				this.top = top;
 			}
 			
+			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A val = aggregates.get(x, y);
 				Color out = ref.at(x, y, aggregates);
@@ -117,6 +118,8 @@ public class Advise {
 				int diff = comp.compare(val, max);
 				return diff !=0 && same; 
 			}
+			
+			@Override public boolean localOnly() {return true;}
 		}
 		
 	}
@@ -194,7 +197,9 @@ public class Advise {
 				} else {
 					return base.at(x, y, aggregates);
 				}
-			}			
+			}	
+			
+			@Override public boolean localOnly() {return true;}
 		}
 	}
 
@@ -237,6 +242,7 @@ public class Advise {
 		}
 	
 
+		//TODO: Move this work to the constructor...
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggs) {
 			Aggregates<Double> cache = AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
@@ -285,7 +291,8 @@ public class Advise {
 			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
 				return inner.at(x,y,cache);
 			}
-
+			
+			@Override public boolean localOnly() {return true;}
 		}
 	}
 	
