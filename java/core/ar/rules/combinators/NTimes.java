@@ -46,5 +46,7 @@ public class NTimes<IN> implements Transfer<IN,IN> {
         public IN at(int x, int y, Aggregates<? extends IN> aggregates) {
             return cache.get(aggregates).get(x,y);
         }
+
+		@Override public boolean localOnly() {return op.localOnly();}
     }
 }

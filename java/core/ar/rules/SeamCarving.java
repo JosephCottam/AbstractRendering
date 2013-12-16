@@ -34,6 +34,7 @@ public class SeamCarving {
 		@Override public A emptyValue() {return empty;}
 		@Override public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 		@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
+		@Override public boolean localOnly() {return false;}
 		
 		public void horizontal(boolean horizontal) {this.horizontal = horizontal;}
 
@@ -96,6 +97,7 @@ public class SeamCarving {
 
 		@Override public Double emptyValue() {return 0d;}
 		@Override public Specialized<A, Double> specialize(Aggregates<? extends A> aggregates) {return this;}
+		@Override public boolean localOnly() {return true;}
 
 		@Override
 		public Double at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -111,6 +113,7 @@ public class SeamCarving {
 		@Override public Double emptyValue() {return 0d;}
 		@Override public Specialized<Double, Double> specialize(Aggregates<? extends Double> aggregates) {return this;}
 		@Override public Double at(int x, int y, Aggregates<? extends Double> aggregates) {return cache.get(aggregates).get(x, y);}
+		@Override public boolean localOnly() {return false;}
 
 		@Override
 		public Aggregates<? extends Double> build(Aggregates<? extends Double> aggregates) {
@@ -137,21 +140,24 @@ public class SeamCarving {
 	
 	
 	public static final class DeltaDouble implements Delta<Double> {
-		public double delta(Double left, Double right) {return left-right;}
+		@Override public double delta(Double left, Double right) {return left-right;}
 	}
 
 	public static final class DeltaInteger implements Delta<Integer> {
-		public double delta(Integer left, Integer right) {return left-right;}
+		@Override public double delta(Integer left, Integer right) {return left-right;}
 	}
 
 	
 	public static final class DeltaLuminance implements Delta<Color> {
-		public double delta(Color left, Color right) {return lum(left)-lum(right);}
+		@Override public double delta(Color left, Color right) {return lum(left)-lum(right);}
+		
+		//TODO: verify this formula...it came from here http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
 		public static double lum(Color c) {return 0.299*c.getRed() + 0.587*c.getGreen() + 0.114*c.getBlue();}
 	}
 	
-	/** Euclidean distance between two colors.**/
+	/** Euclidean distance between two colors in RGB space.**/
 	public static final class RGBEuclid implements Delta<Color> {
+		@Override 
 		public double delta(Color left, Color right) {
 			return Math.sqrt(
 				  Math.pow(left.getRed()  - right.getRed(), 2)

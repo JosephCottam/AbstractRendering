@@ -1,7 +1,2 @@
-/**Transfer combinators allow complex transfer functions to be constructed out of simpler ones.
- * 
- * NOTE: In many cases, correct transfer function semantics require these functions to compute
- * and retain an intermediate state.  IF you are using these functions to create complex 
- * equations, building a complex VALUER first and then wrapping that as the transfer is better.
- * **/
+/**Transfer combinators allow complex transfer functions to be constructed out of simpler ones.**/
 package ar.rules.combinators;
