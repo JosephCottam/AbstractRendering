@@ -10,6 +10,7 @@ import ar.aggregates.AggregateUtils;
 import ar.aggregates.TransposeWrapper;
 import ar.rules.combinators.Seq;
 import ar.util.CacheProvider;
+import ar.util.Util;
 
 //Paper: http://www.win.tue.nl/~wstahw/edu/2IV05/seamcarving.pdf
 
@@ -18,73 +19,89 @@ public class SeamCarving {
 	public interface Delta<A> {public double delta(A left, A right);}
 
 	
-	public static class Carve<A> implements Transfer.Specialized<A,A>, CacheProvider.CacheTarget<A,A> {
+	/**Find and remove a single seam.**/
+	public static class Carve<A> implements Transfer<A,A> {
+		public enum Direction {H,V}
+		
 		final Delta<A> delta;
 		final A empty;
-		final CacheProvider<A,A> cache;
-		boolean horizontal = false;
+		Direction dir;
 		
-		public Carve(Delta<A> delta, boolean horizontal, A empty)  {
+		public Carve(Delta<A> delta, Direction dir, A empty)  {
 			this.delta = delta;
 			this.empty = empty;
-			this.horizontal=horizontal;
-			cache = new CacheProvider<>(this);
+			this.dir = dir;
 		}
 		
 		@Override public A emptyValue() {return empty;}
-		@Override public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
-		@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
 		
+		@Override 
+		public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) { 
+				return new Specialize<>(aggregates, delta, dir, empty);
+		}
 		
-		public void horizontal(boolean horizontal) {this.horizontal = horizontal;}
+		public static class Specialize<A> extends Carve<A> implements Transfer.ControlFlow<A,A>, CacheProvider.CacheTarget<A,A> {
+			final CacheProvider<A,A> cache;
 
-		public Aggregates<? extends A> build(Aggregates<? extends A> aggs) {
-			if (horizontal) {return horizontal(aggs);}
-			else {return vertical(aggs);}
-		}
-		
-		public Aggregates<? extends A> horizontal(Aggregates<? extends A> aggs) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs)));
-		}
-		
-		public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
-			Transfer<A, Double> t = new Seq<>(new Energy<>(delta), new CumulativeEnergy());			
-			Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, t.specialize(aggs));
+			public Specialize(Aggregates<? extends A> aggs, Delta<A> delta, Direction dir, A empty) {
+				super(delta, dir, empty);
+				cache = new CacheProvider<>(this);
+			}
+
 			
-			//find seam
-			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
-			double min = Integer.MAX_VALUE;
-			for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
-				Double eng = cumEng.get(x, cumEng.highY()-1); 
-				if (min > eng) {
-					min = eng;
-					vseam[vseam.length-1] = x;
+			@Override public Aggregates<A> process(Aggregates<? extends A> aggregates) {return (Aggregates<A>) cache.get(aggregates);}
+			@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
+			
+			public void direction(Direction dir) {this.dir = dir;}
+
+			public Aggregates<? extends A> build(Aggregates<? extends A> aggs) {
+				if (dir == Direction.H) {return horizontal(aggs);}
+				else {return vertical(aggs);}
+			}
+			
+			public Aggregates<? extends A> horizontal(Aggregates<? extends A> aggs) {
+				return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs)));
+			}
+			
+			public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
+				Transfer<A, Double> t = new Seq<>(new Energy<>(delta), new CumulativeEnergy());		
+				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, t.specialize(aggs));
+				
+				//find seam
+				int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
+				double min = Integer.MAX_VALUE;
+				for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
+					Double eng = cumEng.get(x, cumEng.highY()-1); 
+					if (min > eng) {
+						min = eng;
+						vseam[vseam.length-1] = x;
+					}
 				}
-			}
+					
+				for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
+					int x = vseam[y-cumEng.lowY()+1];  
+					double upLeft = cumEng.get(x-1, y-1);
+					double up = cumEng.get(x, y-1);
+					double upRight = cumEng.get(x+1, y-1);
+					
+					if (upLeft < up && upLeft < upRight) {x = x -1;}
+					else if (up > upRight) {x = x+1;}
+					
+					vseam[y-cumEng.lowY()] = x;
+				}
+								
+				Aggregates<A> rslt = 
+						AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
+						//AggregateUtils.make(aggs, (A) aggs.defaultValue());
 				
-			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
-				int x = vseam[y-cumEng.lowY()+1];  
-				double upLeft = cumEng.get(x-1, y-1);
-				double up = cumEng.get(x, y-1);
-				double upRight = cumEng.get(x+1, y-1);
-				
-				if (upLeft < up && upLeft < upRight) {x = x -1;}
-				else if (up > upRight) {x = x+1;}
-				
-				vseam[y-cumEng.lowY()] = x;
+				for (int y = aggs.lowY(); y<aggs.highY(); y++) {
+					int split = vseam[y-aggs.lowY()];
+					for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
+					for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
+				}
+				return rslt;
 			}
-			
-			Aggregates<A> rslt = 
-					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-					//AggregateUtils.make(aggs, (A) aggs.defaultValue());
-			
-			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
-				int split = vseam[y-aggs.lowY()];
-				for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
-				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
-			}
-			return rslt;
-		}		
+		}
 	}
 	
 	/**Computes the energy of a set of aggregates.

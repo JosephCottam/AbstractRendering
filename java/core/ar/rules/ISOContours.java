@@ -56,7 +56,7 @@ public interface ISOContours<N> {
 			
 			public Specialized(Renderer renderer, double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
 				super(renderer, spacing, floor, fill);
-				Util.Stats<N> stats = Util.stats(aggregates, true, true);
+				Util.Stats<N> stats = Util.stats(aggregates, true, true, true);
 				
 				N bottom = floor == null ? (N) stats.min : floor;
 				Single.Specialized<N>[] ts = LocalUtils.transfers(bottom, stats.max, spacing, renderer, fill, aggregates);
@@ -99,7 +99,7 @@ public interface ISOContours<N> {
 			
 			public Specialized(Renderer r, int n, boolean fill, Aggregates<? extends N> aggregates) {
 				super(r, n, fill);
-				Util.Stats<N> stats = Util.stats(aggregates, true, true);
+				Util.Stats<N> stats = Util.stats(aggregates, true, true, true);
 				contours = new GlyphList<>();
 				
 				double step = (stats.max.doubleValue()-stats.min.doubleValue())/n;

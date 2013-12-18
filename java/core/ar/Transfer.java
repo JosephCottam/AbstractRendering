@@ -46,7 +46,6 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * **/
 	public Specialized<IN,OUT> specialize(Aggregates<? extends IN> aggregates);
 
-	
 	/**Indicate that a transfer function is "ready to run".**/
 	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> { 
 		/**What color should be used for the pixel at location X/Y.
@@ -59,5 +58,13 @@ public interface Transfer<IN,OUT> extends Serializable {
 		 * a single thread, so implementations must provide for thread safety.
 		 */
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
+	}
+	
+	
+	/**Control flow operations handle their own execution order and resource allocation.
+	 * TODO: Should this have a method that takes a renderer (to provide execution resources...that would simplify a few other renderers)
+	 * **/
+	public static interface ControlFlow<IN,OUT> extends Specialized<IN,OUT> {
+		public Aggregates<? extends OUT> process(Aggregates<? extends IN> aggregates);		
 	}
 }

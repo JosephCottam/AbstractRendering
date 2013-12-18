@@ -16,9 +16,12 @@ import ar.Transfer;
 import ar.app.display.TransferDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.implicitgeometry.Indexed;
+import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.renderers.ParallelRenderer;
+import ar.rules.General;
 import ar.rules.SeamCarving;
 import ar.rules.Numbers;
+import ar.rules.SeamCarving.Carve.Direction;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
@@ -42,16 +45,18 @@ public class CarveApp {
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Point2D> selector = TouchesPixel.make(dataset);
 
-		
-		Transfer<Integer, Color> color = new  Numbers.Interpolate<>(new Color(255,0,0,25), new Color(255,0,0,255));
-		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(),true, 0);
-		final Transfer<Integer, Color> transfer = new Seq<>(new NTimes<>(300, carve), color);
-		
 		int width = 800;
 		int height = 375;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
-		
+
+		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
+		final Transfer<Integer, Color> transfer = 
+				new Seq<>(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()),
+						new NTimes<>(500, carve))
+				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10), 0d))
+				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
+				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 				
 		JFrame frame = new JFrame("Simple Display");
 		frame.setLayout(new BorderLayout());

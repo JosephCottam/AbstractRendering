@@ -38,7 +38,10 @@ public class NTimes<IN> implements Transfer<IN,IN> {
         }
 
         public Aggregates<? extends IN> build(Aggregates<? extends IN> aggs) {
-            for (int i=0; i<n; i++){aggs = renderer.transfer(aggs, op);}
+            for (int i=0; i<n; i++){
+            	Transfer.Specialized<IN, IN> spec = op.specialize(aggs);
+            	aggs = renderer.transfer(aggs, spec);
+            }
             return aggs;
         }
 
