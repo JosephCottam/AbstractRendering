@@ -64,8 +64,8 @@ public class SeamCarving {
 			}
 			
 			public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
-				Transfer<A, Double> t = new Seq<>(new Energy<>(delta), new CumulativeEnergy());		
-				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, t.specialize(aggs));
+				Aggregates<Double> energy = Resources.DEFAULT_RENDERER.transfer(aggs, new Energy<>(delta));
+				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(energy, new CumulativeEnergy().specialize(energy));
 				
 				//find seam
 				int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
@@ -89,6 +89,13 @@ public class SeamCarving {
 					
 					vseam[y-cumEng.lowY()] = x;
 				}
+				
+				//System.out.print(cumEng.get(vseam[vseam.length-1], cumEng.highX()-1));
+				for (int i=0; i<vseam.length;i++) {
+					System.out.print(cumEng.get(vseam[i], i+cumEng.lowX()));
+					System.out.print(", ");
+				}
+				System.out.println();
 								
 				Aggregates<A> rslt = 
 						AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
@@ -142,7 +149,7 @@ public class SeamCarving {
 				for (int x = aggregates.lowX(); x<aggregates.highX(); x++) {
 					double upLeft = x-1 > aggregates.lowX() ? cached.get(x-1, y-1) : Double.MAX_VALUE;
 					double up = cached.get(x, y-1);
-					double upRight = x+1 >= aggregates.highX() ? cached.get(x+1, y-1) :Double.MAX_VALUE;
+					double upRight = x+1 < aggregates.highX() ? cached.get(x+1, y-1) :Double.MAX_VALUE;
 					
 					double min = Math.min(upRight, Math.min(upLeft, up));
 					cached.set(x, y, min+aggregates.get(x, y));

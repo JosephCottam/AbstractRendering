@@ -53,7 +53,7 @@ public class CarveApp {
 		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
 		final Transfer<Integer, Color> transfer = 
 				new Seq<>(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()),
-						new NTimes<>(500, carve))
+						new NTimes<>(10, carve))
 				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));

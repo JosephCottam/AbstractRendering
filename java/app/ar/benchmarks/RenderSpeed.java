@@ -147,7 +147,7 @@ public class RenderSpeed {
 			if (v.equals(aggregates.defaultValue())) {
 				return empty;
 			}
-			Util.Stats<Number> extrema = Util.stats(aggregates, true, true);
+			Util.Stats<Number> extrema = Util.stats(aggregates, true, true, true);
 			
 			if (logBasis <= 1) {
 				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
