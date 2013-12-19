@@ -10,10 +10,22 @@ import ar.aggregates.AggregateUtils;
 import ar.aggregates.TransposeWrapper;
 import ar.rules.combinators.Seq;
 import ar.util.CacheProvider;
-import ar.util.Util;
 
-//Paper: http://www.win.tue.nl/~wstahw/edu/2IV05/seamcarving.pdf
 
+/** Seam-carving is a content-sensitive image resizing technique.
+ * 
+ * The basic idea is that not all pixels are equally important.
+ * Therefore, some can be removed without changing the image as 
+ * much as others.  The low-importance pixels do not need to all be
+ * in the same row (or column) but they do need to be contiguous and
+ * only one removed from each column (or row).  
+ * 
+ * This collection of classes adapts the technique to the abstract
+ * rendering framework and generalizes it from just pixels to arbitrary
+ * aggregate sets.
+ * 
+ * Paper: http://www.win.tue.nl/~wstahw/edu/2IV05/seamcarving.pdf
+ */
 public class SeamCarving {
 	/**Calculate the difference between two values.**/
 	public interface Delta<A> {public double delta(A left, A right);}
@@ -64,8 +76,8 @@ public class SeamCarving {
 			}
 			
 			public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
-				Aggregates<Double> energy = Resources.DEFAULT_RENDERER.transfer(aggs, new Energy<>(delta));
-				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(energy, new CumulativeEnergy().specialize(energy));
+				Transfer<A, Double> energy = new Seq<>(new Energy<>(delta), new CumulativeEnergy());
+				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, energy.specialize(aggs));
 				int[] vseam = findVSeam(cumEng);
 				
 				Aggregates<A> rslt = 
