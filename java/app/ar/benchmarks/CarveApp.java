@@ -47,18 +47,21 @@ public class CarveApp {
 
 		int width = 800;
 		int height = 375;
+		int seams = 700;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
+		
+		
 		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
 		final Transfer<Integer, Color> transfer = 
 				new Seq<>(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()),
-						new NTimes<>(10, carve))
+						new NTimes<>(seams, carve))
 				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 				
-		JFrame frame = new JFrame("Simple Display");
+		JFrame frame = new JFrame("Seam Carving -- Removed " + seams + " seams");
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

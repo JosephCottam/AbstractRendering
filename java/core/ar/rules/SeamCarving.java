@@ -66,37 +66,8 @@ public class SeamCarving {
 			public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
 				Aggregates<Double> energy = Resources.DEFAULT_RENDERER.transfer(aggs, new Energy<>(delta));
 				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(energy, new CumulativeEnergy().specialize(energy));
+				int[] vseam = findVSeam(cumEng);
 				
-				//find seam
-				int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
-				double min = Integer.MAX_VALUE;
-				for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
-					Double eng = cumEng.get(x, cumEng.highY()-1); 
-					if (min > eng) {
-						min = eng;
-						vseam[vseam.length-1] = x;
-					}
-				}
-					
-				for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
-					int x = vseam[y-cumEng.lowY()+1];  
-					double upLeft = cumEng.get(x-1, y-1);
-					double up = cumEng.get(x, y-1);
-					double upRight = cumEng.get(x+1, y-1);
-					
-					if (upLeft < up && upLeft < upRight) {x = x -1;}
-					else if (up > upRight) {x = x+1;}
-					
-					vseam[y-cumEng.lowY()] = x;
-				}
-				
-				//System.out.print(cumEng.get(vseam[vseam.length-1], cumEng.highX()-1));
-				for (int i=0; i<vseam.length;i++) {
-					System.out.print(cumEng.get(vseam[i], i+cumEng.lowX()));
-					System.out.print(", ");
-				}
-				System.out.println();
-								
 				Aggregates<A> rslt = 
 						AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
 						//AggregateUtils.make(aggs, (A) aggs.defaultValue());
@@ -108,6 +79,34 @@ public class SeamCarving {
 				}
 				return rslt;
 			}
+		}
+
+		public static int[] findVSeam(Aggregates<Double> cumEng) {
+			
+			//find the lowest end of the seam
+			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
+			double min = Integer.MAX_VALUE;
+			for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
+				Double eng = cumEng.get(x, cumEng.highY()-1); 
+				if (min > eng) {
+					min = eng;
+					vseam[vseam.length-1] = x;
+				}
+			}
+				
+			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
+				int x = vseam[y-cumEng.lowY()+1]; //Get the x value for the next row down  
+
+				double upLeft = x-1 >= cumEng.lowX() ? cumEng.get(x-1, y) : Double.MAX_VALUE;
+				double up = cumEng.get(x, y);
+				double upRight = x+1 < cumEng.highX() ? cumEng.get(x+1, y) : Double.MAX_VALUE;
+
+				if (upLeft < up && upLeft < upRight) {x = x-1;}
+				else if (up > upRight) {x = x+1;}
+				
+				vseam[y-cumEng.lowY()] = x;
+			}
+			return vseam;
 		}
 	}
 	
@@ -147,7 +146,7 @@ public class SeamCarving {
 			
 			for (int y = aggregates.lowY()+1; y<aggregates.highY(); y++) {
 				for (int x = aggregates.lowX(); x<aggregates.highX(); x++) {
-					double upLeft = x-1 > aggregates.lowX() ? cached.get(x-1, y-1) : Double.MAX_VALUE;
+					double upLeft = x-1 >= aggregates.lowX() ? cached.get(x-1, y-1) : Double.MAX_VALUE;
 					double up = cached.get(x, y-1);
 					double upRight = x+1 < aggregates.highX() ? cached.get(x+1, y-1) :Double.MAX_VALUE;
 					
