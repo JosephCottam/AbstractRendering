@@ -46,9 +46,12 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * **/
 	public Specialized<IN,OUT> specialize(Aggregates<? extends IN> aggregates);
 
-	/**Indicate that a transfer function is "ready to run".**/
+	/**Indicate that a transfer function is "ready to run".
+	 * 
+	 * TOOD: Consider converting Specialized to a tagging interface and have subtypes "ItemWise" for the x/y taking path and "SetWise" replace 'ControlFlow' 
+	 * **/
 	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> { 
-		/**What color should be used for the pixel at location X/Y.
+		/**What value results from transformation at X/Y?
 		 * 
 		 * This function accepts the full set of aggregates so context 
 		 * (as determined by the full set of aggregates)
