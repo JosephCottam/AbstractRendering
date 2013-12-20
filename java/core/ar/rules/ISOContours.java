@@ -52,7 +52,7 @@ public interface ISOContours<N> {
 		
 		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
-			final Aggregates<N> cached;
+			final Aggregates<? extends N> cached;
 			
 			public Specialized(Renderer renderer, double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
 				super(renderer, spacing, floor, fill);
@@ -95,7 +95,7 @@ public interface ISOContours<N> {
 		
 		public static final class Specialized<N extends Number> extends NContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
-			final Aggregates<N> cached;
+			final Aggregates<? extends N> cached;
 			
 			public Specialized(Renderer r, int n, boolean fill, Aggregates<? extends N> aggregates) {
 				super(r, n, fill);
@@ -132,7 +132,7 @@ public interface ISOContours<N> {
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
 			private final GlyphList<Shape, N> contours;
-			protected final Aggregates<N> cached;
+			protected final Aggregates<? extends N> cached;
 
 			public Specialized(Renderer renderer, N threshold, boolean fill, Aggregates<? extends N> aggregates) {
 				super(renderer, threshold, fill);

@@ -68,6 +68,6 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * TODO: Should this have a method that takes a renderer (to provide execution resources...that would simplify a few other renderers)
 	 * **/
 	public static interface ControlFlow<IN,OUT> extends Specialized<IN,OUT> {
-		public Aggregates<? extends OUT> process(Aggregates<? extends IN> aggregates);		
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates);		
 	}
 }

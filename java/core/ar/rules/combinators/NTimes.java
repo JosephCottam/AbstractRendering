@@ -6,7 +6,9 @@ import ar.Transfer;
 import ar.Renderer;
 import ar.util.CacheProvider;
 
-/** Apply an operator N times.*/
+/** Apply an operator N times.
+ * Specializes the operator each time around the loop.
+ * */
 public class NTimes<IN> implements Transfer<IN,IN> {
     protected final Transfer<IN,IN> base;
     protected final int n;
@@ -37,12 +39,15 @@ public class NTimes<IN> implements Transfer<IN,IN> {
             op = base.specialize(aggs);
         }
 
-        public Aggregates<? extends IN> build(Aggregates<? extends IN> aggs) {
-            for (int i=0; i<n; i++){
-            	Transfer.Specialized<IN, IN> spec = op.specialize(aggs);
-            	aggs = renderer.transfer(aggs, spec);
+        public Aggregates<IN> build(Aggregates<? extends IN> aggs) {
+        	Transfer.Specialized<IN, IN> spec = op.specialize(aggs);
+            Aggregates<IN> out = renderer.transfer(aggs, spec);
+
+            for (int i=0; i<n-1; i++){  //Did it once to initialize the loop
+            	spec = op.specialize(out);
+            	out = renderer.transfer(out, spec);
             }
-            return aggs;
+            return out;
         }
 
         @Override

@@ -59,7 +59,7 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
         }
 
         @Override
-        public Aggregates<? extends OUT> build(Aggregates<? extends IN> aggs) {
+        public Aggregates<OUT> build(Aggregates<? extends IN> aggs) {
         	Aggregates<OUT> left = null;
         	for (int i=0; i<specialized.length; i++) {
         		Aggregates<OUT> right = renderer.transfer(aggs, specialized[i]);
