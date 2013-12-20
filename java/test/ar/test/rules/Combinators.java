@@ -74,7 +74,7 @@ public class Combinators {
 	}
 
 	@Test
-	public void Fix() {
+	public void While() {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 1);
 		
 		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);

@@ -61,23 +61,23 @@ public class SeamCarving {
 			}
 
 			
-			@Override public Aggregates<A> process(Aggregates<? extends A> aggregates) {return (Aggregates<A>) cache.get(aggregates);}
+			@Override public Aggregates<A> process(Aggregates<? extends A> aggregates) {return cache.get(aggregates);}
 			@Override public A at(int x, int y, Aggregates<? extends A> aggregates) {return cache.get(aggregates).get(x, y);}
 			
 			public void direction(Direction dir) {this.dir = dir;}
 
-			public Aggregates<? extends A> build(Aggregates<? extends A> aggs) {
+			public Aggregates<A> build(Aggregates<? extends A> aggs) {
 				if (dir == Direction.H) {return horizontal(aggs);}
 				else {return vertical(aggs);}
 			}
 			
-			public Aggregates<? extends A> horizontal(Aggregates<? extends A> aggs) {
+			public Aggregates<A> horizontal(Aggregates<? extends A> aggs) {
 				return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs)));
 			}
 			
-			public Aggregates<? extends A> vertical(Aggregates<? extends A> aggs) {
+			public Aggregates<A> vertical(Aggregates<? extends A> aggs) {
 				Transfer<A, Double> energy = new Seq<>(new Energy<>(delta), new CumulativeEnergy());
-				Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, energy.specialize(aggs));
+				Aggregates<? extends Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, energy.specialize(aggs));
 				int[] vseam = findVSeam(cumEng);
 				
 				Aggregates<A> rslt = 
@@ -93,7 +93,7 @@ public class SeamCarving {
 			}
 		}
 
-		public static int[] findVSeam(Aggregates<Double> cumEng) {
+		public static int[] findVSeam(Aggregates<? extends Double> cumEng) {
 			
 			//find the lowest end of the seam
 			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
@@ -148,7 +148,7 @@ public class SeamCarving {
 		@Override public Double at(int x, int y, Aggregates<? extends Double> aggregates) {return cache.get(aggregates).get(x, y);}
 
 		@Override
-		public Aggregates<? extends Double> build(Aggregates<? extends Double> aggregates) {
+		public Aggregates<Double> build(Aggregates<? extends Double> aggregates) {
 			Aggregates<Double> cached = AggregateUtils.make(aggregates, 0d);
 			
 			//Copy the first row over...

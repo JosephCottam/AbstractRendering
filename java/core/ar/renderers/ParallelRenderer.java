@@ -87,7 +87,7 @@ public class ParallelRenderer implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		if (t instanceof Transfer.ControlFlow) {
-			return (Aggregates<OUT>) ((Transfer.ControlFlow<IN, OUT>) t).process(aggregates);
+			return  ((Transfer.ControlFlow<IN, OUT>) t).process(aggregates);
 		} else {
 			Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
 			

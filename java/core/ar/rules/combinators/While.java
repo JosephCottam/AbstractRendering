@@ -45,9 +45,10 @@ public class While<IN> implements Transfer<IN,IN> {
             op = base.specialize(aggs);
         }
 
-        public Aggregates<? extends IN> build(Aggregates<? extends IN> aggs) {
-            while (!pred.value(aggs)) {aggs = renderer.transfer(aggs, op);}
-            return aggs;
+        public Aggregates<IN> build(Aggregates<? extends IN> aggs) {
+            Aggregates<IN> out = renderer.transfer(aggs, op);
+        	while (!pred.value(out)) {out = renderer.transfer(out, op);}
+            return out;
         }
 
         @Override
