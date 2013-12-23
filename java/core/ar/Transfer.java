@@ -48,26 +48,39 @@ public interface Transfer<IN,OUT> extends Serializable {
 
 	/**Indicate that a transfer function is "ready to run".
 	 * 
-	 * TOOD: Consider converting Specialized to a tagging interface and have subtypes "ItemWise" for the x/y taking path and "SetWise" replace 'ControlFlow' 
-	 * **/
-	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> { 
-		/**What value results from transformation at X/Y?
+	 * By default, all transfers are expected to operate set-wise, taking a whole
+	 * set of aggregates in and producing a new set of aggregates.  However, many
+	 * transfers can be efficiently composed item-wise (one x/y at a time) and 
+	 * may implement the ItemWise interface additionally. 
+	 **/
+	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> {
+		 /** To facilitate efficient processing of possibly nested transfers,
+		  *  the renderer is also taken as an argument.
+		  **/
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend);
+	}
+ 	
+	/**What value results from transformation at X/Y?
+	 * 
+	 * This function accepts the full set of aggregates so context 
+	 * (as determined by the full set of aggregates)
+	 * can be employed in determining a specific pixel.
+	 * 
+	 * Classes implementing this interface can trivially implement `process(Aggregates, Renderer)` 
+	 * as `return rend.transfer(aggregates, this);`
+	 * TODO: Java 8, add default method body for process
+	 * 
+	 * This function is not guaranteed to be  called from 
+	 * a single thread, so implementations must provide for thread safety.
+	 */
+	public static interface ItemWise<IN,OUT> extends Specialized<IN,OUT> {
+		/**
 		 * 
-		 * This function accepts the full set of aggregates so context 
-		 * (as determined by the full set of aggregates)
-		 * can be employed in determining a specific pixel.
-		 * 
-		 * These functions are not guaranteed to be  called from 
-		 * a single thread, so implementations must provide for thread safety.
+		 * @param x
+		 * @param y
+		 * @param aggregates
+		 * @return
 		 */
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
-	}
-	
-	
-	/**Control flow operations handle their own execution order and resource allocation.
-	 * TODO: Should this have a method that takes a renderer (to provide execution resources...that would simplify a few other renderers)
-	 * **/
-	public static interface ControlFlow<IN,OUT> extends Specialized<IN,OUT> {
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates);		
 	}
 }

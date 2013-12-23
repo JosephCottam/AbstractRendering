@@ -85,17 +85,20 @@ public class ParallelRenderer implements Renderer {
 	}
 	
 	
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
+		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
+		long taskSize = Math.max(TRANSFER_TASK_MIN, AggregateUtils.size(aggregates)/pool.getParallelism());
+		
+		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
+		pool.invoke(task);
+		return result;		
+	}
+	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
-		if (t instanceof Transfer.ControlFlow) {
-			return  ((Transfer.ControlFlow<IN, OUT>) t).process(aggregates);
-		} else {
-			Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());
-			
-			long taskSize = Math.max(TRANSFER_TASK_MIN, AggregateUtils.size(aggregates)/pool.getParallelism());
-			
-			PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
-			pool.invoke(task);
-			return result;
+		if (t instanceof Transfer.ItemWise) {
+			return transfer(aggregates, (Transfer.ItemWise<IN, OUT>) t);
+		} else  {
+			return t.process(aggregates, this);
 		}
 	}	
 	

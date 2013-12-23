@@ -27,7 +27,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	} 
 
 	public class OverplotLast implements WrappedAggregator<Color, Color> {
-		public Aggregator<Color, Color> op() {return new Categories.Last();}
+		public Aggregator<Color, Color> op() {return new General.Last<>(Util.CLEAR);}
 		public String toString() {return "Overplot Last (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 		public int hashCode() {return this.getClass().hashCode();}

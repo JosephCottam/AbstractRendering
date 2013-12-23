@@ -10,6 +10,7 @@ import java.util.Map;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
@@ -17,8 +18,39 @@ import ar.util.Util;
 /**Tools that don't apply to a particular data type.**/
 public class General {
 
+	/**What is the last item in the given pixel.
+	 * 
+	 * Unless the 'nullIsValue' flag is set, 
+	 * a null right-hand value results in the left value being returned.
+	 * A null right and left value results in the identity being returned;   
+	 * **/
+	public static final class Last<A> implements Aggregator<A,A> {
+		private static final long serialVersionUID = -3640093539839073637L;
+		final boolean nullIsValue;
+		final A id;
+		
+		public Last(A id) {this(id, false);}
+		public Last(A id, boolean nullIsValue) {
+			this.id = id;
+			this.nullIsValue = nullIsValue;
+		}
+		
+		@Override 
+		public A rollup(A left, A right) {
+			if (nullIsValue) {return right;}
+			if (right != null) {return right;}
+			if (left != null) {return left;}
+			return identity();
+		}
+		
+		@Override public A combine(A left, A update) {return update;}
+		@Override public A identity() {return id;}
+		@Override public boolean equals(Object other) {return other instanceof Last;}
+		@Override public int hashCode() {return Last.class.hashCode();}
+	}
+
 	/**Wrap a valuer in a transfer function.**/
-	public static final class ValuerTransfer<IN,OUT> implements Transfer.Specialized<IN, OUT> {
+	public static final class ValuerTransfer<IN,OUT> implements Transfer.ItemWise<IN, OUT> {
 		private final Valuer<IN,OUT> valuer;
 		private final OUT empty;
 		public ValuerTransfer(Valuer<IN,OUT> valuer, OUT empty) {
@@ -26,26 +58,23 @@ public class General {
 			this.empty = empty;
 		}
 
-		public OUT emptyValue() {return empty;}
-		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+		@Override public OUT emptyValue() {return empty;}
+		@Override public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return valuer.value(aggregates.get(x,y));
 		}
-	}
-	
-	public static final class Last<IN> implements Aggregator<IN,IN> {
-		private final IN id;
-		public <V extends IN> Last(V id) {this.id = id;}
-		public IN combine(IN current, IN update) {return update;}
-		public IN rollup(IN left, IN right) {return right;}
-		public IN identity() {return id;}
+
+		@Override
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	/**Performs a type-preserving replacement.  
 	 * Specified values are replaced, others as passed through.
 	 * For more control or type-converting replace, use MapWrapper instead.
 	 * **/
-	public static class Replace<T> implements Transfer.Specialized<T,T> {
+	public static class Replace<T> implements Transfer.ItemWise<T,T> {
 		private final Map<T,T> mapping;
 		private final T empty;
 		
@@ -55,8 +84,15 @@ public class General {
 			this.empty = empty;
 		}
 		
-		public T emptyValue() {return empty;}
-		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		@Override public T emptyValue() {return empty;}
+		@Override public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+
+		@Override
+		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+		
+		@Override 
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {
 			T val = aggregates.get(x,y);
 			if (mapping.containsKey(val)) {return mapping.get(val);}
@@ -67,7 +103,7 @@ public class General {
 	
 	
 	/**Changes a cell to empty if it and all of its neighbors are the same value.**/
-	public static class Simplify<V> implements Transfer.Specialized<V, V> {
+	public static class Simplify<V> implements Transfer.ItemWise<V, V> {
 		private final V empty;
 		public Simplify(V empty) {this.empty = empty;}
 		public V emptyValue() {return empty;}
@@ -88,14 +124,19 @@ public class General {
 			return val;
 		}
 		
+		@Override
+		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	/**Fill in empty values based on a function of nearby values.
 	 *
+	 * TODO: Possibly combine with spread.   
 	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
 	 * TODO: Add support for a searching function...
 	 ***/ 
-	public static class Smear<V> implements Transfer.Specialized<V,V> {
+	public static class Smear<V> implements Transfer.ItemWise<V,V> {
 		final V empty;
 		public Smear(V empty) {
 			this.empty = empty;
@@ -113,6 +154,11 @@ public class General {
 				if (!Util.isEqual(val, empty)) {return val;}
 			}
 			throw new RuntimeException("Reached illegal state...");
+		}
+		
+		@Override
+		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
 		}
 
 		public Point spiralFrom(int X, int Y, int n, Point into) {
@@ -142,7 +188,10 @@ public class General {
 		}
 	}
 	
-	/**Spread a value out in a general geometric shape.**/
+	/**Spread a value out in a general geometric shape.
+	 * 
+	 * TODO: Shift away from item-wise.  Eliminate the cache.
+	 * **/
 	public static class Spread<V> implements Transfer<V,V> {
 		final Spreader<V> spreader;
 		final Aggregator<V,V> combiner;
@@ -159,7 +208,7 @@ public class General {
 			return new Specialized<>(spreader, aggregates, combiner);
 		}
 		
-		public static class Specialized<V> extends Spread<V> implements Transfer.Specialized<V, V>  {
+		public static class Specialized<V> extends Spread<V> implements Transfer.ItemWise<V, V>  {
 			private Object cacheGuard = new Object(){};
 			private Aggregates<?> cacheKey;
 			private Aggregates<V> cachedAggs;
@@ -185,6 +234,12 @@ public class General {
 				return target;
 			}
 			
+			@Override
+			public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}
+			
+			@Override
 			public V at(int x, int y, Aggregates<? extends V> aggregates) {
 				synchronized(cacheGuard) {
 					if (cacheKey != aggregates || aggregates == null) {
@@ -193,7 +248,8 @@ public class General {
 					}
 				}
 
-				return cachedAggs.get(x, y);}			
+				return cachedAggs.get(x, y);
+			}			
 		}
 		
 		/**Spreader takes a type argument in case the spreading depends on the value.
@@ -264,7 +320,7 @@ public class General {
 	}
 	
 	/**Aggregator and Transfer that always returns the same value.**/
-	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.Specialized<A, OUT> {
+	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
 		
@@ -276,38 +332,48 @@ public class General {
 		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
-		public OUT combine(OUT left, A update) {return val;}
-		public OUT rollup(OUT left, OUT right) {return val;}
-		public OUT identity() {return val;}
-		public OUT emptyValue() {return val;}
-		public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
-		public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
+		@Override public OUT combine(OUT left, A update) {return val;}
+		@Override public OUT rollup(OUT left, OUT right) {return val;}
+		@Override public OUT identity() {return val;}
+		@Override public OUT emptyValue() {return val;}
+		@Override public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
+		@Override public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
+
+		@Override
+		public Aggregates<OUT> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 
 
 	/**Return what is found at the given location.**/
-	public static final class Echo<T> implements Transfer.Specialized<T,T>, Aggregator<T,T> {
+	public static final class Echo<T> implements Transfer.ItemWise<T,T>, Aggregator<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
 		 *               but some methods need an empty value independent of the aggregates set.**/
 		public Echo(T empty) {this.empty = empty;}
-		public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
-
-		public T emptyValue() {return empty;}
 		
-		public T combine(T left, T update) {return update;}
-		public T rollup(T left, T right) {
+		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
+		@Override public T emptyValue() {return empty;}
+		@Override public T identity() {return emptyValue();}
+		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
+		@Override public T combine(T left, T update) {return update;}
+		
+		@Override public T rollup(T left, T right) {
 			if (left != null) {return left;}
 			if (right != null) {return right;}
 			return emptyValue();
 		}
-		public T identity() {return emptyValue();}
-		public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		
+		@Override
+		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 
 	/**Return the given value when presented with a non-empty value.**/
-	public static final class Present<IN, OUT> implements Transfer.Specialized<IN,OUT> {
+	public static final class Present<IN, OUT> implements Transfer.ItemWise<IN,OUT> {
 		private static final long serialVersionUID = -7511305102790657835L;
 		private final OUT present, absent;
 		
@@ -320,21 +386,25 @@ public class General {
 			this.absent=absent;
 		}
 		
-		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
+		@Override public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public OUT emptyValue() {return absent;}
+
+		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			Object v = aggregates.get(x, y);
 			if (v != null && !v.equals(aggregates.defaultValue())) {return present;}
 			return absent;
 		}
 		
-		public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
-		public OUT emptyValue() {return absent;}
+		@Override
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	/**Transfer function that wraps a java.util.map.
 	 * The empty value is returned if the input value is not found in the mapping.
 	 * **/
-	public static class MapWrapper<IN,OUT> implements Transfer.Specialized<IN,OUT> {
+	public static class MapWrapper<IN,OUT> implements Transfer.ItemWise<IN,OUT> {
 		private static final long serialVersionUID = -4326656735271228944L;
 		private final Map<IN, OUT> mappings;
 		private final OUT other; 
@@ -364,8 +434,13 @@ public class General {
 			return mappings.get(key);
 		}
 
-		public OUT emptyValue() {return other;}
-		public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public OUT emptyValue() {return other;}
+		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		
+		@Override
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 
 		/**From a reader, make a map wrapper.  
 		 * 

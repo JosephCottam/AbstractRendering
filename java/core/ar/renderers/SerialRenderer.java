@@ -49,10 +49,9 @@ public final class SerialRenderer implements Renderer {
 		}
 		return aggregates;
 	}
-	
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
-		Aggregates<OUT> out = AggregateUtils.make(aggregates, t.emptyValue());
-		
+
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
+ 		Aggregates<OUT> out = AggregateUtils.make(aggregates, t.emptyValue());
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 				OUT val = t.at(x, y, aggregates);
@@ -60,6 +59,14 @@ public final class SerialRenderer implements Renderer {
 			}
 		}
 		return out;
+	}
+
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
+		if (t instanceof Transfer.ItemWise) {
+			return transfer(aggregates, (Transfer.ItemWise<IN, OUT>) t);
+		} else {
+			return t.process(aggregates, this);
+		}
 	}
 	
 	public ProgressReporter progress() {return recorder;}

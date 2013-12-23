@@ -7,6 +7,7 @@ import java.util.Map;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Renderer;
 import ar.Transfer;
 import ar.rules.CategoricalCounts.CoC;
 import ar.util.Util;
@@ -33,29 +34,13 @@ public class Categories {
 		public int hashCode() {return First.class.hashCode();}
 	}
 
-	/**What is the last item in the given pixel (an over-plotting strategy).
-	 * 
-	 * TODO: This may actually belong in 'general'...
-	 * **/
-	public static final class Last implements Aggregator<Color, Color> {
-		private static final long serialVersionUID = -3640093539839073637L;
-		public Color combine(Color left, Color update) {return update;}
-		public Color rollup(Color left, Color right) {
-			if (right != null) {return right;}
-			if (left != null) {return left;}
-			return identity();
-		}
-		
-		public Color identity() {return Util.CLEAR;}
-		public boolean equals(Object other) {return other instanceof Last;}
-		public int hashCode() {return Last.class.hashCode();}
-	}
-	
-
 	
 	/**Convert a set of categorical counts to its total.**/ 
-	public static final class NumCategories<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
+	public static final class NumCategories<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
+
+		@Override public Integer emptyValue() {return 0;}
+		@Override public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
@@ -63,16 +48,18 @@ public class Categories {
 		}
 
 		@Override
-		public Integer emptyValue() {return 0;}
-
-		@Override
-		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	
 	/**Convert a set of categorical counts to its total.**/ 
-	public static final class ToCount<IN> implements Transfer.Specialized<CategoricalCounts<IN>, Integer> {
+	public static final class ToCount<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
+
+		@Override public Integer emptyValue() {return 0;}
+		@Override public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
@@ -80,17 +67,16 @@ public class Categories {
 		}
 
 		@Override
-		public Integer emptyValue() {return 0;}
-
-		@Override
-		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	/**Replace categories with other categories.
 	 * 
 	 * Useful for (for example) assigning categories to colors.
 	 * **/ 
-	public static final class ReKey<IN,OUT> implements Transfer.Specialized<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+	public static final class ReKey<IN,OUT> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
 		private static final long serialVersionUID = -1547309163997797688L;
 		
 		final CategoricalCounts<OUT> like;
@@ -107,6 +93,9 @@ public class Categories {
 			this.rekey = rekey;
 			this.missing= missing;
 		}
+		
+		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
+		@Override public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 
 		@Override
 		public CategoricalCounts<OUT> at(int x, int y,
@@ -126,10 +115,9 @@ public class Categories {
 		}
 
 		@Override
-		public CategoricalCounts<OUT> emptyValue() {return like.empty();}
-
-		@Override
-		public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
+		public Aggregates<CategoricalCounts<OUT>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 
@@ -141,7 +129,7 @@ public class Categories {
 	 * multiple values are presented and ANY of them are
 	 * not the expected value, then it is treated as the unexpected value.
 	 */
-	public static final class Binary<IN,OUT> implements Transfer.Specialized<IN,OUT> {
+	public static final class Binary<IN,OUT> implements Transfer.ItemWise<IN,OUT> {
 		private static final long serialVersionUID = 7268579911789809640L;
 		private final IN key;
 		private final OUT match, noMatch;
@@ -159,18 +147,21 @@ public class Categories {
 			this.noMatch = noMatch;
 			this.comp = comp;
 		}
+		
+		@Override public OUT emptyValue() {return noMatch;}
+		@Override public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 
+		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			IN v = aggregates.get(x, y);
 			if ((comp != null && comp.compare(v, key) == 0) || v == key) {return match;}
 			return noMatch;
 		}
 
-		public OUT emptyValue() {return noMatch;}
-
 		@Override
-		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	/**Create run-length-encodings (RLE objects) for each aggregate value.
@@ -241,7 +232,8 @@ public class Categories {
 		/**Create categories based on the default definition of equality.**/
 		public CountCategories() {this(null);}
 
-		@Override
+		@Override public CoC<T> identity() {return new CoC<T>(comp);}
+		@Override 
 		public CoC<T> combine(CoC<T> left, T update) {
 			return left.extend(update, 1);
 		}
@@ -251,8 +243,6 @@ public class Categories {
 			return CategoricalCounts.CoC.rollupTwo(left, right);
 		}
 
-		@Override
-		public CoC<T> identity() {return new CoC<T>(comp);}
 		
 		@SuppressWarnings("rawtypes")
 		public boolean equals(Object other) {
@@ -269,7 +259,7 @@ public class Categories {
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
-	public static final class NthItem<T> implements Transfer.Specialized<CategoricalCounts<T>, Integer> {
+	public static final class NthItem<T> implements Transfer.ItemWise<CategoricalCounts<T>, Integer> {
 		private static final long serialVersionUID = -7261917422124936899L;
 		private final Integer background;
 		private final int n;
@@ -283,6 +273,7 @@ public class Categories {
 			this.n = n;
 		}
 		
+		@Override
 		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
 			CategoricalCounts<T> cats = aggregates.get(x,y);
 			if (cats.size() <= n) {return background;}
@@ -292,6 +283,11 @@ public class Categories {
 		public Integer emptyValue() {return background;}
 		
 		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+
+		@Override
+		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 
 	/**Switch between two colors depending on the percent contribution of
@@ -302,7 +298,7 @@ public class Categories {
 	 * return one value.  Otherwise return another.  If category X is not present, return a third.
 	 * 
 	 ***/
-	public static final class KeyPercent<T> implements Transfer.Specialized<CategoricalCounts<T>, Color> {
+	public static final class KeyPercent<T> implements Transfer.ItemWise<CategoricalCounts<T>, Color> {
 		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
@@ -323,6 +319,7 @@ public class Categories {
 			this.firstKey = keyCategory;
 		}
 		
+		@Override
 		public Color at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
 			CategoricalCounts<T> cats = aggregates.get(x,y);
 			double size = cats.fullSize();
@@ -333,9 +330,13 @@ public class Categories {
 			else {return noMatch;}
 		}
 
-		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
-		
-		public Color emptyValue() {return background;}
+		@Override public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		@Override public Color emptyValue() {return background;}
+
+		@Override
+		public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 	
@@ -372,8 +373,8 @@ public class Categories {
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
 			return new Specialized(max, background, omin, log);
 		}
-		
-		protected static final class Specialized extends HighAlpha implements Transfer.Specialized<CategoricalCounts<Color>, Color> {
+
+		protected static final class Specialized extends HighAlpha implements Transfer.ItemWise<CategoricalCounts<Color>, Color> {
 			private static final long serialVersionUID = 4453971577170705122L;
 			private final int max;
 			
@@ -382,6 +383,12 @@ public class Categories {
 				this.max = max;
 			}
 
+			@Override
+			public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}			
+
+			@Override
 			public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 				CategoricalCounts<Color> cats = aggregates.get(x, y);
 				Color c;
@@ -400,7 +407,6 @@ public class Categories {
 				return c;			
 			}
 			
-			//TODO: Update to use a color mapping outside of the category set
 			private static Color fullInterpolate(CategoricalCounts<Color> cats) {
 				double total = cats.fullSize();
 				double r = 0;
@@ -424,9 +430,10 @@ public class Categories {
 	}
 	
 	/**Implements color-weaving with a random distribution of points.**/
-	public static class RandomWeave implements Transfer.Specialized<CoC<Color>, Color> {
+	public static class RandomWeave implements Transfer.ItemWise<CoC<Color>, Color> {
 		private static final long serialVersionUID = -6006747974949256518L;
 		
+		@Override
 		public Color at(int x, int y,
 				Aggregates<? extends CoC<Color>> aggregates) {
 			CoC<Color> counts = aggregates.get(x, y);
@@ -441,23 +448,32 @@ public class Categories {
 			else {return emptyValue();}
 		}
 
-		@Override
-		public Color emptyValue() {return Util.CLEAR;}
+		@Override public Color emptyValue() {return Util.CLEAR;}
+
+		@Override public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}
 
 		@Override
-		public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}		
+		public Aggregates<Color> process(Aggregates<? extends CoC<Color>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}		
 	}
 	
 	/**Convert a CoC just a set of counts for a specific category.**/
-	public static class Select<IN> implements Transfer.Specialized<CoC<IN>, Integer> {
+	public static class Select<IN> implements Transfer.ItemWise<CoC<IN>, Integer> {
 		private final IN label;
 		public Select(IN label) {this.label = label;}
 		public Integer emptyValue() {return 0;}
 		public Specialized<CoC<IN>, Integer> specialize(Aggregates<? extends CoC<IN>> aggregates) {return this;}
+		
+		@Override
 		public Integer at(int x, int y, Aggregates<? extends CoC<IN>> aggregates) {
 			return aggregates.get(x, y).count(label);
 		}
-		
+
+		@Override
+		public Aggregates<Integer> process(Aggregates<? extends CoC<IN>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}		
 	}
 	
 

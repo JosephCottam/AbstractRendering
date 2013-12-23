@@ -2,6 +2,7 @@ package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Renderer;
+import ar.Resources;
 import ar.Transfer;
 import ar.util.CacheProvider;
 
@@ -28,16 +29,14 @@ import ar.util.CacheProvider;
 @SuppressWarnings("unchecked")
 public class Chain<IN,OUT> implements Transfer<IN,OUT>{
 	private final Transfer<?,?>[] transfers;
-	protected final Renderer renderer;
 	
 	/**
 	 * 
 	 * @param renderer Rendering resources used for specialization of intermediate transfers
 	 * @param transfers
 	 */
-	public Chain(Renderer renderer, Transfer<?, ?>... transfers) {
+	public Chain(Transfer<?, ?>... transfers) {
 		this.transfers=transfers;
-		this.renderer = renderer;
 	}
 	
 	/**Default output is the default of the last item in the chain.**/
@@ -47,7 +46,7 @@ public class Chain<IN,OUT> implements Transfer<IN,OUT>{
 	@Override
 	public Specialized<IN, OUT> specialize(
 			Aggregates<? extends IN> aggregates) {
-		return new Specialized<>(renderer, aggregates, transfers);
+		return new Specialized<>(aggregates, transfers);
 	}
 
 	
@@ -56,29 +55,35 @@ public class Chain<IN,OUT> implements Transfer<IN,OUT>{
 		private final Transfer.Specialized[] specialized;
         private final CacheProvider<IN,OUT> cache;
 		
-		public Specialized(Renderer renderer, Aggregates rootAggregates, Transfer... transfers) {
-			super(renderer, transfers);
+		public Specialized(Aggregates rootAggregates, Transfer... transfers) {
+			super(transfers);
             cache = new CacheProvider(this);
 
 			specialized = new Transfer.Specialized[transfers.length];
 			Aggregates tempAggs = rootAggregates;
 			for (int i=0; i<transfers.length; i++) {
 				specialized[i] = transfers[i].specialize(tempAggs);
-				tempAggs = renderer.transfer(tempAggs, specialized[i]);
+				
+				//TODO: Maybe specialize needs to take a renderer as an argument as well...
+				tempAggs = Resources.DEFAULT_RENDERER.transfer(tempAggs, specialized[i]);
 			}
             cache.set(rootAggregates, tempAggs);
 		}
 
 		@Override
-		public OUT at(int x, int y, Aggregates<? extends IN> aggs) {return cache.get(aggs).get(x,y);}
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return cache.get(aggregates, rend);
+		}
 
+		
         @Override
-        public Aggregates build(Aggregates aggs) {
+        public Aggregates build(Aggregates aggs, Renderer renderer) {
             Aggregates tempAggs = aggs;
             for (Transfer.Specialized ts: specialized) {
                 tempAggs = renderer.transfer(tempAggs, ts);
             }
             return tempAggs;
         }
+
     }
 }

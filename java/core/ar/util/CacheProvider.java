@@ -1,6 +1,7 @@
 package ar.util;
 
 import ar.Aggregates;
+import ar.Renderer;
 
 /**Utility class to provide results caching in complex transfer functions.*/
 public class CacheProvider<IN,OUT> {
@@ -11,10 +12,10 @@ public class CacheProvider<IN,OUT> {
 
     public CacheProvider(final CacheTarget<IN,OUT> target) {this.target = target;}
 
-    public Aggregates<OUT> get(Aggregates<? extends IN> key) {
+    public Aggregates<OUT> get(Aggregates<? extends IN> key, Renderer rend) {
         synchronized(guard) {
             if (this.key != key) {
-                cache = target.build(key);
+                cache = target.build(key, rend);
                 this.key =key;
             }
         }
@@ -28,6 +29,6 @@ public class CacheProvider<IN,OUT> {
     }
 
     public static interface CacheTarget<IN,OUT> {
-        public Aggregates<OUT> build(Aggregates<? extends IN> aggs);
+        public Aggregates<OUT> build(Aggregates<? extends IN> aggs, Renderer rend);
     }
 }

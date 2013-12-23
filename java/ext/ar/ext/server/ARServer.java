@@ -80,7 +80,7 @@ public class ARServer extends NanoHTTPD {
 						
 		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));
 		AGGREGATORS.put("First", new Categories.First());
-		AGGREGATORS.put("Last", new Categories.Last());
+		AGGREGATORS.put("Last", new General.Last<>(null));
 		AGGREGATORS.put("Count", new Numbers.Count<Object>());
 		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
 		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<Color>());
@@ -132,7 +132,7 @@ public class ARServer extends NanoHTTPD {
 		
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
-		Transfer transfer = new Chain(r, transfers.toArray(new Transfer[transfers.size()]));
+		Transfer transfer = new Chain(transfers.toArray(new Transfer[transfers.size()]));
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;

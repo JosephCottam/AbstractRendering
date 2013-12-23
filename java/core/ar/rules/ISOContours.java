@@ -11,6 +11,7 @@ import java.util.Map;
 import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
+import ar.Resources;
 import ar.Transfer;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
@@ -52,7 +53,7 @@ public interface ISOContours<N> {
 		
 		public static final class Specialized<N extends Number> extends SpacedContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
-			final Aggregates<? extends N> cached;
+			final Aggregates<N> cached;
 			
 			public Specialized(Renderer renderer, double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
 				super(renderer, spacing, floor, fill);
@@ -67,9 +68,8 @@ public interface ISOContours<N> {
 				for (Single.Specialized<N> ss: ts) {contours.addAll(ss.contours);}
 			}
 			
-			public GlyphList<Shape, N> contours() {return contours;}
-
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public Aggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {return cached;}
 		}
 		
 	}
@@ -95,7 +95,7 @@ public interface ISOContours<N> {
 		
 		public static final class Specialized<N extends Number> extends NContours<N> implements ISOContours<N>, Transfer.Specialized<N, N> {
 			final GlyphList<Shape, N> contours;
-			final Aggregates<? extends N> cached;
+			final Aggregates<N> cached;
 			
 			public Specialized(Renderer r, int n, boolean fill, Aggregates<? extends N> aggregates) {
 				super(r, n, fill);
@@ -107,37 +107,37 @@ public interface ISOContours<N> {
 				Transfer.Specialized<N,N> t = new Fan<>(new General.Last<N>(aggregates.defaultValue()), ts).specialize(aggregates);
 				cached = renderer.transfer(aggregates, t);
 			}
-			public GlyphList<Shape, N> contours() {return contours;}
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public Aggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {return cached;}
 		}
 	}
 	
 	/**Produce a single ISO contour at the given division point.**/
 	public static class Single<N extends Number> implements Transfer<N, N> {
 		protected final N threshold;
-		protected final Renderer renderer;
 		protected final boolean fill;
 
-		public Single(Renderer r, N threshold, boolean fill) {
+		public Single(N threshold, boolean fill) {
 			this.threshold = threshold;
-			this.renderer = r;
 			this.fill = fill;
 		}
 
 		public N emptyValue() {return null;}
 		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {
-			return new Specialized<>(renderer, threshold, fill,  aggregates);
+			return new Specialized<>(threshold, fill,  aggregates);
 		}
 
 
 		public static final class Specialized<N extends Number> extends Single<N> implements Transfer.Specialized<N,N>, ISOContours<N> { 
 			private final GlyphList<Shape, N> contours;
-			protected final Aggregates<? extends N> cached;
+			protected final Aggregates<N> cached;
 
-			public Specialized(Renderer renderer, N threshold, boolean fill, Aggregates<? extends N> aggregates) {
-				super(renderer, threshold, fill);
+			public Specialized(N threshold, boolean fill, Aggregates<? extends N> aggregates) {
+				super(threshold, fill);
 				Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, null);  
 
+				Renderer renderer = Resources.DEFAULT_RENDERER;  //TODO: Should specialization take the renderer as an argument?
 				Aggregates<Boolean> isoDivided = renderer.transfer(padAggs, new ISOBelow<>(threshold));
 				Aggregates<MC_TYPE> classified = renderer.transfer(isoDivided, new MCClassifier());
 				Shape s = Assembler.assembleContours(classified, isoDivided);
@@ -147,8 +147,9 @@ public interface ISOContours<N> {
 				if (!fill) {isoDivided = renderer.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
 				cached = renderer.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
 			}
-			public GlyphList<Shape, N> contours() {return contours;}
-			public N at(int x, int y, Aggregates<? extends N> aggregates) {return cached.get(x,y);}
+			
+			@Override public GlyphList<Shape, N> contours() {return contours;}
+			@Override public Aggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {return cached;}
 		}
 	}
 	
@@ -161,7 +162,7 @@ public interface ISOContours<N> {
 
 			for (int i=0; i<stepCount; i++) {
 				N threshold = LocalUtils.addTo(bottom, (i*spacing));
-				ts[i] = new Single.Specialized<>(r, threshold, fill, aggs);
+				ts[i] = new Single.Specialized<>(threshold, fill, aggs);
 			}
 			return ts;
 		}
@@ -254,7 +255,7 @@ public interface ISOContours<N> {
 	/**Classifies each cell as above or below the given ISO value
 	 *TODO: Are doubles enough?  Should there be number-type-specific implementations?
 	 **/
-	public static final class ISOBelow<N extends Number> implements Transfer.Specialized<N, Boolean> {
+	public static final class ISOBelow<N extends Number> implements Transfer.ItemWise<N, Boolean> {
 		private final Number threshold;
 
 		public ISOBelow(Number threshold) {
@@ -269,6 +270,11 @@ public interface ISOContours<N> {
 			if (v == null) {return false;}
 			double delta = threshold.doubleValue() - v.doubleValue();
 			return delta < 0;
+		}
+
+		@Override
+		public Aggregates<Boolean> process(Aggregates<? extends N> aggregates,Renderer rend) {
+			return rend.transfer(aggregates, this);
 		}
 	}
 
@@ -400,7 +406,7 @@ public interface ISOContours<N> {
 		public static MC_TYPE get(int code) {return lookup.get(code);}
 	}
 
-	public static final class MCClassifier implements Transfer.Specialized<Boolean, MC_TYPE> {
+	public static final class MCClassifier implements Transfer.ItemWise<Boolean, MC_TYPE> {
 		private final int DOWN_INDEX_LEFT  = 0b1000;
 		private final int DOWN_INDEX_RIGHT = 0b0100;
 		private final int UP_INDEX_RIGHT   = 0b0010;
@@ -419,6 +425,11 @@ public interface ISOContours<N> {
 			if (aggregates.get(x-1,y)) {code = code | UP_INDEX_LEFT;}
 			if (aggregates.get(x,y)) {code = code | UP_INDEX_RIGHT;}
 			return MC_TYPE.get(code);
+		}
+
+		@Override
+		public Aggregates<MC_TYPE> process(Aggregates<? extends Boolean> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
 		}
 	}
 

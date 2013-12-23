@@ -41,7 +41,7 @@ public class Advise {
 			return new Specialized<>(ref.specialize(aggregates), comp, tolerance);
 		}
 		
-		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.Specialized<A, Boolean> {
+		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.ItemWise<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
 			private final Transfer.Specialized<A, Color> ref;
 			
@@ -50,6 +50,7 @@ public class Advise {
 				this.ref = ref;
 			}
 			
+			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
@@ -85,8 +86,6 @@ public class Advise {
 		}
 
 		public Boolean emptyValue() {return Boolean.FALSE;}
-
-		
 		
 		@Override
 		public Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {

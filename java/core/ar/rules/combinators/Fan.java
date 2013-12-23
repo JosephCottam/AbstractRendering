@@ -3,25 +3,16 @@ package ar.rules.combinators;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
-import ar.Resources;
 import ar.Transfer;
 import ar.renderers.AggregationStrategies;
-import ar.util.CacheProvider;
 
 /**Split (arbitrary width), then merge...**/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
     protected final Aggregator<?, OUT> merge;
-    protected final Renderer renderer;
 
     @SafeVarargs
-	public Fan(Aggregator<?, OUT> merge, Transfer<IN, OUT>... transfers) {
-        this(Resources.DEFAULT_RENDERER, merge, transfers);
-    }
-
-    @SafeVarargs
-    public Fan(Renderer renderer, Aggregator<?, OUT> merge, Transfer<IN, OUT>... transfers) {
-        this.renderer = renderer;
+    public Fan(Aggregator<?, OUT> merge, Transfer<IN, OUT>... transfers) {
         this.transfers = transfers;
         this.merge = merge;
     }
@@ -31,38 +22,30 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
 
     @Override
     public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized<>(renderer, merge, transfers, aggregates);
+        return new Specialized<>(merge, transfers, aggregates);
     }
 
-    public static class Specialized<IN,OUT> extends Fan<IN,OUT> implements Transfer.Specialized<IN,OUT>, CacheProvider.CacheTarget<IN,OUT> {
+    public static class Specialized<IN,OUT> extends Fan<IN,OUT> implements Transfer.Specialized<IN,OUT> {
         protected final Transfer.Specialized<IN,OUT>[] specialized;
-        protected final CacheProvider<IN,OUT> cache;
 
         @SuppressWarnings("unchecked")
 		public Specialized(
-                Renderer renderer,
                 Aggregator<?, OUT> merge,
                 Transfer<IN, OUT>[] transfers,
                 Aggregates<? extends IN> aggs) {
-            super(renderer, merge, transfers);
+            super(merge, transfers);
             
             specialized = new Transfer.Specialized[transfers.length]; 
             for (int i=0; i< transfers.length; i++) {
             	specialized[i] = transfers[i].specialize(aggs);
             }
-            this.cache = new CacheProvider<>(this);
         }
 
         @Override
-        public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-            return cache.get(aggregates).get(x,y);
-        }
-
-        @Override
-        public Aggregates<OUT> build(Aggregates<? extends IN> aggs) {
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
         	Aggregates<OUT> left = null;
         	for (int i=0; i<specialized.length; i++) {
-        		Aggregates<OUT> right = renderer.transfer(aggs, specialized[i]);
+        		Aggregates<OUT> right = rend.transfer(aggregates, specialized[i]);
         		left = AggregationStrategies.horizontalRollup(left, right, merge);
         	}
         	return left;

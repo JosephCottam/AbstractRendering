@@ -31,7 +31,7 @@ public class Combinators {
 		assertTrue(isTrue.value(t.get(0, 0)));
 		assertTrue(isFalse.value(f.get(0, 0)));
 		
-		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Some<>(isTrue);		
+		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Any<>(isTrue);		
 		assertTrue(someTrue.value(t));
 		assertFalse(someTrue.value(f));
 		assertTrue(someTrue.value(m));
@@ -41,7 +41,7 @@ public class Combinators {
 		assertFalse(allTrue.value(f));
 		assertFalse(allTrue.value(m));
 		
-		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Some<>(isFalse);
+		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Any<>(isFalse);
 		assertFalse(someFalse.value(t));
 		assertTrue(someFalse.value(f));
 		assertTrue(someFalse.value(m));

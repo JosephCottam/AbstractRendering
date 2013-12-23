@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
+import ar.Renderer;
 import ar.Transfer;
 import ar.rules.CategoricalCounts.CoC;
 import ar.util.HasViewTransform;
@@ -69,7 +70,7 @@ public class Shapes {
 			return acc;
 		}
 
-		private static class Specialized extends ShapeGather implements Transfer.Specialized<CategoricalCounts<Color>, CoC<Color>> { 
+		private static class Specialized extends ShapeGather implements Transfer.ItemWise<CategoricalCounts<Color>, CoC<Color>> { 
 			private final Map<Shape, CoC<Color>> regionVals;
 			private final List<Shape> viewRegions;
 			
@@ -88,6 +89,7 @@ public class Shapes {
 			}
 			
 
+			/**Which shape does the given x/y touch?**/
 			protected Shape touches(int x, int y) {
 				Rectangle2D r = new Rectangle2D.Double(x,y,1,1);
 				for (Shape s: viewRegions) {
@@ -96,6 +98,12 @@ public class Shapes {
 					}
 				}
 				return null;
+			}
+
+
+			@Override
+			public Aggregates<CoC<Color>> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
 			}
 		}
 	}
