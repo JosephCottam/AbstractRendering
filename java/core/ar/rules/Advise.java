@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.util.Comparator;
 
 import ar.Aggregates;
+import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.util.Util;
@@ -41,7 +42,7 @@ public class Advise {
 			return new Specialized<>(ref.specialize(aggregates), comp, tolerance);
 		}
 		
-		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.ItemWise<A, Boolean> {
+		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.Specialized<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
 			private final Transfer.Specialized<A, Color> ref;
 			
@@ -49,24 +50,51 @@ public class Advise {
 				super(ref, comp, tolerance);
 				this.ref = ref;
 			}
+			 
+			@Override
+			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				Aggregates<Color> refImg = rend.transfer(aggregates, ref);
+				return rend.transfer(aggregates, new Inner<>(refImg, ref.emptyValue(), comp, tolerance));
+			}
+		}
+		
+		private static final class Inner<A> implements Transfer.ItemWise<A, Boolean> {
+			private final Color emptyRef;
+			private final double tolerance;
+			private final Comparator<A> comp;
+			private final Aggregates<Color> refImg;
+
+			public Inner(Aggregates<Color> refImg, Color emptyRef, Comparator<A> comp, double tolerance) {
+				this.emptyRef = emptyRef;
+				this.tolerance = tolerance;
+				this.comp = comp;
+				this.refImg = refImg;
+			}
 			
+			@Override
+			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}
+
+			@Override public Boolean emptyValue() {return Boolean.FALSE;}
+			@Override public Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {return this;}
+
 			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
-				Color empty = ref.emptyValue();
-				Color out = ref.at(x, y, aggregates);
-				double distance = euclidean(empty, out);
+				Color out = refImg.get(x, y);
+				double distance = euclidean(emptyRef, out);
 				return comp.compare(val, def) != 0 && distance < tolerance;
-			}
+			}		
+		}
+		
 			
-			private static final double euclidean(Color c1, Color c2) {
-				double r = Math.pow(c1.getRed()-c2.getRed(),2);
-				double g = Math.pow(c1.getGreen()-c2.getGreen(),2);
-				double b = Math.pow(c1.getBlue()-c2.getBlue(),2);
-				return Math.sqrt(r+g+b);
-			}
-
+		private static final double euclidean(Color c1, Color c2) {
+			double r = Math.pow(c1.getRed()-c2.getRed(),2);
+			double g = Math.pow(c1.getGreen()-c2.getGreen(),2);
+			double b = Math.pow(c1.getBlue()-c2.getBlue(),2);
+			return Math.sqrt(r+g+b);
 		}
 	}
 	
@@ -90,32 +118,62 @@ public class Advise {
 		@Override
 		public Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
 			Transfer.Specialized<A,Color> refSpecialized = ref.specialize(aggregates);
-			Point p = max(aggregates, comp);
-			A max = aggregates.get(p.x, p.y);
-			Color top = refSpecialized.at(p.x,p.y, aggregates);
-			return new Specialized<>(refSpecialized, comp, max, top);
+			return new Specialized<>(refSpecialized, comp);
 		}
 		
 		protected static final class Specialized<A> extends OverSaturate<A> implements Transfer.Specialized<A,Boolean> {
 			private static final long serialVersionUID = 3155281566160217841L;
 			private final Transfer.Specialized<A, Color> ref;
-			private final A max;
-			private final Color top;
 
-			public Specialized(Transfer.Specialized<A, Color> ref, Comparator<A> comp, A max, Color top) {
+			public Specialized(Transfer.Specialized<A, Color> ref, Comparator<A> comp) {
 				super(ref, comp);
 				this.ref = ref;
-				this.max = max;
+			}
+
+			@Override
+			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				Aggregates<Color> img = rend.transfer(aggregates, ref);
+
+				Point p = max(aggregates, comp);
+				A max = aggregates.get(p.x, p.y);
+				Color top = img.get(p.x,p.y);
+				return rend.transfer(aggregates, new Inner<>(img, max, top, comp));
+			}
+		}
+		private static final class Inner<A> implements Transfer.ItemWise<A, Boolean> {
+			final Aggregates<Color> refImg;
+			final Color top;
+			final A max;
+			final Comparator<A> comp;
+			
+			public Inner(Aggregates<Color> img, A max, Color top, Comparator<A> comp) {
+				this.refImg=img;
 				this.top = top;
+				this.max = max;
+				this.comp = comp;
+			}
+
+			@Override
+			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}
+
+			@Override public Boolean emptyValue() {return false;}
+
+			@Override
+			public ar.Transfer.Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
+				return this;
+			}
+
+			@Override
+			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
+				Color out = refImg.get(x, y);
+				boolean same = Util.isEqual(top, out);
+				A val = aggregates.get(x,y);
+				int diff = comp.compare(val, max);
+				return diff !=0 && same;
 			}
 			
-			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
-				A val = aggregates.get(x, y);
-				Color out = ref.at(x, y, aggregates);
-				boolean same = Util.isEqual(top, out);
-				int diff = comp.compare(val, max);
-				return diff !=0 && same; 
-			}
 		}
 		
 	}
@@ -183,18 +241,60 @@ public class Advise {
 				this.over = over;
 			}
 
-			public Color at(int x, int y, Aggregates<? extends A> aggregates) {
-				boolean below = under.at(x, y, aggregates);
-				boolean above = over.at(x, y, aggregates);
-				if (above) {
-					return overColor;
-				} else if (below) {
-					return underColor;
-				} else {
-					return base.at(x, y, aggregates);
+			@Override
+			public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				Aggregates<Boolean> overs = rend.transfer(aggregates, over);
+				Aggregates<Boolean> unders = rend.transfer(aggregates, under);
+				Aggregates<Color> bases = rend.transfer(aggregates, base);
+				return rend.transfer(aggregates, new Inner(overs, unders, bases, base.emptyValue()));
+			}		
+			
+			private class Inner implements Transfer.ItemWise<A,Color> {
+				final Aggregates<Boolean> overs;
+				final Aggregates<Boolean> unders;
+				final Aggregates<Color> bases;
+				final Color empty;
+				
+				public Inner(Aggregates<Boolean> overs,
+						Aggregates<Boolean> unders,
+						Aggregates<Color> bases,
+						Color empty) {
+					this.overs = overs;
+					this.unders = unders;
+					this.bases = bases;
+					this.empty = empty;
 				}
-			}			
+
+				@Override
+				public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
+					return rend.transfer(aggregates, this);
+				}
+
+				@Override
+				public Color emptyValue() {return empty;}
+
+				@Override
+				public ar.Transfer.Specialized<A, Color> specialize(Aggregates<? extends A> aggregates) {
+					return this;
+				}
+
+				@Override
+				public Color at(int x, int y, Aggregates<? extends A> aggregates) {
+					boolean below = unders.get(x, y);
+					boolean above = overs.get(x, y);
+					if (above) {
+						return overColor;
+					} else if (below) {
+						return underColor;
+					} else {
+						return bases.get(x, y);
+					}			
+				}
+				
+			}
 		}
+		
+		
 	}
 
 	
@@ -281,8 +381,10 @@ public class Advise {
 				this.inner=inner;
 				this.cache = cache;
 			}
-			public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-				return inner.at(x,y,cache);
+			
+			@Override
+			public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+				return cache;
 			}
 
 		}

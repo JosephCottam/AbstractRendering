@@ -9,7 +9,7 @@ import ar.renderers.AggregationStrategies;
 /**Split (arbitrary width), then merge...**/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
-    protected final Aggregator<?, OUT> merge;
+    protected final Aggregator<?, OUT> merge;	//Only rollup is used, so only OUT matters 
 
     @SafeVarargs
     public Fan(Aggregator<?, OUT> merge, Transfer<IN, OUT>... transfers) {

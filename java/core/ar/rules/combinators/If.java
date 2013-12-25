@@ -4,6 +4,7 @@ import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.rules.General;
 
 /**If/Then/Else implementation.
  * 
@@ -19,9 +20,14 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT> fail;
     protected final OUT empty;
 
-    /**The empty value will be taken from pass.**/
+    /**The empty value will be taken from fail.**/
     public If(Valuer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {
-        this(pred, pass, fail, pass.emptyValue());
+        this(pred, pass, fail, fail.emptyValue());
+    }
+    
+    /**The empty value will be the same as the fail value.**/
+    public If(Valuer<IN, Boolean> pred, OUT pass, OUT fail) {
+    	this(pred, new General.Const<IN,OUT>(pass), new General.Const<IN,OUT>(fail), fail);
     }
 
     public If(Valuer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail, OUT empty) {
