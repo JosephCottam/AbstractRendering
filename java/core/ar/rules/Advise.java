@@ -7,7 +7,7 @@ import java.util.Comparator;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.AggregateUtils;
+import ar.rules.combinators.Seq;
 import ar.util.Util;
 
 /**Advise methods provide information about where to look in a visualization.
@@ -338,55 +338,59 @@ public class Advise {
 
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggs) {
-			Aggregates<Double> cache = AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
-			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
-				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-					if (aggs.get(x, y).doubleValue() > 0) {
-						cache.set(x, y, preprocOne(x,y,aggs));
-					} else {
-						cache.set(x,y, Double.NaN);
-					}
-				}
-			}
-			Transfer.Specialized<Number, Color> innerS = inner.specialize(cache);
-			return new Specialized(distance, innerS, cache);
+			return new Specialized(distance, inner, aggs);
 		}
 		
-		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {
-			double surroundingSum =0;
-			int cellCount = 0;
-			for (int dx=-distance; dx<=distance; dx++) {
-				for (int dy=-distance; dy<=distance; dy++) {
-					int cx=x+dx;
-					int cy=y+dy;
-					if (cx < aggregates.lowX() || cy < aggregates.lowY() 
-							|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-					cellCount++;
-					double dv = aggregates.get(cx,cy).doubleValue();
-					if (dv != 0) {surroundingSum++;}
-				}
+		
+		private static final class RatioNeighbors implements Transfer.ItemWise<Number, Number> {
+			private final int distance;
+			
+			public RatioNeighbors(int distance) {this.distance = distance;}
+
+			@Override
+			public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
 			}
-			return surroundingSum/cellCount;
+
+			@Override public Double emptyValue() {return 0d;}
+
+			@Override
+			public ItemWise<Number, Number> specialize(Aggregates<? extends Number> aggregates) {return this;}
+			public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
+				double surroundingSum =0;
+				int cellCount = 0;
+				for (int dx=-distance; dx<=distance; dx++) {
+					for (int dy=-distance; dy<=distance; dy++) {
+						int cx=x+dx;
+						int cy=y+dy;
+						if (cx < aggregates.lowX() || cy < aggregates.lowY() 
+								|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
+						cellCount++;
+						double dv = aggregates.get(cx,cy).doubleValue();
+						if (dv != 0) {surroundingSum++;}
+					}
+				}
+				return surroundingSum/cellCount;
+			}
 		}
 
-		public Color emptyValue() {return Color.white;}
+		public Color emptyValue() {return inner.emptyValue();}
 
 		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
 			private static final long serialVersionUID = 2548271516304517444L;
-			private final Transfer.Specialized<Number, Color> inner;
-			Aggregates<Double> cache;
+			private final Transfer.Specialized<Number, Color> seq;
 			
-			public Specialized(int distance, Transfer.Specialized<Number, Color> inner, Aggregates<Double> cache) {
+			public Specialized(int distance, Transfer<Number, Color> inner, Aggregates<? extends Number> aggs) {
 				super(distance, inner);
-				this.inner=inner;
-				this.cache = cache;
-			}
-			
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-				return cache;
+				this.seq= new Seq<>(new RatioNeighbors(distance), inner).specialize(aggs);
 			}
 
+			@Override
+			public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+				return seq.process(aggregates, rend);
+			}
+			
+			
 		}
 	}
 	
