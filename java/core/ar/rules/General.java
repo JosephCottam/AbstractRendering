@@ -319,7 +319,9 @@ public class General {
 		}
 	}
 	
-	/**Aggregator and Transfer that always returns the same value.**/
+	/**Aggregator and Transfer that always returns the same value.
+	 * TODO: Can we drop the 'A' parameter?
+	 * **/
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;

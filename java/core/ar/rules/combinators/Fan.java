@@ -6,7 +6,13 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.renderers.AggregationStrategies;
 
-/**Split (arbitrary width), then merge...**/
+/**Split (arbitrary width), then merge...
+ * 
+ * All branches have to produce the same type...
+ * 
+ * TODO: Build a version that can do merge on two different types...requires a lambda(t1,t2) instead of aggregator
+ * 
+ * **/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
     protected final Aggregator<?, OUT> merge;	//Only rollup is used, so only OUT matters 

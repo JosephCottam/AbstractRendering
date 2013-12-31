@@ -35,6 +35,11 @@ public abstract class Predicates<IN> {
 			}
 			return Boolean.TRUE;			
 		}
+		
+		public static Boolean all(Aggregates<Boolean> arg) {
+			for (Boolean v: arg) {if (!v) {return false;}}
+			return true;
+		}
     }
     
     /**Check if a predicate is true for at least one item in an aggregate set.**/
