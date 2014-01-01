@@ -31,7 +31,6 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
-import ar.rules.combinators.Chain;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.DelimitedReader;
@@ -129,10 +128,18 @@ public class ARServer extends NanoHTTPD {
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
 		Renderer r = new ParallelRenderer();
-		
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
-		Transfer transfer = new Chain(transfers.toArray(new Transfer[transfers.size()]));
+
+		Transfer transfer;
+		if (transfers.size() >= 2) {
+			Seq t = new Seq(transfers.get(0), transfers.get(1));
+			for (int i=2; i< transfers.size(); i++) {t.then(transfers.get(i));}
+			transfer = t;
+		} else {
+			transfer = transfers.get(0);
+		}
+		
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;
