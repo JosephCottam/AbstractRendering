@@ -54,7 +54,7 @@ public final class Numbers {
 	 * 
 	 * @author jcottam
 	 */
-	public static final class FixedInterpolate implements Transfer.ItemWise<Number,Color> {
+	public static final class FixedInterpolate<IN extends Number> implements Transfer.ItemWise<IN,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high, background;
 		final double lowv, highv;
@@ -79,17 +79,17 @@ public final class Numbers {
 		}
 
 		@Override
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+		public Color at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
 
 		@Override
-		public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+		public Aggregates<Color> process(Aggregates<? extends IN> aggregates, Renderer rend) {
 			return rend.transfer(aggregates,this);
 		}
 		
 		@Override public Color emptyValue() {return background;}
-		@Override public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
+		@Override public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/

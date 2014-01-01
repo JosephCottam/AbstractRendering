@@ -67,8 +67,8 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("RedWhiteLog", new Seq<Number, Double, Color>(
 											new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d), 
 											new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white)));
-		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5));
-		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5));
+		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 255));
 		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
 		TRANSFERS.put("90Percent", new Categories.KeyPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("25Percent", new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
