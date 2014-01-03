@@ -1,7 +1,6 @@
 package ar.rules;
 
 import java.awt.Color;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -9,9 +8,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.rules.CategoricalCounts.CoC;
 import ar.util.Util;
-import static ar.rules.CategoricalCounts.RLE;
 
 /**Tools for working with categorical entries.**/
 public class Categories {
@@ -164,48 +161,20 @@ public class Categories {
 		}
 	}
 	
-	/**Create run-length-encodings (RLE objects) for each aggregate value.
-	 * 
-	 * See the class description for {@link ar.rules.CategoricalCounts.RLE} 
-	 * @param <T> Type of the categories
-	 */
-	public static class RunLengthEncode<T> implements Aggregator<T, RLE<T>> {
-		private static final long serialVersionUID = 1379800289471184022L;
-
-		public RLE<T> combine(RLE<T> left, T update) {
-			return left.extend(update, 1);
-		}
-
-		/**Combines run-length encodings.  Assumes that the presentation order
-		 * of the various RLEs matches contiguous blocks.  The result is essentially
-		 * concatenating each encoding in iteration order.
-		 */
-		public RLE<T> rollup(RLE<T> left, RLE<T> right) {
-			RLE<T> union = new RLE<T>();
-			for (RLE<T> r: Arrays.asList(left, right)) {
-				for (int i=0; i< r.size(); i++) {
-					union = union.extend(r.key(i), r.count(i));
-				}
-			}
-			return union;
-		}
-
-		public RLE<T> identity() {return new RLE<T>();}
-	}
 	
-	/**Given a CoC as value on a glyph, create CoC aggregates.**/
-	public static final class MergeCategories<T> implements Aggregator<CoC<T>, CoC<T>> {
+	/**Given a CategoricalCounts as value on a glyph, create CategoricalCounts aggregates.**/
+	public static final class MergeCategories<T> implements Aggregator<CategoricalCounts<T>, CategoricalCounts<T>> {
 		private static final long serialVersionUID = 1L;
 
-		public CoC<T> combine(CoC<T> current, CoC<T> update) {
-			return CategoricalCounts.CoC.rollupTwo(current, update);
+		public CategoricalCounts<T> combine(CategoricalCounts<T> current, CategoricalCounts<T> update) {
+			return CategoricalCounts.rollupTwo(current, update);
 		}
 
-		public CoC<T> rollup(CoC<T> left, CoC<T> right) {
-			return CategoricalCounts.CoC.rollupTwo(left, right);
+		public CategoricalCounts<T> rollup(CategoricalCounts<T> left, CategoricalCounts<T> right) {
+			return CategoricalCounts.rollupTwo(left, right);
 		}
 
-		public CoC<T> identity() {return new CoC<T>();}
+		public CategoricalCounts<T> identity() {return new CategoricalCounts<T>();}
 		
 		public boolean equals(Object other) {return other instanceof MergeCategories;}
 		
@@ -217,7 +186,7 @@ public class Categories {
 	 * 
 	 * @param <T> The type of the categories
 	 */
-	public static final class CountCategories<T> implements Aggregator<T, CoC<T>> {
+	public static final class CountCategories<T> implements Aggregator<T, CategoricalCounts<T>> {
 		private final Comparator<T> comp;
 		
 		/**Create categories based on the passed comparator.
@@ -232,15 +201,15 @@ public class Categories {
 		/**Create categories based on the default definition of equality.**/
 		public CountCategories() {this(null);}
 
-		@Override public CoC<T> identity() {return new CoC<T>(comp);}
+		@Override public CategoricalCounts<T> identity() {return new CategoricalCounts<T>(comp);}
 		@Override 
-		public CoC<T> combine(CoC<T> left, T update) {
+		public CategoricalCounts<T> combine(CategoricalCounts<T> left, T update) {
 			return left.extend(update, 1);
 		}
 
 		@Override
-		public CoC<T> rollup(CoC<T> left, CoC<T> right) {
-			return CategoricalCounts.CoC.rollupTwo(left, right);
+		public CategoricalCounts<T> rollup(CategoricalCounts<T> left, CategoricalCounts<T> right) {
+			return CategoricalCounts.rollupTwo(left, right);
 		}
 
 		
@@ -430,13 +399,13 @@ public class Categories {
 	}
 	
 	/**Implements color-weaving with a random distribution of points.**/
-	public static class RandomWeave implements Transfer.ItemWise<CoC<Color>, Color> {
+	public static class RandomWeave implements Transfer.ItemWise<CategoricalCounts<Color>, Color> {
 		private static final long serialVersionUID = -6006747974949256518L;
 		
 		@Override
 		public Color at(int x, int y,
-				Aggregates<? extends CoC<Color>> aggregates) {
-			CoC<Color> counts = aggregates.get(x, y);
+				Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+			CategoricalCounts<Color> counts = aggregates.get(x, y);
 			int top = counts.fullSize();
 			int r = (int) (Math.random()*top);
 			for (int i = 0; i<counts.size();i++) {
@@ -450,28 +419,28 @@ public class Categories {
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
 
-		@Override public RandomWeave specialize(Aggregates<? extends CoC<Color>> aggregates) {return this;}
+		@Override public RandomWeave specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {return this;}
 
 		@Override
-		public Aggregates<Color> process(Aggregates<? extends CoC<Color>> aggregates, Renderer rend) {
+		public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
 		}		
 	}
 	
-	/**Convert a CoC just a set of counts for a specific category.**/
-	public static class Select<IN> implements Transfer.ItemWise<CoC<IN>, Integer> {
+	/**Convert a CategoricalCounts just a set of counts for a specific category.**/
+	public static class Select<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private final IN label;
 		public Select(IN label) {this.label = label;}
 		public Integer emptyValue() {return 0;}
-		public Specialized<CoC<IN>, Integer> specialize(Aggregates<? extends CoC<IN>> aggregates) {return this;}
+		public Specialized<CategoricalCounts<IN>, Integer> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 		
 		@Override
-		public Integer at(int x, int y, Aggregates<? extends CoC<IN>> aggregates) {
+		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 			return aggregates.get(x, y).count(label);
 		}
 
 		@Override
-		public Aggregates<Integer> process(Aggregates<? extends CoC<IN>> aggregates, Renderer rend) {
+		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
 		}		
 	}

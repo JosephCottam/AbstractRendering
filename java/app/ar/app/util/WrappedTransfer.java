@@ -113,14 +113,14 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class FixedAlpha implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5);}
 		public String toString() {return "10% Alpha (int)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}
 	}
 	
 	public class FixedAlphaB implements WrappedTransfer<Number,Color> {
-		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255);}
+		public Transfer<Number,Color> op() {return new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 255);}
 		public String toString() {return "Min Alpha (int)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}

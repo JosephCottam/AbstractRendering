@@ -81,8 +81,7 @@ public class ARServer extends NanoHTTPD {
 		AGGREGATORS.put("First", new Categories.First());
 		AGGREGATORS.put("Last", new General.Last<>(null));
 		AGGREGATORS.put("Count", new Numbers.Count<Object>());
-		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
-		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<Color>());
+		AGGREGATORS.put("CoCColor", new Categories.CountCategories<Color>());
 	}
 	
 	public ARServer(String hostname) {this(hostname, 8739);}

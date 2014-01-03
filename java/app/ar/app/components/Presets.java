@@ -40,7 +40,6 @@ import ar.rules.General;
 import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.Advise.DrawDark;
-import ar.rules.CategoricalCounts.CoC;
 import ar.rules.combinators.Seq;
 import ar.rules.combinators.If;
 import ar.rules.Shapes;
@@ -155,7 +154,7 @@ public class Presets extends JPanel {
 	}
 	
 	public static class BoostMMAlphaHDAlpha implements Preset {
-		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
+		public Aggregator<?,?> aggregator() {return new WrappedAggregator.CoCColors().op();}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {return new WrappedTransfer.HighAlphaLog().op();}
 		public String name() {return "BGL Memory: HDAlpha Cache hits (log)";}		
@@ -164,7 +163,7 @@ public class Presets extends JPanel {
 	}
 	
 	public static class BoostMMAlphaActivity implements Preset {
-		public Aggregator<?,?> aggregator() {return new WrappedAggregator.RLEColors().op();}
+		public Aggregator<?,?> aggregator() {return new WrappedAggregator.CoCColors().op();}
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
@@ -305,7 +304,7 @@ public class Presets extends JPanel {
 				colors.put(6, Color.GRAY);	//Hawaiian
 				colors.put(7, Color.GRAY);	//Other
 				colors.put(8, Color.GRAY);	//Mixed
-				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 
 				Transfer<?, ?> chain = Seq
 						.start(rekey) 
@@ -333,10 +332,12 @@ public class Presets extends JPanel {
 			colors.put(7, new Color(136,90,68));//Other
 			colors.put(8, new Color(136,90,68));//Mixed
 
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			return Seq.start(rekey)
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<CoC<Object>>(1), new Categories.MergeCategories<>()))
+					  .then(new General.Spread<>(
+							  new General.Spread.UnitSquare<CategoricalCounts<Color>>(1), 
+							  new Categories.MergeCategories<Color>()))
 					  .then(stratAlpha);
 		}
 		public String name() {return "US Racial Distribution";}
@@ -359,7 +360,7 @@ public class Presets extends JPanel {
 			colors.put(7, other);//Other
 			colors.put(8, other);//Mixed
 			
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
 			
@@ -379,8 +380,8 @@ public class Presets extends JPanel {
 			
 			return Seq.start(rekey)
 					  .then(new General.Spread<>(
-							  new General.Spread.UnitSquare<CoC<Object>>(1), 
-							  new Categories.MergeCategories<>()))
+							  new General.Spread.UnitSquare<CategoricalCounts<Color>>(1), 
+							  new Categories.MergeCategories<Color>()))
 					  .then(lift);
 		}
 		public String name() {return "US Racial Distribution (highlight 'other')";}
@@ -450,7 +451,7 @@ public class Presets extends JPanel {
 			colors.put('h', new Color(255,165,0));	//Hispanic
 			colors.put('o', new Color(136,90,68));	//Other
 
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CoC<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighAlpha(Color.white, .1, true);
 			return Seq.start(rekey)
 					.then(stratAlpha);
@@ -536,7 +537,7 @@ public class Presets extends JPanel {
 	private static final Glyphset<Rectangle2D, Color> CIRCLE_SCATTER; 
 	private static final Glyphset<Point2D, Color> KIVA_ADJ; 
 	private static final Glyphset<Point2D, Color> BOOST_MEMORY_MM; 
-	private static final Glyphset<Point2D, CoC<String>> CENSUS_MM;
+	private static final Glyphset<Point2D, CategoricalCounts<String>> CENSUS_MM;
 	private static final Glyphset<Point2D, Character> CENSUS_SYN_PEOPLE;
 	private static final Glyphset<Point2D, Color> WIKIPEDIA;
 	
@@ -562,7 +563,7 @@ public class Presets extends JPanel {
 		}
 		BOOST_MEMORY_MM = boost_temp;
 		
-		Glyphset<Point2D, CoC<String>> census_temp = null;
+		Glyphset<Point2D, CategoricalCounts<String>> census_temp = null;
 		try {census_temp = GlyphsetUtils.memMap(
 				"US Census Tracts", CENSUS_TRACTS, 
 				new Indexed.ToPoint(true, 0, 1),

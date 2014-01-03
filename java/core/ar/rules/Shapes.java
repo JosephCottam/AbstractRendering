@@ -12,7 +12,6 @@ import java.util.Map;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.rules.CategoricalCounts.CoC;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
@@ -22,11 +21,11 @@ public class Shapes {
 	/**Given a set of regions, combine all aggregates that are in that region and make that combined
 	 * value the value of any point in the region.
 	 * 
-	 * TODO: Extend to more than CoC...
+	 * TODO: Extend to more than CategoricalCounts...
 	 * TODO: Consider adding the view transform to the transfer function specialization process
 	 * 
 	 */
-	public static class ShapeGather implements Transfer<CategoricalCounts<Color>, CoC<Color>> {
+	public static class ShapeGather implements Transfer<CategoricalCounts<Color>, CategoricalCounts<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;
 		final List<Shape> baseRegions;
 		final HasViewTransform transformSource;
@@ -41,11 +40,11 @@ public class Shapes {
 		}
 
 		@Override
-		public CoC<Color> emptyValue() {return new CoC<Color>(Util.COLOR_SORTER);}
+		public CategoricalCounts<Color> emptyValue() {return new CategoricalCounts<Color>(Util.COLOR_SORTER);}
 		
 		@Override
 		public ShapeGather.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
-			Map<Shape, CoC<Color>> values = new HashMap<>();
+			Map<Shape, CategoricalCounts<Color>> values = new HashMap<>();
 			AffineTransform vt = transformSource.viewTransform();
 			List<Shape> viewRegions = new ArrayList<>();
 			for (Shape s: baseRegions) {viewRegions.add(vt.createTransformedShape(s));}
@@ -56,25 +55,25 @@ public class Shapes {
 			return new Specialized(baseRegions, viewRegions, transformSource, values);
 		}
 
-		private CoC<Color> gather(Shape region, Aggregates<? extends CategoricalCounts<Color>> aggs) {
+		private CategoricalCounts<Color> gather(Shape region, Aggregates<? extends CategoricalCounts<Color>> aggs) {
 			Rectangle2D r = new Rectangle2D.Double(0,0,1,1);
-			CoC<Color> acc = emptyValue();
+			CategoricalCounts<Color> acc = emptyValue();
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
 					r.setRect(x, y, 1,1);
 					if (region.contains(r)) {
-						acc = CoC.rollupTwo(acc, (CoC<Color>) aggs.get(x, y));
+						acc = CategoricalCounts.rollupTwo(acc, (CategoricalCounts<Color>) aggs.get(x, y));
 					}
 				}
 			}
 			return acc;
 		}
 
-		private static class Specialized extends ShapeGather implements Transfer.ItemWise<CategoricalCounts<Color>, CoC<Color>> { 
-			private final Map<Shape, CoC<Color>> regionVals;
+		private static class Specialized extends ShapeGather implements Transfer.ItemWise<CategoricalCounts<Color>, CategoricalCounts<Color>> { 
+			private final Map<Shape, CategoricalCounts<Color>> regionVals;
 			private final List<Shape> viewRegions;
 			
-			Specialized(List<Shape> baseRegions, List<Shape> viewRegions, HasViewTransform transformSource, Map<Shape, CoC<Color>> regionVals) {
+			Specialized(List<Shape> baseRegions, List<Shape> viewRegions, HasViewTransform transformSource, Map<Shape, CategoricalCounts<Color>> regionVals) {
 				super(baseRegions, transformSource);
 				this.regionVals = regionVals;
 				this.viewRegions = viewRegions;
@@ -82,7 +81,7 @@ public class Shapes {
 
 
 			@Override
-			public CoC<Color> at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+			public CategoricalCounts<Color> at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 				Shape region = touches(x,y);
 				if (region == null) {return emptyValue();}
 				return regionVals.get(region);
@@ -102,7 +101,7 @@ public class Shapes {
 
 
 			@Override
-			public Aggregates<CoC<Color>> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
+			public Aggregates<CategoricalCounts<Color>> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
 				return rend.transfer(aggregates, this);
 			}
 		}

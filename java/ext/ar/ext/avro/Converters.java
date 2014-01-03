@@ -33,16 +33,13 @@ public class Converters {
 		}
 	}
 
-	/**Generic deserialization for RLE.
+	/**Generic deserialization for CoC.
 	 * Keys are kept as strings.
-	 * 
-	 * TODO: Expand to be general CategoricalCounts
-	 *   
 	 */	
-	public static class ToRLE implements Valuer<GenericRecord, CategoricalCounts.RLE<String>> {
+	public static class ToCoC implements Valuer<GenericRecord, CategoricalCounts<String>> {
 		private static final long serialVersionUID = 2979290290172689482L;
 
-		public CategoricalCounts.RLE<String> value(GenericRecord from) {
+		public CategoricalCounts<String> value(GenericRecord from) {
 			List<?> ks = (List<?>) from.get("keys");
 			@SuppressWarnings("unchecked")
 			List<Integer> vs = (List<Integer>) from.get("counts");
@@ -50,23 +47,21 @@ public class Converters {
 			for (int i=0; i < ks.size(); i++) {
 				keys.add(ks.get(i).toString());
 			}
-			return new CategoricalCounts.RLE<String>(keys, vs);
+			
+			return CategoricalCounts.make(keys, vs);			
 		}
 	}
 	
-	/**Generic serialization for RLE.  
+	/**Generic serialization for CoC.  
 	 * 
 	 * Can only safely handle categories that are isomorphic to their toString
-	 * since the RLE schema uses strings as keys.
-	 * 
-	 * TODO: Expand to be general CategoricalCounts
-	 *
+	 * since the CoC schema uses strings as keys.
 	 */
-	public static class FromRLE<T> implements Valuer<CategoricalCounts.RLE<T>, GenericRecord> {
+	public static class FromCoC<T> implements Valuer<CategoricalCounts<T>, GenericRecord> {
 		private static final long serialVersionUID = 6201382979970104470L;
 		private final Schema schema;
-		public FromRLE(Schema s) {this.schema = s;}
-		public GenericRecord value(CategoricalCounts.RLE<T> from) {
+		public FromCoC(Schema s) {this.schema = s;}
+		public GenericRecord value(CategoricalCounts<T> from) {
 			GenericRecord r = new GenericData.Record(schema);
 			List<String> keys = new ArrayList<String>();
 			List<Integer> counts = new ArrayList<Integer>();

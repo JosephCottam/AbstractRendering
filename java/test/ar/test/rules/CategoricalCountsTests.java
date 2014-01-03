@@ -10,7 +10,9 @@ import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public class CategoricalCountsTests {
-	private static void testItems(CategoricalCounts<Color> cats) {
+	@Test
+	public void testCoC() {
+		CategoricalCounts<Color> cats = new CategoricalCounts<Color>(Util.COLOR_SORTER);
 		int full=0;
 
 		for (int i=1; i<11; i++) {
@@ -31,18 +33,6 @@ public class CategoricalCountsTests {
 			Color c = cats.key(i);
 			assertEquals("Unexpected key/count pair.", c.getRed(), cats.count(c));
 		}
-	}
-	@Test
-	public void testRLE() {
-		CategoricalCounts.RLE<Color> rle = new CategoricalCounts.RLE<Color>();
-		testItems(rle);
-	}
-	
-	@Test
-	public void testCoC() {
-		CategoricalCounts.CoC<Color> cats = new CategoricalCounts.CoC<Color>(Util.COLOR_SORTER);
-		testItems(cats);
-
 	}
 	
 }
