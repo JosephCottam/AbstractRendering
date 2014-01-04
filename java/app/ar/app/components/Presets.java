@@ -117,7 +117,7 @@ public class Presets extends JPanel {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(100_000_000, 0, new SyntheticGlyphset.SyntheticPoints());}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate<>(Color.white, Color.red);}
-		public String name() {return String.format("Synthetic Points (%d points)", glyphset().size());}
+		public String name() {return String.format("Synthetic Points (%,d points)", glyphset().size());}
 		public String toString() {return fullName(this);}
 		public boolean init(HasViewTransform panel) {return glyphset() != null;}
 	}
