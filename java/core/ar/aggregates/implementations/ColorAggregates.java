@@ -16,12 +16,16 @@ public class ColorAggregates extends IntegerBackingAggregates implements Aggrega
 	}
 
 	public ColorAggregates(int lowX, int lowY, int highX, int highY, Color background) {
-		this(lowX, lowY, highX, highY, background, new BufferedImage(highX-lowX, highY-lowY, BufferedImage.TYPE_INT_ARGB));
+		this(lowX, lowY, highX, highY, background, null);
 	}
 
 	private ColorAggregates(int lowX,int lowY, int highX, int highY, Color background, BufferedImage img) {
 		super(lowX, lowY, highX, highY, background.getRGB());
 		this.background = background;
+		if (img != null) {
+			//TODO: Implement initializing aggregates off of an image.
+			throw new UnsupportedOperationException("Can't initialize off of an image...yet...");
+		}
 	}
 
 	public Color get(int x, int y) {return new Color(super.getInt(x, y), true);}

@@ -3,31 +3,42 @@ package ar.rules.combinators;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
+import ar.renderers.ParallelRenderer;
 
-//TODO: Add a 'Seq.Start' to compliment 'Seq.then'.  You can then do Seq.start(t).then(a).then(b)
+//TODO: Investigate if specialize generally should take a renderer as an argument...
+
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,MID> first;
     protected final Transfer<MID,OUT> second;
+    protected final Renderer rend;
 
-    public Seq(Transfer<IN,MID> first, Transfer<MID,OUT> second) {
+    public Seq(Transfer<IN,MID> first, Transfer<MID,OUT> second) {this(null, first, second);}
+    public Seq(Renderer rend, Transfer<IN,MID> first, Transfer<MID,OUT> second) {
         this.first = first;
         this.second = second;
+        this.rend = rend == null ? new ParallelRenderer() : rend;
     }
+
     
     @Override public OUT emptyValue() {return second.emptyValue();}
 
     @Override
     public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized<>(first, second, aggregates);
+        return new Specialized<>(rend, first, second, aggregates);
     }
     public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
     
-    public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(start);}
+    public static <IN, OUT> SeqStart<IN,OUT> start(Renderer rend, Transfer<IN,OUT> start) {return new SeqStart<>(rend, start);}
+    public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(null, start);}
     
     public static class SeqStart<IN,OUT> implements Transfer<IN,OUT> {
     	public final Transfer<IN,OUT> base;
+    	public final Renderer rend;
 
-    	public SeqStart(Transfer<IN, OUT> base) {this.base = base;}
+    	public SeqStart(Renderer rend, Transfer<IN, OUT> base) {
+    		this.base = base;
+    		this.rend = rend;
+    	}
 
 		@Override
 		public OUT emptyValue() {return base.emptyValue();}
@@ -37,20 +48,21 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
 			return base.specialize(aggregates);
 		}
 		
-	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(base, next);}
+	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, base, next);}
     }
 
     public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT> {
         protected final Transfer.Specialized<IN,MID> first;
         protected final Transfer.Specialized<MID,OUT> second;
 
-        public Specialized(final Transfer<IN, MID> first,
+        public Specialized(final Renderer rend,
+        				   final Transfer<IN, MID> first,
                            final Transfer<MID, OUT> second,
                            final Aggregates<? extends IN> aggs) {
             super(first, second);
             this.first = first.specialize(aggs);
 
-            Aggregates<MID> tempAggs = Resources.DEFAULT_RENDERER.transfer(aggs, this.first); //TODO: Maybe specialize needs to take the renderer as an argument...
+            Aggregates<MID> tempAggs = rend.transfer(aggs, this.first); 
             this.second = second.specialize(tempAggs);
         }
 

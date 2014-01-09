@@ -452,7 +452,7 @@ public class General {
 		@SuppressWarnings("resource")
 		public static <K,V> MapWrapper<K,V> fromReader(
 				Reader in, Valuer<String,K> keyer, Valuer<String,V> valuer,
-				V other, boolean nullIsValue) throws Exception {
+				V other) throws Exception {
 			BufferedReader bf;
 
 			if (in instanceof BufferedReader) {

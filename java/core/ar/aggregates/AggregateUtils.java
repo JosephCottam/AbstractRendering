@@ -92,6 +92,8 @@ public class AggregateUtils {
 		return ((long) (highX-lowX)) * ((long) (highY-lowY));
 	}
 	
+	@SuppressWarnings("unused") 
+	/**Convert the x/y value to a single index based on the low/high x/y.**/
 	public static final int idx(int x,int y, int lowX, int lowY, int highX, int highY) {
 		int idx = ((highX-lowX)*(y-lowY))+(x-lowX);
 		return idx;

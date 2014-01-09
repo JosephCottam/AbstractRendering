@@ -33,13 +33,15 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	/**Reduce aggregate values into a single value.
 	 * 
 	 * If there is any sequential notion, the "first" item should go into left and the "second" into right.
-	 * If semantically appropriate, accumulators should be passed as "left" and implementing classes may optimize for that case.
-	 * This is used for reducing the resolution of a single set of aggregates (e.g., for zooming without recomputing aggregates). 
+	 * If semantically appropriate, accumulators should be passed as "left" 
+	 * and implementing classes may optimize for that case.
+	 * This is used for reducing the resolution of a single set of aggregates 
+	 * (e.g., for zooming without recomputing aggregates). 
 	 * 
 	 * @return Combination of the passed aggregates
 	 */
 	public OUT rollup(OUT left, OUT right);
-
+		
 	/**What value is an mathematical identity value for this operation?
 	 * Value V is an identity is op(V, x) = x for all V.
 	 * 
