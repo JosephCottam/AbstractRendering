@@ -58,14 +58,14 @@ public class ContourApp {
 		Aggregates<Integer> counts = r.aggregate(dataset, selector, aggregator, vt, width, height);
 		
 		//final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(5, true, counts);
-		//final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(r, 5, true, counts);
-		//final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(r, 0, 100, true, counts);
+		//final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(5, true, counts);
+		//final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, true, counts);
 		
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
 		
 		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(2d, false, magnitudes);
-		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, true, magnitudes);
-		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(r, .5, 0d, false, magnitudes);
+		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(3, true, magnitudes);
+		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(.5, 0d, false, magnitudes);
 		
 		
 		

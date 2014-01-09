@@ -19,7 +19,6 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
-import ar.Resources;
 import ar.Transfer;
 import ar.app.display.ARComponent;
 import ar.app.util.GeoJSONTools;
@@ -495,7 +494,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
 					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10, false, true), 0d))
-					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 5, true))
+					.then(new ISOContours.NContours<Double>(5, true))
 					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
 		public String name() {return "US Synthetic Population (Contour)";}
@@ -509,7 +508,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
 					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10, false, true), 0d))
-					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 5, false))
+					.then(new ISOContours.NContours<Double>(5, false))
 					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
 		public String name() {return "US Synthetic Population (Contour Lines)";}
@@ -522,7 +521,7 @@ public class Presets extends JPanel {
 		public Aggregator<?,Integer> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {
-			return Seq.start(new ISOContours.NContours<>(Resources.DEFAULT_RENDERER, 5, true))
+			return Seq.start(new ISOContours.NContours<>(5, true))
 					.then(new General.Simplify<Number>(0))
 					.then(new General.Replace<Number>(null, 0, 0))
 					.then(new Numbers.Interpolate<>(new Color(254, 229, 217), new Color(165, 15, 21)));

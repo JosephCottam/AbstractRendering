@@ -6,7 +6,7 @@ import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
 
 import ar.Aggregates;
-import ar.Resources;
+import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.rules.SeamCarving;
@@ -78,7 +78,7 @@ public class SeamCarvingTests {
 		}
 		
 		Transfer<Double, Double> t = new SeamCarving.CumulativeEnergy();
-		Aggregates<Double> cumEng = Resources.DEFAULT_RENDERER.transfer(energy, t.specialize(energy));
+		Aggregates<Double> cumEng = TestResources.RENDERER.transfer(energy, t.specialize(energy));
 		
 		double val =0;
 		for (int y=energy.lowY(); y<energy.highY(); y++) {

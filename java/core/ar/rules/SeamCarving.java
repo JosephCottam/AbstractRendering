@@ -5,7 +5,6 @@ import java.awt.Color;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.Resources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.TransposeWrapper;
@@ -51,19 +50,19 @@ public class SeamCarving {
 			
 		@Override 
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) { 
-			if (dir == Direction.H) {return horizontal(aggregates);}
-			else {return vertical(aggregates);}
+			if (dir == Direction.H) {return horizontal(aggregates, rend);}
+			else {return vertical(aggregates, rend);}
 		}
 		
 		public void direction(Direction dir) {this.dir = dir;}
 		
-		public Aggregates<A> horizontal(Aggregates<? extends A> aggs) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs)));
+		public Aggregates<A> horizontal(Aggregates<? extends A> aggs, Renderer rend) {
+			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs), rend));
 		}
 		
-		public Aggregates<A> vertical(Aggregates<? extends A> aggs) {
+		public Aggregates<A> vertical(Aggregates<? extends A> aggs, Renderer rend) {
 			Transfer<A, Double> energy = new Seq<>(new Energy<>(delta), new CumulativeEnergy());
-			Aggregates<? extends Double> cumEng = Resources.DEFAULT_RENDERER.transfer(aggs, energy.specialize(aggs));
+			Aggregates<? extends Double> cumEng = rend.transfer(aggs, energy.specialize(aggs));
 			int[] vseam = findVSeam(cumEng);
 			
 			Aggregates<A> rslt = 

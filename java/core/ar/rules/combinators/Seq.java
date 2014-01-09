@@ -2,7 +2,6 @@ package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.Resources;
 import ar.Transfer;
 
 //TODO: Add a 'Seq.Start' to compliment 'Seq.then'.  You can then do Seq.start(t).then(a).then(b)
