@@ -32,6 +32,7 @@ import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
+@SuppressWarnings("all")
 public class ContourApp {
 	public static void main(String[] args) throws Exception {
 		//------------------------ Setup Operations -------------------
@@ -56,15 +57,17 @@ public class ContourApp {
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> counts = r.aggregate(dataset, selector, aggregator, vt, width, height);
 		
-//		final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(0, 5, counts);
-//		final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(0, 5, counts);
-//		final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, null, counts);
+		//final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(5, true, counts);
+		//final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(r, 5, true, counts);
+		//final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(r, 0, 100, true, counts);
 		
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
 		
-		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
+		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(2d, false, magnitudes);
 		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, true, magnitudes);
-		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
+		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(r, .5, 0d, false, magnitudes);
+		
+		
 		
 		JFrame f = new JFrame();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -77,12 +80,15 @@ public class ContourApp {
 	}
 	
 	public static <S extends Shape,N extends Number> void renderTo(Glyphset.RandomAccess<? extends S, ? extends N> contours, Graphics2D g2, int width, int height) {
+		if (contours.size() <=0 ){return;}
+
 		//g2.setColor(new Color(240,240,255));
 		g2.setColor(Color.white);
 		g2.fill(new Rectangle2D.Double(0,0,width, height));
 		
 		AffineTransform saved = g2.getTransform();
 		g2.setTransform(new AffineTransform());
+		
 		
 		Number min = contours.get(0).info();
 		Number max = contours.get(contours.size()-1).info();

@@ -23,7 +23,7 @@ public class AggregateUtils {
 	
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs, int width, int height, Color background) {
-		if (aggs instanceof ImageAggregates) {return ((ImageAggregates) aggs).image();}
+		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}
 		
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = i.getGraphics();
@@ -47,7 +47,7 @@ public class AggregateUtils {
 	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> make(int lowX, int lowY, int highX, int highY, A defVal) {
 		if (defVal != null && defVal instanceof Color) {
-			return (Aggregates<A>) new ImageAggregates(lowX, lowY, highX, highY, (Color) defVal);
+			return (Aggregates<A>) new ColorAggregates(lowX, lowY, highX, highY, (Color) defVal);
 		} else if (defVal instanceof Integer) {
 			return (Aggregates<A>) new IntAggregates(lowX, lowY, highX, highY, (Integer) defVal);
 		} else if (defVal instanceof Double) {

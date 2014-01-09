@@ -106,6 +106,8 @@ public interface ISOContours<N> {
 				Single.Specialized<N>[] ts = LocalUtils.transfers(stats.min, stats.max, step, renderer, fill, aggregates);				
 				Transfer.Specialized<N,N> t = new Fan<>(new General.Last<N>(aggregates.defaultValue()), ts).specialize(aggregates);
 				cached = renderer.transfer(aggregates, t);
+				
+				for (Single.Specialized<N> s: ts) {contours.addAll(s.contours);}
 			}
 
 			@Override public GlyphList<Shape, N> contours() {return contours;}

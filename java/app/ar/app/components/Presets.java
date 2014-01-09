@@ -495,8 +495,8 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
 					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10, false, true), 0d))
-					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 3, true))
-					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21)));
+					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 5, true))
+					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
 		public String name() {return "US Synthetic Population (Contour)";}
 		public String toString() {return fullName(this);}
@@ -509,8 +509,8 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
 					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10, false, true), 0d))
-					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 3, false))
-					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21)));
+					.then(new ISOContours.NContours<Double>(Resources.DEFAULT_RENDERER, 5, false))
+					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
 		public String name() {return "US Synthetic Population (Contour Lines)";}
 		public String toString() {return fullName(this);}
