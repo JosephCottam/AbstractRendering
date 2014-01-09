@@ -8,6 +8,7 @@ import ar.renderers.ParallelRenderer;
 //TODO: Investigate if specialize generally should take a renderer as an argument...
 
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
+	private static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
     protected final Transfer<IN,MID> first;
     protected final Transfer<MID,OUT> second;
     protected final Renderer rend;
@@ -16,7 +17,7 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
     public Seq(Renderer rend, Transfer<IN,MID> first, Transfer<MID,OUT> second) {
         this.first = first;
         this.second = second;
-        this.rend = rend == null ? new ParallelRenderer() : rend;
+        this.rend = rend == null ? SHARED_RENDERER : rend;
     }
 
     

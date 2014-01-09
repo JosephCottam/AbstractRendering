@@ -47,7 +47,7 @@ public class CarveApp {
 
 		int width = 800;
 		int height = 375;
-		int seams = 700;
+		int seams = 100;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
