@@ -62,7 +62,7 @@ public class Shapes {
 				for (int y=aggs.lowY(); y < aggs.highY(); y++) {
 					r.setRect(x, y, 1,1);
 					if (region.contains(r)) {
-						acc = CategoricalCounts.rollupTwo(acc, (CategoricalCounts<Color>) aggs.get(x, y));
+						acc = CategoricalCounts.rollupTwo(acc, aggs.get(x, y));
 					}
 				}
 			}

@@ -55,7 +55,7 @@ public class TileUtilsTest {
 		for (File f: files) {assertTrue("File not found: " + f.getPath(), f.exists());}
 		
 		
-		Aggregates<Integer> output = TileUtils.loadTiles(new ar.ext.avro.Converters.ToCount(), Integer.class, files.toArray(new File[0]));
+		Aggregates<Integer> output = TileUtils.loadTiles(new ar.ext.avro.Converters.ToCount(), files.toArray(new File[0]));
 		for (int x=output.lowX(); x<output.highX(); x++) {
 			for (int y=output.lowY(); y<output.lowY(); y++) {
 				assertThat(String.format("Error at %d, %d.", x,y), output.get(x,y), is(aggs.get(x, y)));

@@ -84,7 +84,7 @@ public class TileUtils {
 	}
 	
 	/**Reload a specified subset of tiles into a single set of aggregates.**/
-	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, Class<A> type, File... files) 
+	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, File... files) 
 			throws IOException {
 		
 		Aggregates<A> acc = null;
