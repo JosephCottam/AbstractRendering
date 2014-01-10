@@ -12,15 +12,15 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.InvocationTargetException;
 
-import ar.Resources;
 import ar.app.components.*;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
+import ar.renderers.ParallelRenderer;
 import ar.renderers.RenderUtils;
 
 public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
-	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(Resources.DEFAULT_RENDERER));
+	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();

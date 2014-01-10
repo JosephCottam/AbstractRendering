@@ -55,6 +55,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this(renderer);
 		this.aggregator = aggregator;
 		this.dataset = glyphs;		
+		display.transfer(transfer);
 		new ZoomPanHandler().register(this);
 	}
 	

@@ -4,12 +4,16 @@ import ar.Aggregates;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
-/**Simple true/false test.
+/**Simple true/false tests.
+ * Predicates are valuers that return true or false.
  * 
- * TODO: Should this really be a valuer of return-type boolean (saves the VPred class...).
+ * The 'predicates' should never be used, but it is a convenient place
+ * to put several common predicates.  
+ * 
  * @param <IN>  The type of the value to be tested
  */
-public interface Predicates<IN> {
+public abstract class Predicates<IN> {
+	private Predicates() {/*Prevent Instantiation*/}
     
     /**Check if a predicate is true for all items in an aggregate set.**/
     public static final class All<IN> implements Valuer<Aggregates<? extends IN>, Boolean> {
@@ -20,20 +24,28 @@ public interface Predicates<IN> {
     		this.pred = pred;
     		this.ignoreDefault = ignoreDefault;
     	}
-		public Boolean value(Aggregates<? extends IN> arg) {
+    	
+		public Boolean value(Aggregates<? extends IN> arg) {return value(arg, pred, ignoreDefault);}
+		
+		public static <IN> Boolean value(Aggregates<? extends IN> arg, Valuer<IN, Boolean> pred, boolean ignoreDefault) {
 			for (IN v: arg) {
 				boolean empty = Util.isEqual(v, arg.defaultValue());
 				if (ignoreDefault && empty) {continue;}
 				if (!pred.value(v)) {return Boolean.FALSE;}
 			}
-			return Boolean.TRUE;
+			return Boolean.TRUE;			
+		}
+		
+		public static Boolean all(Aggregates<Boolean> arg) {
+			for (Boolean v: arg) {if (!v) {return false;}}
+			return true;
 		}
     }
     
     /**Check if a predicate is true for at least one item in an aggregate set.**/
-    public static final class Some<IN> implements Valuer<Aggregates<? extends IN>, Boolean> {
+    public static final class Any<IN> implements Valuer<Aggregates<? extends IN>, Boolean> {
     	private final Valuer<IN, Boolean> pred;
-    	public Some(Valuer<IN, Boolean> pred) {this.pred = pred;}
+    	public Any(Valuer<IN, Boolean> pred) {this.pred = pred;}
 		public Boolean value(Aggregates<? extends IN> arg) {
 			for (IN v: arg) {if (pred.value(v)) {return Boolean.TRUE;}}
 			return Boolean.FALSE;
@@ -46,4 +58,5 @@ public interface Predicates<IN> {
     	public Not(Valuer<IN, Boolean> base) {this.base = base;}
 		public Boolean value(IN arg) {return !base.value(arg);}
     }
+    
 }

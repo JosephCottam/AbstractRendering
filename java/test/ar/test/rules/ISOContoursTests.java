@@ -13,7 +13,9 @@ import ar.Renderer;
 import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.ParallelRenderer;
 import ar.rules.ISOContours;
+import ar.rules.ISOContours.ContourAggregates;
 import ar.rules.ISOContours.MC_TYPE;
+import ar.test.TestResources;
 
 
 public class ISOContoursTests {
@@ -60,8 +62,9 @@ public class ISOContoursTests {
 		source.set(1,1,5);
 		source.set(2,2,5);
 		
-		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(RENDERER, threshold, true, source);
-		GeneralPath p = (GeneralPath) contour.contours().get(0).shape();
+		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) TestResources.RENDERER.transfer(source, contour);
+		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
 
 		GeneralPath p2 = (GeneralPath) p.clone();
 		p2.closePath();
@@ -84,8 +87,10 @@ public class ISOContoursTests {
 			}
 		}
 		
-		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(RENDERER, threshold, true, source);
-		GeneralPath p = (GeneralPath) contour.contours().get(0).shape();
+		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) TestResources.RENDERER.transfer(source, contour);
+		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
+
 
 		GeneralPath p2 = (GeneralPath) p.clone();
 		p2.closePath();

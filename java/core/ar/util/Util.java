@@ -259,15 +259,16 @@ public final class Util {
 
 	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers).
 	 * 
-	 * By default NaNs and Nulls are fully skipped.  However, if set to false they will be included in the "count" basis 
-	 * and thus influence the mean.
+	 * By default NaNs, Nulls and infinity are fully skipped.  
+	 * However, if the relevant parameters set to false they will be included in the "count" basis and thus influence the mean.
 	 * 
 	 * **/
-	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreNulls, boolean ignoreNaNs) {
+	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreNulls, boolean ignoreNaNs, boolean ignoreInfinity) {
 		//For a single-test std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		long count=0;
 		long nullCount=0;
 		long nanCount=0;
+		long infCount=0;
 		N min = null;
 		N max = null;
 		double sum=0;
@@ -277,13 +278,14 @@ public final class Util {
 			
 			double v = n.doubleValue();
 			if (Double.isNaN(v)) {nanCount++; continue;}
+			if (Double.isInfinite(v)) {infCount++; continue;}
 			if (min == null || min.doubleValue() > v) {min = n;}
 			if (max == null || max.doubleValue() < v) {max = n;}
 			sum += v;
 			count++;
 		}
 		
-		final long fullCount = count + (ignoreNulls ? 0 : nullCount) + (ignoreNaNs ? 0 : nanCount); 
+		final long fullCount = count + (ignoreNulls ? 0 : nullCount) + (ignoreNaNs ? 0 : nanCount) + (ignoreInfinity ? 0 : infCount);
 
 		final double mean = sum/fullCount;
 		double acc =0;
@@ -382,4 +384,17 @@ public final class Util {
 		System.arraycopy(values, at, newValues, at+1, values.length-at);
 		return newValues;
 	}
+	
+	public static String deepToString(int[] values) {
+		StringBuilder b = new StringBuilder();
+		b.append("[");
+		for (int i=0; i<values.length;i++) {
+			b.append(values[i]);
+			b.append(", ");
+		}
+		b.delete(b.length()-2, b.length()-1);
+		b.append("]");
+		return b.toString();
+	}
+	
 }

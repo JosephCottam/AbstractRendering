@@ -7,21 +7,25 @@ import java.util.Iterator;
 import ar.Aggregates;
 import ar.aggregates.Iterator2D;
 
-/**Set of color aggregates backed by a buffered image.**/
-public class ImageAggregates extends IntegerBackingAggregates implements Aggregates<Color> {
+/**Set of colors, with extra tools for creating images.**/
+public class ColorAggregates extends IntegerBackingAggregates implements Aggregates<Color> {
 	private final Color background;
 
-	public ImageAggregates(int lowX, int lowY, Color background, BufferedImage img) {
+	public ColorAggregates(int lowX, int lowY, Color background, BufferedImage img) {
 		this(lowX, lowY, lowX+img.getWidth(), lowY+img.getHeight(), background, img);
 	}
 
-	public ImageAggregates(int lowX, int lowY, int highX, int highY, Color background) {
-		this(lowX, lowY, highX, highY, background, new BufferedImage(highX-lowX, highY-lowY, BufferedImage.TYPE_INT_ARGB));
+	public ColorAggregates(int lowX, int lowY, int highX, int highY, Color background) {
+		this(lowX, lowY, highX, highY, background, null);
 	}
 
-	private ImageAggregates(int lowX,int lowY, int highX, int highY, Color background, BufferedImage img) {
+	private ColorAggregates(int lowX,int lowY, int highX, int highY, Color background, BufferedImage img) {
 		super(lowX, lowY, highX, highY, background.getRGB());
 		this.background = background;
+		if (img != null) {
+			//TODO: Implement initializing aggregates off of an image.
+			throw new UnsupportedOperationException("Can't initialize off of an image...yet...");
+		}
 	}
 
 	public Color get(int x, int y) {return new Color(super.getInt(x, y), true);}

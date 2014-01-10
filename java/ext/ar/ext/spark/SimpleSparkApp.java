@@ -58,7 +58,7 @@ public class SimpleSparkApp {
 
 		
 		if (outFile == null) {
-			TransferDisplay.show("", width, height, aggs, new Numbers.Interpolate(new Color(230,230,255), Color.BLUE));
+			TransferDisplay.show("", width, height, aggs, new Numbers.Interpolate<>(new Color(230,230,255), Color.BLUE));
 		} else {
 			AggregatesToCSV.export(aggs, new File(outFile));
 		}

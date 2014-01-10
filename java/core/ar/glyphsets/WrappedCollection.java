@@ -103,8 +103,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	public static <B,G,I> WrappedCollection<B,G,I> wrap(
 				Collection<B> basis, 
 				Shaper<G,B> shaper, 
-				Valuer<B,I> valuer,
-				Class<I> valueType) {
+				Valuer<B,I> valuer) {
 		
 		if (basis instanceof java.util.List) {
 			return new List<>((java.util.List<B>) basis, shaper, valuer);

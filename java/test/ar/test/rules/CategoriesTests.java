@@ -9,7 +9,7 @@ import java.awt.Color;
 import ar.Aggregates;
 import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.AggregationStrategies;
-import ar.rules.CategoricalCounts.CoC;
+import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.util.Util;
 import static java.lang.String.format;
@@ -19,10 +19,10 @@ public class CategoriesTests {
 	@Test
 	public void CountCategoriesLeft() {
 		Categories.CountCategories<Color> counter = new Categories.CountCategories<Color>(Util.COLOR_SORTER);
-		CoC<Color> coc = new CoC<Color>(Util.COLOR_SORTER);
+		CategoricalCounts<Color> coc = new CategoricalCounts<Color>(Util.COLOR_SORTER);
 		coc = coc.extend(Color.BLUE, 1);
 		coc = coc.extend(Color.RED, 2);
-		Aggregates<CoC<Color>> aggs = new RefFlatAggregates<CoC<Color>>(10,10,coc);
+		Aggregates<CategoricalCounts<Color>> aggs = new RefFlatAggregates<CategoricalCounts<Color>>(10,10,coc);
 		
 		aggs = AggregationStrategies.horizontalRollup(aggs, aggs, counter);
 		

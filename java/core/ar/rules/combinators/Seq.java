@@ -2,67 +2,76 @@ package ar.rules.combinators;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.Resources;
 import ar.Transfer;
-import ar.util.CacheProvider;
+import ar.renderers.ParallelRenderer;
+
+//TODO: Investigate if specialize generally should take a renderer as an argument...
 
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
+	private static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
     protected final Transfer<IN,MID> first;
     protected final Transfer<MID,OUT> second;
-    protected final Renderer renderer;
+    protected final Renderer rend;
 
-    public Seq(Transfer<IN,MID> first, Transfer<MID,OUT> second) {this(Resources.DEFAULT_RENDERER, first, second);}
-    public Seq(Renderer renderer, Transfer<IN,MID> first, Transfer<MID,OUT> second) {
-        this.renderer = renderer;
+    public Seq(Transfer<IN,MID> first, Transfer<MID,OUT> second) {this(null, first, second);}
+    public Seq(Renderer rend, Transfer<IN,MID> first, Transfer<MID,OUT> second) {
         this.first = first;
         this.second = second;
+        this.rend = rend == null ? SHARED_RENDERER : rend;
     }
-    @Override
-    public OUT emptyValue() {return second.emptyValue();}
+
+    
+    @Override public OUT emptyValue() {return second.emptyValue();}
 
     @Override
     public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized<>(renderer, first, second, aggregates);
+        return new Specialized<>(rend, first, second, aggregates);
+    }
+    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
+    
+    public static <IN, OUT> SeqStart<IN,OUT> start(Renderer rend, Transfer<IN,OUT> start) {return new SeqStart<>(rend, start);}
+    public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(null, start);}
+    
+    public static class SeqStart<IN,OUT> implements Transfer<IN,OUT> {
+    	public final Transfer<IN,OUT> base;
+    	public final Renderer rend;
+
+    	public SeqStart(Renderer rend, Transfer<IN, OUT> base) {
+    		this.base = base;
+    		this.rend = rend;
+    	}
+
+		@Override
+		public OUT emptyValue() {return base.emptyValue();}
+
+		@Override
+		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
+			return base.specialize(aggregates);
+		}
+		
+	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, base, next);}
     }
 
-    //TODO: Put some smarts here about caching.  
-    //TODO: Maybe pair this up with chain (or get rid of chain, or make chain use this...) 
-    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
-
-    public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT>,CacheProvider.CacheTarget<IN,OUT> {
+    public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT> {
         protected final Transfer.Specialized<IN,MID> first;
         protected final Transfer.Specialized<MID,OUT> second;
-        protected final CacheProvider<IN,OUT> cache;
 
-        public Specialized(final Renderer renderer,
-                           final Transfer<IN, MID> first,
+        public Specialized(final Renderer rend,
+        				   final Transfer<IN, MID> first,
                            final Transfer<MID, OUT> second,
                            final Aggregates<? extends IN> aggs) {
-            super(renderer, first, second);
+            super(first, second);
             this.first = first.specialize(aggs);
-            cache = new CacheProvider<>(this);
 
-            Aggregates<MID> tempAggs = renderer.transfer(aggs, this.first);
+            Aggregates<MID> tempAggs = rend.transfer(aggs, this.first); 
             this.second = second.specialize(tempAggs);
-            Aggregates<OUT> tempAggs2 = renderer.transfer(tempAggs, this.second);
-            cache.set(aggs, tempAggs2);
         }
 
-        @Override
-        public OUT at(int x, int y, Aggregates<? extends IN> aggs) {
-            return cache.get(aggs).get(x,y);
-        }
-
-        @Override
-        public Aggregates<OUT> build(Aggregates<? extends IN> aggs) {
-            Aggregates<MID> tempAggs1 = renderer.transfer(aggs, first);
-            Aggregates<OUT> tempAggs2 = renderer.transfer(tempAggs1, second);
+		@Override
+		public Aggregates<OUT> process(Aggregates<? extends IN> aggs, Renderer rend) {
+            Aggregates<MID> tempAggs1 = rend.transfer(aggs, first);
+            Aggregates<OUT> tempAggs2 = rend.transfer(tempAggs1, second);
             return tempAggs2;
-        }
-
-        @Override
-        public boolean localOnly() {
-        	return first.localOnly() && second.localOnly();
-        }
+		}
     }
 }

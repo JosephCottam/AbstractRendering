@@ -27,7 +27,7 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 	} 
 
 	public class OverplotLast implements WrappedAggregator<Color, Color> {
-		public Aggregator<Color, Color> op() {return new Categories.Last();}
+		public Aggregator<Color, Color> op() {return new General.Last<>(Util.CLEAR);}
 		public String toString() {return "Overplot Last (color)";}
 		public boolean equals(Object other) {return other.toString().equals(this.toString());}
 		public int hashCode() {return this.getClass().hashCode();}
@@ -40,8 +40,8 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public int hashCode() {return this.getClass().hashCode();}
 	}
 	
-	public class RLEColors implements WrappedAggregator<Color, CategoricalCounts.CoC<Color>> {
-		public Aggregator<Color, CategoricalCounts.CoC<Color>> op() {
+	public class CoCColors implements WrappedAggregator<Color, CategoricalCounts<Color>> {
+		public Aggregator<Color, CategoricalCounts<Color>> op() {
 			return new Categories.CountCategories<Color>(Util.COLOR_SORTER);
 		}
 		public String toString() {return "Color RLE sorted (RLE)";}
@@ -49,12 +49,4 @@ public interface WrappedAggregator<G,A> extends Wrapped<Aggregator<G,A>> {
 		public int hashCode() {return this.getClass().hashCode();}
 	}
 	
-	public class RLEUnsortColors implements WrappedAggregator<Color, CategoricalCounts.RLE<Color>> {
-		public Aggregator<Color, CategoricalCounts.RLE<Color>> op() {
-			return new Categories.RunLengthEncode<Color>();
-		}
-		public String toString() {return "Color RLE (RLE)";}
-		public boolean equals(Object other) {return other.toString().equals(this.toString());}
-		public int hashCode() {return this.getClass().hashCode();}
-	}
 }

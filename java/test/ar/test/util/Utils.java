@@ -54,8 +54,8 @@ public class Utils {
 				else {aggs.set(x, y, new Double(x));}
 			}
 		}
-		Util.Stats<Double> s1 = Util.stats(aggs, true,true);
-		Util.Stats<Double> s2 = Util.stats(aggs, false,false);
+		Util.Stats<Double> s1 = Util.stats(aggs, true,true,true);
+		Util.Stats<Double> s2 = Util.stats(aggs, false,false,false);
 
 		assertThat(s1.max.doubleValue(), is((double) aggs.highX()-1));
 		assertThat(s2.max.doubleValue(), is((double) aggs.highX()-1));

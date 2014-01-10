@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -28,10 +29,13 @@ import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.ISOContours;
 import ar.rules.Numbers;
+import ar.rules.ISOContours.ContourAggregates;
 import ar.selectors.TouchesPixel;
+import ar.test.TestResources;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
+@SuppressWarnings("all")
 public class ContourApp {
 	public static void main(String[] args) throws Exception {
 		//------------------------ Setup Operations -------------------
@@ -56,27 +60,35 @@ public class ContourApp {
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> counts = r.aggregate(dataset, selector, aggregator, vt, width, height);
 		
-//		final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(0, 5, counts);
-//		final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(0, 5, counts);
-//		final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, null, counts);
+		//final ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<>(5, true, counts);
+		//final ISOContours.NContours.Specialized<Integer> contour = new ISOContours.NContours.Specialized<>(5, true, counts);
+		//final ISOContours.SpacedContours.Specialized<Integer> contour = new ISOContours.SpacedContours.Specialized<>(0, 100, true, counts);
 		
 		Aggregates<Double> magnitudes = r.transfer(counts, new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), aggregator.identity().doubleValue()));
 		
-		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(0d, 2d, magnitudes);
-		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(r, 3, true, magnitudes);
-		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(0d, .5, null, magnitudes);
+		//final ISOContours.Single.Specialized<Double> contour = new ISOContours.Single.Specialized<>(2d, false, magnitudes);
+		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(3, true, magnitudes);
+		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(.5, 0d, false, magnitudes);
+		
+		ContourAggregates<Double> ct = (ContourAggregates<Double>) TestResources.RENDERER.transfer(magnitudes, contour);
+
+		
 		
 		JFrame f = new JFrame();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		f.setLayout(new BorderLayout());
-		f.add(new Display(contour), BorderLayout.CENTER);
+		f.add(new Display(ct.contours()), BorderLayout.CENTER);
 		f.setSize(width+50,height+50);
 		f.validate();
 		f.setVisible(true);
 	}
 	
-	public static <S extends Shape,N extends Number> void renderTo(Glyphset.RandomAccess<? extends S, ? extends N> contours, Graphics2D g2, int width, int height) {
+	public static <N extends Number> 
+	void renderTo(Glyphset.RandomAccess<Shape, ? extends N> contours, Graphics2D g2, int width, int height) {
+		
+		if (contours.size() <=0 ){return;}
+
 		//g2.setColor(new Color(240,240,255));
 		g2.setColor(Color.white);
 		g2.fill(new Rectangle2D.Double(0,0,width, height));
@@ -84,10 +96,11 @@ public class ContourApp {
 		AffineTransform saved = g2.getTransform();
 		g2.setTransform(new AffineTransform());
 		
+		
 		Number min = contours.get(0).info();
 		Number max = contours.get(contours.size()-1).info();
 		
-		for (Glyph<? extends S, ? extends N> glyph: contours) {
+		for (Glyph<Shape, ? extends N> glyph: contours) {
 			Color c = Util.interpolate(new Color(254, 229, 217), new Color(165, 15, 21), min.doubleValue(), max.doubleValue(), glyph.info().doubleValue());
 			Shape s = glyph.shape();
 //			g2.setColor(c);
@@ -99,18 +112,18 @@ public class ContourApp {
 		g2.setTransform(saved);
 	}
 	
-	public static class Display extends JPanel implements HasViewTransform {
-		final ISOContours<? extends Number> contour;
+	public static class Display<N extends Number> extends JPanel implements HasViewTransform {
+		final Glyphset.RandomAccess<Shape, N> contours;
 		AffineTransform transform = new AffineTransform();
 
-		public Display(ISOContours<? extends Number> contour) {
-			this.contour = contour;
+		public Display(Glyphset.RandomAccess<Shape, N> contours) {
+			this.contours = contours;
 			new ZoomPanHandler().register(this);
 		}
 
 		public void paintComponent(Graphics g) {
 			Graphics2D g2 = (Graphics2D) g;
-			renderTo(contour.contours(), g2, this.getWidth(), this.getHeight());
+			renderTo(contours, g2, this.getWidth(), this.getHeight());
 		}
 		
 		public static Color desaturate(Color c, int factor) {
@@ -132,8 +145,8 @@ public class ContourApp {
 		}
 		
 		public Rectangle dataBounds() {
-			Rectangle r = contour.contours().get(0).shape().getBounds();
-			for (Glyph<? extends Shape, ?> g: contour.contours()) {
+			Rectangle r = contours.get(0).shape().getBounds();
+			for (Glyph<? extends Shape, ?> g: contours) {
 				r.add(g.shape().getBounds());
 			}
 			return r;

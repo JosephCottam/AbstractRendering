@@ -24,13 +24,12 @@ import ar.renderers.ParallelRenderer;
 import ar.renderers.SerialRenderer;
 import ar.rules.Advise;
 import ar.rules.Categories;
-import ar.rules.CategoricalCounts.CoC;
-import ar.rules.CategoricalCounts.RLE;
+import ar.rules.CategoricalCounts;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
-/**Tests the amount of time to render count visualizations.
+/**Tests the amount of time to render specific configurations.
  * **/
 @SuppressWarnings("unused")
 public class RenderSpeed {
@@ -52,14 +51,6 @@ public class RenderSpeed {
 		int height = Integer.parseInt(arg(args, "-height", "800"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
 		
-		//Aggregator<Object,Integer> aggregator = new WrappedAggregator.Count().op();
-		
-		//Transfer<Number,Color> transfer = new Numbers.Interpolate(new Color(255,0,0,38), Color.red);
-		//Transfer<Number,Color> transfer = new RenderSpeedTest.CachelessInterpolate(new Color(255,0,0,38), Color.red);
-		//Transfer<Number,Color> transfer = new CachelessDrawDark(Color.white, Color.black, 5);
-		//Transfer<Number,Color> transfer = new CachelessDrawDark(Color.white, Color.black, 5);		
-		//Transfer<Number,Color> transfer = new WrappedTransfer.FixedAlpha().op();
-
 		Presets.Preset source = null;
 		for (Class clss: Presets.class.getClasses()) {
 			if (clss.getSimpleName().equals(config)) {
@@ -115,113 +106,6 @@ public class RenderSpeed {
 			e.printStackTrace();
 		}
 		System.exit(0);
-	}
-	
-	/**HD interpolation between two colors EXCEPT re-calculate the extrema at each pixel.**/
-	public static final class CachelessInterpolate implements Transfer.Specialized<Number, Color> {
-		private static final long serialVersionUID = 2878901447280244237L;
-		private final Color low, high, empty;
-		private final int logBasis;
-		
-		/**
-		 * @param low Color to associate with lowest input value
-		 * @param high Color to associate with highest input value
-		 */
-		public CachelessInterpolate(Color low, Color high) {this(low,high, Util.CLEAR, 0);}
-		
-		/**
-		 * @param low Color to associate with lowest input value
-		 * @param high Color to associate with highest input value
-		 * @param empty Color to return when the default aggregate value is encountered
-		 * @param logBasis Log basis to use; Value less than 1 signals linear interpolation
-		 */
-		public CachelessInterpolate(Color low, Color high, Color empty, int logBasis) {
-			this.low = low;
-			this.high = high;
-			this.empty = empty;
-			this.logBasis = logBasis;
-		}
-		
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			Number v = aggregates.get(x,y);
-			if (v.equals(aggregates.defaultValue())) {
-				return empty;
-			}
-			Util.Stats<Number> extrema = Util.stats(aggregates, true, true);
-			
-			if (logBasis <= 1) {
-				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
-			} else {
-				return Util.logInterpolate(low,high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue(), logBasis);
-			}
-		}
-
-		@Override
-		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggregates) {return this;}
-		@Override public boolean localOnly() {return true;}
-		@Override public Color emptyValue() {return Color.white;}
-	}
-	
-	public static class CachelessDrawDark implements Transfer.Specialized<Number, Color> {
-		private static final long serialVersionUID = 4417984252053517048L;
-		
-		/**How large is the neighborhood?**/
-		public final int distance;
-		
-		/**Transfer function used to determine the colors after the ratios have been determined.**/
-		public final Transfer<Number, Color> inner;
-		Aggregates<Double> cached;
-		
-		/**
-		 * @param low Color to represent average or low value in the neighborhood
-		 * @param high Color to represent high value for the neighborhood
-		 * @param distance Distance that defines the neighborhood.
-		 */
-		public CachelessDrawDark(Color low, Color high, int distance) {
-			this.distance=distance;
-			inner = new Numbers.Interpolate<>(low,high,high);
-		}
-	
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
-			Transfer.Specialized<Number,Color> innerS = specializeTo(aggregates);
-			return innerS.at(x,y,cached);
-		}
-
-		public Specialized<Number,Color> specialize(Aggregates<? extends Number> aggs) {return this;}
-
-		public Specialized<Number,Color> specializeTo(Aggregates<? extends Number> aggs) {
-			this.cached = new RefFlatAggregates<>(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY(), Double.NaN);
-			for (int x=aggs.lowX(); x <aggs.highX(); x++) {
-				for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-					if (aggs.get(x, y).doubleValue() > 0) {
-						cached.set(x, y, preprocOne(x,y,aggs));
-					} else {
-						cached.set(x,y, Double.NaN);
-					}
-				}
-			}
-			return inner.specialize(cached);
-		}
-		
-		private double preprocOne(int x, int y, Aggregates<? extends Number> aggregates) {
-			double surroundingSum =0;
-			int cellCount = 0;
-			for (int dx=-distance; dx<=distance; dx++) {
-				for (int dy=-distance; dy<=distance; dy++) {
-					int cx=x+dx;
-					int cy=y+dy;
-					if (cx < aggregates.lowX() || cy < aggregates.lowY() 
-							|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-					cellCount++;
-					double dv = aggregates.get(cx,cy).doubleValue();
-					if (dv != 0) {surroundingSum++;}
-				}
-			}
-			return surroundingSum/cellCount;
-		}
-
-		@Override public Color emptyValue() {return Color.white;}
-		@Override public boolean localOnly() {return true;}
 	}
 }
 

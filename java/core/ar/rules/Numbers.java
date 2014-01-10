@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
@@ -53,7 +54,7 @@ public final class Numbers {
 	 * 
 	 * @author jcottam
 	 */
-	public static final class FixedInterpolate implements Transfer.Specialized<Number,Color> {
+	public static final class FixedInterpolate<IN extends Number> implements Transfer.ItemWise<IN,Color> {
 		private static final long serialVersionUID = -2583391379423930420L;
 		final Color low, high, background;
 		final double lowv, highv;
@@ -77,13 +78,18 @@ public final class Numbers {
 			this.background = background;
 		}
 
-		public Color at(int x, int y, Aggregates<? extends Number> aggregates) {
+		@Override
+		public Color at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
 
-		public Color emptyValue() {return background;}
-		public FixedInterpolate  specialize(Aggregates<? extends Number> aggregates) {return this;}
-		public boolean localOnly() {return true;}
+		@Override
+		public Aggregates<Color> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates,this);
+		}
+		
+		@Override public Color emptyValue() {return background;}
+		@Override public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/
@@ -108,28 +114,33 @@ public final class Numbers {
 			this.empty = empty;
 		}
 		
-
+		@Override 
 		public Transfer.Specialized<A,Color> specialize(Aggregates<? extends A> aggregates) {
 			return new Specialized<>(aggregates, low, high, empty);
 		}
 		
-		public Color emptyValue() {return empty;}
+		@Override public Color emptyValue() {return empty;}
 		
-		private static class Specialized<A extends Number> extends Interpolate<A> implements Transfer.Specialized<A, Color> {
+		private static class Specialized<A extends Number> extends Interpolate<A> implements Transfer.ItemWise<A, Color> {
 			private static final long serialVersionUID = 1106343839501609604L;
 			protected final Util.Stats<? extends Number> extrema;
 
 			public Specialized(Aggregates<? extends A> aggregates, Color low, Color high, Color empty) {
 				super(low, high, empty);
-				this.extrema = Util.stats(aggregates, false, false);
+				this.extrema = Util.stats(aggregates, false, false, false);
 			}
 
+			@Override
 			public Color at(int x, int y, Aggregates<? extends A> aggregates) {
 				Number v = aggregates.get(x,y);
 				if (Util.isEqual(v, aggregates.defaultValue())) {return empty;}
 				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
 			}
-			public boolean localOnly() {return true;}
+
+			@Override
+			public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}
 		}
 	}
 	

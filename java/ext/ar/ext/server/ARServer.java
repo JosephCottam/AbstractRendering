@@ -31,7 +31,6 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
-import ar.rules.combinators.Chain;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.DelimitedReader;
@@ -68,8 +67,8 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("RedWhiteLog", new Seq<Number, Double, Color>(
 											new General.ValuerTransfer<>(new MathValuers.Log<>(10, false, true), 0d), 
 											new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white)));
-		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25.5));
-		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate(Color.white, Color.red, 0, 255));
+		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5));
+		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 255));
 		TRANSFERS.put("Present", new General.Present<Integer,Color>(Color.red, Color.white));
 		TRANSFERS.put("90Percent", new Categories.KeyPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("25Percent", new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
@@ -80,10 +79,9 @@ public class ARServer extends NanoHTTPD {
 						
 		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));
 		AGGREGATORS.put("First", new Categories.First());
-		AGGREGATORS.put("Last", new Categories.Last());
+		AGGREGATORS.put("Last", new General.Last<>(null));
 		AGGREGATORS.put("Count", new Numbers.Count<Object>());
-		AGGREGATORS.put("RLEColor", new Categories.RunLengthEncode<Color>());
-		AGGREGATORS.put("RLEUnsortColor", new Categories.CountCategories<Color>());
+		AGGREGATORS.put("CoCColor", new Categories.CountCategories<Color>());
 	}
 	
 	public ARServer(String hostname) {this(hostname, 8739);}
@@ -129,10 +127,18 @@ public class ARServer extends NanoHTTPD {
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
 		Renderer r = new ParallelRenderer();
-		
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
-		Transfer transfer = new Chain(r, transfers.toArray(new Transfer[transfers.size()]));
+
+		Transfer transfer;
+		if (transfers.size() >= 2) {
+			Seq t = new Seq(transfers.get(0), transfers.get(1));
+			for (int i=2; i< transfers.size(); i++) {t.then(transfers.get(i));}
+			transfer = t;
+		} else {
+			transfer = transfers.get(0);
+		}
+		
 		Transfer.Specialized ts = transfer.specialize(aggs);
 		Aggregates<?> rslt = r.transfer(aggs, ts);
 		return rslt;
