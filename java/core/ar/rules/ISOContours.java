@@ -136,7 +136,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 
 			contours.add(new SimpleGlyph<>(s, threshold));
 			if (!fill) {isoDivided = rend.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
-			Aggregates<N> base = rend.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
+			Aggregates<N> base = rend.transfer(isoDivided, new General.MapWrapper<>(true, threshold, LocalUtils.zeroLike(threshold))); //TODO: Is zero-ing the right thing to do?  May cause problems for ISO contours of values crossing the zero-boundary... 
 			return new ContourAggregates<>(base, contours);
 		}
 	}
@@ -172,6 +172,17 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			if (val instanceof Long) {return (N) new Long((long) (((Long) val).longValue()+more));}
 			if (val instanceof Integer) {return (N) new Integer((int) (((Integer) val).intValue()+more));}
 			if (val instanceof Short) {return (N) new Short((short) (((Short) val).shortValue()+more));}
+			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
+		}
+		
+		
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> N zeroLike(N val) {
+			if (val instanceof Double) {return (N) (Double) 0d;}
+			if (val instanceof Float) {return (N) (Float) 0f;}
+			if (val instanceof Long) {return (N) (Long) 0l;}
+			if (val instanceof Integer) {return (N) (Integer) 0;}
+			if (val instanceof Short) {return (N) (Short) (short)0;}
 			throw new IllegalArgumentException("Cannot add to " + val.getClass().getName());
 		}
 	}
