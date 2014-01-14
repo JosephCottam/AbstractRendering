@@ -102,9 +102,12 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 				}
 			);
 		} catch (InvocationTargetException | InterruptedException e1) {}
-		
+	
+		//Plumbing for the top row...
 		this.status.startMonitoring(display.renderer());
-	}
+		clipwarnControl.target(display);
+        enhanceOptions.host(display);	
+    }
 	
 	public void update(ARComponent.Aggregating panel) {
 		if (panel.dataset() == composer.dataset()
