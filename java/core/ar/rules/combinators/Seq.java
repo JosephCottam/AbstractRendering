@@ -32,24 +32,20 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
     public static <IN, OUT> SeqStart<IN,OUT> start(Renderer rend, Transfer<IN,OUT> start) {return new SeqStart<>(rend, start);}
     public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(null, start);}
     
-    public static class SeqStart<IN,OUT> implements Transfer<IN,OUT> {
-    	public final Transfer<IN,OUT> base;
-    	public final Renderer rend;
-
+    public static class SeqStart<IN,OUT> extends Seq<IN, OUT, OUT> {
     	public SeqStart(Renderer rend, Transfer<IN, OUT> base) {
-    		this.base = base;
-    		this.rend = rend;
+    		super(rend, base,null);
     	}
 
 		@Override
-		public OUT emptyValue() {return base.emptyValue();}
+		public OUT emptyValue() {return first.emptyValue();}
 
 		@Override
 		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-			return base.specialize(aggregates);
+			return first.specialize(aggregates);
 		}
 		
-	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, base, next);}
+	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, first, next);}
     }
 
     public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT> {

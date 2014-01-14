@@ -9,6 +9,7 @@ import ar.Transfer;
 import ar.app.components.DrawDarkControl;
 import ar.app.components.ScatterControl;
 import ar.app.display.ARComponent;
+import ar.app.display.ARComponent.Holder;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
@@ -86,6 +87,13 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 		}
 	}
 
+	public class Echo implements WrappedTransfer<Object,Object> {
+		public static String NAME = "Echo (*)"; //Static so it can be tested for; non-final so it can be changed in some cases
+		@Override public void deselected() {}
+		@Override public void selected(Holder app) {}
+		@Override public Transfer<Object, Object> op() {return new General.Echo<>(null);}		
+		@Override public String toString() {return NAME;}
+	}
 
 	public class Gradient implements WrappedTransfer<Object, Color> {
 		public Transfer<Object, Color> op() {return new Debug.Gradient();}
@@ -150,13 +158,6 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	public class Percent25 implements WrappedTransfer<CategoricalCounts<Color>,Color> {
 		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red);}
 		public String toString() {return "25% Percent (RLE)";}
-		public void selected(ARComponent.Holder app) {}
-		public void deselected() {}
-	}
-	
-	public class EchoColor implements WrappedTransfer<Color,Color> {
-		public Transfer<Color,Color> op() {return new General.Echo<Color>(Color.white);}
-		public String toString() {return "Echo (Color)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}
 	}

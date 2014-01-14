@@ -352,6 +352,7 @@ public class General {
 	public static final class Echo<T> implements Transfer.ItemWise<T,T>, Aggregator<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
+		
 		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
 		 *               but some methods need an empty value independent of the aggregates set.**/
 		public Echo(T empty) {this.empty = empty;}
