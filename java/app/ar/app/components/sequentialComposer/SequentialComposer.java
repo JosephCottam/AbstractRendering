@@ -21,9 +21,10 @@ import ar.app.util.AppUtil;
 import ar.rules.General;
 import ar.rules.combinators.Seq;
 
+@SuppressWarnings("rawtypes")
 public class SequentialComposer extends JPanel  {
-	private JComboBox<OptionDataset<?,?>> datasets = new JComboBox<>();
-	private JComboBox<OptionAggregator<?,?>> aggregators  = new JComboBox<>();
+	private JComboBox<OptionDataset> datasets = new JComboBox<>();
+	private JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
 	private List<JComboBox<OptionTransfer>> transfers = new ArrayList<>();
 	private final ActionProvider actionProvider = new ActionProvider();  
 
