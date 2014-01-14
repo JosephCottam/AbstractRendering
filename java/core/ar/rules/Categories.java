@@ -8,6 +8,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 /**Tools for working with categorical entries.**/
@@ -443,6 +444,45 @@ public class Categories {
 			return rend.transfer(aggregates, this);
 		}		
 	}
+//
+//	/**Applies a valuer to each category's COUNT value.
+//	 * 
+//	 * TODO: Extend 'fan' with some index-parameter or splitter-function options and implement this with fan
+//	 * **/
+//	public static class ValuerEach<IN,N extends Number> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<IN>> {
+//		final Valuer<Integer,N> valuer; 
+//		public ValuerEach(Valuer<Integer,N> valuer) {this.valuer = valuer;}
+//		
+//		@Override
+//		public Aggregates<CategoricalCounts<IN>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
+//			return rend.transfer(aggregates, this);		}
+//
+//		@Override
+//		public CategoricalCounts<IN> emptyValue() {return new CategoricalCounts();} //TODO: This might lead to problems with comparators....
+//
+//		@Override
+//		public ar.Transfer.Specialized<CategoricalCounts<IN>, CategoricalCounts<IN>> specialize(
+//				Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+//			return this;
+//		}
+//
+//		@Override
+//		public CategoricalCounts<IN> at(int x, int y,
+//				Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+//			CategoricalCounts<IN> in = aggregates.get(x, y);
+//			CategoricalCounts<IN> out = in.empty();
+//			
+//			for (int i=0; i< in.size();i++) {
+//				IN key = in.key(i);
+//				int count = in.count(i);
+//				N v = valuer.value(count);
+//			}
+//			
+//			// TODO Auto-generated method stub
+//			return null;
+//		}
+//		
+//	}
 	
 
 }

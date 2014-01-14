@@ -88,6 +88,9 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 	
 	public int count(int i) {return counts[i];}
 
+	/**Create an empty version of the current thing.
+	 * Does not remove any values,  but creates a new counter with the same construction parameters as the current one.
+	 */
 	public CategoricalCounts<T> empty() {return new CategoricalCounts<>(comp);} 
 
 

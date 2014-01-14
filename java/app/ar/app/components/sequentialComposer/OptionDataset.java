@@ -15,6 +15,9 @@ import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public final class OptionDataset<G,I> {
+	
+	//TODO: Add "default chain" for ready access to a decent configuration 
+	
 	private final String name;
 	private final Glyphset<G,I> glyphs;
 	public OptionDataset(String name, File file, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer) {

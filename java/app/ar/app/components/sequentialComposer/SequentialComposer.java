@@ -18,17 +18,16 @@ import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
-import ar.app.util.WrappedTransfer;
 import ar.rules.General;
 import ar.rules.combinators.Seq;
 
 public class SequentialComposer extends JPanel  {
 	private JComboBox<OptionDataset<?,?>> datasets = new JComboBox<>();
 	private JComboBox<OptionAggregator<?,?>> aggregators  = new JComboBox<>();
-	private List<JComboBox<WrappedTransfer<?,?>>> transfers = new ArrayList<>();
+	private List<JComboBox<OptionTransfer>> transfers = new ArrayList<>();
 	private final ActionProvider actionProvider = new ActionProvider();  
 
-	static {WrappedTransfer.Echo.NAME = "End (*)";}
+	static {OptionTransfer.Echo.NAME = "End (*)";}
 	
 	public SequentialComposer() {
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
@@ -44,17 +43,17 @@ public class SequentialComposer extends JPanel  {
 	}	
 	
 	private void addTransferBox() {
-		JComboBox<WrappedTransfer<?,?>> transferOptions = new JComboBox<WrappedTransfer<?,?>>();
-		AppUtil.loadInstances(transferOptions, WrappedTransfer.class, WrappedTransfer.class, WrappedTransfer.Echo.NAME);
+		JComboBox<OptionTransfer> transferOptions = new JComboBox<OptionTransfer>();
+		AppUtil.loadInstances(transferOptions, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
 		transfers.add(transferOptions);
-		transferOptions.addItemListener(new  ChangeTransfer(this, transfers));
+		transferOptions.addItemListener(new ChangeTransfer(this, transfers));
 		transferOptions.addActionListener(new ActionProvider.DelegateListener(actionProvider));
 		this.add(transferOptions);
 		if (this.getParent() != null) {this.getParent().revalidate();}
 	}
 	
 	private void clearTransfers() {
-		for (JComboBox<WrappedTransfer<?,?>> transfer: transfers) {
+		for (JComboBox<OptionTransfer> transfer: transfers) {
 			this.remove(transfer);
 		}
 		transfers.clear();
@@ -94,10 +93,10 @@ public class SequentialComposer extends JPanel  {
 	
 	
 	public static class ChangeTransfer implements ItemListener {
-		final List<JComboBox<WrappedTransfer<?,?>>> listing;
+		final List<JComboBox<OptionTransfer>> listing;
 		final SequentialComposer host;
 		
-		public ChangeTransfer(SequentialComposer host, List<JComboBox<WrappedTransfer<?,?>>> listing) {
+		public ChangeTransfer(SequentialComposer host, List<JComboBox<OptionTransfer>> listing) {
 			this.listing = listing;
 			this.host = host;
 		}
@@ -105,9 +104,9 @@ public class SequentialComposer extends JPanel  {
 		@Override
 		public void itemStateChanged(ItemEvent e) {
 			@SuppressWarnings("unchecked")
-			JComboBox<WrappedTransfer<?,?>> source = (JComboBox<WrappedTransfer<?,?>>) e.getSource();
+			JComboBox<OptionTransfer> source = (JComboBox<OptionTransfer>) e.getSource();
 			int idx = listing.indexOf(source);
-			boolean end = e.getItem().toString().equals(WrappedTransfer.Echo.NAME);
+			boolean end = e.getItem().toString().equals(OptionTransfer.Echo.NAME);
 			if (idx < listing.size()-1 && end) {
 				listing.remove(source);
 				host.remove(source);
@@ -127,10 +126,10 @@ public class SequentialComposer extends JPanel  {
 		if (transfers.size() == 1) {return new General.Echo<>(aggregator().identity());}
 		
 		int idx = transfers.get(0).getSelectedIndex();
-		Seq t = Seq.start(transfers.get(0).getItemAt(idx).op());
+		Seq t = Seq.start(transfers.get(0).getItemAt(idx).transfer());
 		for (int i=1; i<transfers.size()-1; i++) {
 			idx = transfers.get(i).getSelectedIndex();
-			t.then(transfers.get(i).getItemAt(idx).op());
+			t.then(transfers.get(i).getItemAt(idx).transfer());
 		}
 		return t;
 	}
