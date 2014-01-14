@@ -223,7 +223,7 @@ public class Categories {
 			return base + 891734501; //Plus noise....
 		}
 
-		@Override public CategoricalCounts<T> identity() {return new CategoricalCounts<>();}
+		@Override public CategoricalCounts<T> identity() {return new CategoricalCounts<>(comp);}
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
