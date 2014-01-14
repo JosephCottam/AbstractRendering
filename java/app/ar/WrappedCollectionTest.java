@@ -55,7 +55,7 @@ public class WrappedCollectionTest {
 		WrappedCollection<Integer,Rectangle2D, Color> gs = new WrappedCollection<>(vs, g, g);
 		
 		AggregatingDisplay p = new AggregatingDisplay(new WrappedAggregator.OverplotFirst().op(), 
-								new WrappedTransfer.EchoColor().op(), 
+								new WrappedTransfer.Echo().op(), 
 								gs, 
 								new ParallelRenderer());
 		

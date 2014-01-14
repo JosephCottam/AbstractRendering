@@ -18,6 +18,8 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Transfer;
 import ar.app.components.LabeledItem;
+import ar.app.display.ARComponent;
+import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.app.util.WrappedAggregator;
 import ar.app.util.WrappedTransfer;
@@ -30,17 +32,21 @@ import ar.rules.General;
 import ar.rules.combinators.Seq;
 import ar.util.Util;
 
-public class SequentialComposer extends JPanel {
+public class SequentialComposer extends JPanel  {
 	private JComboBox<OptionDataset<?,?>> datasets = new JComboBox<>();
-	private JComboBox<Aggregator<?,?>> aggregators  = new JComboBox<>();
+	private JComboBox<WrappedAggregator<?,?>> aggregators  = new JComboBox<>();
 	private List<JComboBox<WrappedTransfer<?,?>>> transfers = new ArrayList<>();
-	
+	private final ActionProvider actionProvider = new ActionProvider();  
+
 	static {WrappedTransfer.Echo.NAME = "End (*)";}
 	
 	public SequentialComposer() {
 		AppUtil.loadStaticItems(datasets, SequentialComposer.class, OptionDataset.class, "BGL Memory");
 		AppUtil.loadInstances(aggregators, WrappedAggregator.class, WrappedAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		
+		datasets.addActionListener(new ActionProvider.DelegateListener(actionProvider));
+		aggregators.addActionListener(new ActionProvider.DelegateListener(actionProvider));
 		
 		this.add(new LabeledItem("Dataset:", datasets));
 		this.add(new LabeledItem("Aggregator:", aggregators));
@@ -52,6 +58,7 @@ public class SequentialComposer extends JPanel {
 		AppUtil.loadInstances(transferOptions, WrappedTransfer.class, WrappedTransfer.class, WrappedTransfer.Echo.NAME);
 		transfers.add(transferOptions);
 		transferOptions.addItemListener(new  ChangeTransfer(this, transfers));
+		transferOptions.addActionListener(new ActionProvider.DelegateListener(actionProvider));
 		this.add(transferOptions);
 		if (this.getParent() != null) {this.getParent().revalidate();}
 	}
@@ -84,6 +91,18 @@ public class SequentialComposer extends JPanel {
 		}
 	}
 		
+	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
+	
+	/**Should the display be re-zoomed?  
+	 * Returns true when the new glyphset & aggregator is not the same as the old one.**/
+	public boolean doZoomWith(ARComponent.Aggregating oldPanel) {
+		return oldPanel == null
+				|| oldPanel.dataset() != dataset()
+				|| !oldPanel.aggregator().equals(aggregator());
+	}
+	
+	
+	
 	public static class ChangeTransfer implements ItemListener {
 		final List<JComboBox<WrappedTransfer<?,?>>> listing;
 		final SequentialComposer host;
@@ -111,8 +130,8 @@ public class SequentialComposer extends JPanel {
 		
 	}
 	
-	public Glyphset<?,?> dataset() {return datasets.getItemAt(aggregators.getSelectedIndex()).dataset();}
-	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex());}
+	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).dataset();}
+	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex()).op();}
 	
 	public Transfer<?,?> transfer() {
 		if (transfers.size() == 1) {return new General.Echo<>(aggregator().identity());}

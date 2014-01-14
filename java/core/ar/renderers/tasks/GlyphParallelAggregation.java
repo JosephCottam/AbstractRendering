@@ -60,7 +60,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 	protected final Aggregates<A> local() {
-		long step = recorder.reportStep() <= 0 ? high-low : recorder.reportStep();
+		long step = recorder.reportStep() <= 0 ? high-low : recorder.reportStep();  //How often should reports be made?
 		Aggregates<A> target = allocateAggregates(glyphs.bounds());
 		
 		for (long bottom=low; bottom < high; bottom+= step) {

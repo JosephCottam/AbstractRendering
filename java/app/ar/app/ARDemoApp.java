@@ -72,20 +72,20 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 
 		
 
-//		final ARDemoApp app = this;
-//		presets.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				boolean rezoom = presets.doZoomWith(app.display);
-//				app.changeDisplay(presets.update(app.display));
-//				if (rezoom) {
-//					display.zoomFit();
-//				}
-//			}
-//		});
-//		
-//		app.changeDisplay(presets.update(app.display));
-//		
-//		frame.add(display, BorderLayout.CENTER);
+		final ARDemoApp app = this;
+		composer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean rezoom = composer.doZoomWith(app.display);
+				update(app.display);
+				if (rezoom) {
+					display.zoomFit();
+				}
+			}
+		});
+		
+		update(app.display);
+		
+		frame.add(display, BorderLayout.CENTER);
 
 
 		frame.setSize(800, 800);
@@ -102,6 +102,18 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 				}
 			);
 		} catch (InvocationTargetException | InterruptedException e1) {}
+		
+		this.status.startMonitoring(display.renderer());
+	}
+	
+	public void update(ARComponent.Aggregating panel) {
+		if (panel.dataset() == composer.dataset()
+			&& panel.aggregator().equals(composer.aggregator())) {
+		    panel.transfer(composer.transfer());
+		} else {
+			panel.dataset(composer.dataset(), composer.aggregator(), composer.transfer());
+			panel.zoomFit();
+		}
 	}
 	
 	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source) {
