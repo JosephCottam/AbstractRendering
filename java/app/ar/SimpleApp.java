@@ -12,8 +12,8 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import ar.aggregates.AggregateUtils;
-import ar.app.display.FullDisplay;
-import ar.app.display.SimpleDisplay;
+import ar.app.display.AggregatingDisplay;
+import ar.app.display.TransferDisplay;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelRenderer;
@@ -47,7 +47,7 @@ public class SimpleApp {
 		//However, in exchange we need to supply the "shaper" and the "valuer" instances.
 		//These instances are defined above and depend on what exactly is
 		//held in the collection being wrapped.
-		Glyphset<Rectangle2D, Double> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4), Double.class);
+		Glyphset<Rectangle2D, Double> dataset = WrappedCollection.wrap(items, new Indexed.ToRect(.05,2,3), new Indexed.ToValue<Indexed,Double>(4));
 		
 
 
@@ -66,7 +66,7 @@ public class SimpleApp {
 
 		//The transfer function is used to convert one set of aggregates into another.
 		//In the end, an image is a set of aggreagates where the value in each bin is a color.
-		Transfer<Number, Color> transfer = new  Numbers.Interpolate(new Color(255,0,0,25), new Color(255,0,0,255));
+		Transfer<Number, Color> transfer = new  Numbers.Interpolate<>(new Color(255,0,0,25), new Color(255,0,0,255));
 
 
 		//Selector associates the glyphs individual bins.  
@@ -99,7 +99,7 @@ public class SimpleApp {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new SimpleDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();
@@ -114,7 +114,7 @@ public class SimpleApp {
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);
 		frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		final FullDisplay panel = new FullDisplay(aggregator, transfer, dataset, r);
+		final AggregatingDisplay panel = new AggregatingDisplay(aggregator, transfer, dataset, r);
 		frame2.add(panel, BorderLayout.CENTER);
 		frame2.setVisible(true);
 		frame2.revalidate();

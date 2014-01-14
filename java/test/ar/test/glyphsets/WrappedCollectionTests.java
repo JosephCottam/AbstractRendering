@@ -29,7 +29,7 @@ public class WrappedCollectionTests {
 	@Test
 	public void wrapList() {
 		ArrayList<Indexed> data = data();
-		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
+		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer());
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());
@@ -45,7 +45,7 @@ public class WrappedCollectionTests {
 		Collection<Indexed> data = new HashSet<Indexed>();
 		data.addAll(data());
 		
-		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer(), Object.class);
+		Glyphset<Rectangle2D, Object> g = WrappedCollection.wrap(data, shaper(), valuer());
 		
 		assertNotNull(g);
 		assertEquals("Size mismatch.", data.size(), g.size());

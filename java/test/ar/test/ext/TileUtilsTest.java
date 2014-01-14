@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.ext.tiles.TileUtils;
 import ar.rules.Numbers;
 import ar.test.aggregates.TestAggregates;
@@ -21,7 +21,7 @@ public class TileUtilsTest {
 	public void subset() {
 		Aggregates<Integer> aggs = TestAggregates.simpleAggregates(10, 10, 100, 100, -1);
 		
-		Aggregates<Integer> subset = AggregateUtils.alignedSubset(aggs, 0, 0, 25, 25);
+		Aggregates<Integer> subset = new SubsetWrapper<>(aggs, 0, 0, 25, 25);
 		
 		for (int x=subset.lowX(); x<subset.highX(); x++) {
 			for (int y=subset.lowY(); y<subset.highY(); y++) {
@@ -55,7 +55,7 @@ public class TileUtilsTest {
 		for (File f: files) {assertTrue("File not found: " + f.getPath(), f.exists());}
 		
 		
-		Aggregates<Integer> output = TileUtils.loadTiles(new ar.ext.avro.Converters.ToCount(), Integer.class, files.toArray(new File[0]));
+		Aggregates<Integer> output = TileUtils.loadTiles(new ar.ext.avro.Converters.ToCount(), files.toArray(new File[0]));
 		for (int x=output.lowX(); x<output.highX(); x++) {
 			for (int y=output.lowY(); y<output.lowY(); y++) {
 				assertThat(String.format("Error at %d, %d.", x,y), output.get(x,y), is(aggs.get(x, y)));

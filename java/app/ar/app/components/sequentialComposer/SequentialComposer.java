@@ -20,7 +20,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
-import ar.rules.CategoricalCounts.CoC;
+import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public class SequentialComposer extends JPanel {
@@ -79,7 +79,7 @@ public class SequentialComposer extends JPanel {
 					new Indexed.ToPoint(true, 0, 1),
 					new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
 	
-	public static OptionDataset<Point2D, CoC<String>> CENSUS_TRACTS = new OptionDataset<>(
+	public static OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS = new OptionDataset<>(
 			"US Census Tracts", 
 			new File("../data/2010Census_RaceTract.hbin"), 
 			new Indexed.ToPoint(true, 0, 1),

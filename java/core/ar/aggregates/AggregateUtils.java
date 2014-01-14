@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ar.Aggregates;
+import ar.aggregates.implementations.*;
 
 /**Utilities for working with aggregates.
  * 
@@ -21,8 +22,8 @@ public class AggregateUtils {
 	}
 	
 	/**From a set of color aggregates, make a new image.**/
-	public static BufferedImage asImage(Aggregates<Color> aggs, int width, int height, Color background) {
-		if (aggs instanceof ImageAggregates) {return ((ImageAggregates) aggs).image();}
+	public static BufferedImage asImage(Aggregates<? extends Color> aggs, int width, int height, Color background) {
+		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}
 		
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = i.getGraphics();
@@ -38,57 +39,26 @@ public class AggregateUtils {
 		return i;
 	}
 
-	/**Create a new aggregate set that is a subset of the old aggregate set.
-	 * 
-	 * The new aggregate set will have the same indices as the old aggregate set
-	 * (so 100,100 in the old one will have the same value as 100,100 in the old),
-	 * however the new aggregate set will not necessarily have the same lowX/lowY or highX/highY
-	 * as the old set.  The new aggregate set will have the same default value as the old.
-	 */
-	public static  <A> Aggregates<A> alignedSubset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		Aggregates<A> target = make(lowX, lowY, highX, highY, source.defaultValue());
-		for (int x=lowX; x<highX; x++) {
-			for (int y=lowY; y<highY; y++) {
-				target.set(x, y, source.get(x, y));
-			}
-		}
-		return target;
-	}
-
 	public static <A> Aggregates<A> make(Aggregates<?> like, A defVal) {return make(like.lowX(), like.lowY(), like.highX(), like.highY(),defVal);}
 
 	public static <A> Aggregates<A> make(int width, int height, A defVal) {return make(0,0,width,height,defVal);}
 
-	/**Create a set of aggregates for the given type.
-	 */
+	/**Create a set of aggregates for the given type.*/
 	@SuppressWarnings("unchecked")
 	public static <A> Aggregates<A> make(int lowX, int lowY, int highX, int highY, A defVal) {
 		if (defVal != null && defVal instanceof Color) {
-			return (Aggregates<A>) new ImageAggregates(lowX, lowY, highX, highY, (Color) defVal);
+			return (Aggregates<A>) new ColorAggregates(lowX, lowY, highX, highY, (Color) defVal);
+		} else if (defVal instanceof Integer) {
+			return (Aggregates<A>) new IntAggregates(lowX, lowY, highX, highY, (Integer) defVal);
+		} else if (defVal instanceof Double) {
+			return (Aggregates<A>) new DoubleAggregates(lowX, lowY, highX, highY, (Double) defVal);
+		} else if (defVal instanceof Boolean) {
+			return (Aggregates<A>) new BooleanAggregates(lowX, lowY, highX, highY, (Boolean) defVal);
+		} else if (size(lowX,lowY,highX,highY) > Integer.MAX_VALUE){
+			return new Ref2DAggregates<>(lowX, lowY, highX, highY, defVal);
 		} else {
-			return new FlatAggregates<>(lowX, lowY, highX, highY, defVal);
+			return new RefFlatAggregates<>(lowX, lowY, highX, highY, defVal);
 		}
-	}
-
-	/**Produce an independent aggregate set that has a lowX/Y value of 0,0 and contains
-	 * values from the source as determined by the passed low/high values.
-	 * 
-	 * On null, returns null.
-	 * **/
-	public static <A> Aggregates<A> subset(Aggregates<A> source, int lowX, int lowY, int highX, int highY) {
-		if (source == null) {return null;}
-		
-		int width = highX-lowX;
-		int height = highY-lowY;
-		
-		Aggregates<A> aggs= make(0, 0, width, height, source.defaultValue());
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				A val = source.get(x+lowX,y+lowY);
-				aggs.set(x, y, val);
-			}
-		}
-		return aggs;
 	}
 
 	/**Grid-style printing of the aggregates.  
@@ -115,8 +85,18 @@ public class AggregateUtils {
 	}
 	
 	/**How many aggregate values are present here?**/
-	public static final long size(Aggregates<?> aggs) {
-		return ((long) (aggs.highX()-aggs.lowX())) * ((long) (aggs.highY()-aggs.lowY()));
+	public static final long size(Aggregates<?> aggs) {return size(aggs.lowX(), aggs.lowY(), aggs.highX(), aggs.highY());}
+
+	/**How many aggregate values are present here?**/
+	public static final long size(int lowX, int lowY, int highX, int highY) {
+		return ((long) (highX-lowX)) * ((long) (highY-lowY));
+	}
+	
+	@SuppressWarnings("unused") 
+	/**Convert the x/y value to a single index based on the low/high x/y.**/
+	public static final int idx(int x,int y, int lowX, int lowY, int highX, int highY) {
+		int idx = ((highX-lowX)*(y-lowY))+(x-lowX);
+		return idx;
 	}
 
 	

@@ -35,7 +35,7 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	/**Return the backing aggregate set that this class wraps.**/
 	public Aggregates<A> base() {return base;}
 	
-	public Iterator<A> iterator() {return base.iterator();}
+	public Iterator<A> iterator() {return new Iterator2D<>(this);}
 
 	public A get(int x, int y) {return base.get(x, y);}
 

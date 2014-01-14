@@ -11,8 +11,8 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Selector;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.ConstantAggregates;
 import ar.aggregates.TouchedBoundsWrapper;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
 import ar.util.Util;
@@ -55,15 +55,21 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregates<A> rslt;
 		if ((high-low) > taskSize) {rslt=split();}
 		else {rslt=local();}
-		recorder.update((high-low)/2);
+		recorder.update((high-low)/3);
 		return rslt;
 	}
 	
 	protected final Aggregates<A> local() {
-		Glyphset<? extends G, ? extends I> subset = glyphs.segment(low,  high);
+		long step = recorder.reportStep() <= 0 ? high-low : recorder.reportStep();
 		Aggregates<A> target = allocateAggregates(glyphs.bounds());
-		selector.processSubset(subset, view, target, op);
-		recorder.update((high-low)/2);
+		
+		for (long bottom=low; bottom < high; bottom+= step) {
+			long top = Math.min(bottom+step, high);
+			Glyphset<? extends G, ? extends I> subset = glyphs.segment(bottom, top);
+			selector.processSubset(subset, view, target, op);
+			recorder.update(2*(step/3));
+		}
+		
 		return target;
 	}
 	

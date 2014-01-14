@@ -12,12 +12,12 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 	private final int lowx, lowy, highx, highy;
 	private final Aggregates<OUT> out;
 	private final Aggregates<? extends IN> in;
-	private final Transfer.Specialized<IN, OUT> t;
+	private final Transfer.ItemWise<IN, OUT> t;
 	private final long taskSize;
 	
 	public PixelParallelTransfer(
 			Aggregates<? extends IN> input, Aggregates<OUT> result, 
-			Transfer.Specialized<IN, OUT> t,
+			Transfer.ItemWise<IN, OUT> t,
 			long taskSize,
 			int lowX, int lowY, int highX, int highY) {
 		

@@ -7,7 +7,7 @@ import java.util.List;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.ConstantAggregates;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.util.Util;
 
 

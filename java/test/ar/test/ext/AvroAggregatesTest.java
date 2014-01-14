@@ -28,7 +28,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.AggregateSerializer.FORMAT;
@@ -37,7 +37,7 @@ import ar.ext.avro.SchemaComposer;
 
 public class AvroAggregatesTest {
 	public static Aggregates<Integer> count;
-	public static Aggregates<CategoricalCounts.RLE<Color>> rles;
+	public static Aggregates<CategoricalCounts<Color>> rles;
 	
 	@BeforeClass
 	public static void load() throws Exception {
@@ -51,12 +51,12 @@ public class AvroAggregatesTest {
 				236.13546883394775);
 		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
 		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt, 500,500);
-		rles = r.aggregate(glyphs, s, new Categories.RunLengthEncode<Color>(), vt, 500,500);
+		rles = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(), vt, 500,500);
 	}
 	
 	@Test
 	public void inOrderEqOutOrder() throws Exception {
-		Aggregates<Integer> ref = new FlatAggregates<Integer>(2,2,-1);
+		Aggregates<Integer> ref = new RefFlatAggregates<Integer>(2,2,-1);
 		ref.set(0, 0, 11);
 		ref.set(0, 1, 12);
 		ref.set(1, 0, 21);
@@ -128,14 +128,14 @@ public class AvroAggregatesTest {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void RLERoundTrip() throws Exception {
-		Aggregates<CategoricalCounts.RLE<Color>> ref = rles;
+		Aggregates<CategoricalCounts<Color>> ref = rles;
 		
 		File file =  new File("./testResults/rle.avro");
 		try (OutputStream out = new FileOutputStream(file)) {
 			Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
-			AggregateSerializer.serialize(ref, out, s, new Converters.FromRLE(s));
-			Aggregates<CategoricalCounts.RLE<String>> res 
-				= AggregateSerializer.deserialize(file, new Converters.ToRLE());
+			AggregateSerializer.serialize(ref, out, s, new Converters.FromCoC(s));
+			Aggregates<CategoricalCounts<String>> res 
+				= AggregateSerializer.deserialize(file, new Converters.ToCoC());
 	
 			assertEquals(ref.lowX(), res.lowX());
 			assertEquals(ref.lowY(), res.lowY());
@@ -145,8 +145,8 @@ public class AvroAggregatesTest {
 			
 			for (int x=ref.lowX(); x<ref.highX(); x++) {
 				for (int y=ref.lowY(); y<ref.highY(); y++) {
-					CategoricalCounts.RLE<Color> rref = ref.get(x,y);
-					CategoricalCounts.RLE<String> rres = res.get(x,y);
+					CategoricalCounts<Color> rref = ref.get(x,y);
+					CategoricalCounts<String> rres = res.get(x,y);
 					assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), rres.size());
 					
 					for (int i=0; i<rres.size();i++) {

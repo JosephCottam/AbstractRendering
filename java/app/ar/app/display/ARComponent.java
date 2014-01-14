@@ -35,11 +35,12 @@ public abstract class ARComponent extends JComponent {
 	
 	public static abstract class Aggregating extends ARComponent implements HasViewTransform {
 		private static final long serialVersionUID = 404081973530563354L;
+
 		public abstract Glyphset<?,?> dataset();
-		public abstract void dataset(Glyphset<?,?> data);
+		public abstract void dataset(Glyphset<?,?> data, Aggregator<?,?> agg, Transfer<?,?> t);
 	
-		public abstract Aggregator<?, ?> aggregator();
-		public abstract void aggregator(Aggregator<?, ?> aggregator);
+		public abstract Aggregator<?,?> aggregator();
+		public abstract Transfer<?,?> transfer();
 		
 		public abstract AffineTransform viewTransform();
 		public abstract AffineTransform renderTransform();

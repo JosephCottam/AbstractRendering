@@ -16,7 +16,7 @@ import ar.renderers.SerialRenderer;
 import ar.util.Util;
 
 /**Panel that will draw a set of aggregates on the screen with a given transfer function.**/
-public class SimpleDisplay extends ARComponent {
+public class TransferDisplay extends ARComponent {
 	private static final long serialVersionUID = 1L;
 	
 	/**Transfer function to use in rendering*/
@@ -38,17 +38,17 @@ public class SimpleDisplay extends ARComponent {
 
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "SimpleDisplay Render Thread");
 	
-	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
+	public TransferDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
 		this(aggregates, transfer, new SerialRenderer());
 	}
 	
-	public SimpleDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {
+	public TransferDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {
 		super();
 		this.renderer = renderer;
 		this.transfer = transfer;
 		this.aggregates = aggregates;
 		this.addComponentListener(new ComponentListener(){
-			public void componentResized(ComponentEvent e) {SimpleDisplay.this.renderAgain = true;}
+			public void componentResized(ComponentEvent e) {TransferDisplay.this.renderAgain = true;}
 			public void componentMoved(ComponentEvent e) {}
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
@@ -128,7 +128,7 @@ public class SimpleDisplay extends ARComponent {
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
 				Aggregates<Color> colors = renderer.transfer(aggs, ts);
 				
-				image = AggregateUtils.asImage(colors, SimpleDisplay.this.getWidth(), SimpleDisplay.this.getHeight(), Util.CLEAR);
+				image = AggregateUtils.asImage(colors, TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight(), Util.CLEAR);
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
@@ -136,12 +136,12 @@ public class SimpleDisplay extends ARComponent {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
-				e.printStackTrace();
+				//e.printStackTrace();
 			} finally {
 				renderAgain = false;
 			}
 			
-			SimpleDisplay.this.repaint();
+			TransferDisplay.this.repaint();
 		}
 	}
 		
@@ -151,7 +151,7 @@ public class SimpleDisplay extends ARComponent {
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new SimpleDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();

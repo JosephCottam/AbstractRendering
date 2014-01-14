@@ -62,7 +62,7 @@ public class AvroGlyphsTest {
 				new Indexed.ToRect(.1, 2,3), 
 				new Indexed.ToValue<>(4));
 		
-		Glyphset.RandomAccess<Rectangle2D, Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4), Color.class);
+		Glyphset.RandomAccess<Rectangle2D, Color> result = GlyphsetTools.fullLoad(output, new AvroRect<Color>(.1, 2, 3, 4));
 		
 		assertEquals("Size did not match", reference.size(), result.size());
 		for (int i=0;i<reference.size(); i++) {

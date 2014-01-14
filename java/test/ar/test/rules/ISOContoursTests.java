@@ -10,17 +10,19 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.aggregates.FlatAggregates;
+import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.ParallelRenderer;
 import ar.rules.ISOContours;
+import ar.rules.ISOContours.ContourAggregates;
 import ar.rules.ISOContours.MC_TYPE;
+import ar.test.TestResources;
 
 
 public class ISOContoursTests {
 	private static final Renderer RENDERER = new ParallelRenderer();
 	
 	public Aggregates<Boolean> makeMarchingSquareCase(boolean zz, boolean oz, boolean zo, boolean oo) {
-		Aggregates<Boolean> source = new FlatAggregates<>(0,0,2,2,false);
+		Aggregates<Boolean> source = new RefFlatAggregates<>(0,0,2,2,false);
 		source.set(0, 0, zz);
 		source.set(1, 0, oz);
 		source.set(0, 1, zo);
@@ -56,12 +58,13 @@ public class ISOContoursTests {
 	@Test
 	public void SaddleContour() {
 		int threshold = 3;
-		Aggregates<Integer> source = new FlatAggregates<>(0,0,4,4,0);
+		Aggregates<Integer> source = new RefFlatAggregates<>(0,0,4,4,0);
 		source.set(1,1,5);
 		source.set(2,2,5);
 		
-		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(RENDERER, threshold, true, source);
-		GeneralPath p = (GeneralPath) contour.contours().get(0).shape();
+		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) TestResources.RENDERER.transfer(source, contour);
+		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
 
 		GeneralPath p2 = (GeneralPath) p.clone();
 		p2.closePath();
@@ -77,15 +80,17 @@ public class ISOContoursTests {
 	@Test
 	public void SimpleContours() {
 		int threshold = 3;
-		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
+		Aggregates<Integer> source = new RefFlatAggregates<>(0,0,10,10,0); 
 		for (int x=source.lowX()+1; x<source.highX()-2; x++) {
 			for (int y=source.lowY()+1; y<source.highY()-2; y++) {
 				source.set(x,y,5);
 			}
 		}
 		
-		ISOContours.Single.Specialized<Integer> contour = new ISOContours.Single.Specialized<Integer>(RENDERER, threshold, true, source);
-		GeneralPath p = (GeneralPath) contour.contours().get(0).shape();
+		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) TestResources.RENDERER.transfer(source, contour);
+		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
+
 
 		GeneralPath p2 = (GeneralPath) p.clone();
 		p2.closePath();
@@ -106,7 +111,7 @@ public class ISOContoursTests {
 	@Test
 	public void ClassifyAggs() {
 		int threshold = 3;
-		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
+		Aggregates<Integer> source = new RefFlatAggregates<>(0,0,10,10,0); 
 		for (int x=source.lowX()+1; x<source.highX()-2; x++) {
 			for (int y=source.lowY()+1; y<source.highY()-2; y++) {
 				source.set(x,y,5);
@@ -155,7 +160,7 @@ public class ISOContoursTests {
 	@Test
 	public void ISODivide() {
 		int threshold = 3;
-		Aggregates<Integer> source = new FlatAggregates<>(0,0,10,10,0); 
+		Aggregates<Integer> source = new RefFlatAggregates<>(0,0,10,10,0); 
 		for (int x=3; x<6; x++) {
 			for (int y=3; y<6; y++) {
 				source.set(x,y,5);
@@ -174,7 +179,7 @@ public class ISOContoursTests {
 	@Test
 	public void PadAggregates() {
 		int pad = 3;
-		Aggregates<Integer> base = new FlatAggregates<>(0,0,10,10,5);
+		Aggregates<Integer> base = new RefFlatAggregates<>(0,0,10,10,5);
 		Aggregates<Integer> padded = new ISOContours.PadAggregates<Integer>(base, pad);
 		
 		assertThat(padded.lowX(), is(base.lowX()-1));

@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -29,7 +28,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.app.components.LabeledItem;
 import ar.util.Util;
 
@@ -39,7 +38,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	
 	private static final Color SHOW_ENHANCED  = new Color(100,149,237);
 	
-	private SubsetDisplay hosted;
+	private AggregatingDisplay hosted;
 	private SelectionOverlay overlay;
 	private EnhancedOverlay enhanced = new EnhancedOverlay();
 	private boolean enhanceEnabled;
@@ -47,7 +46,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private boolean redoRefAggregates = true;
 	
 	/**Host the given component in the overlay.**/
-	public EnhanceHost(SubsetDisplay hosted) {	
+	public EnhanceHost(AggregatingDisplay hosted) {	
 		this.hosted = hosted;
 		this.overlay = new SelectionOverlay(this);
 		this.add(overlay);
@@ -98,20 +97,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		int highX = (int) bounds.getMaxX();
 		int highY = (int) bounds.getMaxY();
 		
-		int width = highX-lowX;
-		int height = highY-lowY;
-		
-		Aggregates<A> subset= AggregateUtils.make(0, 0, width, height, aggs.defaultValue());
-		for (int x=0; x<width; x++) {
-			for (int y=0; y<height; y++) {
-				if (selection.contains(x+lowX, y+lowY)) {
-					A val = aggs.get(x+lowX,y+lowY);
-					subset.set(x, y, val);
-				}
-			}
-		}
-		return subset;
-
+		return new SubsetWrapper<>(aggs, lowX, lowY, highX, highY);
 	}
 	
 	public void enableEnhance(boolean enable) {
@@ -128,7 +114,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 				Aggregates<?> subset = subset();
 				hosted.refAggregates(subset);
 			} else {
-				hosted.refAggregates(null);
+				hosted.refAggregates(hosted.aggregates());
 			}
 			redoRefAggregates = false;
 		}
@@ -154,13 +140,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public Glyphset<?,?> dataset() {return hosted.dataset();}
 	public void renderAgain() {hosted.renderAgain();}
 	
-	public void dataset(Glyphset<?,?> data) {
-		hosted.dataset(data);
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
+		hosted.dataset(data, aggregator, transfer);
 		overlay.clear();
 	}
 	
 	public Aggregator<?, ?> aggregator() {return hosted.aggregator();}
-	public void aggregator(Aggregator<?, ?> aggregator) {hosted.aggregator(aggregator);}
 	public Renderer renderer() {return hosted.renderer();}
 
 	public void zoomFit() {hosted.zoomFit();}
@@ -208,8 +193,8 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private static class SelectionOverlay extends JComponent implements Selectable {
 		private static final long serialVersionUID = 9079768489874376280L;
 		
-		/**Color to make 'masked off' areas.**/
-		public Color MASKED = new Color(100,100,100,50);
+		/**Color to show 'delete' in enhancement.**/
+		public Color PROVISIONAL = new Color(200,30,30);
 		
 		private Area selected;
 		
@@ -232,26 +217,17 @@ public class EnhanceHost extends ARComponent.Aggregating {
 							new ImageIcon(makeImage(borderSize+2, new Color(255,140,0), Util.CLEAR))));
 		}
 		
-		
-		
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
-			Area a =new Area(this.getBounds());
 			AffineTransform vt = host.viewTransform();
 			
-			if (selected != null) {a.subtract(new Area(vt.createTransformedShape(selected)));}
-			
-			if (provisional != null) {
-				Shape s = vt.createTransformedShape(provisional);
-				if (provisionalRemove) {a.add(new Area(s));}
-				else {a.subtract(new Area(s));}
-			}
-			
-			if (provisional != null || selected != null) {
-				g2.setColor(MASKED);
-				g2.fill(a);
-			}
+
+			g2.setColor(SHOW_ENHANCED);
+			if (selected != null) {g2.draw(vt.createTransformedShape(selected));}
+
+			if (provisionalRemove) {g2.setColor(PROVISIONAL);}
+			if (provisional != null) {g2.draw(vt.createTransformedShape(provisional));}
 		}
 
 		public void clear() {
@@ -352,7 +328,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		
 		/**Create a toggle control.  Will have no effect until 'host' is set.**/
 		public Control() {
-			JPanel item = new LabeledItem("Show Overlay:", box);
+			JPanel item = new LabeledItem("Modify Selection:", box);
 			this.add(item);
 			
 			box.addActionListener(new ActionListener() {

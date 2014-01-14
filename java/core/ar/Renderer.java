@@ -31,23 +31,22 @@ public interface Renderer extends Serializable {
 			final AffineTransform viewTransform, final int width, final int height);
 	
 	
-	/**Produces an new set of aggregates for rendering, converting a set of aggregates into a set of colors.
+	/**Produces an new set of aggregates from an existing one.
 	 * 
 	 * Since aggregates are produced with-respect-to a particular viewport, converting to colors
-	 * is essentially producing an image.  Therefore, this image returns an image ready-to-display.
+	 * is essentially producing an image.  Therefore, this function may be used to prepare an image
+	 * that is ready-to-display.
 	 * 
-	 * The width and height must be passed to transfer separately from the aggregates 
-	 * because (1) Aggregates support sub-regions and therefore might not be the same size as the space 
-	 * to render in and (2) a set of aggregates might extend off the rendering window if over-sampling
-	 * was done in aggregation (i.e., to support fast panning or maintain a view invariant property 
-	 * by aggregating over the entire canvas instead of just the view window).
-	 *   
 	 * @param aggregates Set of aggregates to perform transfer on 
 	 * @param t Transfer function to apply
 	 * @return A resulting set of aggregates
 	 */
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN, OUT> t);
 	
+
+	/**Produces a set of aggregates based on an item-wise specialization.**/
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN, OUT> t);
+
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.
 	 * Progress and progress reporting/recording are left up to the renderer to define.  This method may

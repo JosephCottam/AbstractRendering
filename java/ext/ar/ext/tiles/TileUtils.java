@@ -11,7 +11,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.AggregateUtils;
+import ar.aggregates.SubsetWrapper;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.AggregationStrategies;
@@ -50,7 +50,7 @@ public class TileUtils {
 			for (int col=0; col<cols; col++) {
 				int lowX=(col*tileWidth)+aggs.lowX();
 				int lowY=(col*tileHeight)+aggs.lowY();
-				Aggregates<?> subset = AggregateUtils.alignedSubset(aggs, lowX, lowY, lowX+tileWidth, lowY+tileHeight);
+				Aggregates<?> subset = new SubsetWrapper<>(aggs, lowX, lowY, lowX+tileWidth, lowY+tileHeight);
 				
 				File target = extend(levelRoot, Integer.toString(col), Integer.toString(row), ".avro");
 				target.getParentFile().mkdirs();
@@ -84,7 +84,7 @@ public class TileUtils {
 	}
 	
 	/**Reload a specified subset of tiles into a single set of aggregates.**/
-	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, Class<A> type, File... files) 
+	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, File... files) 
 			throws IOException {
 		
 		Aggregates<A> acc = null;

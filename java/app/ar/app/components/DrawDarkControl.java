@@ -7,7 +7,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import ar.Transfer;
-import ar.app.ARApp;
 import ar.app.display.ARComponent;
 import ar.rules.Advise.DrawDark;
 
@@ -28,7 +27,7 @@ public class DrawDarkControl extends JPanel {
 		});
 	}
 	
-	public void setSource(ARApp source) {this.source=source;}
+	public void setSource(ARComponent.Holder source) {this.source=source;}
 	public int distance() {return (Integer) distance.getValue();}
 	public void updateImage() {
 		source.getARComponent().transfer(DrawDarkControl.this.getTransfer());

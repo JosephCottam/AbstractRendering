@@ -9,7 +9,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
-import ar.app.ARApp;
+import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 
 public class FileOptions extends JPanel {
@@ -35,7 +35,7 @@ public class FileOptions extends JPanel {
 	
 	public void addActionListener(ActionListener l) {provider.addActionListener(l);}
 	
-	public FileOptions(ARApp parnt) {
+	public FileOptions(ARComponent.Holder parnt) {
 		export = new ExportAggregates(parnt);
 		this.add(chooseFile);
 		this.add(export);

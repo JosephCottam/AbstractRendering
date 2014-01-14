@@ -1,2 +1,2 @@
-/**Implementations of the aggregates interface and related utilities.**/
+/**Tools for working with aggregate interface instances.**/
 package ar.aggregates;

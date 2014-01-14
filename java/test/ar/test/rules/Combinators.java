@@ -8,7 +8,6 @@ import java.awt.Color;
 import org.junit.Test;
 
 import ar.Aggregates;
-import ar.Resources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.MathValuers;
@@ -16,6 +15,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.combinators.*;
+import ar.test.TestResources;
 
 public class Combinators {
 	@Test
@@ -31,7 +31,7 @@ public class Combinators {
 		assertTrue(isTrue.value(t.get(0, 0)));
 		assertTrue(isFalse.value(f.get(0, 0)));
 		
-		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Some<>(isTrue);		
+		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Any<>(isTrue);		
 		assertTrue(someTrue.value(t));
 		assertFalse(someTrue.value(f));
 		assertTrue(someTrue.value(m));
@@ -41,7 +41,7 @@ public class Combinators {
 		assertFalse(allTrue.value(f));
 		assertFalse(allTrue.value(m));
 		
-		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Some<>(isFalse);
+		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Any<>(isFalse);
 		assertFalse(someFalse.value(t));
 		assertTrue(someFalse.value(f));
 		assertTrue(someFalse.value(m));
@@ -63,7 +63,7 @@ public class Combinators {
 		}
 		
 		Transfer.Specialized<Boolean,Color> t = new If<>(new Valuer.Constant<Boolean, Boolean>(true), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
-		Aggregates<Color> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
+		Aggregates<Color> rslt = TestResources.RENDERER.transfer(a, t);
 		
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
@@ -74,14 +74,14 @@ public class Combinators {
 	}
 
 	@Test
-	public void Fix() {
+	public void While() {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 1);
 		
 		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10));
 		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
-		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
 		
 		assertTrue("Bluk test", p.value(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
@@ -103,7 +103,7 @@ public class Combinators {
 		
 				
 		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
-		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45));
 		assertTrue("Bluk test", p.value(rslt));
@@ -117,7 +117,7 @@ public class Combinators {
 		Transfer<Integer,Integer> t2 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(2),0);
 		Transfer.Specialized<Integer, Integer> t = new Seq<>(t1,t2).specialize(a);
 		
-		Aggregates<Integer> rslt = Resources.DEFAULT_RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
 		assertTrue("Bluk test", p.value(rslt));

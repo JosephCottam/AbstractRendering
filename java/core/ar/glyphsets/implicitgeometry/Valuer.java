@@ -74,7 +74,7 @@ public interface Valuer<I,V> extends Serializable {
 	}
 
 	/**Load the data as a key/value pair.  The key is the category, the value is an integer count.**/
-	public static class CategoryCount<T> implements Valuer<Indexed,CategoricalCounts.CoC<T>> {
+	public static class CategoryCount<T> implements Valuer<Indexed,CategoricalCounts<T>> {
 		private static final long serialVersionUID = 1L;
 		private final int catIdx, valIdx;
 		private final Comparator<T> comp;
@@ -89,11 +89,11 @@ public interface Valuer<I,V> extends Serializable {
 			this.comp = comp;
 		}
 		
-		public CategoricalCounts.CoC<T> value(Indexed from) {
+		public CategoricalCounts<T> value(Indexed from) {
 			@SuppressWarnings("unchecked")
 			T key = (T) from.get(catIdx);
 			int val = ((Integer) from.get(valIdx)).intValue();
-			return new CategoricalCounts.CoC<>(comp, key, val); 
+			return new CategoricalCounts<>(comp, key, val); 
 		}
 	}
 	
