@@ -1,11 +1,6 @@
 package ar.app.components.sequentialComposer;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
@@ -18,14 +13,12 @@ import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
-import ar.rules.General;
-import ar.rules.combinators.Seq;
 
 @SuppressWarnings("rawtypes")
 public class SequentialComposer extends JPanel  {
-	private JComboBox<OptionDataset> datasets = new JComboBox<>();
-	private JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
-	private List<JComboBox<OptionTransfer>> transfers = new ArrayList<>();
+	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
+	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
+	private final TransferBuilder transfers = new TransferBuilder();
 	private final ActionProvider actionProvider = new ActionProvider();  
 
 	static {OptionTransfer.Echo.NAME = "End (*)";}
@@ -37,50 +30,13 @@ public class SequentialComposer extends JPanel  {
 		
 		datasets.addActionListener(new ActionProvider.DelegateListener(actionProvider));
 		aggregators.addActionListener(new ActionProvider.DelegateListener(actionProvider));
+		transfers.addActionListener(new ActionProvider.DelegateListener(actionProvider));
 		
 		this.add(new LabeledItem("Dataset:", datasets));
 		this.add(new LabeledItem("Aggregator:", aggregators));
-		addTransferBox();
+		this.add(new LabeledItem("Transfer:", transfers));
 	}	
 	
-	private void addTransferBox() {
-		JComboBox<OptionTransfer> transferOptions = new JComboBox<OptionTransfer>();
-		AppUtil.loadInstances(transferOptions, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
-		transfers.add(transferOptions);
-		transferOptions.addItemListener(new ChangeTransfer(this, transfers));
-		transferOptions.addActionListener(new ActionProvider.DelegateListener(actionProvider));
-		this.add(transferOptions);
-		if (this.getParent() != null) {this.getParent().revalidate();}
-	}
-	
-	private void clearTransfers() {
-		for (JComboBox<OptionTransfer> transfer: transfers) {
-			this.remove(transfer);
-		}
-		transfers.clear();
-		this.validate();
-	}
-	
-	public static class TransferGrow implements ActionListener {
-		final SequentialComposer target;
-		public TransferGrow(SequentialComposer target) {this.target = target;}
-		public void actionPerformed(ActionEvent e) {target.addTransferBox();}
-	}
-	
-	public static class TransferClear implements ActionListener {
-		final SequentialComposer target;
-		public TransferClear(SequentialComposer target) {this.target = target;}
-		public void actionPerformed(ActionEvent e) {target.clearTransfers();}
-	}
-	
-	public static class TransferClean implements ActionListener {
-		final SequentialComposer target;
-		public TransferClean(SequentialComposer target) {this.target = target;}
-		public void actionPerformed(ActionEvent e) {
-			target.addTransferBox();
-		}
-	}
-		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
 	/**Should the display be re-zoomed?  
@@ -92,47 +48,9 @@ public class SequentialComposer extends JPanel  {
 	}
 	
 	
-	
-	public static class ChangeTransfer implements ItemListener {
-		final List<JComboBox<OptionTransfer>> listing;
-		final SequentialComposer host;
-		
-		public ChangeTransfer(SequentialComposer host, List<JComboBox<OptionTransfer>> listing) {
-			this.listing = listing;
-			this.host = host;
-		}
-		
-		@Override
-		public void itemStateChanged(ItemEvent e) {
-			@SuppressWarnings("unchecked")
-			JComboBox<OptionTransfer> source = (JComboBox<OptionTransfer>) e.getSource();
-			int idx = listing.indexOf(source);
-			boolean end = e.getItem().toString().equals(OptionTransfer.Echo.NAME);
-			if (idx < listing.size()-1 && end) {
-				listing.remove(source);
-				host.remove(source);
-				if (host.getParent() != null) {host.getParent().validate();}
-			} else if (idx == listing.size()-1 && !end) {
-				host.addTransferBox();
-			}
-			
-		}
-		
-	}
+
 	
 	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).dataset();}
 	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex()).aggregator();}
-	
-	public Transfer<?,?> transfer() {
-		if (transfers.size() == 1) {return new General.Echo<>(aggregator().identity());}
-		
-		int idx = transfers.get(0).getSelectedIndex();
-		Seq t = Seq.start(transfers.get(0).getItemAt(idx).transfer());
-		for (int i=1; i<transfers.size()-1; i++) {
-			idx = transfers.get(i).getSelectedIndex();
-			t.then(transfers.get(i).getItemAt(idx).transfer());
-		}
-		return t;
-	}
-		
+	public Transfer<?,?> transfer() {return transfers.transfer();}
 }

@@ -24,7 +24,7 @@ public interface OptionTransfer<P extends JPanel> {
 	
 	public class Echo implements OptionTransfer<JPanel> {
 		public static String NAME = "Echo (*)"; //Static so it can be tested for; non-final so it can be changed in some cases
-		@Override public JPanel control(Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 		@Override public Transfer<Object, Object> transfer(JPanel p) {return new General.Echo<>(null);}		
 		@Override public String toString() {return NAME;}
 	}
@@ -32,7 +32,7 @@ public interface OptionTransfer<P extends JPanel> {
 	public class Gradient implements OptionTransfer<JPanel> {
 		@Override public Transfer<Object, Color> transfer(JPanel p) {return new Debug.Gradient();}
 		@Override public String toString() {return "Gradient (color)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	} 
 	
 	public class RedWhiteLinear implements OptionTransfer<JPanel> {
@@ -42,7 +42,7 @@ public interface OptionTransfer<P extends JPanel> {
 		}
 		
 		@Override public String toString() {return "Red luminance linear (int)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 	
 	public class RedWhiteLog implements OptionTransfer<JPanel> {
@@ -54,17 +54,23 @@ public interface OptionTransfer<P extends JPanel> {
 		}
 		
 		@Override public String toString() {return "Red luminance log-10 (int)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 	
-	public class FixedAlpha implements OptionTransfer<JPanel> {
+	public class FixedAlpha implements OptionTransfer<FixedAlpha.Controls> {
 		@Override 
-		public Transfer<Number,Color> transfer(JPanel p) {
-			return new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5);
+		public Transfer<Number,Color> transfer(Controls p) {
+			double percent = ((int) p.spinner.getValue())/100d;
+			return new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 255*percent);
 		}
 		
-		@Override public String toString() {return "10% Alpha (int)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public String toString() {return "Fixed Alpha (int)";}
+		@Override public Controls control(Holder app) {return new Controls();}
+		
+		private class Controls extends JPanel {
+			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(10, 1, 100,1));
+			public Controls() {add(new LabeledItem("Percent:", spinner));}
+		}
 	}
 	
 	public class FixedAlphaB implements OptionTransfer<JPanel> {
@@ -74,7 +80,7 @@ public interface OptionTransfer<P extends JPanel> {
 		}
 		
 		@Override public String toString() {return "Min Alpha (int)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 	
 	public class Present implements OptionTransfer<JPanel> {
@@ -84,7 +90,7 @@ public interface OptionTransfer<P extends JPanel> {
 		}
 		
 		@Override public String toString() {return "Present (int)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 	
 	public class Percent implements OptionTransfer<Percent.Controls> {
@@ -112,12 +118,12 @@ public interface OptionTransfer<P extends JPanel> {
 		}
 		
 		@Override public String toString() {return "Log HD Alpha (RLE)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 	
 	public class HighAlphaLin implements OptionTransfer<JPanel> {
 		public Transfer<CategoricalCounts<Color>,Color> transfer(JPanel p) {return new Categories.HighAlpha(Color.white, .1, false);}
 		@Override public String toString() {return "Linear HD Alpha (RLE)";}
-		@Override public JPanel control(ARComponent.Holder app) {return null;}
+		@Override public JPanel control(Holder app) {return new JPanel();}
 	}
 }
