@@ -37,8 +37,7 @@ public class ClipwarnControl  extends JPanel {
 		});
 	}
 	
-	/**Is "enhance mode" enabled?*/
-	public boolean enhance() {return clipwarn.isSelected();}
+	public boolean isEnabled() {return clipwarn.isSelected();}
 	
 	/**Overlay host associated with this control.*/
 	public ARComponent target() {return target;}

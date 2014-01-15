@@ -17,10 +17,10 @@ import ar.rules.combinators.Seq;
 
 @SuppressWarnings("rawtypes")
 public class TransferBuilder extends JPanel {
-	private final ActionProvider actionProvider = new ActionProvider();  
+	private final ActionProvider actionProvider = new ActionProvider("Transfer Changed");  
 
 	private List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
-	private List<JPanel> optionPanels = new ArrayList<>();
+	private List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
 
 	public TransferBuilder() {
 		this.setLayout(new GridLayout(0,2));
@@ -54,10 +54,13 @@ public class TransferBuilder extends JPanel {
 		JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
 		AppUtil.loadInstances(transfers, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
 		transfers.addItemListener(new ChangeTransfer(this));
-		transfers.addActionListener(new ActionProvider.DelegateListener(actionProvider));
+		transfers.addActionListener(actionProvider.actionDelegate());
 
 		transferLists.add(transfers);
-		optionPanels.add(transfers.getItemAt(transfers.getSelectedIndex()).control(null));
+		
+		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(null);
+		optionPanels.add(controls);
+		controls.addActionListener(actionProvider.actionDelegate());
 		rebuild();
 	}
 	
@@ -83,9 +86,10 @@ public class TransferBuilder extends JPanel {
 			} else if (idx == size-1 && !end) {				
 				host.addTransferBox();
 			} else {
-				JPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(null);
+				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(null);
 				host.optionPanels.remove(idx);
 				host.optionPanels.add(idx, params);
+				params.addActionListener(host.actionProvider.actionDelegate());
 				host.rebuild();
 			}
 			

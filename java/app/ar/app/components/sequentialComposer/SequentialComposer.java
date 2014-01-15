@@ -28,9 +28,9 @@ public class SequentialComposer extends JPanel  {
 		AppUtil.loadStaticItems(aggregators, OptionAggregator.class, OptionAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
-		datasets.addActionListener(new ActionProvider.DelegateListener(actionProvider));
-		aggregators.addActionListener(new ActionProvider.DelegateListener(actionProvider));
-		transfers.addActionListener(new ActionProvider.DelegateListener(actionProvider));
+		datasets.addActionListener(actionProvider.actionDelegate());
+		aggregators.addActionListener(actionProvider.actionDelegate());
+		transfers.addActionListener(actionProvider.actionDelegate());
 		
 		this.add(new LabeledItem("Dataset:", datasets));
 		this.add(new LabeledItem("Aggregator:", aggregators));

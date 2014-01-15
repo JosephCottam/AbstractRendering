@@ -39,7 +39,7 @@ public class GlyphsetOptions extends JPanel  {
 		size.setSelectedItem(.01);
 		this.add(new LabeledItem("Size: ", size));
 		
-		ActionListener l = actionProvider.delegateListener();
+		ActionListener l = actionProvider.actionDelegate();
 		glyphsType.addActionListener(l);
 		size.addActionListener(l);
 	}

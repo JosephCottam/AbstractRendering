@@ -17,7 +17,7 @@ public class RendererOptions extends JPanel {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		renderers.addItem("Parallel");
 		renderers.addItem("Serial");
-		renderers.addActionListener(actionProvider.delegateListener());
+		renderers.addActionListener(actionProvider.actionDelegate());
 		renderers.setSelectedItem("Parallel");
 		
 		JPanel upper = new JPanel(); 

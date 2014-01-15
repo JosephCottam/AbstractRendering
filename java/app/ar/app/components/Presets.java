@@ -53,7 +53,7 @@ public class Presets extends JPanel {
 	
 	public Presets(HasViewTransform transformSource) {
 		this.add(new LabeledItem("Presets:", presets));
-		presets.addActionListener(actionProvider.delegateListener());
+		presets.addActionListener(actionProvider.actionDelegate());
 		
 		ar.app.util.AppUtil.loadInstances(presets, Presets.class, Presets.Preset.class, "");
 
