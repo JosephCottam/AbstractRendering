@@ -20,8 +20,6 @@ public class SequentialComposer extends JPanel  {
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
 	private final TransferBuilder transfers = new TransferBuilder();
 	private final ActionProvider actionProvider = new ActionProvider();  
-
-	static {OptionTransfer.Echo.NAME = "End (*)";}
 	
 	public SequentialComposer() {
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");

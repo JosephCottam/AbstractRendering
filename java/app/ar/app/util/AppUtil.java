@@ -8,7 +8,7 @@ import javax.swing.JComboBox;
 public class AppUtil {
 
 	@SuppressWarnings("unchecked") //Several inherently not type-safe operation...
-	public static <A,B> void loadInstances(JComboBox<B> target, Class<A> source, Class<?> limit, String defaultItem) {
+	public static <B> void loadInstances(JComboBox<B> target, Class<?> source, Class<?> limit, Object defaultItem) {
 		Class<?>[] clss = source.getClasses();
 		for (Class<?> cls:clss) {
 			try {
@@ -27,10 +27,13 @@ public class AppUtil {
 			}
 		}
 		
-		for (int i=0; i<target.getItemCount(); i++) {
-			B item = target.getItemAt(i);
-			if (item.toString().equals(defaultItem)) {target.setSelectedIndex(i); break;}
-		}		
+		
+		if (defaultItem != null) {
+			for (int i=0; i<target.getItemCount(); i++) {
+				B item = target.getItemAt(i);
+				if (item.toString().equals(defaultItem)) {target.setSelectedIndex(i); break;}
+			}		
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

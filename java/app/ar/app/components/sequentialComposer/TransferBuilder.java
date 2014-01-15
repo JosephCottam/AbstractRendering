@@ -35,7 +35,7 @@ public class TransferBuilder extends JPanel {
 							.transfer(optionPanels.get(0)));
 		for (int i=1; i<transferLists.size()-1; i++) {
 			idx = transferLists.get(i).getSelectedIndex();
-			t.then(transferLists.get(i).getItemAt(idx).transfer(optionPanels.get(i)));
+			t = t.then(transferLists.get(i).getItemAt(idx).transfer(optionPanels.get(i)));
 		}
 		return t;
 	}

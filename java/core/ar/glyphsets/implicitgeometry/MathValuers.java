@@ -98,7 +98,17 @@ public class MathValuers {
 	public static final class Sqrt<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.sqrt(from.doubleValue());}
 	}
+	
 
+	public static final class AbsLong<A extends Number> implements Valuer<A,Long> {
+		public Long value(A from) {return Math.abs(from.longValue());}
+	}
+
+	public static final class AbsFloat<A extends Number> implements Valuer<A,Float> {
+		public Float value(A from) {return Math.abs(from.floatValue());}
+	}
+
+	
 	public static final class AbsInt<A extends Number> implements Valuer<A,Integer> {
 		public Integer value(A from) {return Math.abs(from.intValue());}
 	}
@@ -186,8 +196,8 @@ public class MathValuers {
 		public Double value(A from) {return Math.ulp(from.doubleValue());}
 	}
 	
-	public static final class DoubleWrapper implements Valuer<Double, Double> {
-		public Double value(Double d) {return d;}
+	public static final class ToDouble implements Valuer<Number, Double> {
+		public Double value(Number d) {return d.doubleValue();}
 	}
 	public static final class FloatWrapper implements Valuer<Double, Float> {
 		public Float value(Double d) {return d.floatValue();}
@@ -201,7 +211,6 @@ public class MathValuers {
 	public static final class ShortWrapper implements Valuer<Double, Short> {
 		public Short value(Double d) {return d.shortValue();}
 	}
-	
 	
 	public static final class GT<N extends Number> implements Valuer<N, Boolean> {
 		final double ref;
