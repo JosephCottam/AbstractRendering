@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 import ar.app.util.ActionProvider;
+import ar.util.Util;
 
 public final class ColorChooser extends JPanel {
 	private Color current;
@@ -31,13 +32,6 @@ public final class ColorChooser extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				final JColorChooser chooser = new JColorChooser(current);
-				for (int i=0; i< chooser.getChooserPanels().length; i++) {
-					AbstractColorChooserPanel p = chooser.getChooserPanels()[i];
-					System.out.println(p.getDisplayName());
-					if (!p.equals("RGB") && !p.equals("Swatches")) {
-						chooser.removeChooserPanel(p);
-					}
-				}
 				
 				chooser.setPreviewPanel(new JPanel());
 				JDialog d = JColorChooser.createDialog(ColorChooser.this, ColorChooser.this.varName, true, chooser, 

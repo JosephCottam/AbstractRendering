@@ -7,50 +7,50 @@ package ar.glyphsets.implicitgeometry;
 public class MathValuers {
 	public static final class AddInt<A extends Number> implements Valuer<A, Integer> {
 		final int val;
-		public AddInt(int val) {this.val = val;}
+		public AddInt(Integer val) {this.val = val;}
 		public Integer value(A from) {return from.intValue()+val;}
 	}
 
 	public static final class AddDouble<A extends Number> implements Valuer<A, Double> {
 		final double val;
-		public AddDouble(double val) {this.val = val;}
+		public AddDouble(Double val) {this.val = val;}
 		public Double value(A from) {return from.doubleValue()+val;}
 	}
 	
 	public static final class SubtractInt<A extends Number> implements Valuer<A, Integer> {
 		final int val;
-		public SubtractInt(int val) {this.val = val;}
+		public SubtractInt(Integer val) {this.val = val;}
 		public Integer value(A from) {return from.intValue()-val;}
 	}
 
 	public static final class SubtractDouble<A extends Number> implements Valuer<A, Double> {
 		final double val;
-		public SubtractDouble(double val) {this.val = val;}
+		public SubtractDouble(Double val) {this.val = val;}
 		public Double value(A from) {return from.doubleValue()-val;}
 	}
 
 	
 	public static final class DivideInt<A extends Number> implements Valuer<A,Integer> {
 		final int denominator;
-		public DivideInt(int denominator) {this.denominator = denominator;}
+		public DivideInt(Integer denominator) {this.denominator = denominator;}
 		public Integer value(A from) {return from.intValue()/denominator;}		
 	}
 	
 	public static final class DivideDouble<A extends Number> implements Valuer<A,Double> {
 		final double denominator;
-		public DivideDouble(double denominator) {this.denominator = denominator;}
+		public DivideDouble(Double denominator) {this.denominator = denominator;}
 		public Double value(A from) {return from.doubleValue()/denominator;}		
 	}
 	
 	public static final class MultiplyInt<A extends Number> implements Valuer<A, Integer> {
 		final int multiplier;
-		public MultiplyInt(int multiplier) {this.multiplier = multiplier;}
+		public MultiplyInt(Integer multiplier) {this.multiplier = multiplier;}
 		public Integer value(A from) {return from.intValue()*multiplier;}
 	}
 
 	public static final class MultiplyDouble<A extends Number> implements Valuer<A, Double> {
 		final double multiplier;
-		public MultiplyDouble(double multiplier) {this.multiplier = multiplier;}
+		public MultiplyDouble(Double multiplier) {this.multiplier = multiplier;}
 		public Double value(A from) {return from.doubleValue()*multiplier;}
 	}
 		
@@ -62,8 +62,8 @@ public class MathValuers {
 		final boolean add1;
 		final boolean ignoreZeros;
 		
-		public Log(double base) {this(base, false, false);}
-		public Log(double base, boolean add1, boolean ignoreZeros) {
+		public Log(Double base) {this(base, false, false);}
+		public Log(Double base, boolean add1, boolean ignoreZeros) {
 			this.base = base; 
 			this.add1=add1;
 			this.ignoreZeros = ignoreZeros;
@@ -199,14 +199,14 @@ public class MathValuers {
 	public static final class ToDouble implements Valuer<Number, Double> {
 		public Double value(Number d) {return d.doubleValue();}
 	}
-	public static final class FloatWrapper implements Valuer<Double, Float> {
-		public Float value(Double d) {return d.floatValue();}
+	public static final class ToFloat implements Valuer<Number, Float> {
+		public Float value(Number d) {return d.floatValue();}
 	}
-	public static final class LongWrapper implements Valuer<Double, Long> {
-		public Long value(Double d) {return d.longValue();}
+	public static final class ToLong implements Valuer<Number, Long> {
+		public Long value(Number d) {return d.longValue();}
 	}
-	public static final class IntegerWrapper implements Valuer<Double, Integer> {
-		public Integer value(Double d) {return d.intValue();}
+	public static final class ToInteger implements Valuer<Number, Integer> {
+		public Integer value(Number d) {return d.intValue();}
 	}
 	public static final class ShortWrapper implements Valuer<Double, Short> {
 		public Short value(Double d) {return d.shortValue();}
@@ -214,31 +214,31 @@ public class MathValuers {
 	
 	public static final class GT<N extends Number> implements Valuer<N, Boolean> {
 		final double ref;
-		public GT(double ref) {this.ref = ref;} 
+		public GT(Double ref) {this.ref = ref;} 
 		public Boolean value(N from) {return from.doubleValue() > ref;}
 	}
 	
 	public static final class GTE<N extends Number> implements Valuer<N, Boolean> {
 		final double ref;
-		public GTE(double ref) {this.ref = ref;} 
+		public GTE(Double ref) {this.ref = ref;} 
 		public Boolean value(N from) {return from.doubleValue() >= ref;}
 	}
 	
 	public static final class LT<N extends Number> implements Valuer<N, Boolean> {
 		final double ref;
-		public LT(double ref) {this.ref = ref;} 
+		public LT(Double ref) {this.ref = ref;} 
 		public Boolean value(N from) {return from.doubleValue() < ref;}
 	}
 	
 	public static final class LTE<N extends Number> implements Valuer<N, Boolean> {
 		final double ref;
-		public LTE(double ref) {this.ref = ref;} 
+		public LTE(Double ref) {this.ref = ref;} 
 		public Boolean value(N from) {return from.doubleValue() <= ref;}
 	}
 	
 	public static final class EQ<N extends Number> implements Valuer<N, Boolean> {
-		final Number ref;
-		public EQ(Number ref) {this.ref = ref;} 
-		public Boolean value(N from) {return ref.equals(from);}
+		final double ref;
+		public EQ(Double ref) {this.ref = ref;} 
+		public Boolean value(N from) {return ref == from.doubleValue();}
 	}
 }

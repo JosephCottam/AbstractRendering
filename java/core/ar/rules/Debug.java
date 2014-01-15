@@ -17,7 +17,7 @@ public class Debug {
 	/**Compute a gradient across the 2D space.  
 	 * This class was used largely for debugging; it ignores its inputs. 
 	 */
-	public static class Gradient implements Transfer<Object, Color> {
+	public static class Gradient implements Transfer.ItemWise<Object, Color> {
 		private static final long serialVersionUID = 2620947228987431184L;
 
 		public boolean equals(Object other) {return other instanceof Gradient;}
@@ -27,26 +27,18 @@ public class Debug {
 
 		@Override
 		public ar.Transfer.Specialized<Object, Color> specialize(
-				Aggregates<? extends Object> aggregates) {
-			return new Specialized(aggregates);
+				Aggregates<? extends Object> aggregates) {return this;}
+		
+		@Override
+		public Aggregates<Color> process(
+				Aggregates<? extends Object> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
 		}
-		public static class Specialized extends Gradient implements Transfer.ItemWise<Object, Color> {
-			private final float width,height;
-
-			public Specialized(Aggregates<? extends Object> aggregates) {
-				width = aggregates.highX()-aggregates.lowX();
-				height = aggregates.highY()-aggregates.lowY();
-			}
-
-			@Override
-			public Color at(int x, int y, Aggregates<? extends Object> aggregates) {
-				return new Color(x/width, y/height,.5f ,1.0f); 
-			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends Object> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}			
+		@Override
+		public Color at(int x, int y, Aggregates<? extends Object> aggregates) {
+			float width =aggregates.highX()-aggregates.lowX();
+			float height = aggregates.highY()-aggregates.lowY();
+			return new Color((x-aggregates.lowX())/width, (y-aggregates.lowY())/height,.5f ,1.0f); 
 		}
 	}
 	
