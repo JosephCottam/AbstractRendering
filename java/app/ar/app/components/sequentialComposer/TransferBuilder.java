@@ -1,14 +1,22 @@
 package ar.app.components.sequentialComposer;
 
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.ListCellRenderer;
+import javax.swing.TransferHandler;
+import javax.swing.UIDefaults;
 
 import ar.Transfer;
 import ar.app.util.ActionProvider;
@@ -55,16 +63,17 @@ public class TransferBuilder extends JPanel {
 		AppUtil.loadInstances(transfers, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
 		transfers.addItemListener(new ChangeTransfer(this));
 		transfers.addActionListener(actionProvider.actionDelegate());
-
+		
 		transferLists.add(transfers);
 		
 		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(null);
 		optionPanels.add(controls);
 		controls.addActionListener(actionProvider.actionDelegate());
+		
 		rebuild();
 	}
 	
-	public static class ChangeTransfer implements ItemListener {
+	public static final class ChangeTransfer implements ItemListener {
 		final TransferBuilder host;
 		
 		public ChangeTransfer(TransferBuilder host) {
