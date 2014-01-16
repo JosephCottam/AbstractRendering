@@ -1,4 +1,4 @@
-package ar.app.components;
+package ar.app.util;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -12,7 +12,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
-import ar.app.util.ActionProvider;
+import ar.app.components.LabeledItem;
 import ar.util.Util;
 
 public final class ColorChooser extends JPanel {

@@ -78,7 +78,7 @@ public class Combinators {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 1);
 		
 		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1),0);
-		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10d));
 		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
 		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
@@ -105,7 +105,7 @@ public class Combinators {
 		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
 		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
 		
-		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
 		assertTrue("Bluk test", p.value(rslt));
 	}
 
@@ -119,7 +119,7 @@ public class Combinators {
 		
 		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
 		
-		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3));
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
 		assertTrue("Bluk test", p.value(rslt));
 	}
 }

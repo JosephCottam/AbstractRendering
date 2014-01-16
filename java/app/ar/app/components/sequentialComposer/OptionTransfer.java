@@ -15,12 +15,12 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import ar.Transfer;
-import ar.app.components.ColorChooser;
 import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
 import ar.app.display.ARComponent.Holder;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
+import ar.app.util.ColorChooser;
 import ar.app.util.SimpleNameRenderer;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
