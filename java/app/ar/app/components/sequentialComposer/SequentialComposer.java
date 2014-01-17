@@ -1,8 +1,11 @@
 package ar.app.components.sequentialComposer;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
@@ -16,10 +19,12 @@ import ar.app.util.AppUtil;
 
 @SuppressWarnings("rawtypes")
 public class SequentialComposer extends JPanel  {
+	private final ActionProvider actionProvider = new ActionProvider();  
+
 	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
 	private final TransferBuilder transfers = new TransferBuilder();
-	private final ActionProvider actionProvider = new ActionProvider();  
+	private final JButton transferDefaults = new JButton("Transfer Defaults");
 	
 	public SequentialComposer() {
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
@@ -30,9 +35,24 @@ public class SequentialComposer extends JPanel  {
 		aggregators.addActionListener(actionProvider.actionDelegate());
 		transfers.addActionListener(actionProvider.actionDelegate());
 		
-		this.add(new LabeledItem("Dataset:", datasets));
+		JPanel ds = new JPanel();
+		ds.setLayout(new BorderLayout());
+		ds.add(datasets, BorderLayout.CENTER);
+		ds.add(transferDefaults, BorderLayout.EAST);
+		
+		this.add(new LabeledItem("Dataset:", ds));
 		this.add(new LabeledItem("Aggregator:", aggregators));
 		this.add(new LabeledItem("Transfer:", transfers));
+		
+		transferDefaults.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
+				OptionAggregator agg = od.defaultAggregator();
+				aggregators.setSelectedItem(agg);
+			}
+		});
+		
 	}	
 	
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
@@ -44,9 +64,6 @@ public class SequentialComposer extends JPanel  {
 				|| oldPanel.dataset() != dataset()
 				|| !oldPanel.aggregator().equals(aggregator());
 	}
-	
-	
-
 	
 	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).dataset();}
 	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex()).aggregator();}

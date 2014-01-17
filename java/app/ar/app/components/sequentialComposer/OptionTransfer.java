@@ -34,6 +34,21 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public abstract Transfer<?,?> transfer(P params);
 	public abstract P control(Holder app);
 	
+	public static final class ToCount implements OptionTransfer<ControlPanel> {
+
+		@Override
+		public Transfer<?, ?> transfer(
+				ar.app.components.sequentialComposer.OptionTransfer.ControlPanel params) {
+			return new Categories.ToCount();
+		}
+
+		@Override
+		public ar.app.components.sequentialComposer.OptionTransfer.ControlPanel control(Holder app) {
+			return new ControlPanel();
+		}
+		
+	}
+	
 	public static final class RefArgMathTransfer implements OptionTransfer<RefArgMathTransfer.Controls> {
 		
 		@Override
@@ -114,13 +129,14 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				return t;
 			}
 			
-			public Number convert(Number v, Class t) {
-				if (t.equals(Double.class)) {return v.doubleValue();}
-				if (t.equals(Integer.class)) {return v.intValue();}
-				if (t.equals(Float.class)) {return v.floatValue();}
-				if (t.equals(Long.class)) {return v.longValue();}
-				if (t.equals(Short.class)) {return v.shortValue();}
-				throw new UnsupportedOperationException("Could not construct zero for selected operation: " + valuer());
+			public <T> T convert(Number v, Class<T> t) {
+				if (t.equals(Double.class)) {return (T) (Double) v.doubleValue();}
+				if (t.equals(Integer.class)) {return (T) (Integer) v.intValue();}
+				if (t.equals(Float.class)) {return (T) (Float) v.floatValue();}
+				if (t.equals(Long.class)) {return (T) (Long) v.longValue();}
+				if (t.equals(Short.class)) {return (T) (Short) v.shortValue();}
+				if (t.equals(Boolean.class)) {return (T) Boolean.FALSE;} 
+				throw new UnsupportedOperationException("Could not construct zero for selected operation.  Requested zero for type: " + t.getSimpleName());
 			}
 		}
 	}
@@ -177,7 +193,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public Controls control(Holder app) {return new Controls();}
 		
 		private static class Controls extends ControlPanel {
-			public ColorChooser low = new ColorChooser(Color.white, "Low");
+			public ColorChooser low = new ColorChooser(new Color(255,204,204), "Low");
 			public ColorChooser high = new ColorChooser(Color.red, "High");
 			public Controls() {
 				super("FixedAlpha");
@@ -243,18 +259,19 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override 
 		public Controls control(ARComponent.Holder app) {return new Controls();}
-		@Override public String toString() {return "Split on Percent (RLE)";}
+		@Override public String toString() {return "Split on Percent (CoC)";}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(50, 0, 100,1));
-			public ColorChooser aboveColor = new ColorChooser(Color.white, "Low");
-			public ColorChooser belowColor = new ColorChooser(Color.red, "High");
+			public ColorChooser aboveColor = new ColorChooser(Color.blue, "Above");
+			public ColorChooser belowColor = new ColorChooser(Color.red, "Below");
 
 			public Controls() {
 				super("Percent");
+				this.setLayout(new GridLayout(1,0));
 				add(new LabeledItem("Percent:", spinner));
-				add(new LabeledItem("Above:", aboveColor));
-				add(new LabeledItem("Below:", belowColor));
+				add(aboveColor);
+				add(belowColor);
 				
 				spinner.addChangeListener(actionProvider.changeDelegate());
 				aboveColor.addActionListener(actionProvider.actionDelegate());
@@ -283,13 +300,13 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new Categories.HighAlpha(Color.white, .1, true);
 		}
 		
-		@Override public String toString() {return "Log HD Alpha (RLE)";}
+		@Override public String toString() {return "Log HD Alpha (CoC)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
 	}
 	
 	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
 		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighAlpha(Color.white, .1, false);}
-		@Override public String toString() {return "Linear HD Alpha (RLE)";}
+		@Override public String toString() {return "Linear HD Alpha (CoC)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
 	}
 	
