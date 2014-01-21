@@ -53,6 +53,7 @@ public final class OptionDataset<G,I> {
 			new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 			OptionAggregator.MERGE_CATS,
 			new OptionTransfer.ToCount(),
+			new OptionTransfer.Spread(),
 			new OptionTransfer.HDInterpolate());
 	
 	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE = new OptionDataset<>(

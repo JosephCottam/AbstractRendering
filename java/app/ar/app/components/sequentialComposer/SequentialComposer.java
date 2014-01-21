@@ -24,7 +24,7 @@ public class SequentialComposer extends JPanel  {
 	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
 	private final TransferBuilder transfers = new TransferBuilder();
-	private final JButton transferDefaults = new JButton("Transfer Defaults");
+	private final JButton transferDefaults = new JButton("Defaults");
 	
 	public SequentialComposer() {
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
@@ -52,6 +52,7 @@ public class SequentialComposer extends JPanel  {
 				OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
 				aggregators.setSelectedItem(od.defaultAggregator());
 				transfers.configureTo(od.defaultTransfers());
+				actionProvider.fireActionListeners();
 			}
 		});
 		

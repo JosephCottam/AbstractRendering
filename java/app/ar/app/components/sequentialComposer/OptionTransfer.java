@@ -253,17 +253,6 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class Present implements OptionTransfer<ControlPanel> {
-		@Override 
-		public Transfer<Integer,Color> transfer(ControlPanel p) {
-			return new General.Present<Integer, Color>(Color.red, Color.white);
-		}
-		
-		@Override public String toString() {return "Present (*)";}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-	
 	public static final class Percent implements OptionTransfer<Percent.Controls> {
 		@Override 
 		public Transfer<CategoricalCounts<Color>,Color> transfer(Controls p) {
@@ -299,6 +288,46 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
+	public static class Spread implements OptionTransfer<Spread.Controls> {
+		
+		
+
+		@Override
+		public Transfer<?, ?> transfer(Controls params) {
+			int radius = (int) params.spinner.getValue(); 
+			return new General.Spread(new General.Spread.UnitSquare<Integer>(radius), new Numbers.Count<Integer>());
+		}
+
+		@Override public String toString() {return "Spread (int)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+
+		
+		@Override
+		public Controls control(Holder app) {return new Controls();}
+
+		public static final class Controls extends ControlPanel {
+			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			public Controls() {
+				super("radius");
+				add(new LabeledItem("Radius:", spinner));
+				spinner.addChangeListener(actionProvider.changeDelegate());
+			}
+		}
+	}
+
+	
+	public static final class Present implements OptionTransfer<ControlPanel> {
+		@Override 
+		public Transfer<Integer,Color> transfer(ControlPanel p) {
+			return new General.Present<Integer, Color>(Color.red, Color.white);
+		}
+		
+		@Override public String toString() {return "Present (*)";}
+		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+
+	
 	public static final class Echo implements OptionTransfer<ControlPanel> {
 		public static final String NAME = "Echo (*)"; 
 		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
@@ -332,6 +361,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
+	
 	
 	public static class ControlPanel extends JPanel {
 		protected final ActionProvider actionProvider;

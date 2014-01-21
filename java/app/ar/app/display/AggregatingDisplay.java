@@ -74,7 +74,9 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.dataset = data;
 		this.aggregator = aggregator;
 		this.transfer(transfer);
-		this.aggregates = null;
+		aggregates(null, null);
+		fullRender = true;
+		renderError = false;
 		this.repaint();
 	}
 	
