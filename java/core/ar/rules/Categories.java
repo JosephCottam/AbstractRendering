@@ -317,7 +317,7 @@ public class Categories {
 	 * @author jcottam
 	 *
 	 */
-	public static class HighAlpha implements Transfer<CategoricalCounts<Color>, Color> {
+	public static class HighDefAlpha implements Transfer<CategoricalCounts<Color>, Color> {
 		private static final long serialVersionUID = 2468586294425442332L;
 		protected final Color background;
 		protected final boolean log;
@@ -328,7 +328,7 @@ public class Categories {
 		 * @param omin Opacity minimum (range 0-1)
 		 * @param log Use a log scale?
 		 */
-		public HighAlpha(Color background, double omin, boolean log) {
+		public HighDefAlpha(Color background, double omin, boolean log) {
 			this.background = background;
 			this.log = log;
 			this.omin = omin;
@@ -338,13 +338,13 @@ public class Categories {
 		@Override public Color emptyValue() {return background;}
 
 		@Override
-		public HighAlpha.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
+		public HighDefAlpha.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			int max=Integer.MIN_VALUE;
 			for (CategoricalCounts<Color> cats:aggregates) {max = Math.max(max,cats.fullSize());}
 			return new Specialized(max, background, omin, log);
 		}
 
-		protected static final class Specialized extends HighAlpha implements Transfer.ItemWise<CategoricalCounts<Color>, Color> {
+		protected static final class Specialized extends HighDefAlpha implements Transfer.ItemWise<CategoricalCounts<Color>, Color> {
 			private static final long serialVersionUID = 4453971577170705122L;
 			private final int max;
 			

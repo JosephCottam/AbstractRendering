@@ -8,12 +8,20 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import ar.Aggregates;
+import ar.Aggregator;
 import ar.Transfer;
 import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
@@ -28,11 +36,12 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
+import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
 
 public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public abstract Transfer<?,?> transfer(P params);
-	public abstract P control(Holder app);
+	public abstract P control(SequentialComposer composer);
 	
 	public static final class ToCount implements OptionTransfer<ControlPanel> {
 
@@ -44,7 +53,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override
-		public ar.app.components.sequentialComposer.OptionTransfer.ControlPanel control(Holder app) {
+		public ar.app.components.sequentialComposer.OptionTransfer.ControlPanel control(SequentialComposer composer) {
 			return new ControlPanel();
 		}
 		
@@ -60,7 +69,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
 		}
 
-		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -159,7 +168,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new General.ValuerTransfer(params.valuer(), params.zero());
 		}
 
-		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -175,7 +184,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				
 				for (int i=0; i<valuers.getItemCount(); i++) {
 					Valuer<?,?> item = valuers.getItemAt(i);
-					if (item instanceof MathValuers.Sqrt) {valuers.setSelectedIndex(i); break;}
+					if (item instanceof MathValuers.CubeRoot) {valuers.setSelectedIndex(i); break;}
 				}		
 			}
 			
@@ -206,7 +215,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "HD Interpolate (Num->Color))";}
-		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -230,7 +239,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "Fixed Interpolate (Num->Color)";}
-		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -265,7 +274,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					p.belowColor.color());
 		}
 		
-		@Override public Controls control(ARComponent.Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
@@ -288,29 +297,148 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static class Spread implements OptionTransfer<Spread.Controls> {
-		
-		
-
+	public static final class Spread implements OptionTransfer<Spread.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params) {
-			int radius = (int) params.spinner.getValue(); 
-			return new General.Spread(new General.Spread.UnitSquare<Integer>(radius), new Numbers.Count<Integer>());
+			return new General.Spread(params.spreader(), params.combiner());
 		}
 
-		@Override public String toString() {return "Spread (int)";}
+		@Override public String toString() {return "Spread (int->int)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-
-		
-		@Override
-		public Controls control(Holder app) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer) {return new Controls(composer);}
 
 		public static final class Controls extends ControlPanel {
-			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
-			public Controls() {
-				super("radius");
+			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JComboBox<String> combiner = new JComboBox<>();
+			private final SequentialComposer composer;
+			
+			public Controls(SequentialComposer composer) {
+				super("spread");
+				this.composer = composer;
+				
+				combiner.addItem("Auto");
+				combiner.addItem("Num");
+				combiner.addItem("Categories");
+				
 				add(new LabeledItem("Radius:", spinner));
+				add(new LabeledItem("Combiner:", combiner));
+				
 				spinner.addChangeListener(actionProvider.changeDelegate());
+				combiner.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public Spreader spreader() {return new General.Spread.UnitSquare<Integer>(radius());}
+			public int radius() {return (int) spinner.getValue();}
+			public Aggregator combiner() {
+				String selected = combiner.getItemAt(combiner.getSelectedIndex());
+				if (selected.equals("Auto")) {
+					Object o = composer.aggregator().identity();	//TODO: This doesn't work if a transfer changed the aggregates type... 
+					if (o instanceof Number) {selected = "Num";}
+					else if (o instanceof CategoricalCounts) {selected="Categories";}
+					else {selected = o.getClass().getSimpleName();}
+				}
+				
+				if (selected.equals("Num")) {
+					return new Numbers.Count<Integer>();					
+				} else if (selected.equals("Categories")) {
+					return new Categories.MergeCategories<Color>();
+				} else {
+					throw new IllegalArgumentException("Cannot create combiner for " + selected);
+				}
+			}
+		}
+	}
+	
+	public static final class ColorKey implements OptionTransfer<ColorKey.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params) {			
+			Set<Object> cats = new HashSet<>();
+			Aggregates<CategoricalCounts<?>> aggs = ????;  //TODO: How to get the set of aggregates here?  Or, how to get a default mapping here?
+
+			for (CategoricalCounts cc: aggs) {
+				for (int i=0; i<cc.size(); i++) {cats.add(cc.key(i));}
+			}
+			
+			Map<Object,Color> m = new HashMap();
+			Color[] palette = params.palette();
+
+			int i=0;
+			for (Object cat: cats) {
+				m.put(cat, palette[i]);
+				if (++i>=palette.length) {break;}
+			}
+			
+			
+			return new Categories.ReKey((CategoricalCounts<?>) params.composer.aggregator().identity(), m, params.reserve());
+		}
+
+		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public Controls control(SequentialComposer composer) {return new Controls(composer);}
+
+		
+		public static final class Controls extends ControlPanel {
+			private Entry brewerColors = 
+					new Entry(
+							"Brewer 12",
+							Color.black,
+					new Color[]{//A set of default Colors, taken from colorbrewer but re-ordered
+					new Color(166,206,227), 
+					new Color(178,223,138), 
+					new Color(251,154,153),					
+					new Color(253,191,111),
+					new Color(202,178,214), 
+					new Color(255,255,153), 
+					new Color(31,120,180), 
+					new Color(51,160,44), 
+					new Color(227,26,28), 
+					new Color(255,127,0), 
+					new Color(106,61,154),
+					new Color(177,89,40),
+			});
+			
+			private final Entry cableColors = 
+					new Entry(
+							"Cable",
+							new Color(136,90,68),
+					new Color[] {//Taken from Dustin Cable's racial dot-map http://www.coopercenter.org/demographics/Racial-Dot-Map
+					new Color(0,0,200),
+					new Color(0,200,0),
+					new Color(136,90,68),
+					new Color(255,69,0),
+					
+			});
+			
+			private final Entry redBlue = new Entry("Red/Blue", Color.white, new Color[]{new Color(255,0,0,25), Color.red}); 
+
+			private final SequentialComposer composer;
+			private final JComboBox<Entry> palette = new JComboBox<>();
+			
+			public Controls(SequentialComposer composer) {
+				this.composer = composer;
+				this.add(new LabeledItem("Palette:", palette));
+				
+				palette.addItem(cableColors);
+				palette.addItem(brewerColors);
+				palette.addItem(redBlue);
+				
+				palette.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public Color[] palette() {return selected().colors;}
+			public Color reserve() {return selected().reserve;}
+			private Entry selected() {return palette.getItemAt(palette.getSelectedIndex());}
+			
+			private static final class Entry {
+				public Color[] colors;
+				public Color reserve;
+				public String name;
+				public Entry(String name, Color reserve, Color[] colors) {
+					this.colors = colors;
+					this.name = name;
+					this.reserve = reserve;
+				}
+				public String toString() {return name;}
 			}
 		}
 	}
@@ -323,7 +451,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "Present (*)";}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 
@@ -332,14 +460,14 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public static final String NAME = "Echo (*)"; 
 		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
 		@Override public String toString() {return NAME;}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 
 	public static final class Gradient implements OptionTransfer<ControlPanel> {
 		@Override public Transfer<Object, Color> transfer(ControlPanel p) {return new Debug.Gradient();}
 		@Override public String toString() {return "Gradient (color)";}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
@@ -347,18 +475,18 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class HighAlphaLog implements OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {
-			return new Categories.HighAlpha(Color.white, .1, true);
+			return new Categories.HighDefAlpha(Color.white, .1, true);
 		}
 		
 		@Override public String toString() {return "Log HD Alpha (CoC)";}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
-		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighAlpha(Color.white, .1, false);}
+		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
 		@Override public String toString() {return "Linear HD Alpha (CoC)";}
-		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	

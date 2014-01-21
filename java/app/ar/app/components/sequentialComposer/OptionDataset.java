@@ -54,6 +54,7 @@ public final class OptionDataset<G,I> {
 			OptionAggregator.MERGE_CATS,
 			new OptionTransfer.ToCount(),
 			new OptionTransfer.Spread(),
+			new OptionTransfer.OneArgMathTransfer(),
 			new OptionTransfer.HDInterpolate());
 	
 	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE = new OptionDataset<>(
@@ -62,6 +63,8 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToPoint(true, 0, 1),
 			new Indexed.ToValue<Indexed,Character>(2),
 			OptionAggregator.COC_COMP,
+			new OptionTransfer.ColorKey(),
+			new OptionTransfer.Spread(),
 			new OptionTransfer.HighAlphaLog());
 	
 	public static OptionDataset<Point2D, Color> WIKIPEDIA = new OptionDataset<>(

@@ -23,7 +23,7 @@ public class SequentialComposer extends JPanel  {
 
 	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
-	private final TransferBuilder transfers = new TransferBuilder();
+	private final TransferBuilder transfers = new TransferBuilder(this);
 	private final JButton transferDefaults = new JButton("Defaults");
 	
 	public SequentialComposer() {

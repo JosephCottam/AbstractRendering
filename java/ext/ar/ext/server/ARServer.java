@@ -73,8 +73,8 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("90Percent", new Categories.KeyPercent<Color>(.9, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("25Percent", new Categories.KeyPercent<Color>(.25, Color.blue, Color.white, Color.blue, Color.red));
 		TRANSFERS.put("Echo", new General.Echo<Color>(Util.CLEAR));
-		TRANSFERS.put("HDAlpha", new Categories.HighAlpha(Color.white, .1, false));
-		TRANSFERS.put("HDAlphaLog", new Categories.HighAlpha(Color.white, .1, true));
+		TRANSFERS.put("HDAlpha", new Categories.HighDefAlpha(Color.white, .1, false));
+		TRANSFERS.put("HDAlphaLog", new Categories.HighDefAlpha(Color.white, .1, true));
 		TRANSFERS.put("Gradient", new Debug.Gradient());
 						
 		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));

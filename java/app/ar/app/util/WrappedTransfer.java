@@ -163,14 +163,14 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	}
 	
 	public class HighAlphaLog implements WrappedTransfer<CategoricalCounts<Color>,Color> {
-		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighAlpha(Color.white, .1, true);}
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighDefAlpha(Color.white, .1, true);}
 		public String toString() {return "Log HD Alpha (RLE)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}
 	}
 	
 	public class HighAlphaLin implements WrappedTransfer<CategoricalCounts<Color>,Color> {
-		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighAlpha(Color.white, .1, false);}
+		public Transfer<CategoricalCounts<Color>,Color> op() {return new Categories.HighDefAlpha(Color.white, .1, false);}
 		public String toString() {return "Linear HD Alpha (RLE)";}
 		public void selected(ARComponent.Holder app) {}
 		public void deselected() {}

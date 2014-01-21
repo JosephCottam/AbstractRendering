@@ -126,7 +126,7 @@ public class MathValuers {
 	public static final class ATan<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.atan(from.doubleValue());}
 	}
-	public static final class CBRT<A extends Number> implements Valuer<A,Double> {
+	public static final class CubeRoot<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.cbrt(from.doubleValue());}
 	}
 	

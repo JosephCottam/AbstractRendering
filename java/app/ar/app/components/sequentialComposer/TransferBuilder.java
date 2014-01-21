@@ -1,7 +1,6 @@
 package ar.app.components.sequentialComposer;
 
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -19,11 +18,12 @@ import ar.rules.combinators.Seq;
 @SuppressWarnings("rawtypes")
 public class TransferBuilder extends JPanel {
 	private final ActionProvider actionProvider = new ActionProvider("Transfer Changed");  
+	private final List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
+	private final List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
+	private final SequentialComposer composer;
 
-	private List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
-	private List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
-
-	public TransferBuilder() {
+	public TransferBuilder(SequentialComposer composer) {
+		this.composer = composer;
 		this.setLayout(new GridLayout(0,2));
 		addTransferBox();
 	}
@@ -32,6 +32,7 @@ public class TransferBuilder extends JPanel {
 	
 	public void configureTo(final OptionTransfer[] transfers) {
 		transferLists.clear();
+		optionPanels.clear();
 		
 		for (int i=0; i<transfers.length; i++) {
 			addTransferBox();
@@ -70,7 +71,7 @@ public class TransferBuilder extends JPanel {
 		
 		transferLists.add(transfers);
 		
-		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(null);
+		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(composer);
 		optionPanels.add(controls);
 		controls.addActionListener(actionProvider.actionDelegate());
 		
@@ -99,7 +100,7 @@ public class TransferBuilder extends JPanel {
 			} else if (idx == size-1 && !end) {				
 				host.addTransferBox();
 			} else {
-				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(null);
+				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.composer);
 				host.optionPanels.remove(idx);
 				host.optionPanels.add(idx, params);
 				params.addActionListener(host.actionProvider.actionDelegate());
