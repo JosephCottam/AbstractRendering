@@ -112,7 +112,7 @@ public interface WrappedTransfer<IN,OUT> extends Wrapped<Transfer<IN,OUT>> {
 	public class RedWhiteLog implements WrappedTransfer<Number,Color> {
 		public Transfer<Number,Color> op() {
 			return new Seq<Number, Double, Color>(
-					new General.ValuerTransfer<>(new MathValuers.Log<>(10d, false, true), 0d), 
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10d, true), 0d), 
 					new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white));
 		}
 		public String toString() {return "Red luminance log-10 (int)";}

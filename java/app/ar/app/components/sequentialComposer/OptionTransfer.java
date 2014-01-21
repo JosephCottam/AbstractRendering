@@ -4,14 +4,14 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import ar.Transfer;
@@ -37,7 +37,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class ToCount implements OptionTransfer<ControlPanel> {
 
 		@Override
-		public Transfer<?, ?> transfer(
+		public Transfer<?,?> transfer(
 				ar.app.components.sequentialComposer.OptionTransfer.ControlPanel params) {
 			return new Categories.ToCount();
 		}
@@ -47,6 +47,8 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new ControlPanel();
 		}
 		
+		@Override public String toString() {return "To Counts (CoC->Int)";}
+		
 	}
 	
 	public static final class RefArgMathTransfer implements OptionTransfer<RefArgMathTransfer.Controls> {
@@ -54,15 +56,15 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public Transfer<?,?> transfer(Controls params) {
-			return new General.ValuerTransfer(params.valuer(), params.convert(0, params.returnType()));
+			return new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
 		}
 
 		@Override public Controls control(Holder app) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num->Num)";}
 
 		private static final class Controls extends ControlPanel {
-			private JComboBox<Entry> valuers = new JComboBox<>();
-			public JSpinner value = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
+			private JComboBox<Entry<?>> valuers = new JComboBox<>();
+			public JSpinner value = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,1));
 			
 			public Controls() {
 				valuers.addItem(new Entry<>(MathValuers.Log.class, 10d));
@@ -81,45 +83,31 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				valuers.addItem(new Entry<>(MathValuers.SubtractInt.class, 1));
 				
 				
-				//this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 				this.setLayout(new GridLayout(1,0));
 				this.add(new LabeledItem("Operation:", valuers));
 				this.add(new LabeledItem("Ref Arg:", value));
 
 				value.addChangeListener(actionProvider.changeDelegate());
 				valuers.addActionListener(actionProvider.actionDelegate());
-				valuers.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						Controls.this.value.setValue(valuers.getItemAt(valuers.getSelectedIndex()).defVal);
-					}
-					
-				});				
+
+				valuers.addItemListener(new TransferDefaultRef());
+				valuers.addActionListener(new TransferDefaultRef());
+				valuers.setSelectedIndex(0);
 				
 			}
 			
-			private static final class Entry<A extends Valuer<?,?>> {
-				public final Class<A> valuerClass;
-				public final Number defVal;
-				public Entry(Class<A> valuerClass, Number defVal) {
-					this.valuerClass = valuerClass;
-					this.defVal = defVal;
-				}
-				public String toString() {return valuerClass.getSimpleName();}
-			}
-			
 			public Valuer<?,?> valuer() {
-				Entry e = valuers.getItemAt(valuers.getSelectedIndex());
+				Entry<?> e = valuers.getItemAt(valuers.getSelectedIndex());
 				try {
-					Constructor c = e.valuerClass.getConstructor(e.defVal.getClass());
-					Valuer v = (Valuer) c.newInstance(convert((Number) value.getValue(), e.defVal.getClass()));
+					Constructor<?> c = e.valuerClass.getConstructor(e.refVal.getClass());
+					Valuer<?,?> v = (Valuer<?,?>) c.newInstance(convert((Number) value.getValue(), e.refVal.getClass()));
 					return v;
 				} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
 					throw new IllegalArgumentException("Error constructing valuer " + e.valuerClass.getSimpleName(), e1);
 				}
 			}
 
-			public Class returnType() {
+			public Class<?> returnType() {
 				Class<?> t;
 				try {
 					t = valuer().getClass().getMethod("value", Number.class).getReturnType();
@@ -129,7 +117,8 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				return t;
 			}
 			
-			public <T> T convert(Number v, Class<T> t) {
+			@SuppressWarnings("unchecked")
+			public static <T> T convert(Number v, Class<T> t) {
 				if (t.equals(Double.class)) {return (T) (Double) v.doubleValue();}
 				if (t.equals(Integer.class)) {return (T) (Integer) v.intValue();}
 				if (t.equals(Float.class)) {return (T) (Float) v.floatValue();}
@@ -137,6 +126,24 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				if (t.equals(Short.class)) {return (T) (Short) v.shortValue();}
 				if (t.equals(Boolean.class)) {return (T) Boolean.FALSE;} 
 				throw new UnsupportedOperationException("Could not construct zero for selected operation.  Requested zero for type: " + t.getSimpleName());
+			}
+
+			private final class TransferDefaultRef implements ItemListener, ActionListener {
+				public void itemStateChanged(ItemEvent e) {transfer();}
+				public void actionPerformed(ActionEvent e) {transfer();}
+				public void transfer() {Controls.this.value.setValue(valuers.getItemAt(valuers.getSelectedIndex()).refVal);}
+			}
+			
+			private static final class Entry<A extends Valuer<?,?>> {
+				public final Class<A> valuerClass;
+				public final Number refVal;
+				
+				public Entry(Class<A> valuerClass, Number defVal) {
+					this.valuerClass = valuerClass;
+					this.refVal = defVal;
+				}
+
+				public String toString() {return valuerClass.getSimpleName();}
 			}
 		}
 	}
@@ -157,10 +164,15 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			public Controls() {
 				
-				AppUtil.loadInstances(valuers, MathValuers.class, Valuer.class, "Sqrt"); //TODO: The default isn't working right...
+				AppUtil.loadInstances(valuers, MathValuers.class, Valuer.class, null); 
 				valuers.setRenderer(new SimpleNameRenderer<Valuer<?,?>>());
 				this.add(new LabeledItem("Operation:", valuers));
 				valuers.addActionListener(actionProvider.actionDelegate());
+				
+				for (int i=0; i<valuers.getItemCount(); i++) {
+					Valuer<?,?> item = valuers.getItemAt(i);
+					if (item instanceof MathValuers.Sqrt) {valuers.setSelectedIndex(i); break;}
+				}		
 			}
 			
 			public Valuer<?,?> valuer() {return valuers.getItemAt(valuers.getSelectedIndex());}

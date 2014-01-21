@@ -55,24 +55,23 @@ public class MathValuers {
 	}
 		
 	/**Perform log based on the double-value of the input.  
+	 * By default, the add1 flag is set to true. 
+	 * 
 	 * If basis is set to 0, will just echo input values (convenient with interactive tools).
 	 */
 	public static final class Log<A extends Number> implements Valuer<A,Double> {
 		final double base;
 		final boolean add1;
-		final boolean ignoreZeros;
 		
-		public Log(Double base) {this(base, false, false);}
-		public Log(Double base, boolean add1, boolean ignoreZeros) {
+		public Log(Double base) {this(base, true);}
+		public Log(Double base, boolean add1) {
 			this.base = base; 
 			this.add1=add1;
-			this.ignoreZeros = ignoreZeros;
 		}
 
 		public Double value(A from) {
 			double val = from.doubleValue();
 			if (base == 0) {return val;}
-			else if (val == 0d && ignoreZeros) {return 0d;}
 			else if (add1 && base == Math.E) {return Math.log1p(val);}
 			else if (add1) {return Math.log1p(val)/Math.log(base);}
 			else if (base == Math.E) {return Math.log(val);}

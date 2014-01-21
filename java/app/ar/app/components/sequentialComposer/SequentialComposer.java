@@ -32,7 +32,9 @@ public class SequentialComposer extends JPanel  {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		datasets.addActionListener(actionProvider.actionDelegate());
+		datasets.addItemListener(actionProvider.itemDelegate());
 		aggregators.addActionListener(actionProvider.actionDelegate());
+		aggregators.addItemListener(actionProvider.itemDelegate());
 		transfers.addActionListener(actionProvider.actionDelegate());
 		
 		JPanel ds = new JPanel();
@@ -50,6 +52,7 @@ public class SequentialComposer extends JPanel  {
 				OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
 				OptionAggregator agg = od.defaultAggregator();
 				aggregators.setSelectedItem(agg);
+				
 			}
 		});
 		

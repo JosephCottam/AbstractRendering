@@ -144,7 +144,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CIRCLE_SCATTER;}
 		public Transfer<?,?> transfer() {			
 			return new Seq<Number, Double, Color>(
-					new General.ValuerTransfer<>(new MathValuers.Log<>(10d, false, true), 0d), 
+					new General.ValuerTransfer<>(new MathValuers.Log<>(10d, true), 0d), 
 					new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white));
 		}
 		public String name() {return "Scatterplot: HDAlpha (log)";}
@@ -166,7 +166,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return BOOST_MEMORY_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, false, true), 0d))
+					  .then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, true), 0d))
 					  .then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), Color.red, Color.white));
 		}
 		public String name() {return "BGL Memory: Activity (log)";}		
@@ -431,7 +431,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, false, true), 0d))
+					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, true), 0d))
 					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21)));
 		}
 		public String name() {return "US Synthetic Population (Log 10)";}
@@ -493,7 +493,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, false, true), 0d))
+					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, true), 0d))
 					.then(new ISOContours.NContours<Double>(5, true))
 					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
@@ -507,7 +507,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, false, true), 0d))
+					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d, true), 0d))
 					.then(new ISOContours.NContours<Double>(5, false))
 					.then(new Numbers.Interpolate<Double>(new Color(254, 229, 217), new Color(165, 15, 21), Color.white));
 		}
