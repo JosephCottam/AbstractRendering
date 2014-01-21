@@ -1,22 +1,15 @@
 package ar.app.components.sequentialComposer;
 
-import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.ListCellRenderer;
-import javax.swing.TransferHandler;
-import javax.swing.UIDefaults;
 
 import ar.Transfer;
 import ar.app.util.ActionProvider;
@@ -36,6 +29,18 @@ public class TransferBuilder extends JPanel {
 	}
 		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
+	
+	public void configureTo(final OptionTransfer[] transfers) {
+		transferLists.clear();
+		
+		for (int i=0; i<transfers.length; i++) {
+			addTransferBox();
+			JComboBox<OptionTransfer> b = transferLists.get(i);
+			b.setSelectedItem(transfers[i]);
+		}
+		//The standard "extra" box at the end is added by a state change listener
+		rebuild();
+	}
 	
 	public Transfer<?,?> transfer() {
 		int idx = transferLists.get(0).getSelectedIndex();
@@ -62,7 +67,6 @@ public class TransferBuilder extends JPanel {
 		JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
 		AppUtil.loadInstances(transfers, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
 		transfers.addItemListener(new ChangeTransfer(this));
-		transfers.addActionListener(actionProvider.actionDelegate());
 		
 		transferLists.add(transfers);
 		
@@ -86,7 +90,7 @@ public class TransferBuilder extends JPanel {
 			int size = host.transferLists.size();
 			JComboBox<OptionTransfer> transferList = (JComboBox<OptionTransfer>) e.getSource();
 			int idx = host.transferLists.indexOf(transferList);
-			boolean end = e.getItem().toString().equals(OptionTransfer.Echo.NAME);
+			boolean end = transferList.getSelectedItem().toString().equals(OptionTransfer.Echo.NAME);
 			
 			if (idx < size-1 && end) {
 				host.transferLists.remove(idx);
@@ -101,8 +105,7 @@ public class TransferBuilder extends JPanel {
 				params.addActionListener(host.actionProvider.actionDelegate());
 				host.rebuild();
 			}
-			
+			host.actionProvider.fireActionListeners();
 		}
-		
 	}
 }

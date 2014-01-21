@@ -50,9 +50,8 @@ public class SequentialComposer extends JPanel  {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
-				OptionAggregator agg = od.defaultAggregator();
-				aggregators.setSelectedItem(agg);
-				
+				aggregators.setSelectedItem(od.defaultAggregator());
+				transfers.configureTo(od.defaultTransfers());
 			}
 		});
 		

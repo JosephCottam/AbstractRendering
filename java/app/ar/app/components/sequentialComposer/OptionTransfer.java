@@ -37,6 +37,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class ToCount implements OptionTransfer<ControlPanel> {
 
 		@Override
+		@SuppressWarnings("rawtypes")
 		public Transfer<?,?> transfer(
 				ar.app.components.sequentialComposer.OptionTransfer.ControlPanel params) {
 			return new Categories.ToCount();
@@ -48,7 +49,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "To Counts (CoC->Int)";}
-		
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class RefArgMathTransfer implements OptionTransfer<RefArgMathTransfer.Controls> {
@@ -61,6 +62,8 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public Controls control(Holder app) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num->Num)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+
 
 		private static final class Controls extends ControlPanel {
 			private JComboBox<Entry<?>> valuers = new JComboBox<>();
@@ -158,6 +161,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public Controls control(Holder app) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static final class Controls extends ControlPanel {
 			private JComboBox<Valuer<?,?>> valuers = new JComboBox<>();
@@ -203,6 +207,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "HD Interpolate (Num->Color))";}
 		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public ColorChooser low = new ColorChooser(new Color(255,204,204), "Low");
@@ -226,6 +231,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Fixed Interpolate (Num->Color)";}
 		@Override public Controls control(Holder app) {return new Controls();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner low = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
@@ -255,6 +261,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Present (*)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class Percent implements OptionTransfer<Percent.Controls> {
@@ -269,9 +276,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					p.belowColor.color());
 		}
 		
-		@Override 
-		public Controls control(ARComponent.Holder app) {return new Controls();}
+		@Override public Controls control(ARComponent.Holder app) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(50, 0, 100,1));
@@ -297,12 +304,14 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
 		@Override public String toString() {return NAME;}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 
 	public static final class Gradient implements OptionTransfer<ControlPanel> {
 		@Override public Transfer<Object, Color> transfer(ControlPanel p) {return new Debug.Gradient();}
 		@Override public String toString() {return "Gradient (color)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
 	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
@@ -314,12 +323,14 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Log HD Alpha (CoC)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
 		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighAlpha(Color.white, .1, false);}
 		@Override public String toString() {return "Linear HD Alpha (CoC)";}
 		@Override public ControlPanel control(Holder app) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static class ControlPanel extends JPanel {
@@ -328,5 +339,6 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public ControlPanel() {this("");}
 		public ControlPanel(String id) {actionProvider = new ActionProvider(id);}
 		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 }
