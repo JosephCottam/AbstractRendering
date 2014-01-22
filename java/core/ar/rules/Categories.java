@@ -117,6 +117,36 @@ public class Categories {
 		}
 	}
 	
+	
+	/**Replace categories with other categories BUT the mapping is created at specialization time
+	 * instead of at transfer construction time.
+	 * 
+	 * In contrast to ReKey, which takes a full map, this class only takes the new keys.
+	 * At specialization time, the aggregates are inspected and a full set of keys is produced.
+	 * Those keys are sorted and matched in order against the set of new keys. 
+	 * 
+	 * @author jcottam
+	 *
+	 * @param <IN>
+	 * @param <OUT>
+	 */
+	public static final class DynamicRekey<IN,OUT> implements Transfer<IN, OUT> {
+
+		@Override
+		public OUT emptyValue() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ar.Transfer.Specialized<IN, OUT> specialize(
+				Aggregates<? extends IN> aggregates) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
+	
 
 	
 	/**Return one value if a key value is found,
