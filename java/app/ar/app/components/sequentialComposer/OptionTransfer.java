@@ -25,6 +25,7 @@ import ar.app.util.ColorChooser;
 import ar.app.util.SimpleNameRenderer;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
@@ -371,13 +372,13 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			private final Entry cableColors = 
 					new Entry(
 							"Cable",
-							new Color(136,90,68),
-					new Color[] {//Taken from Dustin Cable's racial dot-map http://www.coopercenter.org/demographics/Racial-Dot-Map
-					new Color(0,0,200),
-					new Color(0,200,0),
-					new Color(136,90,68),
+							Color.BLACK,
+					new Color[] {//Taken from Dustin Cable's racial dot-map http://www.coopercenter.org/demographics/Racial-Dot-Map; ordered so they match the letter-code sort-order
 					new Color(255,69,0),
-					
+					new Color(0,200,0),
+					new Color(255,165,0),
+					new Color(136,90,68),
+					new Color(0,0,200),
 			});
 			
 			private final Entry redBlue = new Entry("Red/Blue", Color.white, new Color[]{new Color(255,0,0,25), Color.red}); 
@@ -453,10 +454,36 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
-		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
+		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
 		@Override public String toString() {return "Linear HD Alpha (CoC)";}
 		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+	
+	public static final class DrawDark implements OptionTransfer<DrawDark.Controls> {
+		@Override public Transfer<Number, Color> transfer(Controls p) {return new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());}
+		@Override public String toString() {return "Draw Dark (int)";}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+
+		private static class Controls extends ControlPanel {
+			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
+			public ColorChooser lowColor = new ColorChooser(Color.black, "Low");
+			public ColorChooser highColor = new ColorChooser(Color.white, "High");
+			public Controls() {
+				super("FixedAlpha");
+				this.setLayout(new GridLayout(1,0));
+				add(new LabeledItem("Radius:", radius));
+				add(lowColor);
+				add(highColor);
+				radius.addChangeListener(actionProvider.changeDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
+				highColor.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public int radius() {return (int) radius.getValue();}
+		}
+
 	}
 	
 	

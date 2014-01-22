@@ -131,6 +131,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 
 	public Transfer<?, ?> transfer() {return hosted.transfer();}
 	public void transfer(Transfer<?, ?> t) {hosted.transfer(t);}
+	public Aggregates<?> transferAggregates() {return hosted.transferAggregates();}
 	public Aggregates<?> aggregates() {return hosted.aggregates();}
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		hosted.aggregates(aggregates, renderTransform);

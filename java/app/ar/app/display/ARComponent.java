@@ -22,7 +22,13 @@ public abstract class ARComponent extends JComponent {
 	public abstract Transfer<?,?> transfer();
 	public abstract void transfer(Transfer<?, ?> t);
 
+	/**Aggregates that result after transfer is performed (if any)*/
+	public abstract Aggregates<?> transferAggregates();
+
+	/**Aggregates before transfer.**/
 	public abstract Aggregates<?> aggregates();
+
+	/**Set Aggregates before transfer and the transform used to create them.**/
 	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform);
 	
 	public abstract Aggregates<?> refAggregates();
@@ -30,6 +36,8 @@ public abstract class ARComponent extends JComponent {
 	
 	public abstract Renderer renderer();
 
+
+	
 	/**Force a full re-render.**/
 	public abstract void renderAgain();
 	

@@ -87,6 +87,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public Aggregator<?,?> aggregator() {return aggregator;}
 	
+	public Aggregates<?> transferAggregates() {return display.transferAggregates();}
 	public Aggregates<?> aggregates() {return aggregates;}
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
 		if (aggregates != this.aggregates) {

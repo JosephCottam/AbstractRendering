@@ -365,7 +365,9 @@ public final class Util {
 			if (f.getParentFile() != null && !f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
 			}
-			ImageIO.write(img, "png", f);
+
+			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
+			if (!ImageIO.write(img, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
 		}catch (Exception e) {
 			throw new RuntimeException(e);
 		}

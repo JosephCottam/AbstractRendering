@@ -31,8 +31,11 @@ public class TransferDisplay extends ARComponent {
 	 * If non-null, this set of aggregates is used.*/
 	private volatile Aggregates<?> refAggregates;
 
+
+	private volatile Aggregates<?> postTransferAggregates;
+	private volatile BufferedImage image;
+
 	private final Renderer renderer;
-	private BufferedImage image;
 	private volatile boolean renderError = false;
 	private volatile boolean renderAgain = false;
 
@@ -67,6 +70,7 @@ public class TransferDisplay extends ARComponent {
 		repaint();
 	}
 	public Aggregates<?> aggregates() {return aggregates;}
+	public Aggregates<?> transferAggregates() {return postTransferAggregates;}
 
 	
 	public Aggregates<?> refAggregates() {
@@ -115,7 +119,7 @@ public class TransferDisplay extends ARComponent {
 		}
 	}
 	
-	//TODO: Fix race condition between "aggregates" and "refAggregates".  May require that whenever you set "aggregtes" then "refAggregates" gets cleared off and related shenanagans elsewhere
+	//TODO: Fix race condition between "aggregates" and "refAggregates".  May require that whenever you set "aggregates" then "refAggregates" gets cleared off and related shenanagans elsewhere
 	protected final class TransferRender implements Runnable {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void run() {
@@ -126,13 +130,21 @@ public class TransferDisplay extends ARComponent {
 				long start = System.currentTimeMillis();
 				
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
-				Aggregates<Color> colors = renderer.transfer(aggs, ts);
+				postTransferAggregates = renderer.transfer(aggs, ts);
 				
-				image = AggregateUtils.asImage(colors, TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight(), Util.CLEAR);
+				if (postTransferAggregates.defaultValue() instanceof Color) {
+					image = AggregateUtils.asImage((Aggregates<Color>) postTransferAggregates, TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight(), Util.CLEAR);
+				} else {
+					image = null;
+				}
 				long end = System.currentTimeMillis();
 				if (PERF_REP) {
+					//Populated grid measurements...
+					//int width = postTransferAggregates.highX() - postTransferAggregates.lowX();
+					//int height = postTransferAggregates.highY() - postTransferAggregates.lowY();
+					
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
-							(end-start), image.getWidth(), image.getHeight());
+							(end-start), TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight());
 				}
 			} catch (ClassCastException e) {
 				renderError = true;

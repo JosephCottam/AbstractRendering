@@ -3,6 +3,7 @@ package ar.app;
 import javax.swing.*;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -10,15 +11,21 @@ import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
+import ar.Aggregates;
+import ar.aggregates.AggregateUtils;
 import ar.app.components.*;
 import ar.app.components.sequentialComposer.SequentialComposer;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
+import ar.app.display.TransferDisplay;
 import ar.renderers.ParallelRenderer;
 import ar.renderers.RenderUtils;
+import ar.util.Util;
 
 
 //TODO: Add "subset input", useful for contours
@@ -29,6 +36,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
 	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
+	private final JButton export = new JButton("Save Image");
 	private final Status status = new Status();
 	private final SequentialComposer composer = new SequentialComposer();
 	
@@ -61,6 +69,27 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		c.gridwidth = 1;
 		c.weightx = 1;
 		topRow.add(status,c);
+		
+		c.fill =  GridBagConstraints.HORIZONTAL;
+		c.gridx = 3;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.weightx = 1;
+		topRow.add(export, c);
+		export.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser chooser = new JFileChooser();
+				ARComponent arc = ARDemoApp.this.getARComponent();
+				int rv = chooser.showSaveDialog(arc);
+				if (rv != JFileChooser.APPROVE_OPTION) {return;}
+				File file = chooser.getSelectedFile();
+	
+				@SuppressWarnings("unchecked") //Will fail if the transfer didn't end up with colors
+				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) arc.transferAggregates(), arc.getWidth(), arc.getHeight(), Color.white);
+				Util.writeImage(img, file);
+			}
+		});
+		
 				
 
 		JPanel controls = new JPanel();
