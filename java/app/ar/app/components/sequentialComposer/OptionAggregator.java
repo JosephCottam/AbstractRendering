@@ -36,12 +36,11 @@ public final class OptionAggregator<G,A> {
 		= new OptionAggregator<>("Count (int)", new Numbers.Count<Object>());
 	
 	public static final OptionAggregator<Color, CategoricalCounts<Color>> COC_COLOR  
-		= new OptionAggregator<>("Categorical Counts (CoC Colors)",new Categories.CountCategories<Color>(Util.COLOR_SORTER));
+		= new OptionAggregator<>("Categorical Counts (CoC<Colors>)",new Categories.CountCategories<Color>(Util.COLOR_SORTER));
 		
 	public static final OptionAggregator<Comparable, CategoricalCounts<Comparable>> COC_COMP
-		= new OptionAggregator<>("Categorical Counts (CoC Comp)",new Categories.CountCategories<Comparable>());
-
+		= new OptionAggregator<>("Categorical Counts (CoC<Comp>)",new Categories.CountCategories<Comparable>());
 		
 	public static final OptionAggregator<CategoricalCounts, CategoricalCounts> MERGE_CATS 
-		= new OptionAggregator<>("Merge CoC (CoC Comp)", new Categories.MergeCategories());
+		= new OptionAggregator<>("Merge CoC (CoC<Comp>)", new Categories.MergeCategories());
 }

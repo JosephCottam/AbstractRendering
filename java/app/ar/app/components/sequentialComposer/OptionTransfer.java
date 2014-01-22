@@ -9,23 +9,16 @@ import java.awt.event.ItemListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
-import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
 import ar.app.components.LabeledItem;
-import ar.app.display.ARComponent;
-import ar.app.display.ARComponent.Holder;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.app.util.ColorChooser;
@@ -38,6 +31,7 @@ import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.util.Util;
 
 public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public abstract Transfer<?,?> transfer(P params);
@@ -303,7 +297,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new General.Spread(params.spreader(), params.combiner());
 		}
 
-		@Override public String toString() {return "Spread (int->int)";}
+		@Override public String toString() {return "Spread (*->*)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(SequentialComposer composer) {return new Controls(composer);}
 
@@ -351,30 +345,13 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class ColorKey implements OptionTransfer<ColorKey.Controls> {
 		@Override
-		public Transfer<?, ?> transfer(Controls params) {			
-			Set<Object> cats = new HashSet<>();
-			Aggregates<CategoricalCounts<?>> aggs = ????;  //TODO: How to get the set of aggregates here?  Or, how to get a default mapping here?
-
-			for (CategoricalCounts cc: aggs) {
-				for (int i=0; i<cc.size(); i++) {cats.add(cc.key(i));}
-			}
-			
-			Map<Object,Color> m = new HashMap();
-			Color[] palette = params.palette();
-
-			int i=0;
-			for (Object cat: cats) {
-				m.put(cat, palette[i]);
-				if (++i>=palette.length) {break;}
-			}
-			
-			
-			return new Categories.ReKey((CategoricalCounts<?>) params.composer.aggregator().identity(), m, params.reserve());
+		public Transfer<?, ?> transfer(Controls params) {
+			return new Categories.DynamicRekey(new CategoricalCounts<>(Util.COLOR_SORTER), params.palette(), params.reserve());
 		}
 
 		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		@Override public Controls control(SequentialComposer composer) {return new Controls(composer);}
+		@Override public Controls control(SequentialComposer composer) {return new Controls();}
 
 		
 		public static final class Controls extends ControlPanel {
@@ -383,18 +360,12 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 							"Brewer 12",
 							Color.black,
 					new Color[]{//A set of default Colors, taken from colorbrewer but re-ordered
-					new Color(166,206,227), 
-					new Color(178,223,138), 
-					new Color(251,154,153),					
-					new Color(253,191,111),
-					new Color(202,178,214), 
-					new Color(255,255,153), 
-					new Color(31,120,180), 
-					new Color(51,160,44), 
-					new Color(227,26,28), 
-					new Color(255,127,0), 
-					new Color(106,61,154),
-					new Color(177,89,40),
+					new Color(166,206,227), new Color(31,120,180),
+					new Color(178,223,138), new Color(51,160,44),
+					new Color(251,154,153), new Color(227,26,28),					
+					new Color(253,191,111), new Color(255,127,0),
+					new Color(202,178,214), new Color(106,61,154), 
+					new Color(255,255,153), new Color(177,89,40) 
 			});
 			
 			private final Entry cableColors = 
@@ -411,11 +382,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			private final Entry redBlue = new Entry("Red/Blue", Color.white, new Color[]{new Color(255,0,0,25), Color.red}); 
 
-			private final SequentialComposer composer;
 			private final JComboBox<Entry> palette = new JComboBox<>();
 			
-			public Controls(SequentialComposer composer) {
-				this.composer = composer;
+			public Controls() {
 				this.add(new LabeledItem("Palette:", palette));
 				
 				palette.addItem(cableColors);
@@ -425,7 +394,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				palette.addActionListener(actionProvider.actionDelegate());
 			}
 			
-			public Color[] palette() {return selected().colors;}
+			public List<Color> palette() {return Arrays.asList(selected().colors);}
 			public Color reserve() {return selected().reserve;}
 			private Entry selected() {return palette.getItemAt(palette.getSelectedIndex());}
 			

@@ -2,7 +2,12 @@ package ar.rules;
 
 import java.awt.Color;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -73,7 +78,7 @@ public class Categories {
 	 * 
 	 * Useful for (for example) assigning categories to colors.
 	 * **/ 
-	public static final class ReKey<IN,OUT> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+	public static final class Rekey<IN,OUT> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
 		private static final long serialVersionUID = -1547309163997797688L;
 		
 		final CategoricalCounts<OUT> like;
@@ -85,35 +90,43 @@ public class Categories {
 		 * @param rekey Mapping from key in the input to new key in the output
 		 * @param missing Key to use if the input key is not found in the rekey
 		 */
-		public ReKey(CategoricalCounts<OUT> like, Map<IN,OUT> rekey, OUT missing) {
+		public Rekey(CategoricalCounts<OUT> like, Map<IN,OUT> rekey, OUT missing) {
 			this.like = like;
 			this.rekey = rekey;
 			this.missing= missing;
 		}
 		
 		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
-		@Override public ReKey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
+		@Override public Rekey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 
 		@Override
-		public CategoricalCounts<OUT> at(int x, int y,
-				Aggregates<? extends CategoricalCounts<IN>> aggregates) {
-			CategoricalCounts<IN> v = aggregates.get(x, y);
-			CategoricalCounts<OUT> acc = emptyValue();
-			
-			for (int i=0; i<v.size();i++) {
-				IN cat = v.key(i);
-				int count = v.count(i);
-				OUT cat2;
-				if (rekey.containsKey(cat)) {cat2 = rekey.get(cat);}
-				else {cat2 = missing;}
-				acc = acc.extend(cat2, count);
-			}
-			return acc;
+		public CategoricalCounts<OUT> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			return rekey(rekey, missing, aggregates.get(x, y), emptyValue());
 		}
 
 		@Override
 		public Aggregates<CategoricalCounts<OUT>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
+		}
+		
+		/**Rekey a set of categories.
+		 * 
+		 * @param mapping Source-keys to target-keys mapping
+		 * @param missing Use this key if the source has a key not found in the mapping 
+		 * @param source Input keys
+		 * @param target Item to update.  Will be updaed with 'extend', and thus this procedure is mutative if target.extend is.
+		 * @return
+		 */
+		public static final<IN, OUT> CategoricalCounts<OUT> rekey(Map<IN,OUT> mapping, OUT missing, CategoricalCounts<IN> source, CategoricalCounts<OUT> target) {
+			for (int i=0; i<source.size();i++) {
+				IN cat = source.key(i);
+				int count = source.count(i);
+				OUT cat2;
+				if (mapping.containsKey(cat)) {cat2 = mapping.get(cat);}
+				else {cat2 = missing;}
+				target = target.extend(cat2, count);
+			}
+			return target;
 		}
 	}
 	
@@ -130,19 +143,72 @@ public class Categories {
 	 * @param <IN>
 	 * @param <OUT>
 	 */
-	public static final class DynamicRekey<IN,OUT> implements Transfer<IN, OUT> {
+	public static class DynamicRekey<IN,OUT> implements Transfer<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+		final CategoricalCounts<OUT> like;
+		final List<OUT> outkeys;
+		final OUT missing;
+		final Comparator<IN> comp;
 
-		@Override
-		public OUT emptyValue() {
-			// TODO Auto-generated method stub
-			return null;
+		/** Assumes that IN will extend comparable.**/
+		@SuppressWarnings("unchecked")
+		public DynamicRekey(CategoricalCounts<OUT> like, List<OUT> outkeys, OUT missing) {
+			this(like, outkeys, missing, (Comparator<IN>) new Util.ComparableComparator<>());
+		}
+		
+		/**
+		 * @param like Prototype output element 
+		 * @param outkeys Items that will be used as output keys
+		 * @param missing Item to use if an input key is not mapped to an output
+		 * @param comp Comparator for sorting the input elements. If null, sort order is not guaranteed.  Use Util.ComparableComparator for "natural ordering".
+		 */
+		public DynamicRekey(CategoricalCounts<OUT> like, List<OUT> outkeys, OUT missing, Comparator<IN> comp) {
+			this.like = like;
+			this.outkeys = outkeys;
+			this.missing = missing;
+			this.comp = comp;
 		}
 
-		@Override
-		public ar.Transfer.Specialized<IN, OUT> specialize(
-				Aggregates<? extends IN> aggregates) {
-			// TODO Auto-generated method stub
-			return null;
+		@Override public final CategoricalCounts<OUT> emptyValue() {return like;}
+
+		@Override public Specialized<IN, OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+			return new Specialized<>(like, outkeys, missing, comp, aggregates);
+		}
+		
+		public static final class Specialized<IN,OUT> extends DynamicRekey<IN,OUT> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<OUT>> {
+			private final Map<IN,OUT> rekey;
+			
+			public Specialized(CategoricalCounts<OUT> like,
+					List<OUT> outkeys, OUT missing,
+					Comparator<IN> comp,
+					Aggregates<? extends CategoricalCounts<IN>> aggs) {
+				super(like, outkeys, missing, comp);
+				
+				Set<IN> s;
+				if (comp != null) {s = new TreeSet<>(comp);}
+				else {s = new HashSet<>();}
+				
+				for (CategoricalCounts<IN> agg: aggs) {
+					for (int i=0; i<agg.size(); i++) {s.add(agg.key(i));}
+				}
+				
+				int idx=0;
+				rekey = new HashMap<>();
+				for (IN key:s) {
+					rekey.put(key, outkeys.get(idx));
+					if (++idx >= outkeys.size()) {break;}
+				}
+			}
+
+			@Override
+			public Aggregates<CategoricalCounts<OUT>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates,Renderer rend) {
+				return rend.transfer(aggregates, this);
+			}
+
+			@Override
+			public CategoricalCounts<OUT> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
+				return Rekey.rekey(rekey, missing, aggregates.get(x, y), emptyValue());
+			}
+			
 		}
 		
 	}

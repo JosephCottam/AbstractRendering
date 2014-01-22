@@ -303,7 +303,7 @@ public class Presets extends JPanel {
 				colors.put(6, Color.GRAY);	//Hawaiian
 				colors.put(7, Color.GRAY);	//Other
 				colors.put(8, Color.GRAY);	//Mixed
-				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+				Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.Rekey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 
 				Transfer<?, ?> chain = Seq
 						.start(rekey) 
@@ -331,7 +331,7 @@ public class Presets extends JPanel {
 			colors.put(7, new Color(136,90,68));//Other
 			colors.put(8, new Color(136,90,68));//Mixed
 
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.Rekey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighDefAlpha(Color.white, .1, true);
 			return Seq.start(rekey)
 					  .then(new General.Spread<>(
@@ -359,7 +359,7 @@ public class Presets extends JPanel {
 			colors.put(7, other);//Other
 			colors.put(8, other);//Mixed
 			
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.Rekey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighDefAlpha(Color.white, .1, true);
 			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
 			
@@ -450,7 +450,7 @@ public class Presets extends JPanel {
 			colors.put('h', new Color(255,165,0));	//Hispanic
 			colors.put('o', new Color(136,90,68));	//Other
 
-			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.ReKey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
+			Transfer<CategoricalCounts<Object>, CategoricalCounts<Color>> rekey = new Categories.Rekey<Object, Color>(new CategoricalCounts<Color>(Util.COLOR_SORTER), colors, Color.BLACK);
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new Categories.HighDefAlpha(Color.white, .1, true);
 			return Seq.start(rekey)
 					.then(stratAlpha);
