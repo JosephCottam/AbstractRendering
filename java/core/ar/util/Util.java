@@ -1,6 +1,7 @@
 package ar.util;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -216,45 +217,7 @@ public final class Util {
 		return new java.awt.Color(r,g,b,a);
 	}
 
-	/**Log weight average v between min and max, then do a linear interpolation between low and high.
-	 * @param low The color to associate with the minimum value
-	 * @param high The color to associate with the maximum value
-	 * @param min The lowest value to expect
-	 * @param max The highest value to expect
-	 * @param v The current value under consideration
-	 * @param basis The basis for the log
-	 * @return A color between low and high proportional to the log-distance of v between min and max
-	 * **/
-	public static Color logInterpolate(Color low, Color high, double min, double max, double v, double basis) {
-		if (v>max) {v=max;}
-		if (v<min) {v=min;}
-		int a = (int) logWeightedAvg(low.getAlpha(), high.getAlpha(), max, v, basis);
-		Color c = interpolate(low,high, min,max,v);
-		return new java.awt.Color(c.getRed(), c.getGreen(), c.getBlue(),a);
-	}
 
-	
-	/**From "inMens: Realtime visual querying of Big Data" Zhicheng Liu, Biye Jiang and Jeffrey Heer (2013)**/
-	public static double expWeightedAvg(double min, double max, double weight, double exp) {
-		return weightedAverage(min, max, Math.pow(weight, exp));
-	}
-
-	/** Based on "Visual Analysis of Inter-Process Communication for Large-Scale Parallel Computing"
-	 *   Chris Muelder, Francois Gygi, and Kwan-Liu Ma (2009)
-	 *   
-	 * @param rmin Minim range value
-	 * @param vmax Value maximum
-	 * @param v    Value
-	 * @param basis
-	 */
-	public static double logWeightedAvg(double rmin, double rmax,  double vmax, double v, double basis) {
-		if (v == 0) {return rmin;}
-		double logV= Math.log(v)/Math.log(basis);
-		double logMX = Math.log(vmax)/Math.log(basis);
-		double p = 1-(logV/logMX);
-		return weightedAverage(rmin, rmax, p);
-	}
-	
 	/**Weighted average between two values
 	 * 
 	 * @param min The lowest value to expect
@@ -360,14 +323,32 @@ public final class Util {
 	}
 	
 	/**Write a buffered image to a file.**/
-	public static void writeImage(BufferedImage img, File f) {
+	public static void writeImage(final BufferedImage src, File f) {
 		try {
 			if (f.getParentFile() != null && !f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
 			}
-
+			
+			//Remove alpha component because it was causing problems on some machines.
+			BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
+			Color bgColor = Color.white;
+			for (int x=0; x<src.getWidth(); x++) {
+				for (int y=0; y<src.getHeight();y++) {
+					Color fgColor = new Color(src.getRGB(x,y), true);
+					int r, g, b;
+					r = fgColor.getRed() * fgColor.getAlpha() + bgColor.getRed() * (255 - fgColor.getAlpha());
+					g = fgColor.getGreen() * fgColor.getAlpha() + bgColor.getGreen() * (255 - fgColor.getAlpha());
+					b = fgColor.getBlue() * fgColor.getAlpha() + bgColor.getBlue() * (255 - fgColor.getAlpha());
+					Color result = new Color(r / 255, g / 255, b / 255);
+					noAlpha.setRGB(x, y, result.getRGB());
+				}
+				
+			}
+			
+			
+			
 			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
-			if (!ImageIO.write(img, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
+			if (!ImageIO.write(noAlpha, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
 		}catch (Exception e) {
 			throw new RuntimeException(e);
 		}
