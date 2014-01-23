@@ -71,7 +71,7 @@ public class ClientApp {
 			
 			Aggregates<?> aggs = remoteRender(host, port, dataset(), aggregate(), remoteTransfers());
 			
-			ARComponent newDisplay = new SimpleDisplay(aggs, localTransfer(), renderer); 
+			ARComponent newDisplay = new TransferDisplay(aggs, localTransfer(), renderer); 
 			frame.add(newDisplay, BorderLayout.CENTER);
 			this.display = newDisplay;
 			frame.revalidate();
