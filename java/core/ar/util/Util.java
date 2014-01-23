@@ -1,7 +1,6 @@
 package ar.util;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -344,8 +343,6 @@ public final class Util {
 				}
 				
 			}
-			
-			
 			
 			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
 			if (!ImageIO.write(noAlpha, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
