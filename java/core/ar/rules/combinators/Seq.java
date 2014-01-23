@@ -19,7 +19,6 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
         this.second = second;
         this.rend = rend == null ? SHARED_RENDERER : rend;
     }
-
     
     @Override public OUT emptyValue() {return second.emptyValue();}
 
@@ -27,25 +26,32 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
     public Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
         return new Specialized<>(rend, first, second, aggregates);
     }
+    
+    /**Extend the sequence of transfers with a new step.**/ 
     public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
     
+    /**Create a new sequence with the given transfer and renderer.**/
     public static <IN, OUT> SeqStart<IN,OUT> start(Renderer rend, Transfer<IN,OUT> start) {return new SeqStart<>(rend, start);}
+    
+    /**Create a new sequence with the given transfer and default renderer.**/
     public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(null, start);}
     
+    /**Initiates a sequence with a single transfer function.
+     * Behaves just like the provided transfer, but can be extended with another transfer with the 'then' method.
+     * **/
     public static class SeqStart<IN,OUT> extends Seq<IN, OUT, OUT> {
     	public SeqStart(Renderer rend, Transfer<IN, OUT> base) {
     		super(rend, base,null);
     	}
 
-		@Override
-		public OUT emptyValue() {return first.emptyValue();}
+		@Override public OUT emptyValue() {return first.emptyValue();}
 
 		@Override
 		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
 			return first.specialize(aggregates);
 		}
 		
-	    public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, first, next);}
+	    @Override public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, first, next);}
     }
 
     public static class Specialized<IN,MID,OUT> extends Seq<IN,MID, OUT> implements Transfer.Specialized<IN,OUT> {

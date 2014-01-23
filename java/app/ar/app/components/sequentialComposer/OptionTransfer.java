@@ -38,19 +38,27 @@ import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
 import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
-import ar.util.Util;
 
 public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
-	public abstract Transfer<?,?> transfer(P params);
+	
+	/**Create a new transfer that is based on passed parameters and subsequent transfer.
+	 * 
+	 * In most cases, the new transfer is a sequence.  Sometimes, it will be an 'inner' transfer
+	 * instead.  The new transfer should not discard the old transfer.  
+	 * 
+	 * @param params Control panel with parameters for a new transfer 
+	 *  @param subsequent Transfer functions called AFTER the new one (may be null)
+	 *  @return A new transfer that will combines the new and the 'subsequent' in some way.
+	 */
+	public abstract Transfer<?,?> transfer(P params, Transfer<?,?> subsequent);
 	public abstract P control(SequentialComposer composer, HasViewTransform transformProvider);
 	
 	public static final class ToCount implements OptionTransfer<ControlPanel> {
 
 		@Override
-		@SuppressWarnings("rawtypes")
-		public Transfer<?,?> transfer(
-				ar.app.components.sequentialComposer.OptionTransfer.ControlPanel params) {
-			return new Categories.ToCount();
+		@SuppressWarnings({"rawtypes","unchecked"})
+		public Transfer<?,?> transfer(ControlPanel params,Transfer subsequent) {
+			return Util.extend(new Categories.ToCount(), subsequent);
 		}
 
 		@Override
@@ -66,8 +74,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override
 		@SuppressWarnings({"unchecked","rawtypes"})
-		public Transfer<?,?> transfer(Controls params) {
-			return new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
+		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
+			Transfer t = new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
+			return Util.extend(t, subsequent);
 		}
 
 		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
@@ -165,8 +174,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override
 		@SuppressWarnings({"unchecked","rawtypes"})
-		public Transfer<?,?> transfer(Controls params) {
-			return new General.ValuerTransfer(params.valuer(), params.zero());
+		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
+			Transfer t= new General.ValuerTransfer(params.valuer(), params.zero());
+			return Util.extend(t, subsequent);
 		}
 
 		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
@@ -211,8 +221,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class HDInterpolate implements OptionTransfer<HDInterpolate.Controls> {
 		@Override 
-		public Transfer<Number,Color> transfer(Controls p) {
-			return new Numbers.Interpolate<>(p.low.color(), p.high.color());
+		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
+			Transfer t = new Numbers.Interpolate<>(p.low.color(), p.high.color());
+			return Util.extend(t, subsequent);
 		}
 		
 		@Override public String toString() {return "HD Interpolate (Num->Color))";}
@@ -235,7 +246,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 	public static final class FixedInterpolate implements OptionTransfer<FixedInterpolate.Controls> {
 		@Override 
-		public Transfer<Number,Color> transfer(Controls p) {
+		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
 			return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()));
 		}
 		
@@ -265,14 +276,15 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class Percent implements OptionTransfer<Percent.Controls> {
 		@Override 
-		public Transfer<CategoricalCounts<Color>,Color> transfer(Controls p) {
+		public Transfer<CategoricalCounts<Color>,Color> transfer(Controls p, Transfer subsequent) {
 			int percent = (int) p.spinner.getValue();
-			return new Categories.KeyPercent<Color>(
+			Transfer t = new Categories.KeyPercent<Color>(
 					percent/100d, 
 					Color.blue, 
 					Color.white, 
 					p.aboveColor.color(), 
 					p.belowColor.color());
+			return Util.extend(t, subsequent);
 		}
 		
 		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
@@ -300,8 +312,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class Spread implements OptionTransfer<Spread.Controls> {
 		@Override
-		public Transfer<?, ?> transfer(Controls params) {
-			return new General.Spread(params.spreader(), params.combiner());
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+			Transfer t = new General.Spread(params.spreader(), params.combiner());
+			return Util.extend(t, subsequent);
 		}
 
 		@Override public String toString() {return "Spread (*->*)";}
@@ -352,8 +365,9 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class ColorKey implements OptionTransfer<ColorKey.Controls> {
 		@Override
-		public Transfer<?, ?> transfer(Controls params) {
-			return new Categories.DynamicRekey(new CategoricalCounts<>(Util.COLOR_SORTER), params.palette(), params.reserve());
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+			Transfer t = new Categories.DynamicRekey(new CategoricalCounts<>(Util.COLOR_SORTER), params.palette(), params.reserve());
+			return Util.extend(t, subsequent);
 		}
 
 		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
@@ -430,8 +444,41 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 
+	public static final class Clipwarn implements OptionTransfer<Clipwarn.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
+			if (params.underDelta() == 0) {return subsequent;}
+			return new Advise.OverUnder(params.highColor.color(), params.lowColor.color(), subsequent, params.underDelta());
+		}
+
+		@Override
+		public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public String toString() {return "Clipwarn (int->color)";} 
+		
+		private static class Controls extends ControlPanel {
+			public JSpinner underDelta = new JSpinner(new SpinnerNumberModel(5.0, 0, 100,.5));
+			public ColorChooser highColor = new ColorChooser(Color.black, "Over:");
+			public ColorChooser lowColor = new ColorChooser(Color.gray, "Under:");
+			public Controls() {
+				super("FixedAlpha");
+				this.setLayout(new GridLayout(1,0));
+				add(highColor);
+				add(lowColor);
+				add(new LabeledItem("Delta:", underDelta));
+				underDelta.addChangeListener(actionProvider.changeDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
+				highColor.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public double underDelta() {return (double) underDelta.getValue();}
+		}
+	}
+	
 	public static final class DrawDark implements OptionTransfer<DrawDark.Controls> {
-		@Override public Transfer<Number, Color> transfer(Controls p) {return new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());}
+		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
+			Transfer t = new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());
+			return Util.extend(t, subsequent);
+		}
 		@Override public String toString() {return "Draw Dark (int)";}
 		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
@@ -467,9 +514,10 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override
-		public Transfer<?, ?> transfer(Controls params) {
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
 			return Seq.start(new Shapes.ShapeGather(shapes, params.tp))
-					.then(new Categories.RandomWeave());
+					.then(new Categories.RandomWeave())
+					.then(subsequent);
 		}
 
 		@Override
@@ -490,7 +538,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class Present implements OptionTransfer<ControlPanel> {
 		@Override 
-		public Transfer<Integer,Color> transfer(ControlPanel p) {
+		public Transfer<Integer,Color> transfer(ControlPanel p, Transfer subsequent) {
 			return new General.Present<Integer, Color>(Color.red, Color.white);
 		}
 		
@@ -502,14 +550,22 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class Echo implements OptionTransfer<ControlPanel> {
 		public static final String NAME = "Echo (*)"; 
-		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
+		@Override public Transfer<Object, Object> transfer(ControlPanel p, Transfer subsequent) {
+			Transfer t = new General.Echo<>(null);
+			return Util.extend(t, subsequent);
+		}	
+		
 		@Override public String toString() {return NAME;}
 		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 
 	public static final class Gradient implements OptionTransfer<ControlPanel> {
-		@Override public Transfer<Object, Color> transfer(ControlPanel p) {return new Debug.Gradient();}
+		@Override public Transfer<Object, Color> transfer(ControlPanel p, Transfer subsequent) {
+			Transfer t = new Debug.Gradient();
+			return Util.extend(t, subsequent);	
+		}
+		
 		@Override public String toString() {return "Gradient (color)";}
 		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
@@ -518,7 +574,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
 	public static final class HighAlphaLog implements OptionTransfer<ControlPanel> {
 		@Override 
-		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {
+		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
 			return new Categories.HighDefAlpha(Color.white, .1, true);
 		}
 		
@@ -528,7 +584,11 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
-		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
+		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
+			Transfer t = new Categories.HighDefAlpha(Color.white, .1, false);
+			return Util.extend(t, subsequent);
+		}
+		
 		@Override public String toString() {return "Linear HD Alpha (CoC)";}
 		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
@@ -541,5 +601,15 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public ControlPanel(String id) {actionProvider = new ActionProvider(id);}
 		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+	
+	public static class Util extends ar.util.Util {
+	    @SuppressWarnings("unchecked")
+		public static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {
+	    	if (first == null) {return second;}
+	    	if (second == null) {return first;}
+	    	if (first instanceof Seq) {return ((Seq<IN,?,MID>) first).then(second);}    	
+	    	return new Seq<>(first, second);
+	    }
 	}
 }

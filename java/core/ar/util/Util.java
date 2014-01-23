@@ -26,12 +26,10 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Collection of various utilities that don't have other homes.**/
-public final class Util {
+public class Util {
 	/**Color representing clear (fully transparent).**/
 	public static final Color CLEAR = new Color(0,0,0,0);
 
-	private Util() {}
-	
 	/**Lookup a key/value pair in an argument list.**/
 	public static String argKey(String[] args, String flag, String def) {
 		flag = flag.toUpperCase();

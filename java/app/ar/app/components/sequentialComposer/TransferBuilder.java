@@ -11,10 +11,8 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import ar.Transfer;
-import ar.app.ARDemoApp;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
-import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
 
 @SuppressWarnings("rawtypes")
@@ -48,14 +46,13 @@ public class TransferBuilder extends JPanel {
 	}
 	
 	public Transfer<?,?> transfer() {
-		int idx = transferLists.get(0).getSelectedIndex();
-		Seq t = Seq.start(transferLists.get(0).getItemAt(idx)
-							.transfer(optionPanels.get(0)));
-		for (int i=1; i<transferLists.size()-1; i++) {
-			idx = transferLists.get(i).getSelectedIndex();
-			t = t.then(transferLists.get(i).getItemAt(idx).transfer(optionPanels.get(i)));
+		Transfer subsequent = null; 
+		for (int i=transferLists.size()-1; i>=0; i--) {
+			int idx = transferLists.get(i).getSelectedIndex();
+			OptionTransfer ot = transferLists.get(i).getItemAt(idx);
+			subsequent = ot.transfer(optionPanels.get(i), subsequent);
 		}
-		return t;
+		return subsequent;
 	}
 	
 	private void rebuild() {
