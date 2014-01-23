@@ -16,6 +16,7 @@ import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
+import ar.util.HasViewTransform;
 
 @SuppressWarnings("rawtypes")
 public class SequentialComposer extends JPanel  {
@@ -23,10 +24,11 @@ public class SequentialComposer extends JPanel  {
 
 	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
-	private final TransferBuilder transfers = new TransferBuilder(this);
+	private final TransferBuilder transfers;
 	private final JButton transferDefaults = new JButton("Defaults");
 	
-	public SequentialComposer() {
+	public SequentialComposer(HasViewTransform transferProvider) {
+		transfers = new TransferBuilder(this, transferProvider);
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
 		AppUtil.loadStaticItems(aggregators, OptionAggregator.class, OptionAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));

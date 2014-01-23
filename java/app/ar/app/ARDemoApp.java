@@ -38,7 +38,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
 	private final JButton export = new JButton("Save Image");
 	private final Status status = new Status();
-	private final SequentialComposer composer = new SequentialComposer();
+	private final SequentialComposer composer = new SequentialComposer(this);
 	
 	public ARDemoApp() {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;

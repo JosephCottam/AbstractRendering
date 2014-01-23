@@ -2,10 +2,12 @@ package ar.app.components.sequentialComposer;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -22,6 +24,7 @@ import ar.app.components.LabeledItem;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.app.util.ColorChooser;
+import ar.app.util.GeoJSONTools;
 import ar.app.util.SimpleNameRenderer;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -30,13 +33,16 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
+import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.rules.combinators.Seq;
+import ar.util.HasViewTransform;
 import ar.util.Util;
 
 public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public abstract Transfer<?,?> transfer(P params);
-	public abstract P control(SequentialComposer composer);
+	public abstract P control(SequentialComposer composer, HasViewTransform transformProvider);
 	
 	public static final class ToCount implements OptionTransfer<ControlPanel> {
 
@@ -48,7 +54,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override
-		public ar.app.components.sequentialComposer.OptionTransfer.ControlPanel control(SequentialComposer composer) {
+		public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {
 			return new ControlPanel();
 		}
 		
@@ -64,7 +70,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
 		}
 
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -163,7 +169,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return new General.ValuerTransfer(params.valuer(), params.zero());
 		}
 
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -210,7 +216,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "HD Interpolate (Num->Color))";}
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -234,7 +240,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "Fixed Interpolate (Num->Color)";}
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -269,7 +275,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					p.belowColor.color());
 		}
 		
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
@@ -300,7 +306,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public String toString() {return "Spread (*->*)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		@Override public Controls control(SequentialComposer composer) {return new Controls(composer);}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls(composer);}
 
 		public static final class Controls extends ControlPanel {
 			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
@@ -352,7 +358,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 
 		
 		public static final class Controls extends ControlPanel {
@@ -371,7 +377,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			private final Entry cableColors = 
 					new Entry(
-							"Cable",
+							"Cable Colors",
 							Color.BLACK,
 					new Color[] {//Taken from Dustin Cable's racial dot-map http://www.coopercenter.org/demographics/Racial-Dot-Map; ordered so they match the letter-code sort-order
 					new Color(255,69,0),
@@ -379,6 +385,16 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					new Color(255,165,0),
 					new Color(136,90,68),
 					new Color(0,0,200),
+			});
+			
+			private final Entry tractColors = 
+					new Entry(
+							"Tract Colors",
+							Color.GRAY,
+					new Color[] {//Taken from Dustin Cable's racial dot-map http://www.coopercenter.org/demographics/Racial-Dot-Map; ordered so they match the letter-code sort-order
+					new Color(0,0,200),
+					new Color(0,200,0),
+					new Color(220,0,0)
 			});
 			
 			private final Entry redBlue = new Entry("Red/Blue", Color.white, new Color[]{new Color(255,0,0,25), Color.red}); 
@@ -390,6 +406,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				
 				palette.addItem(cableColors);
 				palette.addItem(brewerColors);
+				palette.addItem(tractColors);
 				palette.addItem(redBlue);
 				
 				palette.addActionListener(actionProvider.actionDelegate());
@@ -413,57 +430,10 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 
-	
-	public static final class Present implements OptionTransfer<ControlPanel> {
-		@Override 
-		public Transfer<Integer,Color> transfer(ControlPanel p) {
-			return new General.Present<Integer, Color>(Color.red, Color.white);
-		}
-		
-		@Override public String toString() {return "Present (*)";}
-		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-
-	
-	public static final class Echo implements OptionTransfer<ControlPanel> {
-		public static final String NAME = "Echo (*)"; 
-		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
-		@Override public String toString() {return NAME;}
-		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-
-	public static final class Gradient implements OptionTransfer<ControlPanel> {
-		@Override public Transfer<Object, Color> transfer(ControlPanel p) {return new Debug.Gradient();}
-		@Override public String toString() {return "Gradient (color)";}
-		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	} 
-
-	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
-	public static final class HighAlphaLog implements OptionTransfer<ControlPanel> {
-		@Override 
-		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {
-			return new Categories.HighDefAlpha(Color.white, .1, true);
-		}
-		
-		@Override public String toString() {return "Log HD Alpha (CoC)";}
-		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-	
-	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
-		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
-		@Override public String toString() {return "Linear HD Alpha (CoC)";}
-		@Override public ControlPanel control(SequentialComposer composer) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-	
 	public static final class DrawDark implements OptionTransfer<DrawDark.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p) {return new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());}
 		@Override public String toString() {return "Draw Dark (int)";}
-		@Override public Controls control(SequentialComposer composer) {return new Controls();}
+		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
@@ -486,7 +456,84 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	}
 	
+	public static final class WeaveStates implements OptionTransfer<WeaveStates.Controls> {
+		private static final List<Shape> shapes;
+		
+		static {
+			try {
+				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
+				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
+			} catch (Exception e) {throw new RuntimeException(e);}
+		}
+		
+		@Override
+		public Transfer<?, ?> transfer(Controls params) {
+			return Seq.start(new Shapes.ShapeGather(shapes, params.tp))
+					.then(new Categories.RandomWeave());
+		}
+
+		@Override
+		public Controls control(SequentialComposer composer, final HasViewTransform transformProvider) {
+			return new Controls(transformProvider);
+		}
+		
+		public static final class Controls extends ControlPanel {
+			final HasViewTransform tp;
+			public Controls(HasViewTransform tp) {this.tp=tp;}
+		}
+		
+		@Override public String toString() {return "Weave States";}
+	}
+
+
 	
+	
+	public static final class Present implements OptionTransfer<ControlPanel> {
+		@Override 
+		public Transfer<Integer,Color> transfer(ControlPanel p) {
+			return new General.Present<Integer, Color>(Color.red, Color.white);
+		}
+		
+		@Override public String toString() {return "Present (*)";}
+		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+
+	
+	public static final class Echo implements OptionTransfer<ControlPanel> {
+		public static final String NAME = "Echo (*)"; 
+		@Override public Transfer<Object, Object> transfer(ControlPanel p) {return new General.Echo<>(null);}		
+		@Override public String toString() {return NAME;}
+		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+
+	public static final class Gradient implements OptionTransfer<ControlPanel> {
+		@Override public Transfer<Object, Color> transfer(ControlPanel p) {return new Debug.Gradient();}
+		@Override public String toString() {return "Gradient (color)";}
+		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	} 
+
+	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
+	public static final class HighAlphaLog implements OptionTransfer<ControlPanel> {
+		@Override 
+		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {
+			return new Categories.HighDefAlpha(Color.white, .1, true);
+		}
+		
+		@Override public String toString() {return "Log HD Alpha (CoC)";}
+		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+	
+	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
+		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p) {return new Categories.HighDefAlpha(Color.white, .1, false);}
+		@Override public String toString() {return "Linear HD Alpha (CoC)";}
+		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	}
+		
 	public static class ControlPanel extends JPanel {
 		protected final ActionProvider actionProvider;
 		

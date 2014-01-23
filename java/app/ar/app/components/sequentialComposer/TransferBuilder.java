@@ -11,9 +11,11 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import ar.Transfer;
+import ar.app.ARDemoApp;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.rules.combinators.Seq;
+import ar.util.HasViewTransform;
 
 @SuppressWarnings("rawtypes")
 public class TransferBuilder extends JPanel {
@@ -21,9 +23,11 @@ public class TransferBuilder extends JPanel {
 	private final List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
 	private final List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
 	private final SequentialComposer composer;
+	private final HasViewTransform transferProvider;
 
-	public TransferBuilder(SequentialComposer composer) {
+	public TransferBuilder(SequentialComposer composer, HasViewTransform transferProvider) {
 		this.composer = composer;
+		this.transferProvider = transferProvider;
 		this.setLayout(new GridLayout(0,2));
 		addTransferBox();
 	}
@@ -71,7 +75,7 @@ public class TransferBuilder extends JPanel {
 		
 		transferLists.add(transfers);
 		
-		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(composer);
+		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(composer,transferProvider);
 		optionPanels.add(controls);
 		controls.addActionListener(actionProvider.actionDelegate());
 		
@@ -100,7 +104,7 @@ public class TransferBuilder extends JPanel {
 			} else if (idx == size-1 && !end) {				
 				host.addTransferBox();
 			} else {
-				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.composer);
+				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.composer, host.transferProvider);
 				host.optionPanels.remove(idx);
 				host.optionPanels.add(idx, params);
 				params.addActionListener(host.actionProvider.actionDelegate());

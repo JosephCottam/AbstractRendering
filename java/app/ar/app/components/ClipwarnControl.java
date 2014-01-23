@@ -27,7 +27,7 @@ public class ClipwarnControl  extends JPanel {
 				JCheckBox b = (JCheckBox) e.getSource();
 				Transfer<?,?> old = target.transfer();
 				if (b.isSelected() && !(old instanceof Advise.OverUnder)) {
-					target.transfer(new Advise.OverUnder(Color.BLACK, Color.gray, old, 1));
+					target.transfer(new Advise.OverUnder(Color.BLACK, Color.gray, old, 5));
 				} else if (!b.isSelected() && (old instanceof Advise.OverUnder)) {
 					target.transfer(((Advise.OverUnder) old).baseTransfer());
 				}
