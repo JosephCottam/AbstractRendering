@@ -22,7 +22,6 @@ import ar.app.components.sequentialComposer.SequentialComposer;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
-import ar.app.display.TransferDisplay;
 import ar.renderers.ParallelRenderer;
 import ar.renderers.RenderUtils;
 import ar.util.Util;
@@ -35,7 +34,6 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final JFrame frame = new JFrame();
 
 	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
-	private final ClipwarnControl clipwarnControl = new ClipwarnControl();
 	private final JButton export = new JButton("Save Image");
 	private final Status status = new Status();
 	private final SequentialComposer composer = new SequentialComposer(this);
@@ -55,13 +53,6 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		c.gridwidth =1;
 		c.weightx = 1;
 		topRow.add(enhanceOptions,c);
-
-		c.fill =  GridBagConstraints.HORIZONTAL;
-		c.gridx = 1;
-		c.gridy = 0;
-		c.gridwidth =1;
-		c.weightx = 1;
-		topRow.add(clipwarnControl,c);
 
 		c.fill =  GridBagConstraints.HORIZONTAL;
 		c.gridx = 2;
@@ -134,7 +125,6 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	
 		//Plumbing for the top row...
 		this.status.startMonitoring(display.renderer());
-		clipwarnControl.target(display);
         enhanceOptions.host(display);	
     }
 	
