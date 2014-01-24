@@ -34,9 +34,7 @@ public class SequentialComposer extends JPanel  {
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		datasets.addActionListener(actionProvider.actionDelegate());
-		//datasets.addItemListener(actionProvider.itemDelegate());
 		aggregators.addActionListener(actionProvider.actionDelegate());
-		//aggregators.addItemListener(actionProvider.itemDelegate());
 		transfers.addActionListener(actionProvider.actionDelegate());
 		
 		JPanel ds = new JPanel();

@@ -188,11 +188,8 @@ public class General {
 		}
 	}
 	
-	/**Spread a value out in a general geometric shape.
-	 * 
-	 * TODO: Shift away from item-wise.  Eliminate the cache.
-	 * **/
-	public static class Spread<V> implements Transfer<V,V> {
+	/**Spread a value out in a general geometric shape.**/
+	public static class Spread<V> implements Transfer.Specialized<V,V> {
 		final Spreader<V> spreader;
 		final Aggregator<V,V> combiner;
 		
@@ -204,53 +201,24 @@ public class General {
 		public V emptyValue() {return combiner.identity();}
 		
 		/**Calculations are done at specialization time, so transfer is fast but specialization is slow.**/
-		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {
-			return new Specialized<>(spreader, aggregates, combiner);
-		}
+		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
-		public static class Specialized<V> extends Spread<V> implements Transfer.ItemWise<V, V>  {
-			private Object cacheGuard = new Object(){};
-			private Aggregates<?> cacheKey;
-			private Aggregates<V> cachedAggs;
-
-			public Specialized(Spreader<V> spreader, Aggregates<? extends V> base, Aggregator<V,V> combiner) {
-				super(spreader, combiner);
-				synchronized(cacheGuard) {
-					cacheKey =base;
-					cachedAggs = spread(base);
+		@Override
+		//TODO: Parallelize...
+		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
+			Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
+			
+			for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+				for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+					V baseVal = aggregates.get(x,y);
+					if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
+					spreader.spread(target , x,y, baseVal, combiner);
 				}
 			}
-
-			private Aggregates<V> spread(Aggregates<? extends V> aggregates) {
-				Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
-			
-				for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
-					for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
-						V baseVal = aggregates.get(x,y);
-						if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
-						super.spreader.spread(target , x,y, baseVal, combiner);
-					}
-				}
-				return target;
-			}
-			
-			@Override
-			public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-			
-			@Override
-			public V at(int x, int y, Aggregates<? extends V> aggregates) {
-				synchronized(cacheGuard) {
-					if (cacheKey != aggregates || aggregates == null) {
-						cachedAggs = spread(aggregates);
-						cacheKey = aggregates;
-					}
-				}
-
-				return cachedAggs.get(x, y);
-			}			
+			return target;
 		}
+			
+		
 		
 		/**Spreader takes a type argument in case the spreading depends on the value.
 		 * This capability can be used to implement (for example) a map with circles centered-on and proportional to a value. 

@@ -18,7 +18,9 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import ar.Aggregates;
 import ar.Aggregator;
+import ar.Renderer;
 import ar.Transfer;
 import ar.app.components.LabeledItem;
 import ar.app.util.ActionProvider;
@@ -321,7 +323,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class Spread extends OptionTransfer<Spread.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			Transfer t = new General.Spread(params.spreader(), Controls.combiner());
+			Transfer t = new FlexSpread(params.spreader());
 			return extend(t, subsequent);
 		}
 
@@ -329,27 +331,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
-		/**Combine items of unknown type by trying to match types from a provided set of aggregators.**/
-		public static class FlexCombiner implements Aggregator<Object, Object> {
-			final Aggregator[] aggregators;
-			public FlexCombiner(Aggregator... aggregators) {this.aggregators = aggregators;}
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public Object combine(Object current, Object update) {
-				for (Aggregator a: aggregators) {
-					if (a.identity().getClass().isAssignableFrom(current.getClass())) {
-						return a.combine(current, update);
-					}
-				}
-				throw new IllegalArgumentException("Could not match " + current.getClass().getSimpleName() + " from provided aggregators.");
-			}
-
-			@Override public Object rollup(Object left, Object right) {return null;}
-			@Override public Object identity() {return null;}
-		}
-
-		
 		public static final class Controls extends ControlPanel {
 			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
 			
@@ -361,12 +342,41 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			public Spreader spreader() {return new General.Spread.UnitSquare<Integer>(radius());}
 			public int radius() {return (int) spinner.getValue();}
-			public static Aggregator combiner() {
-				//return new Numbers.Count<Integer>();
-				return new Categories.MergeCategories<Color>();
-				//return new FlexCombiner(new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>());
-			}
 		}
+		
+		public static class FlexSpread<V> implements Transfer<V,V> {
+			final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>()};
+			final Spreader<V> spreader;
+			public FlexSpread(Spreader<V> spreader) {this.spreader = spreader;}
+			
+			@Override public V emptyValue() {throw new UnsupportedOperationException();}
+			@Override public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return new Specialized<>(spreader, aggregates);}
+
+			
+			public static class Specialized<V> extends FlexSpread<V> implements Transfer.Specialized<V,V> {
+				final General.Spread<V> base;
+				public Specialized(Spreader<V> spreader, Aggregates<? extends V> aggs) {
+					super(spreader);
+					Class<?> targetClass = aggs.defaultValue().getClass();
+					Aggregator combiner = null;
+					for (Aggregator a: combiners) {
+						if (a.identity().getClass().isAssignableFrom(targetClass)) {
+							combiner = a; break;
+						}
+					}					
+					if (combiner == null) {throw new IllegalArgumentException("Could not match " + targetClass.getSimpleName() + " from provided aggregators.");} 
+					base = new General.Spread<>(spreader, combiner);
+				}
+
+				@Override public V emptyValue() {return base.emptyValue();}
+				
+				@Override
+				public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {return base.process(aggregates, rend);}
+			}
+
+		}
+		
+		
 	}
 	
 	public static final class ColorKey extends OptionTransfer<ColorKey.Controls> {
