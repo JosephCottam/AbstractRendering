@@ -1,7 +1,6 @@
 package ar.app.components.sequentialComposer;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
@@ -36,9 +35,11 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
+import ar.rules.SeamCarving;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
 import ar.util.Util;
@@ -318,6 +319,54 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				aboveColor.addActionListener(actionProvider.actionDelegate());
 				belowColor.addActionListener(actionProvider.actionDelegate());
 			}
+		}
+	}
+
+	
+	public static final class Seam extends OptionTransfer<Seam.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+			SeamCarving.Delta<Integer> delta = new SeamCarving.DeltaInteger();	//TODO: Generalize to auto-detect type...on specialization perhaps?  Similar to FlexSpread..
+			
+			Transfer vt=null, ht=null;
+			if (params.columns() >0) {
+				Transfer vcarver = new SeamCarving.Carve<Integer>(delta, SeamCarving.Carve.Direction.V, 0);
+				vt = new NTimes<>(params.columns(), vcarver);
+			}
+
+			if (params.rows() >0) {
+				Transfer hcarver = new SeamCarving.Carve<Integer>(delta, SeamCarving.Carve.Direction.H, 0);
+				ht = new NTimes<>(params.columns(), hcarver);
+			}
+			
+			//TODO: There are probably smarter things to do than just horizontal then vertical...
+			if (vt == null && ht == null) {return subsequent;}
+			if (vt == null && ht != null) {return ht;}
+			if (vt != null && ht == null) {return vt;}
+			Transfer t = extend(vt, subsequent);
+			t = extend(ht, t);
+			return t;
+		}
+
+		@Override public String toString() {return "Seam-Carve (int->int)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+
+		public static final class Controls extends ControlPanel {
+			private final JSpinner rows = new JSpinner(new SpinnerNumberModel(0, 0, 2000, 5));
+			private final JSpinner cols = new JSpinner(new SpinnerNumberModel(0, 0, 2000, 5));
+			
+			public Controls() {
+				super("Seam-carve");				
+				add(new LabeledItem("Rows:", rows));
+				add(new LabeledItem("Columns:", cols));
+				rows.addChangeListener(actionProvider.changeDelegate());
+				cols.addChangeListener(actionProvider.changeDelegate());
+			}
+			
+			public int columns() {return (int) cols.getValue();}
+			public int rows() {return (int) rows.getValue();}
+			
 		}
 	}
 	
