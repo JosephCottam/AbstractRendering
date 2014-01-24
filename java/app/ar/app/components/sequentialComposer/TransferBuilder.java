@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -68,6 +69,7 @@ public class TransferBuilder extends JPanel {
 		List<OptionTransfer> transfers = new ArrayList<>();
 		List<OptionTransfer.ControlPanel> panels = new ArrayList<>(); 
 		for (TransferRow tr: transferRows) {
+			if (!tr.enabled()) {continue;}
 			transfers.add(tr.transfer());
 			panels.add(tr.controls);
 		}
@@ -93,7 +95,7 @@ public class TransferBuilder extends JPanel {
 					transferRows.add(start-1, tr);
 					center.remove(tr);
 					center.add(tr, start-1);
-				} 
+				}
 				revalidate();
 				actionProvider.fireActionListeners();
 			}
@@ -108,9 +110,11 @@ public class TransferBuilder extends JPanel {
 	public static final class TransferRow extends JPanel {
 		public static String REMOVE = "R";
 		public static String UP = "U";
+		public static String ENABLED = "E";
 		
 		private final JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
 		private final JPanel center = new JPanel(new GridLayout(1,0));
+		private final JCheckBox enabled = new JCheckBox("", true);
 		private OptionTransfer.ControlPanel controls;
 
 		private final ActionProvider actionProvider = new ActionProvider(this, "Change");
@@ -125,7 +129,9 @@ public class TransferBuilder extends JPanel {
 			this.setLayout(new BorderLayout());
 			
 			JPanel controls = new JPanel();
+			
 			JLabel remove = new JLabel(" X ");
+			remove.setToolTipText("Remove");
 			remove.addMouseListener(new MouseListener() {
 				@Override public void mouseClicked(MouseEvent e) {sequenceActionProvider.fireActionListeners(REMOVE);}
 				@Override public void mousePressed(MouseEvent e) {}
@@ -134,8 +140,9 @@ public class TransferBuilder extends JPanel {
 				@Override public void mouseExited(MouseEvent e) {}
 			});
 			controls.add(remove);
-			
+		
 			JComponent up = new JLabel(" Up ");
+			up.setToolTipText("Move Up");
 			up.addMouseListener(new MouseListener() {
 				@Override public void mouseClicked(MouseEvent e) {sequenceActionProvider.fireActionListeners(UP);}
 				@Override public void mousePressed(MouseEvent e) {}
@@ -144,13 +151,22 @@ public class TransferBuilder extends JPanel {
 				@Override public void mouseExited(MouseEvent e) {}
 			});
 			controls.add(up);
-						
+
+			enabled.setToolTipText("Enable/Disable");
+			enabled.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent e) {sequenceActionProvider.fireActionListeners(ENABLED);}
+			});
+			controls.add(enabled);
+
+			
 			this.add(controls, BorderLayout.WEST);			
 			center.add(transfers);
 			this.add(center, BorderLayout.CENTER);
 			refreshControls();
 		}
 				
+		
+		public boolean enabled() {return enabled.isSelected();}
 		public void setTransfer(OptionTransfer ot) {
 			transfers.setSelectedItem(ot);
 			refreshControls();

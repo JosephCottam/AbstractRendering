@@ -1,6 +1,7 @@
 package ar.app.components.sequentialComposer;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
@@ -244,7 +245,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public ColorChooser low = new ColorChooser(new Color(255,204,204), "Low");
 			public ColorChooser high = new ColorChooser(Color.red, "High");
 			public Controls() {
-				super("FixedAlpha");
+				super("HD Interpolate");
 				this.setLayout(new GridLayout(1,0));
 				add(low);
 				add(high);
@@ -476,7 +477,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public ColorChooser highColor = new ColorChooser(Color.black, "Over:");
 			public ColorChooser lowColor = new ColorChooser(Color.gray, "Under:");
 			public Controls() {
-				super("FixedAlpha");
+				super("Clipwarn");
 				this.setLayout(new GridLayout(1,0));
 				add(highColor);
 				add(lowColor);
@@ -504,7 +505,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public ColorChooser lowColor = new ColorChooser(Color.black, "Low");
 			public ColorChooser highColor = new ColorChooser(Color.white, "High");
 			public Controls() {
-				super("FixedAlpha");
+				super("DrawDark");
 				this.setLayout(new GridLayout(1,0));
 				add(new LabeledItem("Radius:", radius));
 				add(lowColor);
