@@ -560,18 +560,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-	public static final class Echo extends OptionTransfer<ControlPanel> {
-		public static final String NAME = "Echo (*)"; 
-		@Override public Transfer<Object, Object> transfer(ControlPanel p, Transfer subsequent) {
-			Transfer t = new General.Echo<>(null);
-			return extend(t, subsequent);
-		}	
-		
-		@Override public String toString() {return NAME;}
-		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
-
 	public static final class Gradient extends OptionTransfer<ControlPanel> {
 		@Override public Transfer<Object, Color> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new Debug.Gradient();
@@ -628,7 +616,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		Transfer subsequent = null; 
 		for (int i=transferList.size()-1; i>=0; i--) {
 			OptionTransfer ot = transferList.get(i);
-			if (ot instanceof Echo) {continue;}
 			ControlPanel panel = optionPanels == null || optionPanels.get(i) == null ? ot.control(null) : optionPanels.get(i);
 			subsequent = ot.transfer(panel, subsequent);
 		}

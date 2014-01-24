@@ -19,14 +19,19 @@ public class ActionProvider {
 	private List<ActionListener> listeners = new ArrayList<ActionListener>();
 	private int count;
 	private final String prefix;
+	private final Object source;
 
-	public ActionProvider() {this("");}
-	public ActionProvider(String prefix) {this.prefix = prefix;}
+	public ActionProvider() {this(null, "");}
+	public ActionProvider(String prefix) {this(null, prefix);}
+	public ActionProvider(Object source, String prefix) {
+		this.source = source != null ? source : this;
+		this.prefix = prefix;
+	}
 	
 	public void addActionListener(ActionListener l) {listeners.add(l);}
 	public void fireActionListeners() {fireActionListeners("");}
 	public void fireActionListeners(String command) {
-		final ActionEvent e = new ActionEvent(this, count++, prefix + ":" + command);
+		final ActionEvent e = new ActionEvent(source, count++, prefix + ":" + command);
 		for (ActionListener l: listeners) {
 			final ActionListener l2 = l;
 			SwingUtilities.invokeLater(new Runnable() {public void run() {l2.actionPerformed(e);}});

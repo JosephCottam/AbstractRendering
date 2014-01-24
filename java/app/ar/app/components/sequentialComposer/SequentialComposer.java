@@ -24,18 +24,18 @@ public class SequentialComposer extends JPanel  {
 
 	private final JComboBox<OptionDataset> datasets = new JComboBox<>();
 	private final JComboBox<OptionAggregator> aggregators  = new JComboBox<>();
-	private final TransferBuilder transfers;
+	private final TransferBuilder transferBuilder;
 	private final JButton transferDefaults = new JButton("Defaults");
 	
-	public SequentialComposer(HasViewTransform transferProvider) {
-		transfers = new TransferBuilder(transferProvider);
+	public SequentialComposer(HasViewTransform transformProvider) {
+		transferBuilder = new TransferBuilder(transformProvider);
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
 		AppUtil.loadStaticItems(aggregators, OptionAggregator.class, OptionAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		datasets.addActionListener(actionProvider.actionDelegate());
 		aggregators.addActionListener(actionProvider.actionDelegate());
-		transfers.addActionListener(actionProvider.actionDelegate());
+		transferBuilder.addActionListener(actionProvider.actionDelegate());
 		
 		JPanel ds = new JPanel();
 		ds.setLayout(new BorderLayout());
@@ -44,19 +44,19 @@ public class SequentialComposer extends JPanel  {
 		
 		this.add(new LabeledItem("Dataset:", ds));
 		this.add(new LabeledItem("Aggregator:", aggregators));
-		this.add(new LabeledItem("Transfer:", transfers));
+		this.add(transferBuilder);
 		
-		transferDefaults.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
-				aggregators.setSelectedItem(od.defaultAggregator());
-				transfers.configureTo(od.defaultTransfers());
-				actionProvider.fireActionListeners();
-			}
-		});
+		transferDefaults.addActionListener(new ActionListener() {@Override public void actionPerformed(ActionEvent e) {transferDefaults();}});
+		transferDefaults();
 		
 	}	
+
+	public void transferDefaults() {
+		OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
+		aggregators.setSelectedItem(od.defaultAggregator());
+		transferBuilder.configureTo(od.defaultTransfers());
+		actionProvider.fireActionListeners();
+	}
 	
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
@@ -70,5 +70,5 @@ public class SequentialComposer extends JPanel  {
 	
 	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).dataset();}
 	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex()).aggregator();}
-	public Transfer<?,?> transfer() {return transfers.transfer();}
+	public Transfer<?,?> transfer() {return transferBuilder.transfer();}
 }

@@ -1,13 +1,18 @@
 package ar.app.components.sequentialComposer;
 
+import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import ar.Transfer;
@@ -18,94 +23,145 @@ import ar.util.HasViewTransform;
 @SuppressWarnings("rawtypes")
 public class TransferBuilder extends JPanel {
 	private final ActionProvider actionProvider = new ActionProvider("Transfer Changed");  
-	private final List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
-	private final List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
-	private final HasViewTransform transferProvider;
+	private final List<TransferRow> transferRows = new ArrayList<>();
+	private final JPanel center = new JPanel();
+	private final HasViewTransform transformProvider;
 
 	public TransferBuilder(HasViewTransform transferProvider) {
-		this.transferProvider = transferProvider;
-		this.setLayout(new GridLayout(0,2));
-		addTransferBox();
+		this.transformProvider = transferProvider;
+		this.setLayout(new BorderLayout());
+		addTransferRow();
+		
+		center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+		
+		this.add(center, BorderLayout.CENTER);
+
+		
+
+		
+		JPanel sidebar = new JPanel();
+		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+		sidebar.add(new JLabel("Transfers:"));
+
+		JButton add = new JButton("+");
+		sidebar.add(add);
+		add.addActionListener(new ActionListener() {
+			@Override public void actionPerformed(ActionEvent e) {
+				TransferBuilder.this.addTransferRow();
+			}
+			
+		});
+
+		
+		
+		this.add(sidebar, BorderLayout.WEST);
+		
 	}
 		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
 	public void configureTo(final List<OptionTransfer> transfers) {
-		transferLists.clear();
-		optionPanels.clear();
+		for (TransferRow tr: transferRows) {center.remove(tr);}
+		transferRows.clear();
 		
 		for (int i=0; i<transfers.size(); i++) {
-			addTransferBox();
-			JComboBox<OptionTransfer> b = transferLists.get(i);
-			b.setSelectedItem(transfers.get(i));
+			TransferRow tr = addTransferRow();
+			tr.setTransfer(transfers.get(i));
 		}
-		//The standard "extra" box at the end is added by a state change listener
-		rebuild();
 	}
 	
 	public Transfer<?,?> transfer() {
 		List<OptionTransfer> transfers = new ArrayList<>();
-		for (JComboBox<OptionTransfer> tl: transferLists) {
-			int idx = tl.getSelectedIndex();
-			OptionTransfer ot = tl.getItemAt(idx);
-			transfers.add(ot);
+		List<OptionTransfer.ControlPanel> panels = new ArrayList<>(); 
+		for (TransferRow tr: transferRows) {
+			transfers.add(tr.transfer());
+			panels.add(tr.controls);
 		}
-		return OptionTransfer.toTransfer(transfers, optionPanels);
+		return OptionTransfer.toTransfer(transfers, panels);
 	}
 	
-	private void rebuild() {
-		this.removeAll();
-		for (int i=0; i<transferLists.size();i++) {
-			this.add(transferLists.get(i));
-			this.add(optionPanels.get(i));
-		}		
+	private TransferRow addTransferRow() {
+		TransferRow tr = new TransferRow(transformProvider);
+		transferRows.add(tr);
+		center.add(tr);
+		tr.addActionListener(actionProvider.actionDelegate());
+		tr.addRemoveListener(new ActionListener() {
+			@Override public void actionPerformed(ActionEvent e) {
+				TransferRow tr = (TransferRow) e.getSource();
+				transferRows.remove(tr);
+				TransferBuilder.this.center.remove(tr);
+				TransferBuilder.this.revalidate();
+				TransferBuilder.this.actionProvider.fireActionListeners();
+			}
+		});
 		revalidate();
-		if (this.getParent() != null) {this.getParent().revalidate();}
+		
+		return tr;
 	}
 	
-	private void addTransferBox() {
-		JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
-		AppUtil.loadInstances(transfers, OptionTransfer.class, OptionTransfer.class, OptionTransfer.Echo.NAME);
-		transfers.addItemListener(new ChangeTransfer(this));
+	public static final class TransferRow extends JPanel {
+		private final JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
+		private final JPanel center = new JPanel(new GridLayout(1,0));
+		private OptionTransfer.ControlPanel controls;
+
+		private final ActionProvider actionProvider = new ActionProvider();
+		private final ActionProvider removeProvider = new ActionProvider(this, "Remove");
+		private final HasViewTransform transferProvider;
 		
-		transferLists.add(transfers);
-		
-		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(transferProvider);
-		optionPanels.add(controls);
-		controls.addActionListener(actionProvider.actionDelegate());
-		
-		rebuild();
-	}
-	
-	public static final class ChangeTransfer implements ItemListener {
-		final TransferBuilder host;
-		
-		public ChangeTransfer(TransferBuilder host) {
-			this.host = host;
+		public TransferRow(HasViewTransform transferProvider) {
+			this.transferProvider = transferProvider;
+			AppUtil.loadInstances(transfers, OptionTransfer.class, OptionTransfer.class, "");
+			transfers.addActionListener(new ChangeTransfer(this));
+			
+			this.setLayout(new BorderLayout());
+			
+			JLabel remove = new JLabel(" X ");
+			remove.addMouseListener(new MouseListener() {
+				@Override public void mouseClicked(MouseEvent e) {
+					TransferRow.this.removeProvider.fireActionListeners();
+				}
+				@Override public void mousePressed(MouseEvent e) {}
+				@Override public void mouseReleased(MouseEvent e) {}
+				@Override public void mouseEntered(MouseEvent e) {}
+				@Override public void mouseExited(MouseEvent e) {}
+			});
+			this.add(remove, BorderLayout.WEST);
+			
+			center.add(transfers);
+			this.add(center, BorderLayout.CENTER);
+			refreshControls();
 		}
+				
+		public void setTransfer(OptionTransfer ot) {
+			transfers.setSelectedItem(ot);
+			refreshControls();
+		}
+		
+		public OptionTransfer transfer() {return transfers.getItemAt(transfers.getSelectedIndex());} 
+		
+		public void refreshControls() {
+			if (controls != null) {center.remove(controls);}  ///Remove, already present
+			this.controls = transfer().control(transferProvider);
+			center.add(controls);
+			controls.addActionListener(actionProvider.actionDelegate());
+			revalidate();
+		}
+		
+		public void fireActionEvent(String command) {actionProvider.fireActionListeners(command);}
+		
+		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
+		public void addRemoveListener(ActionListener listener) {removeProvider.addActionListener(listener);}
+	}
+	
+	public static final class ChangeTransfer implements ActionListener {
+		final TransferRow host;
+		
+		public ChangeTransfer(TransferRow host) {this.host = host;}
 		
 		@Override
-		@SuppressWarnings("unchecked")
-		public void itemStateChanged(ItemEvent e) {
-			int size = host.transferLists.size();
-			JComboBox<OptionTransfer> transferList = (JComboBox<OptionTransfer>) e.getSource();
-			int idx = host.transferLists.indexOf(transferList);
-			boolean end = transferList.getSelectedItem().toString().equals(OptionTransfer.Echo.NAME);
-			
-			if (idx < size-1 && end) {
-				host.transferLists.remove(idx);
-				host.optionPanels.remove(idx);
-				host.rebuild();
-			} else if (idx == size-1 && !end) {				
-				host.addTransferBox();
-			} else {
-				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.transferProvider);
-				host.optionPanels.remove(idx);
-				host.optionPanels.add(idx, params);
-				params.addActionListener(host.actionProvider.actionDelegate());
-				host.rebuild();
-			}
-			host.actionProvider.fireActionListeners();
+		public void actionPerformed(ActionEvent e) {
+			host.refreshControls();
+			host.fireActionEvent("Modified");
 		}
 	}
 }
