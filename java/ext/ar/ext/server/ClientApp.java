@@ -65,7 +65,7 @@ public class ClientApp {
 			frame.setVisible(true);
 		}
 		
-		public <A,B> void changeDisplay() throws Exception {
+		public void changeDisplay() throws Exception {
 			ARComponent old = this.display;
 			if (old != null) {frame.remove(old);}
 			

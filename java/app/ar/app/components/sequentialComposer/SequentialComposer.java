@@ -28,15 +28,15 @@ public class SequentialComposer extends JPanel  {
 	private final JButton transferDefaults = new JButton("Defaults");
 	
 	public SequentialComposer(HasViewTransform transferProvider) {
-		transfers = new TransferBuilder(this, transferProvider);
+		transfers = new TransferBuilder(transferProvider);
 		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
 		AppUtil.loadStaticItems(aggregators, OptionAggregator.class, OptionAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		datasets.addActionListener(actionProvider.actionDelegate());
-		datasets.addItemListener(actionProvider.itemDelegate());
+		//datasets.addItemListener(actionProvider.itemDelegate());
 		aggregators.addActionListener(actionProvider.actionDelegate());
-		aggregators.addItemListener(actionProvider.itemDelegate());
+		//aggregators.addItemListener(actionProvider.itemDelegate());
 		transfers.addActionListener(actionProvider.actionDelegate());
 		
 		JPanel ds = new JPanel();

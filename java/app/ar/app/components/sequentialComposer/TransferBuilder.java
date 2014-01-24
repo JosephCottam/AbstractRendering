@@ -20,11 +20,9 @@ public class TransferBuilder extends JPanel {
 	private final ActionProvider actionProvider = new ActionProvider("Transfer Changed");  
 	private final List<JComboBox<OptionTransfer>> transferLists = new ArrayList<>();
 	private final List<OptionTransfer.ControlPanel> optionPanels = new ArrayList<>();
-	private final SequentialComposer composer;
 	private final HasViewTransform transferProvider;
 
-	public TransferBuilder(SequentialComposer composer, HasViewTransform transferProvider) {
-		this.composer = composer;
+	public TransferBuilder(HasViewTransform transferProvider) {
 		this.transferProvider = transferProvider;
 		this.setLayout(new GridLayout(0,2));
 		addTransferBox();
@@ -32,27 +30,27 @@ public class TransferBuilder extends JPanel {
 		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
-	public void configureTo(final OptionTransfer[] transfers) {
+	public void configureTo(final List<OptionTransfer> transfers) {
 		transferLists.clear();
 		optionPanels.clear();
 		
-		for (int i=0; i<transfers.length; i++) {
+		for (int i=0; i<transfers.size(); i++) {
 			addTransferBox();
 			JComboBox<OptionTransfer> b = transferLists.get(i);
-			b.setSelectedItem(transfers[i]);
+			b.setSelectedItem(transfers.get(i));
 		}
 		//The standard "extra" box at the end is added by a state change listener
 		rebuild();
 	}
 	
 	public Transfer<?,?> transfer() {
-		Transfer subsequent = null; 
-		for (int i=transferLists.size()-1; i>=0; i--) {
-			int idx = transferLists.get(i).getSelectedIndex();
-			OptionTransfer ot = transferLists.get(i).getItemAt(idx);
-			subsequent = ot.transfer(optionPanels.get(i), subsequent);
+		List<OptionTransfer> transfers = new ArrayList<>();
+		for (JComboBox<OptionTransfer> tl: transferLists) {
+			int idx = tl.getSelectedIndex();
+			OptionTransfer ot = tl.getItemAt(idx);
+			transfers.add(ot);
 		}
-		return subsequent;
+		return OptionTransfer.toTransfer(transfers, optionPanels);
 	}
 	
 	private void rebuild() {
@@ -72,7 +70,7 @@ public class TransferBuilder extends JPanel {
 		
 		transferLists.add(transfers);
 		
-		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(composer,transferProvider);
+		OptionTransfer.ControlPanel controls = transfers.getItemAt(transfers.getSelectedIndex()).control(transferProvider);
 		optionPanels.add(controls);
 		controls.addActionListener(actionProvider.actionDelegate());
 		
@@ -101,7 +99,7 @@ public class TransferBuilder extends JPanel {
 			} else if (idx == size-1 && !end) {				
 				host.addTransferBox();
 			} else {
-				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.composer, host.transferProvider);
+				OptionTransfer.ControlPanel params = transferList.getItemAt(transferList.getSelectedIndex()).control(host.transferProvider);
 				host.optionPanels.remove(idx);
 				host.optionPanels.add(idx, params);
 				params.addActionListener(host.actionProvider.actionDelegate());

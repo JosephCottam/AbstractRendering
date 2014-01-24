@@ -3,6 +3,8 @@ package ar.app.components.sequentialComposer;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import ar.Glyphset;
 import ar.glyphsets.MemMapList;
@@ -21,7 +23,7 @@ public final class OptionDataset<G,I> {
 	private final String name;
 	private final Glyphset<G,I> glyphs;
 	private final OptionAggregator<? super I,?> defaultAggregator;
-	private final OptionTransfer<?>[] defaultTransfers;
+	private final List<OptionTransfer<?>> defaultTransfers;
 	
 	public OptionDataset(
 			String name, File file, 
@@ -31,14 +33,14 @@ public final class OptionDataset<G,I> {
 		this.name = name;
 		glyphs = new MemMapList<>(file, shaper, valuer);
 		this.defaultAggregator = defAgg;
-		this.defaultTransfers = defTrans;
+		this.defaultTransfers = Arrays.asList(defTrans);
 	}
 	public Glyphset<G,I> dataset() {return glyphs;}
 	public String toString() {return name;}
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
-	public OptionTransfer<?>[] defaultTransfers() {return defaultTransfers;}
+	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
 
-	public static OptionDataset<Point2D, Color> BOST_MEMORY = new OptionDataset<> (
+	public static OptionDataset<Point2D, Color> BOOST_MEMORY = new OptionDataset<> (
 					"BGL Memory", 
 					new File("../data/MemVisScaled.hbin"), 
 					new Indexed.ToPoint(true, 0, 1),

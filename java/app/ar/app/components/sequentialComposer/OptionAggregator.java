@@ -5,7 +5,6 @@ import java.awt.Color;
 import ar.Aggregator;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
-import ar.rules.Categories.MergeCategories;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.util.Util;

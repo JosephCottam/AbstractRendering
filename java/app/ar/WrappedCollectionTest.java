@@ -8,12 +8,12 @@ import java.awt.geom.Rectangle2D;
 import javax.swing.JFrame;
 
 import ar.app.display.AggregatingDisplay;
-import ar.app.util.WrappedAggregator;
-import ar.app.util.WrappedTransfer;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.*;
+import ar.rules.Categories;
+import ar.rules.General;
 
 public class WrappedCollectionTest {
 
@@ -54,8 +54,8 @@ public class WrappedCollectionTest {
 		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
 		WrappedCollection<Integer,Rectangle2D, Color> gs = new WrappedCollection<>(vs, g, g);
 		
-		AggregatingDisplay p = new AggregatingDisplay(new WrappedAggregator.OverplotFirst().op(), 
-								new WrappedTransfer.Echo().op(), 
+		AggregatingDisplay p = new AggregatingDisplay(new Categories.First(), 
+								new General.Echo<>(null),
 								gs, 
 								new ParallelRenderer());
 		

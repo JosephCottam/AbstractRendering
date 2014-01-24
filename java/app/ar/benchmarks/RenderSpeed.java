@@ -3,6 +3,7 @@ package ar.benchmarks;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.io.File;
+import java.util.Arrays;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -12,10 +13,9 @@ import ar.Selector;
 import ar.Transfer;
 import ar.Transfer.Specialized;
 import ar.aggregates.implementations.RefFlatAggregates;
-import ar.app.components.Presets;
+import ar.app.components.sequentialComposer.OptionDataset;
+import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.app.util.GlyphsetUtils;
-import ar.app.util.WrappedAggregator;
-import ar.app.util.WrappedTransfer;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
@@ -45,24 +45,23 @@ public class RenderSpeed {
 	public static void main(String[] args) throws Exception {
 		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
 		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		String config = arg(args, "-config", "USCensusPopulationLinear");
+		String config = arg(args, "-config", "CENSUS_SYN_PEOPLE");
 		String rend = arg(args, "-rend", "parallel").toUpperCase();
 		int width = Integer.parseInt(arg(args, "-width", "800"));
 		int height = Integer.parseInt(arg(args, "-height", "800"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
 		
-		Presets.Preset source = null;
-		for (Class clss: Presets.class.getClasses()) {
-			if (clss.getSimpleName().equals(config)) {
-				source = (Presets.Preset) clss.getConstructor().newInstance();
-			}
+		OptionDataset source;
+		try {
+			source = (OptionDataset) OptionDataset.class.getField(config).get(null);
+		} catch (NoSuchFieldException | NullPointerException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find -config indicated: " + config);
 		}
-		if (source == null) {throw new IllegalArgumentException("Could not find -config indicated: " + config);}
 
 		
-		Aggregator aggregator = source.aggregator();
-		Transfer transfer = source.transfer();
-		Glyphset glyphs = source.glyphset();
+		Aggregator aggregator = source.defaultAggregator().aggregator();
+		Glyphset glyphs = source.dataset();
+		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers(), null);
 	
 		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
 		

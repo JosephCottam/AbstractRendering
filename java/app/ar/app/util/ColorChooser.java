@@ -10,10 +10,8 @@ import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 import ar.app.components.LabeledItem;
-import ar.util.Util;
 
 public final class ColorChooser extends JPanel {
 	private Color current;

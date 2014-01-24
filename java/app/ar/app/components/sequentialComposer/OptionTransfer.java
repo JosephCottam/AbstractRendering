@@ -38,8 +38,9 @@ import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
 import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
+import ar.util.Util;
 
-public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
+public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	/**Create a new transfer that is based on passed parameters and subsequent transfer.
 	 * 
@@ -51,18 +52,25 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	 *  @return A new transfer that will combines the new and the 'subsequent' in some way.
 	 */
 	public abstract Transfer<?,?> transfer(P params, Transfer<?,?> subsequent);
-	public abstract P control(SequentialComposer composer, HasViewTransform transformProvider);
 	
-	public static final class ToCount implements OptionTransfer<ControlPanel> {
+	/**Create a control panel to set/provide transfer-specific parameters.
+	 * MUST be able to accept as arguments and still provide a reasonable set of defaults (to support non-interactive applications).
+	 * 
+	 * @param transformProvider
+	 * @return
+	 */
+	public abstract P control(HasViewTransform transformProvider);
+	
+	public static final class ToCount extends OptionTransfer<ControlPanel> {
 
 		@Override
 		@SuppressWarnings({"rawtypes","unchecked"})
 		public Transfer<?,?> transfer(ControlPanel params,Transfer subsequent) {
-			return Util.extend(new Categories.ToCount(), subsequent);
+			return extend(new Categories.ToCount(), subsequent);
 		}
 
 		@Override
-		public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {
+		public ControlPanel control(HasViewTransform transformProvider) {
 			return new ControlPanel();
 		}
 		
@@ -70,16 +78,16 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-	public static final class RefArgMathTransfer implements OptionTransfer<RefArgMathTransfer.Controls> {
+	public static final class RefArgMathTransfer extends OptionTransfer<RefArgMathTransfer.Controls> {
 		
 		@Override
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
 			Transfer t = new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -170,16 +178,16 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class OneArgMathTransfer implements OptionTransfer<OneArgMathTransfer.Controls> {
+	public static final class OneArgMathTransfer extends OptionTransfer<OneArgMathTransfer.Controls> {
 		
 		@Override
 		@SuppressWarnings({"unchecked","rawtypes"})
 		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
 			Transfer t= new General.ValuerTransfer(params.valuer(), params.zero());
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
@@ -219,15 +227,15 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class HDInterpolate implements OptionTransfer<HDInterpolate.Controls> {
+	public static final class HDInterpolate extends OptionTransfer<HDInterpolate.Controls> {
 		@Override 
 		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
 			Transfer t = new Numbers.Interpolate<>(p.low.color(), p.high.color());
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 		
 		@Override public String toString() {return "HD Interpolate (Num->Color))";}
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -244,14 +252,14 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 		
-	public static final class FixedInterpolate implements OptionTransfer<FixedInterpolate.Controls> {
+	public static final class FixedInterpolate extends OptionTransfer<FixedInterpolate.Controls> {
 		@Override 
 		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
 			return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()));
 		}
 		
 		@Override public String toString() {return "Fixed Interpolate (Num->Color)";}
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
@@ -274,7 +282,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class Percent implements OptionTransfer<Percent.Controls> {
+	public static final class Percent extends OptionTransfer<Percent.Controls> {
 		@Override 
 		public Transfer<CategoricalCounts<Color>,Color> transfer(Controls p, Transfer subsequent) {
 			int percent = (int) p.spinner.getValue();
@@ -284,10 +292,10 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					Color.white, 
 					p.aboveColor.color(), 
 					p.belowColor.color());
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 		
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
@@ -310,69 +318,67 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class Spread implements OptionTransfer<Spread.Controls> {
+	public static final class Spread extends OptionTransfer<Spread.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			Transfer t = new General.Spread(params.spreader(), params.combiner());
-			return Util.extend(t, subsequent);
+			Transfer t = new General.Spread(params.spreader(), Controls.combiner());
+			return extend(t, subsequent);
 		}
 
 		@Override public String toString() {return "Spread (*->*)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls(composer);}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
+		/**Combine items of unknown type by trying to match types from a provided set of aggregators.**/
+		public static class FlexCombiner implements Aggregator<Object, Object> {
+			final Aggregator[] aggregators;
+			public FlexCombiner(Aggregator... aggregators) {this.aggregators = aggregators;}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public Object combine(Object current, Object update) {
+				for (Aggregator a: aggregators) {
+					if (a.identity().getClass().isAssignableFrom(current.getClass())) {
+						return a.combine(current, update);
+					}
+				}
+				throw new IllegalArgumentException("Could not match " + current.getClass().getSimpleName() + " from provided aggregators.");
+			}
+
+			@Override public Object rollup(Object left, Object right) {return null;}
+			@Override public Object identity() {return null;}
+		}
+
+		
 		public static final class Controls extends ControlPanel {
 			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
-			private final JComboBox<String> combiner = new JComboBox<>();
-			private final SequentialComposer composer;
 			
-			public Controls(SequentialComposer composer) {
-				super("spread");
-				this.composer = composer;
-				
-				combiner.addItem("Auto");
-				combiner.addItem("Num");
-				combiner.addItem("Categories");
-				
+			public Controls() {
+				super("spread");				
 				add(new LabeledItem("Radius:", spinner));
-				add(new LabeledItem("Combiner:", combiner));
-				
 				spinner.addChangeListener(actionProvider.changeDelegate());
-				combiner.addActionListener(actionProvider.actionDelegate());
 			}
 			
 			public Spreader spreader() {return new General.Spread.UnitSquare<Integer>(radius());}
 			public int radius() {return (int) spinner.getValue();}
-			public Aggregator combiner() {
-				String selected = combiner.getItemAt(combiner.getSelectedIndex());
-				if (selected.equals("Auto")) {
-					Object o = composer.aggregator().identity();	//TODO: This doesn't work if a transfer changed the aggregates type... 
-					if (o instanceof Number) {selected = "Num";}
-					else if (o instanceof CategoricalCounts) {selected="Categories";}
-					else {selected = o.getClass().getSimpleName();}
-				}
-				
-				if (selected.equals("Num")) {
-					return new Numbers.Count<Integer>();					
-				} else if (selected.equals("Categories")) {
-					return new Categories.MergeCategories<Color>();
-				} else {
-					throw new IllegalArgumentException("Cannot create combiner for " + selected);
-				}
+			public static Aggregator combiner() {
+				//return new Numbers.Count<Integer>();
+				return new Categories.MergeCategories<Color>();
+				//return new FlexCombiner(new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>());
 			}
 		}
 	}
 	
-	public static final class ColorKey implements OptionTransfer<ColorKey.Controls> {
+	public static final class ColorKey extends OptionTransfer<ColorKey.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
 			Transfer t = new Categories.DynamicRekey(new CategoricalCounts<>(Util.COLOR_SORTER), params.palette(), params.reserve());
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 
 		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		
 		public static final class Controls extends ControlPanel {
@@ -444,7 +450,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 
-	public static final class Clipwarn implements OptionTransfer<Clipwarn.Controls> {
+	public static final class Clipwarn extends OptionTransfer<Clipwarn.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			if (params.underDelta() == 0) {return subsequent;}
@@ -452,7 +458,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override
-		public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Clipwarn (int->color)";} 
 		
 		private static class Controls extends ControlPanel {
@@ -474,13 +480,13 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class DrawDark implements OptionTransfer<DrawDark.Controls> {
+	public static final class DrawDark extends OptionTransfer<DrawDark.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
 			Transfer t = new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 		@Override public String toString() {return "Draw Dark (int)";}
-		@Override public Controls control(SequentialComposer composer, HasViewTransform transformProvider) {return new Controls();}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
@@ -503,7 +509,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	}
 	
-	public static final class WeaveStates implements OptionTransfer<WeaveStates.Controls> {
+	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
 		private static final List<Shape> shapes;
 		
 		static {
@@ -521,7 +527,7 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override
-		public Controls control(SequentialComposer composer, final HasViewTransform transformProvider) {
+		public Controls control(final HasViewTransform transformProvider) {
 			return new Controls(transformProvider);
 		}
 		
@@ -532,65 +538,61 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Weave States";}
 	}
-
-
 	
-	
-	public static final class Present implements OptionTransfer<ControlPanel> {
+	public static final class Present extends OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<Integer,Color> transfer(ControlPanel p, Transfer subsequent) {
 			return new General.Present<Integer, Color>(Color.red, Color.white);
 		}
 		
 		@Override public String toString() {return "Present (*)";}
-		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
-
 	
-	public static final class Echo implements OptionTransfer<ControlPanel> {
+	public static final class Echo extends OptionTransfer<ControlPanel> {
 		public static final String NAME = "Echo (*)"; 
 		@Override public Transfer<Object, Object> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new General.Echo<>(null);
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}	
 		
 		@Override public String toString() {return NAME;}
-		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 
-	public static final class Gradient implements OptionTransfer<ControlPanel> {
+	public static final class Gradient extends OptionTransfer<ControlPanel> {
 		@Override public Transfer<Object, Color> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new Debug.Gradient();
-			return Util.extend(t, subsequent);	
+			return extend(t, subsequent);	
 		}
 		
 		@Override public String toString() {return "Gradient (color)";}
-		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
 	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
-	public static final class HighAlphaLog implements OptionTransfer<ControlPanel> {
+	public static final class HighAlphaLog extends OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
 			return new Categories.HighDefAlpha(Color.white, .1, true);
 		}
 		
 		@Override public String toString() {return "Log HD Alpha (CoC)";}
-		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-	public static final class HighAlphaLin implements OptionTransfer<ControlPanel> {
+	public static final class HighAlphaLin extends OptionTransfer<ControlPanel> {
 		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new Categories.HighDefAlpha(Color.white, .1, false);
-			return Util.extend(t, subsequent);
+			return extend(t, subsequent);
 		}
 		
 		@Override public String toString() {return "Linear HD Alpha (CoC)";}
-		@Override public ControlPanel control(SequentialComposer composer, HasViewTransform transformProvider) {return new ControlPanel();}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 		
@@ -603,13 +605,24 @@ public interface OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-	public static class Util extends ar.util.Util {
-	    @SuppressWarnings("unchecked")
-		public static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {
-	    	if (first == null) {return second;}
-	    	if (second == null) {return first;}
-	    	if (first instanceof Seq) {return ((Seq<IN,?,MID>) first).then(second);}    	
-	    	return new Seq<>(first, second);
-	    }
+    @SuppressWarnings("unchecked")
+	protected static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {
+    	if (first == null) {return second;}
+    	if (second == null) {return first;}
+    	if (first instanceof Seq) {return ((Seq<IN,?,MID>) first).then(second);}    	
+    	return new Seq<>(first, second);
+    }
+    
+	/**Convert a list of OptionTransfer items into a transfer.**/
+	public static Transfer<?,?> toTransfer(List<OptionTransfer> transferList, List<? extends ControlPanel> optionPanels) {
+		Transfer subsequent = null; 
+		for (int i=transferList.size()-1; i>=0; i--) {
+			OptionTransfer ot = transferList.get(i);
+			if (ot instanceof Echo) {continue;}
+			ControlPanel panel = optionPanels == null || optionPanels.get(i) == null ? ot.control(null) : optionPanels.get(i);
+			subsequent = ot.transfer(panel, subsequent);
+		}
+		return subsequent;
 	}
+
 }
