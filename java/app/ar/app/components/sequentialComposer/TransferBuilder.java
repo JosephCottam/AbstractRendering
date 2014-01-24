@@ -12,6 +12,7 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -35,9 +36,6 @@ public class TransferBuilder extends JPanel {
 		center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
 		
 		this.add(center, BorderLayout.CENTER);
-
-		
-
 		
 		JPanel sidebar = new JPanel();
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
@@ -49,13 +47,9 @@ public class TransferBuilder extends JPanel {
 			@Override public void actionPerformed(ActionEvent e) {
 				TransferBuilder.this.addTransferRow();
 			}
-			
 		});
 
-		
-		
 		this.add(sidebar, BorderLayout.WEST);
-		
 	}
 		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
@@ -85,27 +79,42 @@ public class TransferBuilder extends JPanel {
 		transferRows.add(tr);
 		center.add(tr);
 		tr.addActionListener(actionProvider.actionDelegate());
-		tr.addRemoveListener(new ActionListener() {
+		tr.addSequenceListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent e) {
 				TransferRow tr = (TransferRow) e.getSource();
-				transferRows.remove(tr);
-				TransferBuilder.this.center.remove(tr);
-				TransferBuilder.this.revalidate();
-				TransferBuilder.this.actionProvider.fireActionListeners();
+				String command = e.getActionCommand();
+				if (command.endsWith(TransferRow.REMOVE)) {
+					transferRows.remove(tr);
+					center.remove(tr);
+				} else if (command.endsWith(TransferRow.UP)) {
+					int start = transferRows.indexOf(tr);
+					if (start == 0) {return;}
+					transferRows.remove(tr);
+					transferRows.add(start-1, tr);
+					center.remove(tr);
+					center.add(tr, start-1);
+				} 
+				revalidate();
+				actionProvider.fireActionListeners();
 			}
 		});
-		revalidate();
 		
+		revalidate();
 		return tr;
 	}
 	
+	public int getMovedIndex() {return 0;}
+	
 	public static final class TransferRow extends JPanel {
+		public static String REMOVE = "R";
+		public static String UP = "U";
+		
 		private final JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
 		private final JPanel center = new JPanel(new GridLayout(1,0));
 		private OptionTransfer.ControlPanel controls;
 
-		private final ActionProvider actionProvider = new ActionProvider();
-		private final ActionProvider removeProvider = new ActionProvider(this, "Remove");
+		private final ActionProvider actionProvider = new ActionProvider(this, "Change");
+		private final ActionProvider sequenceActionProvider = new ActionProvider(this, "Seq");
 		private final HasViewTransform transferProvider;
 		
 		public TransferRow(HasViewTransform transferProvider) {
@@ -115,18 +124,28 @@ public class TransferBuilder extends JPanel {
 			
 			this.setLayout(new BorderLayout());
 			
+			JPanel controls = new JPanel();
 			JLabel remove = new JLabel(" X ");
 			remove.addMouseListener(new MouseListener() {
-				@Override public void mouseClicked(MouseEvent e) {
-					TransferRow.this.removeProvider.fireActionListeners();
-				}
+				@Override public void mouseClicked(MouseEvent e) {sequenceActionProvider.fireActionListeners(REMOVE);}
 				@Override public void mousePressed(MouseEvent e) {}
 				@Override public void mouseReleased(MouseEvent e) {}
 				@Override public void mouseEntered(MouseEvent e) {}
 				@Override public void mouseExited(MouseEvent e) {}
 			});
-			this.add(remove, BorderLayout.WEST);
+			controls.add(remove);
 			
+			JComponent up = new JLabel(" Up ");
+			up.addMouseListener(new MouseListener() {
+				@Override public void mouseClicked(MouseEvent e) {sequenceActionProvider.fireActionListeners(UP);}
+				@Override public void mousePressed(MouseEvent e) {}
+				@Override public void mouseReleased(MouseEvent e) {}
+				@Override public void mouseEntered(MouseEvent e) {}
+				@Override public void mouseExited(MouseEvent e) {}
+			});
+			controls.add(up);
+						
+			this.add(controls, BorderLayout.WEST);			
 			center.add(transfers);
 			this.add(center, BorderLayout.CENTER);
 			refreshControls();
@@ -150,7 +169,7 @@ public class TransferBuilder extends JPanel {
 		public void fireActionEvent(String command) {actionProvider.fireActionListeners(command);}
 		
 		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
-		public void addRemoveListener(ActionListener listener) {removeProvider.addActionListener(listener);}
+		public void addSequenceListener(ActionListener listener) {sequenceActionProvider.addActionListener(listener);}
 	}
 	
 	public static final class ChangeTransfer implements ActionListener {
