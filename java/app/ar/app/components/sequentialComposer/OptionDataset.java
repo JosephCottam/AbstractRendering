@@ -2,12 +2,16 @@ package ar.app.components.sequentialComposer;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
 import ar.Glyphset;
+import ar.app.util.GlyphsetUtils;
+import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
+import ar.glyphsets.SyntheticGlyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -30,11 +34,21 @@ public final class OptionDataset<G,I> {
 			Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
+		this(name, new MemMapList<>(file, shaper, valuer), defAgg, defTrans);
+	}
+	
+	public OptionDataset(
+			String name, 
+			Glyphset<G,I> glyphset,
+			OptionAggregator<? super I,?> defAgg,
+			OptionTransfer<?>... defTrans) {
 		this.name = name;
-		glyphs = new MemMapList<>(file, shaper, valuer);
+		glyphs = glyphset;
 		this.defaultAggregator = defAgg;
 		this.defaultTransfers = Arrays.asList(defTrans);
 	}
+	
+	
 	public Glyphset<G,I> dataset() {return glyphs;}
 	public String toString() {return name;}
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
@@ -86,4 +100,17 @@ public final class OptionDataset<G,I> {
 			new OptionTransfer.RefArgMathTransfer(),
 			new OptionTransfer.HDInterpolate());
 	
+	public static OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER = new OptionDataset<>(
+			"Circle Scatter",
+			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
+			OptionAggregator.COUNT,
+			new OptionTransfer.FixedInterpolate());
+	
+	private static final int POINT_COUNT = 100_000_000;
+	public static  OptionDataset<Point2D, Integer> SYNTHETIC = new OptionDataset<>(
+			String.format("Synthetic Points (%,d points)", POINT_COUNT),
+			new SyntheticGlyphset<>(POINT_COUNT, 0, new SyntheticGlyphset.SyntheticPoints()),
+			OptionAggregator.COUNT,
+			new OptionTransfer.HDInterpolate());
+
 }
