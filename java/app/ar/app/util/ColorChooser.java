@@ -14,6 +14,8 @@ import javax.swing.JPanel;
 import ar.app.components.LabeledItem;
 
 public final class ColorChooser extends JPanel {
+	final JColorChooser chooser = new JColorChooser();
+
 	private Color current;
 	private final String varName;
 	private final JButton button = new ColorButton();
@@ -29,8 +31,7 @@ public final class ColorChooser extends JPanel {
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final JColorChooser chooser = new JColorChooser(current);
-				
+				chooser.setColor(current);
 				chooser.setPreviewPanel(new JPanel());
 				JDialog d = JColorChooser.createDialog(ColorChooser.this, ColorChooser.this.varName, true, chooser, 
 						new ActionListener() {
