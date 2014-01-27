@@ -547,13 +547,13 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class AutoLegend extends OptionTransfer<AutoLegend.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
-			Legend l = new Legend(subsequent);
 			JFrame flyaway = new JFrame();
 			JPanel target = new JPanel(new BorderLayout());
 			flyaway.add(target);
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(l, target, BorderLayout.CENTER);
-			flyaway.setVisible(true);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Util.ComparableComparator<>(), target, BorderLayout.CENTER);
+			flyaway.pack();
 			flyaway.revalidate();
+			flyaway.setVisible(true);
 			return updater;
 		}
 

@@ -1,7 +1,6 @@
 package ar.rules;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -12,6 +11,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 
+import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,7 +38,6 @@ public class Legend<A> implements Transfer<A, Color> {
 	final Comparator<A> comp;
 	int exemplars = 10;
 	
-	public Legend(Transfer<A,Color> basis) {this(basis, (Comparator<A>) new Util.ComparableComparator<>());}
 	public Legend(Transfer<A,Color> basis, Comparator<A> comp) {
 		this.basis = basis;
 		this.comp = comp;
@@ -56,7 +55,7 @@ public class Legend<A> implements Transfer<A, Color> {
 		final Map<A, Set<Color>> mapping;
  		
 		public Specialized(Transfer.Specialized<A, Color> basis, Aggregates<? extends A> inAggs, Comparator<A> comp) {
-			super(basis);
+			super(basis, comp);
 			this.basis = basis;
 			mapping = new TreeMap<>(comp);
 
@@ -87,38 +86,26 @@ public class Legend<A> implements Transfer<A, Color> {
 		
 		public JPanel legend() {
 			JPanel labels = new JPanel(new GridLayout(0,1));
-			JPanel examples = new JPanel(new GridLayout(0,1));
-			
+			JPanel examples = new JPanel(new GridLayout(0,1));			
+
 			for (Map.Entry<A, Set<Color>> entry: mapping.entrySet()) {
-				System.out.println(entry.getKey().toString() + " : " + entry.getValue().size());
 				labels.add(new JLabel(entry.getKey().toString()));
-				JPanel exampleSet = new JPanel();
+				JPanel exampleSet = new JPanel(new GridLayout(1,0));
 				for (Color c: entry.getValue()) {
-					exampleSet.add(new ColorSwatch(c,10,10));
+					exampleSet.add(new ColorSwatch(c));
 				}
 				examples.add(exampleSet);
 			}
-			
 			JPanel legend = new JPanel(new BorderLayout());
-			legend.add(labels, BorderLayout.WEST);
-			legend.add(examples, BorderLayout.EAST);
-			
+			legend.add(labels, BorderLayout.EAST);
+			legend.add(examples, BorderLayout.WEST);			
 			return legend;
 		}
 	}
 	
 	public static final class ColorSwatch extends JPanel {
 		private final Color c;
-		private final Dimension d;
-		
-		public ColorSwatch(Color c, int width, int height) {
-			this.c = c;
-			this.d = new Dimension(width,height);
-		}
-		
-		@Override public Dimension getMinimumSize() {return d;}
-		@Override public Dimension getPreferredSize() {return d;}
-		
+		public ColorSwatch(Color c) {this.c = c;}		
 		@Override public void paintComponent(Graphics g) {
 			g.setColor(c);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -131,7 +118,6 @@ public class Legend<A> implements Transfer<A, Color> {
 	 * TODO: Shift to an event-based system that fires a "legendChanged" events
 	 * */
 	public static final class AutoUpdater<A> extends Legend<A> {
-		final Legend<A> watching;
 		final JComponent host;
 		final Object layoutParams;
 		private JPanel legend;
@@ -141,16 +127,15 @@ public class Legend<A> implements Transfer<A, Color> {
 		 * @param host Where the legend value should be placed
 		 * @param layoutParams How the legend should be added.
 		 */
-		public AutoUpdater(Legend<A> basis, JComponent host, Object layoutParams) {
-			super(basis);
-			this.watching = basis;
+		public AutoUpdater(Transfer<A,Color> basis, Comparator<A> comp, JComponent host, Object layoutParams) {
+			super(basis, comp);
 			this.host = host;
 			this.layoutParams = layoutParams;
 		}
 
-		@Override public Color emptyValue() {return watching.emptyValue();}
+		@Override public Color emptyValue() {return basis.emptyValue();}
 		@Override public Specialized<A> specialize(Aggregates<? extends A> aggregates) {
-			Specialized<A> spec = watching.specialize(aggregates);
+			Specialized<A> spec = super.specialize(aggregates);
 			if (legend != null) {host.remove(legend);}
 			legend = spec.legend();
 			host.add(legend, layoutParams);
