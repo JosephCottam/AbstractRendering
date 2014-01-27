@@ -1,9 +1,11 @@
 package ar.app.components;
 
 import java.awt.BorderLayout;
+
 import javax.swing.*;
 
 import ar.Renderer;
+import ar.app.util.LabeledItem;
 
 public class Status extends JPanel {
 	private static final long serialVersionUID = -3243629269704290121L;

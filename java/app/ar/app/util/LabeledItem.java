@@ -1,4 +1,4 @@
-package ar.app.components;
+package ar.app.util;
 
 import java.awt.BorderLayout;
 import javax.swing.JComponent;

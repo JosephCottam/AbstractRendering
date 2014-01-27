@@ -1,5 +1,6 @@
 package ar.app.components.sequentialComposer;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.Shape;
@@ -14,19 +15,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.app.components.LabeledItem;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.app.util.ColorChooser;
 import ar.app.util.GeoJSONTools;
+import ar.app.util.LabeledItem;
 import ar.app.util.SimpleNameRenderer;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -35,6 +38,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
+import ar.rules.Legend;
 import ar.rules.SeamCarving;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
@@ -538,6 +542,35 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			public double underDelta() {return (double) underDelta.getValue();}
 		}
+	}
+	
+	public static final class AutoLegend extends OptionTransfer<AutoLegend.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
+			Legend l = new Legend(subsequent);
+			JFrame flyaway = new JFrame();
+			JPanel target = new JPanel(new BorderLayout());
+			flyaway.add(target);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(l, target, BorderLayout.CENTER);
+			flyaway.setVisible(true);
+			flyaway.revalidate();
+			return updater;
+		}
+
+		@Override public String toString() {return "Legend (*->Color)";}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+		
+		public static final class Controls extends ControlPanel {
+			private JTextField title = new JTextField();
+			public Controls() {
+				super("legend");
+				this.add(new LabeledItem("Title: ", title));
+				title.addActionListener(actionProvider.actionDelegate());
+			}
+			public String title() {return title.getText();}
+		}
+
+
 	}
 	
 	public static final class DrawDark extends OptionTransfer<DrawDark.Controls> {

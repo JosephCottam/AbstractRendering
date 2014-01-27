@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 
 import ar.Aggregates;
 import ar.app.display.EnhanceHost;
+import ar.app.util.LabeledItem;
 
 /**Panel for controlling the region-based transfer function specialization.**/
 public class EnhanceOptions  extends JPanel {

@@ -11,8 +11,6 @@ import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 
-import ar.app.components.LabeledItem;
-
 public final class ColorChooser extends JPanel {
 	final JColorChooser chooser = new JColorChooser();
 

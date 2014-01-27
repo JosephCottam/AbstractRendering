@@ -29,7 +29,7 @@ import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.SubsetWrapper;
-import ar.app.components.LabeledItem;
+import ar.app.util.LabeledItem;
 import ar.util.Util;
 
 /**Host a panel, add to it a draw-on overlay and enhance-region capability.**/ 

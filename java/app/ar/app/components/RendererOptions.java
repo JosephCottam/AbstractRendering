@@ -6,6 +6,7 @@ import javax.swing.*;
 
 import ar.Renderer;
 import ar.app.util.ActionProvider;
+import ar.app.util.LabeledItem;
 import ar.renderers.*;
 
 public class RendererOptions extends JPanel {

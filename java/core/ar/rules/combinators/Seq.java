@@ -8,7 +8,7 @@ import ar.renderers.ParallelRenderer;
 //TODO: Investigate if specialize generally should take a renderer as an argument...
 
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
-	private static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
+	public static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
     protected final Transfer<IN,MID> first;
     protected final Transfer<MID,OUT> second;
     protected final Renderer rend;

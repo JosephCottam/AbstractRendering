@@ -14,6 +14,8 @@ import ar.util.Util;
  * 
  * These are experimental methods of unproven value, use at your own risk.
  *  
+ *  TODO: Provide a "Multiple representation" warning where in mapps to multiple outputs
+ *  
  * @author jcottam
  */
 public class Advise {
@@ -332,8 +334,6 @@ public class Advise {
 			this.inner = inner;
 		}
 	
-
-		//TODO: Move this work to the constructor...
 		@Override
 		public Specialized specialize(Aggregates<? extends Number> aggs) {
 			return new Specialized(distance, inner, aggs);

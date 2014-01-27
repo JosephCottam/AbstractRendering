@@ -8,6 +8,7 @@ import java.awt.geom.Rectangle2D;
 
 import ar.Glyphset;
 import ar.app.util.ActionProvider;
+import ar.app.util.LabeledItem;
 import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;

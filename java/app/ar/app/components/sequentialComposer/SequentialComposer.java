@@ -12,10 +12,10 @@ import javax.swing.JPanel;
 import ar.Aggregator;
 import ar.Glyphset;
 import ar.Transfer;
-import ar.app.components.LabeledItem;
 import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
+import ar.app.util.LabeledItem;
 import ar.util.HasViewTransform;
 
 @SuppressWarnings("rawtypes")
