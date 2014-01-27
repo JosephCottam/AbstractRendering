@@ -39,22 +39,25 @@ public class Legend<A> implements Transfer<A, Color> {
 	public Legend(Transfer<A,Color> basis, Comparator<A> comp) {
 		this.basis = basis;
 		this.comp = comp;
+		
+		if (basis == null) {throw new IllegalArgumentException("Must supply non-null transfer as a basis for building legends.");}
 	}
 	
 	@Override public Color emptyValue() {return basis.emptyValue();}
 
 	@Override
 	public Specialized<A> specialize(Aggregates<? extends A> aggregates) {
-		return new Specialized<A>(basis.specialize(aggregates), aggregates, comp);
+		return new Specialized<A>(basis, aggregates, comp);
 	}
 	
 	public static final class Specialized<A> extends Legend<A> implements Transfer.Specialized<A, Color> {
 		final Transfer.Specialized<A,Color> basis;
 		final Map<A, Set<Color>> mapping;
  		
-		public Specialized(Transfer.Specialized<A, Color> basis, Aggregates<? extends A> inAggs, Comparator<A> comp) {
-			super(basis, comp);
-			this.basis = basis;
+		public Specialized(Transfer<A, Color> rootBasis, Aggregates<? extends A> inAggs, Comparator<A> comp) {
+			super(rootBasis, comp);	
+
+			this.basis = rootBasis.specialize(inAggs);
 			mapping = new TreeMap<>(comp);
 
 			Aggregates<Color> outAggs = Seq.SHARED_RENDERER.transfer(inAggs, basis);
