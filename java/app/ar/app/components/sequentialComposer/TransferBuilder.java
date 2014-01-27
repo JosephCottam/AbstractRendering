@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -86,6 +87,7 @@ public class TransferBuilder extends JPanel {
 				TransferRow tr = (TransferRow) e.getSource();
 				String command = e.getActionCommand();
 				if (command.endsWith(TransferRow.REMOVE)) {
+					tr.cleanup();
 					transferRows.remove(tr);
 					center.remove(tr);
 				} else if (command.endsWith(TransferRow.UP)) {
@@ -165,6 +167,13 @@ public class TransferBuilder extends JPanel {
 			refreshControls();
 		}
 				
+		public void cleanup() {
+			ComboBoxModel<OptionTransfer> model = transfers.getModel();
+			for (int i=0; i<model.getSize(); i++) {
+				OptionTransfer t =model.getElementAt(i);
+				t.cleanup();
+			}
+		}
 		
 		public boolean enabled() {return enabled.isSelected();}
 		public void setTransfer(OptionTransfer ot) {

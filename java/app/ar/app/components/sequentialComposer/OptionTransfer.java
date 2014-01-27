@@ -69,7 +69,9 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	 */
 	public abstract P control(HasViewTransform transformProvider);
 	
-	/**Remove any residual resources that this transfer created.**/
+	/**Remove any resources that this transfer created.
+	 * Called when the OptionTransfer object is being deleted. 
+	 * **/
 	public void cleanup() {}
 	
 	public static final class ToCount extends OptionTransfer<ControlPanel> {
@@ -548,8 +550,8 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	public static final class AutoLegend extends OptionTransfer<AutoLegend.Controls> {
-		JFrame flyaway = new JFrame("Legend");
-		JPanel root = new JPanel();
+		final JFrame flyaway = new JFrame("Legend");
+		final JPanel root = new JPanel();
 		
 		public AutoLegend() {
 			flyaway.setSize(50, 250);
@@ -569,7 +571,9 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public String toString() {return "Legend (*->Color)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public void cleanup() {
-			
+			root.removeAll();
+			flyaway.setVisible(false);
+			flyaway.dispose();
 		}
 		
 		public static final class Controls extends ControlPanel {
