@@ -69,6 +69,9 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	 */
 	public abstract P control(HasViewTransform transformProvider);
 	
+	/**Remove any residual resources that this transfer created.**/
+	public void cleanup() {}
+	
 	public static final class ToCount extends OptionTransfer<ControlPanel> {
 
 		@Override
@@ -545,20 +548,29 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	public static final class AutoLegend extends OptionTransfer<AutoLegend.Controls> {
+		JFrame flyaway = new JFrame("Legend");
+		JPanel root = new JPanel();
+		
+		public AutoLegend() {
+			flyaway.setSize(50, 250);
+			flyaway.setLayout(new BorderLayout());
+			flyaway.add(root, BorderLayout.CENTER);
+		}
+		
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
-			JFrame flyaway = new JFrame();
-			JPanel target = new JPanel(new BorderLayout());
-			flyaway.add(target);
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Util.ComparableComparator<>(), target, BorderLayout.CENTER);
-			flyaway.pack();
-			flyaway.revalidate();
+			root.removeAll();
+			root.revalidate();
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Util.ComparableComparator<>(), root, BorderLayout.CENTER);
 			flyaway.setVisible(true);
 			return updater;
 		}
 
 		@Override public String toString() {return "Legend (*->Color)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+		@Override public void cleanup() {
+			
+		}
 		
 		public static final class Controls extends ControlPanel {
 			private JTextField title = new JTextField();

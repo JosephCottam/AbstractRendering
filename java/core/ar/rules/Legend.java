@@ -7,11 +7,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 
-import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -74,10 +72,12 @@ public class Legend<A> implements Transfer<A, Color> {
 				@SuppressWarnings("unchecked")
 				Map.Entry<A,Set<Color>>[] entries = mapping.entrySet().toArray(new Map.Entry[size]);
 				mapping.clear();
-				for (int i=0; i<entries.length; i=i+(size/exemplars)) {
+				for (int i=0; i<entries.length; i=i+(size/exemplars-1)) {
 					Map.Entry<A, Set<Color>> entry = entries[i];
 					mapping.put(entry.getKey(), entry.getValue()); 
 				}
+				Map.Entry<A,Set<Color>> last = entries[entries.length-1];
+				mapping.put(last.getKey(), last.getValue());
 			}
 		}
 		
@@ -138,6 +138,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			Specialized<A> spec = super.specialize(aggregates);
 			if (legend != null) {host.remove(legend);}
 			legend = spec.legend();
+			host.removeAll();
 			host.add(legend, layoutParams);
 			host.revalidate();
 			return spec;
