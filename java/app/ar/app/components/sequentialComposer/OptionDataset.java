@@ -54,12 +54,13 @@ public final class OptionDataset<G,I> {
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
 	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
 
-	public static OptionDataset<Point2D, Color> BOOST_MEMORY = new OptionDataset<> (
+	public static OptionDataset<Point2D, String> BOOST_MEMORY = new OptionDataset<> (
 					"BGL Memory", 
 					new File("../data/MemVisScaled.hbin"), 
 					new Indexed.ToPoint(true, 0, 1),
-					new ToValue<>(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)),
-					OptionAggregator.COC_COLOR,
+					new ToValue<>(2, new Binary<Integer,String>(0, "Hit", "Miss")),
+					OptionAggregator.COC_COMP,
+					new OptionTransfer.ColorKey(),
 					new OptionTransfer.HighAlphaLog());
 	
 	public static OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS = new OptionDataset<>(

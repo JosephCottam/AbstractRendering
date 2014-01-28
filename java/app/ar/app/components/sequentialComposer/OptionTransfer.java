@@ -451,7 +451,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		
 		public static final class Controls extends ControlPanel {
-			private Entry brewerColors = 
+			public static final Entry brewerColors = 
 					new Entry(
 							"Brewer 12",
 							Color.black,
@@ -464,7 +464,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					new Color(255,255,153), new Color(177,89,40) 
 			});
 			
-			private final Entry cableColors = 
+			public static final Entry cableColors = 
 					new Entry(
 							"Cable Colors",
 							Color.BLACK,
@@ -476,7 +476,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					new Color(0,0,200),
 			});
 			
-			private final Entry tractColors = 
+			public static final Entry tractColors = 
 					new Entry(
 							"Tract Colors",
 							Color.GRAY,
@@ -486,7 +486,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 					new Color(220,0,0)
 			});
 			
-			private final Entry redBlue = new Entry("Red/Blue", Color.white, new Color[]{new Color(255,0,0,25), Color.red}); 
+			public static final Entry redBlue = new Entry("Blue/Red", Color.white, new Color[]{Color.blue, Color.red}); 
 
 			private final JComboBox<Entry> palette = new JComboBox<>();
 			
@@ -563,7 +563,8 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			root.removeAll();
 			root.revalidate();
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.DiscreteComparable<>(), root, BorderLayout.CENTER);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.FormatCategories<>(), root, BorderLayout.CENTER);
+			//Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.DiscreteComparable<>(), root, BorderLayout.CENTER);
 			flyaway.setVisible(true);
 			return updater;
 		}

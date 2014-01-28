@@ -9,7 +9,7 @@ import ar.util.Util;
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
  */
-public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
+public class CategoricalCounts<T> {
 	private final Comparator<T> comp;
 	private final int[] counts;
 	private final Object[] labels;
@@ -96,8 +96,7 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 		return true;
 	}
 
-	@Override
-	public int hashCode() {return counts.hashCode();}
+	@Override public int hashCode() {return counts.hashCode();}
 	
 	public int count(int i) {return counts[i];}
 
@@ -125,11 +124,6 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 			return combined;
 		}
 	}
-
-	/**Order by the full-size measurement.**/
-	@Override public int compareTo(CategoricalCounts<T> o) {
-		return Integer.compare(fullSize(), o.fullSize());
-	}
 	
 	public static <T> CategoricalCounts<T> make(final Iterable<T> labels, final Iterable<Integer> counts) {
 		CategoricalCounts<T> cc = new CategoricalCounts<T>();
@@ -142,6 +136,14 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 			cc = cc.extend(lab, c);
 		}
 		return cc;
+	}
+	
+	/**Sort categorical counts based on their full size.**/
+	public static final class MangitudeComparator<K> implements Comparator<CategoricalCounts<K>> {
+		@Override
+		public int compare(CategoricalCounts<K> o1, CategoricalCounts<K> o2) {
+			return Integer.compare(o1.fullSize(), o2.fullSize());
+		}
 	}
 	
 }

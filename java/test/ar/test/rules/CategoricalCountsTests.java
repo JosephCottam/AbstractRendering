@@ -35,4 +35,15 @@ public class CategoricalCountsTests {
 		}
 	}
 	
+	@Test
+	public void testCategoricalCountsEquals() {
+		CategoricalCounts<String> c1 = new CategoricalCounts<>();
+		c1 = c1.extend("Hit", 2);
+		
+		CategoricalCounts<String> c2 = new CategoricalCounts<>();
+		c2 = c2.extend("Hit", 1).extend("Miss", 1);
+		
+		assertFalse(c1.equals(c2));
+	}
+	
 }

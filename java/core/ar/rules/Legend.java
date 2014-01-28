@@ -1,6 +1,7 @@
 package ar.rules;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -27,8 +28,8 @@ import ar.util.Util;
  * Input/output values are assumed to exactly align (so in.get(x,y) corresponds to out.get(x,y)).
  * Therefore, this can only be used on transfer chains that maintain that correspondence.
  * 
- * TODO: Currently happens at specialization time...should it be done at transfer time instead?
- * TODO: The auto-watcher reveals some other problems with Specialized extending Transfer...perhaps Specialized should not! 
+ * TODO: Legend building currently happens at specialization time...should it be done at transfer time instead?
+ * TODO: The auto-watcher reveals some problems with Specialized extending Transfer...perhaps Specialized should not! 
  * 
  * @param <A> Input type
  */
@@ -144,7 +145,7 @@ public class Legend<A> implements Transfer<A, Color> {
 		public FormatCategories(int divisions) {this.divisions = divisions;}
 		
 		@Override
-		public Map<CategoricalCounts<T>, Set<Color>> holder() {return new TreeMap<>();}
+		public Map<CategoricalCounts<T>, Set<Color>> holder() {return new HashMap<>();}
 
 		@Override
 		public Map<CategoricalCounts<T>, Set<Color>> select(Map<CategoricalCounts<T>, Set<Color>> input) {
@@ -173,7 +174,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
 			Binner<T> binner = new Binner<>(divisions, catMaxs, catMins);			
 			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
-			Map<CategoricalCounts<T>,Set<Color>> exemplars = holder();
+			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
 			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: input.entrySet()) {
 				int bin = binner.bin(e.getKey());
 				binSize[bin] = binSize[bin]+1;
@@ -234,7 +235,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			}
 
 			/**How many bins are in this dataspace?**/
-			public int binCount() {return maxes.size() * divisions;}
+			public int binCount() {return (int) Math.pow(divisions, maxes.size());}
 		}
 		
 	}

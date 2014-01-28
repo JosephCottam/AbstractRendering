@@ -148,7 +148,7 @@ public class TransferDisplay extends ARComponent {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
-				//e.printStackTrace();
+				e.printStackTrace();
 			} finally {
 				renderAgain = false;
 			}

@@ -13,7 +13,6 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
 /**Tools for working with categorical entries.**/
@@ -442,7 +441,7 @@ public class Categories {
 
 		protected static final class Specialized extends HighDefAlpha implements Transfer.ItemWise<CategoricalCounts<Color>, Color> {
 			private static final long serialVersionUID = 4453971577170705122L;
-			private final int max;
+			private final int max; //Full size of cell with largest number of items
 			
 			public Specialized(int max, Color background, double omin, boolean log) {
 				super(background, omin, log);
