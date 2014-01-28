@@ -57,19 +57,18 @@ public class Legend<A> implements Transfer<A, Color> {
 			super(rootBasis, formatter);	
 
 			this.basis = rootBasis.specialize(inAggs);
-			mapping = formatter.holder();
+			Map<A,Set<Color>> rawList = formatter.holder();
 
 			Aggregates<Color> outAggs = Seq.SHARED_RENDERER.transfer(inAggs, basis);
 			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
 				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
 					A in = inAggs.get(x, y);					
-					if (!mapping.containsKey(in)) {mapping.put(in, new TreeSet<>(Util.COLOR_SORTER));}
-					Set<Color> outs = mapping.get(in);
+					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
+					Set<Color> outs = rawList.get(in);
 					outs.add(outAggs.get(x,y));
 				}
 			}
-			
-			
+			this.mapping = formatter.select(rawList);
 		}
 		
 		@Override
