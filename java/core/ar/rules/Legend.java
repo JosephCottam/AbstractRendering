@@ -3,6 +3,7 @@ package ar.rules;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.awt.BorderLayout;
@@ -135,27 +136,105 @@ public class Legend<A> implements Transfer<A, Color> {
 	
 	/**Shows a selection of categorical counts**/
 	public static final class FormatCategories<T> implements Formatter<CategoricalCounts<T>> {
-
+		/**How many parts should each category be divided into?
+		 * The number of exemplars is approximately dimensions*divisions.*/
+		private final int divisions;
+		
+		public FormatCategories() {this(2);}
+		public FormatCategories(int divisions) {this.divisions = divisions;}
+		
 		@Override
 		public Map<CategoricalCounts<T>, Set<Color>> holder() {return new TreeMap<>();}
 
 		@Override
 		public Map<CategoricalCounts<T>, Set<Color>> select(Map<CategoricalCounts<T>, Set<Color>> input) {
-			Map<CategoricalCounts<T>,Set<Color>> output = holder();
+			//Get max/min (and possibly count) for each category
+			SortedMap<T,Integer> catMaxs = new TreeMap<>();
+			SortedMap<T,Integer> catMins = new TreeMap<>();
 			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: input.entrySet()) {
-				if (e.getKey().size() == 1) {output.put(e.getKey(), e.getValue());}
+				CategoricalCounts<T> cats = e.getKey();
+				for (int i=0; i<cats.size(); i++) {
+					T cat = cats.key(i);
+					if (!catMaxs.containsKey(cat)) {catMaxs.put(cat, 0);}
+					if (!catMins.containsKey(cat)) {catMins.put(cat, Integer.MIN_VALUE);}
+					Integer max = catMaxs.get(cat);
+					Integer min = catMins.get(cat);
+					max = Math.max(max, cats.count(i));
+					min = Math.min(min, cats.count(i));
+					catMaxs.put(cat, max);
+					catMins.put(cat, min);
+				}
+			}
+			
+			assert catMaxs.size() == catMins.size() : "Unequal number of maxes and mins";
+			
+			
+			//Create a partition scheme in each dimension and a storage location			
+			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
+			Binner<T> binner = new Binner<>(divisions, catMaxs, catMins);			
+			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
+			Map<CategoricalCounts<T>,Set<Color>> exemplars = holder();
+			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: input.entrySet()) {
+				int bin = binner.bin(e.getKey());
+				binSize[bin] = binSize[bin]+1;
+				double replaceTest = Math.random();
+				double replaceThreshold = 1/(double) binSize[bin];
+				if (replaceTest < replaceThreshold) {exemplars.put(e.getKey(), e.getValue());}
 			}
 
-			
-			
-			// TODO Auto-generated method stub
-			return null;
+			return exemplars;
 		}
 
 		@Override
 		public JPanel display(Map<CategoricalCounts<T>, Set<Color>> exemplars) {
-			// TODO Auto-generated method stub
-			return null;
+			JPanel labels = new JPanel(new GridLayout(0,1));
+			JPanel examples = new JPanel(new GridLayout(0,1));			
+
+			for (Map.Entry<CategoricalCounts<T>, Set<Color>> entry: exemplars.entrySet()) {
+				labels.add(new JLabel(entry.getKey().toString()));
+				JPanel exampleSet = new JPanel(new GridLayout(1,0));
+				for (Color c: entry.getValue()) {
+					exampleSet.add(new ColorSwatch(c));
+				}
+				examples.add(exampleSet);
+			}
+			JPanel legend = new JPanel(new BorderLayout());
+			legend.add(labels, BorderLayout.EAST);
+			legend.add(examples, BorderLayout.WEST);			
+			return legend;
+		}
+		
+		/**Converts a set of categorical counts into a specific bin.**/
+		private static final class Binner<T> {
+			final int divisions;
+			final SortedMap<T,Integer> maxes;
+			final SortedMap<T,Integer> mins;
+			
+			public Binner(int divisions, SortedMap<T,Integer> maxes, SortedMap<T,Integer> mins) {
+				this.divisions = divisions;
+				this.maxes = maxes;
+				this.mins = mins;
+			}
+			
+			/**What bin does a particular categorization land in?*/
+			public int bin(CategoricalCounts<T> cats){
+				int bin=0;
+				for (int i=0; i< cats.size(); i++) {
+					T cat = cats.key(i);
+					int catIdx = maxes.headMap(cat).size();
+					int catMax = maxes.get(cat);
+					int catMin = mins.get(cat);
+					int count = cats.count(i);
+					
+					float span = catMax-catMin/((float) divisions);
+					int catBin = (int) (count/span); 
+					bin = bin + (catBin + (catIdx * divisions));
+				}
+				return bin;
+			}
+
+			/**How many bins are in this dataspace?**/
+			public int binCount() {return maxes.size() * divisions;}
 		}
 		
 	}

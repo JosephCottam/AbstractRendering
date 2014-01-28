@@ -62,7 +62,20 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 	
 	public int size() {return labels.length;}
 	public int fullSize() {return fullSize;}
-	public String toString() {return "COC: " + counts.toString();}
+	public String toString() {
+		if (size() ==0) {return "<empty>";}
+		
+		StringBuilder b = new StringBuilder();
+		for (int i=0; i<size(); i++) {
+			b.append(labels[i]);
+			b.append(": ");
+			b.append(counts[i]);
+			b.append("; ");
+		}
+		b.deleteCharAt(b.length()-1);
+		b.deleteCharAt(b.length()-1);
+		return b.toString();
+	}
 	
 	@SuppressWarnings("unchecked")
 	public T key(int i) {return (T) labels[i];}
