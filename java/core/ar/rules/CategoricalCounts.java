@@ -113,8 +113,8 @@ public class CategoricalCounts<T> implements Comparable<CategoricalCounts<T>> {
 		}
 	}
 
-	@Override
-	public int compareTo(CategoricalCounts<T> o) {
+	/**Order by the full-size measurement.**/
+	@Override public int compareTo(CategoricalCounts<T> o) {
 		return Integer.compare(fullSize(), o.fullSize());
 	}
 	

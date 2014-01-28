@@ -563,7 +563,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			root.removeAll();
 			root.revalidate();
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Util.ComparableComparator<>(), root, BorderLayout.CENTER);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.DiscreteComparable<>(), root, BorderLayout.CENTER);
 			flyaway.setVisible(true);
 			return updater;
 		}
