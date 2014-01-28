@@ -37,6 +37,8 @@ public class Legend<A> implements Transfer<A, Color> {
 	final Transfer<A,Color> basis;
 	final Formatter<A> formatter;
 	
+	
+	public Legend(Transfer<A,Color> basis) {this(basis, null);}
 	public Legend(Transfer<A,Color> basis, Formatter<A> formatter) {
 		this.basis = basis;
 		this.formatter = formatter;
@@ -54,23 +56,23 @@ public class Legend<A> implements Transfer<A, Color> {
 	public static final class Specialized<A> extends Legend<A> implements Transfer.Specialized<A, Color> {
 		final Transfer.Specialized<A,Color> basis;
 		final Map<A, Set<Color>> mapping;
+		final Formatter<A> formatter;
  		
 		public Specialized(Transfer<A, Color> rootBasis, Formatter<A> formatter, Aggregates<? extends A> inAggs) {
 			super(rootBasis, formatter);	
-
 			this.basis = rootBasis.specialize(inAggs);
-			Map<A,Set<Color>> rawList = formatter.holder();
-
+			if (formatter == null) {
+				A defVal = inAggs.defaultValue();
+				if (defVal instanceof CategoricalCounts) {formatter = new FormatCategories();}
+				else if (defVal instanceof Comparable) {formatter = new DiscreteComparable();}
+				else {throw new IllegalArgumentException("Could not detect the type of formatter to use.  Please explicitly supply.");}
+			} 
+			this.formatter = formatter;
+			
+			
 			Aggregates<Color> outAggs = Seq.SHARED_RENDERER.transfer(inAggs, basis);
-			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
-				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
-					A in = inAggs.get(x, y);					
-					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
-					Set<Color> outs = rawList.get(in);
-					outs.add(outAggs.get(x,y));
-				}
-			}
-			this.mapping = formatter.select(rawList);
+			mapping = formatter.select(inAggs, outAggs);
+
 		}
 		
 		@Override
@@ -118,17 +120,15 @@ public class Legend<A> implements Transfer<A, Color> {
 			legend = spec.legend();
 			host.removeAll();
 			host.add(legend, layoutParams);
-			host.revalidate();
+			host.invalidate();
+			host.validate();
 			return spec;
 		}		
 	}
 	
 	public static interface Formatter<A> {
-		/**Create a container to hold the input/output mappings.**/
-		public Map<A, Set<Color>> holder();
-		
 		/**Select a subset of mappings to actually show in the display.**/
-		public Map<A, Set<Color>> select(Map<A, Set<Color>> input);
+		public Map<A, Set<Color>> select(Aggregates<? extends A> inAggs, Aggregates<Color> outAggs);
 		
 		/**Generate a panel to show the selected mappings.**/
 		public JPanel display(Map<A,Set<Color>> exemplars);
@@ -145,14 +145,24 @@ public class Legend<A> implements Transfer<A, Color> {
 		public FormatCategories(int divisions) {this.divisions = divisions;}
 		
 		@Override
-		public Map<CategoricalCounts<T>, Set<Color>> holder() {return new HashMap<>();}
+		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
+			Map<CategoricalCounts<T>,Set<Color>> rawList = new HashMap<>();
 
-		@Override
-		public Map<CategoricalCounts<T>, Set<Color>> select(Map<CategoricalCounts<T>, Set<Color>> input) {
+			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
+				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
+					CategoricalCounts<T> in = inAggs.get(x, y);					
+					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
+					Set<Color> outs = rawList.get(in);
+					outs.add(outAggs.get(x,y));
+				}
+			}
+			Map<CategoricalCounts<T>, Set<Color>> mapping = new HashMap<>();
+
+			
 			//Get max/min (and possibly count) for each category
 			SortedMap<T,Integer> catMaxs = new TreeMap<>();
 			SortedMap<T,Integer> catMins = new TreeMap<>();
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: input.entrySet()) {
+			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: rawList.entrySet()) {
 				CategoricalCounts<T> cats = e.getKey();
 				for (int i=0; i<cats.size(); i++) {
 					T cat = cats.key(i);
@@ -175,7 +185,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			Binner<T> binner = new Binner<>(divisions, catMaxs, catMins);			
 			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
 			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: input.entrySet()) {
+			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: rawList.entrySet()) {
 				int bin = binner.bin(e.getKey());
 				binSize[bin] = binSize[bin]+1;
 				double replaceTest = Math.random();
@@ -251,15 +261,24 @@ public class Legend<A> implements Transfer<A, Color> {
 			this.exemplars = exemplars;
 		}
 		
-		@Override public Map<A,Set<Color>> holder() {return new TreeMap<>(comp);}
-
 		@Override
-		public Map<A,Set<Color>> select(final Map<A,Set<Color>> input) {
-			int size = input.size();
+		public Map<A,Set<Color>> select(final Aggregates<? extends A> inAggs, final Aggregates<Color> outAggs) { 
+			Map<A,Set<Color>> rawList = new TreeMap<>();
+
+			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
+				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
+					A in = inAggs.get(x, y);					
+					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
+					Set<Color> outs = rawList.get(in);
+					outs.add(outAggs.get(x,y));
+				}
+			}
+			
+			int size = rawList.size();
 			if (size > exemplars) {
 				@SuppressWarnings("unchecked")
-				Map.Entry<A,Set<Color>>[] entries = input.entrySet().toArray(new Map.Entry[size]);
-				Map<A,Set<Color>> output = holder();
+				Map.Entry<A,Set<Color>>[] entries = rawList.entrySet().toArray(new Map.Entry[size]);
+				Map<A,Set<Color>> output = new TreeMap<>();
 				for (int i=0; i<entries.length; i=i+(size/exemplars-1)) {
 					Map.Entry<A, Set<Color>> entry = entries[i];
 					output.put(entry.getKey(), entry.getValue()); 
@@ -268,7 +287,7 @@ public class Legend<A> implements Transfer<A, Color> {
 				output.put(last.getKey(), last.getValue());
 				return output;
 			} else {
-				return input;
+				return rawList;
 			}
 		}
 
