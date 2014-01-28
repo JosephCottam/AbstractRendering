@@ -1,7 +1,10 @@
 package ar.rules;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -38,7 +41,6 @@ public class Legend<A> implements Transfer<A, Color> {
 	final Formatter<A> formatter;
 	
 	
-	public Legend(Transfer<A,Color> basis) {this(basis, null);}
 	public Legend(Transfer<A,Color> basis, Formatter<A> formatter) {
 		this.basis = basis;
 		this.formatter = formatter;
@@ -56,19 +58,10 @@ public class Legend<A> implements Transfer<A, Color> {
 	public static final class Specialized<A> extends Legend<A> implements Transfer.Specialized<A, Color> {
 		final Transfer.Specialized<A,Color> basis;
 		final Map<A, Set<Color>> mapping;
-		final Formatter<A> formatter;
  		
 		public Specialized(Transfer<A, Color> rootBasis, Formatter<A> formatter, Aggregates<? extends A> inAggs) {
 			super(rootBasis, formatter);	
 			this.basis = rootBasis.specialize(inAggs);
-			if (formatter == null) {
-				A defVal = inAggs.defaultValue();
-				if (defVal instanceof CategoricalCounts) {formatter = new FormatCategories();}
-				else if (defVal instanceof Comparable) {formatter = new DiscreteComparable();}
-				else {throw new IllegalArgumentException("Could not detect the type of formatter to use.  Please explicitly supply.");}
-			} 
-			this.formatter = formatter;
-			
 			
 			Aggregates<Color> outAggs = Seq.SHARED_RENDERER.transfer(inAggs, basis);
 			mapping = formatter.select(inAggs, outAggs);
@@ -135,14 +128,127 @@ public class Legend<A> implements Transfer<A, Color> {
 	}
 	
 	
-	/**Shows a selection of categorical counts**/
-	public static final class FormatCategories<T> implements Formatter<CategoricalCounts<T>> {
+	/**Shows a selection of categorical counts, selected based on the OUTPUT (e.g., color) distribution.**/
+	public static final class FormatCategoriesByOutput<T> implements Formatter<CategoricalCounts<T>> {
 		/**How many parts should each category be divided into?
 		 * The number of exemplars is approximately dimensions*divisions.*/
 		private final int divisions;
 		
-		public FormatCategories() {this(2);}
-		public FormatCategories(int divisions) {this.divisions = divisions;}
+		public FormatCategoriesByOutput() {this(2);}
+		public FormatCategoriesByOutput(int divisions) {this.divisions = divisions;}
+		
+		@Override
+		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
+			Map<Color, CategoricalCounts<T>> rawList = new TreeMap<>(Util.COLOR_SORTER);
+
+			for (int x=outAggs.lowX(); x<outAggs.highX(); x++) {
+				for (int y=outAggs.lowY(); y<outAggs.highY(); y++) {
+					CategoricalCounts<T> in = inAggs.get(x, y);
+					Color c = outAggs.get(x,y);
+					rawList.put(c, in);
+				}
+			}
+			
+			Map<CategoricalCounts<T>, Color> selected = new HashMap<>();
+
+			
+			//Map out the used color space
+			int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
+			int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
+			for (Color c: outAggs) {
+				Color display = Util.premultiplyAlpha(c, Color.white);
+				rMax = Math.max(rMax, display.getRed());
+				gMax = Math.max(gMax, display.getBlue());
+				bMax = Math.max(bMax, display.getGreen());
+				rMin = Math.min(rMin, display.getRed());
+				gMin = Math.min(gMin, display.getBlue());
+				bMin = Math.min(bMin, display.getGreen());
+			}
+				
+			//Create a partition scheme in each dimension and a storage location			
+			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
+			Binner binner = new Binner(divisions, rMax, gMax, bMax, rMin, gMin, bMin);
+			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
+			Color[] pickedColors = new Color[binner.binCount()];
+			CategoricalCounts<T>[] pickedInputs = new CategoricalCounts[binner.binCount()];
+			for (int x=outAggs.lowX(); x<outAggs.highX(); x++) {
+				for (int y=outAggs.lowY(); y<outAggs.highY(); y++) {
+					int bin = binner.bin(outAggs.get(x, y));
+					binSize[bin] = binSize[bin] + 1;
+					double replaceTest = Math.random();
+					double replaceThreshold = 1/(double) binSize[bin];
+					if (replaceTest < replaceThreshold) {
+						pickedColors[bin] =  outAggs.get(x,y);
+						pickedInputs[bin] = inAggs.get(x,y);
+					}
+				}
+			}
+				
+			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
+			for (int i=0; i<pickedColors.length; i++) {
+				if (pickedInputs[i] == null) {continue;}
+				exemplars.put(pickedInputs[i], Collections.singleton(pickedColors[i]));
+			}
+			return exemplars;
+		}
+
+		@Override
+		public JPanel display(Map<CategoricalCounts<T>, Set<Color>> exemplars) {
+			JPanel labels = new JPanel(new GridLayout(0,1));
+			JPanel examples = new JPanel(new GridLayout(0,1));			
+
+			for (Map.Entry<CategoricalCounts<T>, Set<Color>> entry: exemplars.entrySet()) {
+				labels.add(new JLabel(entry.getKey().toString()));
+				JPanel exampleSet = new JPanel(new GridLayout(1,0));
+				for (Color c: entry.getValue()) {
+					exampleSet.add(new ColorSwatch(c));
+				}
+				examples.add(exampleSet);
+			}
+			JPanel legend = new JPanel(new BorderLayout());
+			legend.add(labels, BorderLayout.EAST);
+			legend.add(examples, BorderLayout.WEST);			
+			return legend;
+		}
+		
+		/**Converts a set of categorical counts into a specific bin based on its result color.**/
+		private static final class Binner {
+			final int divisions;
+			final int rMax, gMax, bMax, rMin, gMin,  bMin;			
+			
+			public Binner(int divisions, int rMax, int gMax, int bMax, int rMin, int gMin,  int bMin) {
+				this.divisions = divisions;
+				this.rMax = rMax+1;
+				this.gMax = gMax+1;
+				this.bMax = bMax+1;
+				this.rMin = rMin;
+				this.gMin = gMin;
+				this.bMin = bMin;
+			}
+			
+			/**What bin does a particular color land in?*/
+			public int bin(Color color){
+				int rcat = (int) ((color.getRed()-rMin)/((rMax-rMin)/(float) divisions));
+				int gcat = (int) ((color.getGreen()-gMin)/((gMax-gMin)/(float) divisions));
+				int bcat = (int) ((color.getBlue()-bMin)/((bMax-bMin)/(float) divisions));
+				int bin = rcat + (divisions + gcat) + (1*divisions + bcat);
+				return bin;
+			}
+
+			/**How many bins are in this color space?**/
+			public int binCount() {return (int) Math.pow(divisions, 3);} //3--one each for RGB
+		}
+
+	}
+	
+	/**Shows a selection of categorical counts, selected based on the input distribution.**/
+	public static final class FormatCategoriesByInput<T> implements Formatter<CategoricalCounts<T>> {
+		/**How many parts should each category be divided into?
+		 * The number of exemplars is approximately dimensions*divisions.*/
+		private final int divisions;
+		
+		public FormatCategoriesByInput() {this(2);}
+		public FormatCategoriesByInput(int divisions) {this.divisions = divisions;}
 		
 		@Override
 		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
@@ -253,12 +359,13 @@ public class Legend<A> implements Transfer<A, Color> {
 	/**Shows a set of discrete values in a sortable set of inputs.**/
 	public static final class DiscreteComparable<A> implements Formatter<A> {
 		final Comparator<A> comp;
-		final int exemplars;
+		final int divisions;
 		
 		public DiscreteComparable() {this((Comparator<A>) new Util.ComparableComparator<>(), 10);}
-		public DiscreteComparable(Comparator<A> comp, int exemplars) {
+		public DiscreteComparable(int divisions) {this((Comparator<A>) new Util.ComparableComparator<>(), divisions);}
+		public DiscreteComparable(Comparator<A> comp, int divisions) {
 			this.comp = comp;
-			this.exemplars = exemplars;
+			this.divisions = divisions;
 		}
 		
 		@Override
@@ -275,11 +382,11 @@ public class Legend<A> implements Transfer<A, Color> {
 			}
 			
 			int size = rawList.size();
-			if (size > exemplars) {
+			if (size > divisions) {
 				@SuppressWarnings("unchecked")
 				Map.Entry<A,Set<Color>>[] entries = rawList.entrySet().toArray(new Map.Entry[size]);
 				Map<A,Set<Color>> output = new TreeMap<>();
-				for (int i=0; i<entries.length; i=i+(size/exemplars-1)) {
+				for (int i=0; i<entries.length; i=i+(size/divisions-1)) {
 					Map.Entry<A, Set<Color>> entry = entries[i];
 					output.put(entry.getKey(), entry.getValue()); 
 				}

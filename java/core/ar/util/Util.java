@@ -332,12 +332,7 @@ public class Util {
 			for (int x=0; x<src.getWidth(); x++) {
 				for (int y=0; y<src.getHeight();y++) {
 					Color fgColor = new Color(src.getRGB(x,y), true);
-					int r, g, b;
-					r = fgColor.getRed() * fgColor.getAlpha() + bgColor.getRed() * (255 - fgColor.getAlpha());
-					g = fgColor.getGreen() * fgColor.getAlpha() + bgColor.getGreen() * (255 - fgColor.getAlpha());
-					b = fgColor.getBlue() * fgColor.getAlpha() + bgColor.getBlue() * (255 - fgColor.getAlpha());
-					Color result = new Color(r / 255, g / 255, b / 255);
-					noAlpha.setRGB(x, y, result.getRGB());
+					noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
 				}
 				
 			}
@@ -347,6 +342,15 @@ public class Util {
 		}catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public static final Color premultiplyAlpha(Color fgColor, Color bgColor) {
+		int r, g, b;
+		r = fgColor.getRed() * fgColor.getAlpha() + bgColor.getRed() * (255 - fgColor.getAlpha());
+		g = fgColor.getGreen() * fgColor.getAlpha() + bgColor.getGreen() * (255 - fgColor.getAlpha());
+		b = fgColor.getBlue() * fgColor.getAlpha() + bgColor.getBlue() * (255 - fgColor.getAlpha());
+		Color result = new Color(r / 255, g / 255, b / 255);
+		return result;
 	}
 	
 	/**Comparator to wrap the compareTo method of comparable items.**/

@@ -13,6 +13,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -39,9 +41,12 @@ import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Legend;
+import ar.rules.Legend.Formatter;
 import ar.rules.SeamCarving;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
+import ar.rules.Legend.DiscreteComparable;
+import ar.rules.Legend.FormatCategoriesByOutput;
 import ar.rules.Numbers;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
@@ -563,7 +568,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			root.removeAll();
 			root.revalidate();
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, null, root, BorderLayout.CENTER);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new FlexFormatter(params.divisions()), root, BorderLayout.CENTER);
 			//Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.DiscreteComparable<>(), root, BorderLayout.CENTER);
 			flyaway.setVisible(true);
 			return updater;
@@ -578,13 +583,41 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		public static final class Controls extends ControlPanel {
-			private JTextField title = new JTextField();
+			public JSpinner divisions = new JSpinner(new SpinnerNumberModel(10, 0,  50, 1));
+
 			public Controls() {
 				super("legend");
-				this.add(new LabeledItem("Title: ", title));
-				title.addActionListener(actionProvider.actionDelegate());
+				this.add(new LabeledItem("Divisions: ", divisions));
+				divisions.addChangeListener(actionProvider.changeDelegate());
 			}
-			public String title() {return title.getText();}
+			public int divisions() {return (int) divisions.getValue();}
+		}
+		
+		public static final class FlexFormatter implements Legend.Formatter {
+			final int divisions;
+			public FlexFormatter(int divisions) {this.divisions = divisions;}
+			
+			
+			private Formatter decide(Object val) {
+				if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutput(divisions);}
+				else if (val instanceof Comparable) {return new Legend.DiscreteComparable(divisions);}
+				else {throw new IllegalArgumentException("Could not detect the type of formatter to use.  Please explicitly supply.");}
+			}
+
+
+			@Override
+			public Map select(Aggregates inAggs, Aggregates outAggs) {
+				Formatter inner = decide(inAggs.defaultValue());
+				return inner.select(inAggs, outAggs);
+			}
+
+
+			@Override
+			public JPanel display(Map exemplars) {
+				Formatter inner = decide(exemplars.keySet().iterator().next());
+				return inner.display(exemplars);
+			}
+			
 		}
 
 
