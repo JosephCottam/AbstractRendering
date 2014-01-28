@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -40,6 +41,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
+import ar.rules.ISOContours;
 import ar.rules.Legend;
 import ar.rules.Legend.Formatter;
 import ar.rules.SeamCarving;
@@ -383,6 +385,36 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 		}
 	}
+
+	public static final class Contour extends OptionTransfer<Contour.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+			Transfer t = new ISOContours.NContours<>(params.contours(), params.fill());
+			return extend(t, subsequent);
+		}
+
+		@Override public String toString() {return "Contour (Num->Num)";}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+
+		public static final class Controls extends ControlPanel {
+			private final JSpinner contours = new JSpinner(new SpinnerNumberModel(5, 0, 20, 1));
+			private final JCheckBox fill =new JCheckBox("Fill");
+			
+			public Controls() {
+				super("Seam-carve");				
+				add(new LabeledItem("Contours:", contours));
+				add(fill);
+				contours.addChangeListener(actionProvider.changeDelegate());
+				fill.addChangeListener(actionProvider.changeDelegate());
+			}
+			
+			public int contours() {return (int) contours.getValue();}
+			public boolean fill() {return fill.isSelected();}
+			
+		}
+	}
+
 	
 	public static final class Spread extends OptionTransfer<Spread.Controls> {
 		@Override
