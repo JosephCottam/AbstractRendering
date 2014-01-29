@@ -16,6 +16,7 @@ import java.awt.GridLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import ar.Aggregates;
 import ar.Renderer;
@@ -111,8 +112,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			legend = spec.legend();
 			host.removeAll();
 			host.add(legend, layoutParams);
-			host.invalidate();
-			host.validate();
+			SwingUtilities.windowForComponent(legend).pack();
 			return spec;
 		}		
 	}

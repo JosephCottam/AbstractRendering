@@ -108,6 +108,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		frame.add(display, BorderLayout.CENTER);
 
 
+		frame.setLocation(200, 0);
 		frame.setSize(800, 800);
 		frame.validate();
 		frame.setVisible(true);

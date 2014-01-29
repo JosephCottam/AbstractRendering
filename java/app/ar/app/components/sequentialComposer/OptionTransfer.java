@@ -588,7 +588,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		final JPanel root = new JPanel();
 		
 		public AutoLegend() {
-			flyaway.setSize(100, 250);
+			flyaway.setSize(200, 250);
 			flyaway.setLayout(new BorderLayout());
 			flyaway.add(root, BorderLayout.CENTER);
 		}
