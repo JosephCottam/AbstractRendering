@@ -146,10 +146,7 @@ public class Legend<A> implements Transfer<A, Color> {
 					rawList.put(c, in);
 				}
 			}
-			
-			Map<CategoricalCounts<T>, Color> selected = new HashMap<>();
-
-			
+						
 			//Map out the used color space
 			int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
 			int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
@@ -168,6 +165,8 @@ public class Legend<A> implements Transfer<A, Color> {
 			Binner binner = new Binner(examples, rMax, gMax, bMax, rMin, gMin, bMin);
 			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
 			Color[] pickedColors = new Color[binner.binCount()];
+			
+			@SuppressWarnings("unchecked")
 			CategoricalCounts<T>[] pickedInputs = new CategoricalCounts[binner.binCount()];
 			for (int x=outAggs.lowX(); x<outAggs.highX(); x++) {
 				for (int y=outAggs.lowY(); y<outAggs.highY(); y++) {
@@ -272,8 +271,6 @@ public class Legend<A> implements Transfer<A, Color> {
 					outs.add(outAggs.get(x,y));
 				}
 			}
-			Map<CategoricalCounts<T>, Set<Color>> mapping = new HashMap<>();
-
 			
 			//Get max/min (and possibly count) for each category
 			SortedMap<T,Integer> catMaxs = new TreeMap<>();
@@ -371,7 +368,8 @@ public class Legend<A> implements Transfer<A, Color> {
 		final Comparator<A> comp;
 		final int examples;
 		
-		public DiscreteComparable() {this((Comparator<A>) new Util.ComparableComparator<>(), 10);}
+		public DiscreteComparable() {this(10);}
+		@SuppressWarnings("unchecked")
 		public DiscreteComparable(int divisions) {this((Comparator<A>) new Util.ComparableComparator<>(), divisions);}
 		public DiscreteComparable(Comparator<A> comp, int examples) {
 			this.comp = comp;
