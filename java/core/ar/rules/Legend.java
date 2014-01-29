@@ -1,10 +1,8 @@
 package ar.rules;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -132,10 +130,10 @@ public class Legend<A> implements Transfer<A, Color> {
 	public static final class FormatCategoriesByOutput<T> implements Formatter<CategoricalCounts<T>> {
 		/**How many parts should each category be divided into?
 		 * The number of exemplars is approximately dimensions*divisions.*/
-		private final int divisions;
+		private final int examples;
 		
-		public FormatCategoriesByOutput() {this(2);}
-		public FormatCategoriesByOutput(int divisions) {this.divisions = divisions;}
+		public FormatCategoriesByOutput() {this(10);}
+		public FormatCategoriesByOutput(int examples) {this.examples = examples;}
 		
 		@Override
 		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
@@ -167,7 +165,7 @@ public class Legend<A> implements Transfer<A, Color> {
 				
 			//Create a partition scheme in each dimension and a storage location			
 			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
-			Binner binner = new Binner(divisions, rMax, gMax, bMax, rMin, gMin, bMin);
+			Binner binner = new Binner(examples, rMax, gMax, bMax, rMin, gMin, bMin);
 			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
 			Color[] pickedColors = new Color[binner.binCount()];
 			CategoricalCounts<T>[] pickedInputs = new CategoricalCounts[binner.binCount()];
@@ -183,11 +181,16 @@ public class Legend<A> implements Transfer<A, Color> {
 					}
 				}
 			}
-				
+			
+			//Select from the grouped examples values down to the requested number of exemplars
 			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
-			for (int i=0; i<pickedColors.length; i++) {
-				if (pickedInputs[i] == null) {continue;}
-				exemplars.put(pickedInputs[i], Collections.singleton(pickedColors[i]));
+			
+			for (int offset=0; offset<examples && exemplars.size() < examples; offset++) {
+				for (int i=0; i<pickedColors.length; i+=binner.searchStride()) {
+					int idx = offset+i;
+					if (pickedInputs[idx] == null) {continue;}
+					exemplars.put(pickedInputs[idx], Collections.singleton(pickedColors[idx]));
+				}
 			}
 			return exemplars;
 		}
@@ -213,11 +216,13 @@ public class Legend<A> implements Transfer<A, Color> {
 		
 		/**Converts a set of categorical counts into a specific bin based on its result color.**/
 		private static final class Binner {
+			final int examples;
 			final int divisions;
 			final int rMax, gMax, bMax, rMin, gMin,  bMin;			
 			
-			public Binner(int divisions, int rMax, int gMax, int bMax, int rMin, int gMin,  int bMin) {
-				this.divisions = divisions;
+			public Binner(int examples, int rMax, int gMax, int bMax, int rMin, int gMin,  int bMin) {
+				this.examples = examples;
+				this.divisions = examples*10; //Over-dividing the space to helps get to the target number of examples
 				this.rMax = rMax+1;
 				this.gMax = gMax+1;
 				this.bMax = bMax+1;
@@ -237,6 +242,11 @@ public class Legend<A> implements Transfer<A, Color> {
 
 			/**How many bins are in this color space?**/
 			public int binCount() {return (int) Math.pow(divisions, 3);} //3--one each for RGB
+			
+			/**How far apart should increments be made to ensure a different bin-group is hit with each increment.
+			 * Level 0 is the most coarse, any level is acceptable, but eventually the return value is just 1.
+			 * **/ 
+			public int searchStride() {return divisions/examples;}
 		}
 
 	}
@@ -359,13 +369,13 @@ public class Legend<A> implements Transfer<A, Color> {
 	/**Shows a set of discrete values in a sortable set of inputs.**/
 	public static final class DiscreteComparable<A> implements Formatter<A> {
 		final Comparator<A> comp;
-		final int divisions;
+		final int examples;
 		
 		public DiscreteComparable() {this((Comparator<A>) new Util.ComparableComparator<>(), 10);}
 		public DiscreteComparable(int divisions) {this((Comparator<A>) new Util.ComparableComparator<>(), divisions);}
-		public DiscreteComparable(Comparator<A> comp, int divisions) {
+		public DiscreteComparable(Comparator<A> comp, int examples) {
 			this.comp = comp;
-			this.divisions = divisions;
+			this.examples = examples;
 		}
 		
 		@Override
@@ -382,11 +392,11 @@ public class Legend<A> implements Transfer<A, Color> {
 			}
 			
 			int size = rawList.size();
-			if (size > divisions) {
+			if (size > examples) {
 				@SuppressWarnings("unchecked")
 				Map.Entry<A,Set<Color>>[] entries = rawList.entrySet().toArray(new Map.Entry[size]);
 				Map<A,Set<Color>> output = new TreeMap<>();
-				for (int i=0; i<entries.length; i=i+(size/divisions-1)) {
+				for (int i=0; i<entries.length; i=i+(size/examples-1)) {
 					Map.Entry<A, Set<Color>> entry = entries[i];
 					output.put(entry.getKey(), entry.getValue()); 
 				}

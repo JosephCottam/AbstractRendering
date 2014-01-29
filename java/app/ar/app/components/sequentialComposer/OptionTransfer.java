@@ -14,14 +14,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import ar.Aggregates;
@@ -47,8 +45,6 @@ import ar.rules.Legend.Formatter;
 import ar.rules.SeamCarving;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
-import ar.rules.Legend.DiscreteComparable;
-import ar.rules.Legend.FormatCategoriesByOutput;
 import ar.rules.Numbers;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
@@ -403,7 +399,8 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			public Controls() {
 				super("Seam-carve");				
-				add(new LabeledItem("Contours:", contours));
+				add(new LabeledItem
+						("Contours:", contours));
 				add(fill);
 				contours.addChangeListener(actionProvider.changeDelegate());
 				fill.addChangeListener(actionProvider.changeDelegate());
@@ -591,7 +588,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		final JPanel root = new JPanel();
 		
 		public AutoLegend() {
-			flyaway.setSize(50, 250);
+			flyaway.setSize(100, 250);
 			flyaway.setLayout(new BorderLayout());
 			flyaway.add(root, BorderLayout.CENTER);
 		}
@@ -600,7 +597,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			root.removeAll();
 			root.revalidate();
-			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new FlexFormatter(params.divisions()), root, BorderLayout.CENTER);
+			Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new FlexFormatter(params.examples()), root, BorderLayout.CENTER);
 			//Legend.AutoUpdater updater = new Legend.AutoUpdater(subsequent, new Legend.DiscreteComparable<>(), root, BorderLayout.CENTER);
 			flyaway.setVisible(true);
 			return updater;
@@ -615,24 +612,24 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		public static final class Controls extends ControlPanel {
-			public JSpinner divisions = new JSpinner(new SpinnerNumberModel(10, 0,  50, 1));
+			public JSpinner examples = new JSpinner(new SpinnerNumberModel(10, 0,  50, 1));
 
 			public Controls() {
 				super("legend");
-				this.add(new LabeledItem("Divisions: ", divisions));
-				divisions.addChangeListener(actionProvider.changeDelegate());
+				this.add(new LabeledItem("Examples: ", examples));
+				examples.addChangeListener(actionProvider.changeDelegate());
 			}
-			public int divisions() {return (int) divisions.getValue();}
+			public int examples() {return (int) examples.getValue();}
 		}
 		
 		public static final class FlexFormatter implements Legend.Formatter {
-			final int divisions;
-			public FlexFormatter(int divisions) {this.divisions = divisions;}
+			final int examples;
+			public FlexFormatter(int divisions) {this.examples = divisions;}
 			
 			
 			private Formatter decide(Object val) {
-				if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutput(divisions);}
-				else if (val instanceof Comparable) {return new Legend.DiscreteComparable(divisions);}
+				if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutput(examples);}
+				else if (val instanceof Comparable) {return new Legend.DiscreteComparable(examples);}
 				else {throw new IllegalArgumentException("Could not detect the type of formatter to use.  Please explicitly supply.");}
 			}
 
