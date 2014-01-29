@@ -1,10 +1,8 @@
 package ar.rules;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -148,10 +146,7 @@ public class Legend<A> implements Transfer<A, Color> {
 					rawList.put(c, in);
 				}
 			}
-			
-			Map<CategoricalCounts<T>, Color> selected = new HashMap<>();
-
-			
+						
 			//Map out the used color space
 			int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
 			int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
@@ -165,12 +160,12 @@ public class Legend<A> implements Transfer<A, Color> {
 				bMin = Math.min(bMin, display.getGreen());
 			}
 				
-			//Create a partition scheme in each dimension and a storage location			
-			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
 			Binner binner = new Binner(divisions, rMax, gMax, bMax, rMin, gMin, bMin);
-			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
-			Color[] pickedColors = new Color[binner.binCount()];
+
+			@SuppressWarnings("unchecked")
 			CategoricalCounts<T>[] pickedInputs = new CategoricalCounts[binner.binCount()];
+			Color[] pickedColors = new Color[binner.binCount()];
+			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
 			for (int x=outAggs.lowX(); x<outAggs.highX(); x++) {
 				for (int y=outAggs.lowY(); y<outAggs.highY(); y++) {
 					int bin = binner.bin(outAggs.get(x, y));
@@ -262,8 +257,6 @@ public class Legend<A> implements Transfer<A, Color> {
 					outs.add(outAggs.get(x,y));
 				}
 			}
-			Map<CategoricalCounts<T>, Set<Color>> mapping = new HashMap<>();
-
 			
 			//Get max/min (and possibly count) for each category
 			SortedMap<T,Integer> catMaxs = new TreeMap<>();
@@ -361,7 +354,11 @@ public class Legend<A> implements Transfer<A, Color> {
 		final Comparator<A> comp;
 		final int divisions;
 		
-		public DiscreteComparable() {this((Comparator<A>) new Util.ComparableComparator<>(), 10);}
+		/**Assumes the A is comparable.**/
+		public DiscreteComparable() {this(10);}
+
+		/**Assumes the A is comparable.**/
+		@SuppressWarnings("unchecked")
 		public DiscreteComparable(int divisions) {this((Comparator<A>) new Util.ComparableComparator<>(), divisions);}
 		public DiscreteComparable(Comparator<A> comp, int divisions) {
 			this.comp = comp;
