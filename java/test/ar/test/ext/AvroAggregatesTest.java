@@ -28,6 +28,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
+import ar.util.Util;
 import ar.aggregates.implementations.RefFlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
@@ -51,7 +52,7 @@ public class AvroAggregatesTest {
 				236.13546883394775);
 		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
 		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt, 500,500);
-		rles = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(), vt, 500,500);
+		rles = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(Util.COLOR_SORTER), vt, 500,500);
 	}
 	
 	@Test
