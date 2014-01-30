@@ -163,6 +163,7 @@ public class TransferBuilder extends JPanel {
 			
 			this.add(controls, BorderLayout.WEST);			
 			center.add(transfers);
+			transfers.setSelectedItem(new OptionTransfer.OneArgMathTransfer());
 			this.add(center, BorderLayout.CENTER);
 			refreshControls();
 		}

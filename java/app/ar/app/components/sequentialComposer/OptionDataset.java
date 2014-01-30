@@ -60,7 +60,7 @@ public final class OptionDataset<G,I> {
 					new ToValue<>(2, new Binary<Integer,String>(0, "Hit", "Miss")),
 					OptionAggregator.COC_COMP,
 					new OptionTransfer.ColorKey(),
-					new OptionTransfer.HighAlphaLog());
+					new OptionTransfer.ColorCatInterpolate());
 	
 	public static OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS = new OptionDataset<>(
 			"US Census Tracts", 
@@ -71,7 +71,7 @@ public final class OptionDataset<G,I> {
 			new OptionTransfer.Spread(),
 			new OptionTransfer.ToCount(),
 			new OptionTransfer.OneArgMathTransfer(),
-			new OptionTransfer.HDInterpolate());
+			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE = new OptionDataset<>(
 			"US Census Synthetic People", 
@@ -80,7 +80,7 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToValue<Indexed,Character>(2),
 			OptionAggregator.COC_COMP,
 			new OptionTransfer.ColorKey(),
-			new OptionTransfer.HighAlphaLog());
+			new OptionTransfer.ColorCatInterpolate());
 	
 	public static OptionDataset<Point2D, Color> WIKIPEDIA = new OptionDataset<>(
 			"Wikipedia BFS adjacnecy", 
@@ -89,7 +89,7 @@ public final class OptionDataset<G,I> {
 			new Valuer.Constant<Indexed, Color>(Color.RED),
 			OptionAggregator.COUNT,
 			new OptionTransfer.RefArgMathTransfer(),
-			new OptionTransfer.HDInterpolate());
+			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Point2D, Color> KIVA = new OptionDataset<>(
 			"Kiva", 
@@ -98,19 +98,19 @@ public final class OptionDataset<G,I> {
 			new Valuer.Constant<Indexed, Color>(Color.RED),
 			OptionAggregator.COUNT,
 			new OptionTransfer.RefArgMathTransfer(),
-			new OptionTransfer.HDInterpolate());
+			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER = new OptionDataset<>(
 			"Circle Scatter",
 			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
 			OptionAggregator.COUNT,
-			new OptionTransfer.FixedInterpolate());
+			new OptionTransfer.Interpolate());
 	
 	private static final int POINT_COUNT = 100_000_000;
 	public static  OptionDataset<Point2D, Integer> SYNTHETIC = new OptionDataset<>(
 			String.format("Synthetic Points (%,d points)", POINT_COUNT),
 			new SyntheticGlyphset<>(POINT_COUNT, 0, new SyntheticGlyphset.SyntheticPoints()),
 			OptionAggregator.COUNT,
-			new OptionTransfer.HDInterpolate());
+			new OptionTransfer.Interpolate());
 
 }

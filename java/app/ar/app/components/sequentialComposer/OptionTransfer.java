@@ -21,6 +21,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -240,38 +242,18 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 	}
 	
-	public static final class HDInterpolate extends OptionTransfer<HDInterpolate.Controls> {
+	
+	public static final class Interpolate extends OptionTransfer<Interpolate.Controls> {
 		@Override 
 		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
-			Transfer t = new Numbers.Interpolate<>(p.low.color(), p.high.color());
-			return extend(t, subsequent);
-		}
-		
-		@Override public String toString() {return "HD Interpolate (Num->Color))";}
-		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-		
-		private static class Controls extends ControlPanel {
-			public ColorChooser low = new ColorChooser(new Color(255,204,204), "Low");
-			public ColorChooser high = new ColorChooser(Color.red, "High");
-			public Controls() {
-				super("HD Interpolate");
-				this.setLayout(new GridLayout(1,0));
-				add(low);
-				add(high);
-				low.addActionListener(actionProvider.actionDelegate());
-				high.addActionListener(actionProvider.actionDelegate());
+			if (p.highDef()) {
+				return new Numbers.Interpolate<>(p.lowColor.color(), p.highColor.color());
+			} else {
+				return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()));
 			}
 		}
-	}
 		
-	public static final class FixedInterpolate extends OptionTransfer<FixedInterpolate.Controls> {
-		@Override 
-		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
-			return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()));
-		}
-		
-		@Override public String toString() {return "Fixed Interpolate (Num->Color)";}
+		@Override public String toString() {return "Interpolate (Num->Color)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
@@ -280,18 +262,38 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public JSpinner high = new JSpinner(new SpinnerNumberModel(255, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
 			public ColorChooser lowColor = new ColorChooser(Color.white, "Low");
 			public ColorChooser highColor = new ColorChooser(Color.red, "High");
+			public JCheckBox highDef = new JCheckBox("High Def");
+			
 			public Controls() {
-				super("FixedAlpha");
+				super("Interpolate");
 				this.setLayout(new GridLayout(1,0));
 				add(lowColor);
 				add(highColor);
+				add(highDef);
 				add(new LabeledItem("Start:", low));
 				add(new LabeledItem("End:", high));
 				low.addChangeListener(actionProvider.changeDelegate());
 				high.addChangeListener(actionProvider.changeDelegate());
 				lowColor.addActionListener(actionProvider.actionDelegate());
 				highColor.addActionListener(actionProvider.actionDelegate());
+				highDef.addActionListener(actionProvider.actionDelegate());
+				
+				highDef.addChangeListener(new ChangeListener() {
+					@Override public void stateChanged(ChangeEvent e) {
+						if (highDef.isSelected()) {
+							low.setEnabled(false);
+							high.setEnabled(false);
+						} else {
+							low.setEnabled(true);
+							high.setEnabled(true);
+						}
+					}
+				});
+				
+				highDef.setSelected(true);
 			}
+			
+			public boolean highDef() {return highDef.isSelected();}
 		}
 	}
 	
@@ -731,29 +733,36 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
-	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
-	public static final class HighAlphaLog extends OptionTransfer<ControlPanel> {
-		@Override 
-		public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
-			return new Categories.HighDefAlpha(Color.white, .1, true);
-		}
-		
-		@Override public String toString() {return "Log HD Alpha (CoC)";}
-		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-	}
 	
-	public static final class HighAlphaLin extends OptionTransfer<ControlPanel> {
-		@Override public Transfer<CategoricalCounts<Color>,Color> transfer(ControlPanel p, Transfer subsequent) {
-			Transfer t = new Categories.HighDefAlpha(Color.white, .1, false);
-			return extend(t, subsequent);
+	
+
+	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
+	public static final class ColorCatInterpolate extends OptionTransfer<ColorCatInterpolate.Controls> {
+		@Override
+		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+			return new Categories.HighDefAlpha(Color.white, .1, params.log());
 		}
-		
-		@Override public String toString() {return "Linear HD Alpha (CoC)";}
-		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
+
+		@Override public String toString() {return "HD Alpha (CoC<Color>)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+
+		public static final class Controls extends ControlPanel {
+			private final JCheckBox log =new JCheckBox("Log");
+			
+			public Controls() {
+				super("ColorCatInterpolate");
+				add(log);
+				
+				log.setSelected(true);
+				log.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public boolean log() {return log.isSelected();}
+			
+		}
 	}
-		
+
 	public static class ControlPanel extends JPanel {
 		protected final ActionProvider actionProvider;
 		
