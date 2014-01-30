@@ -70,7 +70,7 @@ public final class OptionDataset<G,I> {
 			OptionAggregator.MERGE_CATS,
 			new OptionTransfer.Spread(),
 			new OptionTransfer.ToCount(),
-			new OptionTransfer.OneArgMathTransfer(),
+			new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE = new OptionDataset<>(
@@ -88,7 +88,7 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToPoint(false, 0, 1),
 			new Valuer.Constant<Indexed, Color>(Color.RED),
 			OptionAggregator.COUNT,
-			new OptionTransfer.RefArgMathTransfer(),
+			new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Point2D, Color> KIVA = new OptionDataset<>(
@@ -97,7 +97,7 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToPoint(false, 0, 1),
 			new Valuer.Constant<Indexed, Color>(Color.RED),
 			OptionAggregator.COUNT,
-			new OptionTransfer.RefArgMathTransfer(),
+			new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
 	
 	public static OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER = new OptionDataset<>(

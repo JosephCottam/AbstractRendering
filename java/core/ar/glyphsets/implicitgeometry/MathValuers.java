@@ -130,27 +130,27 @@ public class MathValuers {
 		public Double value(A from) {return Math.cbrt(from.doubleValue());}
 	}
 	
-	public static final class ceil<A extends Number> implements Valuer<A,Double> {
+	public static final class Ceil<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.ceil(from.doubleValue());}
 	}
 
-	public static final class cos<A extends Number> implements Valuer<A,Double> {
+	public static final class Cos<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.cos(from.doubleValue());}
 	}
 	
-	public static final class cosh<A extends Number> implements Valuer<A,Double> {
+	public static final class Cosh<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.cosh(from.doubleValue());}
 	}
 	
-	public static final class exp<A extends Number> implements Valuer<A,Double> {
+	public static final class Exp<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.exp(from.doubleValue());}
 	}
 	
-	public static final class expm1<A extends Number> implements Valuer<A,Double> {
+	public static final class Expm1<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.expm1(from.doubleValue());}
 	}
 	
-	public static final class floor<A extends Number> implements Valuer<A,Double> {
+	public static final class Floor<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.floor(from.doubleValue());}
 	}
 	
@@ -161,36 +161,47 @@ public class MathValuers {
 	public static final class NextUp<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.nextUp(from.doubleValue());}
 	}
+	
 	public static final class RInt<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.rint(from.doubleValue());}
 	}
+	
 	public static final class RoundDouble<A extends Number> implements Valuer<A,Long> {
 		public Long value(A from) {return Math.round(from.doubleValue());}
 	}
+	
 	public static final class RoundFloat<A extends Number> implements Valuer<A,Integer> {
 		public Integer value(A from) {return Math.round(from.floatValue());}
 	}
+	
 	public static final class Signum<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.signum(from.doubleValue());}
 	}
+	
 	public static final class Sin<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.sin(from.doubleValue());}
 	}
+	
 	public static final class Sinh<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.sinh(from.doubleValue());}
 	}
+	
 	public static final class Tan<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.tan(from.doubleValue());}
 	}
+	
 	public static final class Tanh<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.tanh(from.doubleValue());}
 	}
+	
 	public static final class ToDegrees<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.toDegrees(from.doubleValue());}
 	}
+	
 	public static final class ToRadians<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.toRadians(from.doubleValue());}
 	}
+	
 	public static final class ULP<A extends Number> implements Valuer<A,Double> {
 		public Double value(A from) {return Math.ulp(from.doubleValue());}
 	}
@@ -198,16 +209,20 @@ public class MathValuers {
 	public static final class ToDouble implements Valuer<Number, Double> {
 		public Double value(Number d) {return d.doubleValue();}
 	}
+	
 	public static final class ToFloat implements Valuer<Number, Float> {
 		public Float value(Number d) {return d.floatValue();}
 	}
+	
 	public static final class ToLong implements Valuer<Number, Long> {
 		public Long value(Number d) {return d.longValue();}
 	}
+	
 	public static final class ToInteger implements Valuer<Number, Integer> {
 		public Integer value(Number d) {return d.intValue();}
 	}
-	public static final class ShortWrapper implements Valuer<Double, Short> {
+
+	public static final class ToShort implements Valuer<Double, Short> {
 		public Short value(Double d) {return d.shortValue();}
 	}
 	

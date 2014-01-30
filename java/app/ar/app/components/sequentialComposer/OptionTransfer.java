@@ -29,11 +29,9 @@ import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
 import ar.app.util.ActionProvider;
-import ar.app.util.AppUtil;
 import ar.app.util.ColorChooser;
 import ar.app.util.GeoJSONTools;
 import ar.app.util.LabeledItem;
-import ar.app.util.SimpleNameRenderer;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.Advise;
@@ -96,25 +94,48 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-	public static final class RefArgMathTransfer extends OptionTransfer<RefArgMathTransfer.Controls> {
-		
+	public static final class MathTransfer extends OptionTransfer<MathTransfer.Controls> {
+
+
 		@Override
-		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
+		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			Transfer t = new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
 			return extend(t, subsequent);
 		}
 
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public String toString() {return "Math (Num->Num->Num)";}
+		@Override public String toString() {return "Math (Num->Num)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-
-
+		
 		private static final class Controls extends ControlPanel {
 			private JComboBox<Entry<?>> valuers = new JComboBox<>();
 			public JSpinner value = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,1));
 			
 			public Controls() {
 				valuers.addItem(new Entry<>(MathValuers.Log.class, 10d));
+				valuers.addItem(new Entry<>(MathValuers.CubeRoot.class, Double.NaN));
+
+				valuers.addItem(new Entry<>(MathValuers.AbsDouble.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.AbsFloat.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.AbsInt.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.AbsLong.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Cos.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Exp.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Exponent.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Floor.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.RInt.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.RoundDouble.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.RoundFloat.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Signum.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Sin.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Sqrt.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Tan.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.ToDegrees.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.ToDouble.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.ToInteger.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.ToLong.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.ToRadians.class, Double.NaN));
+				
 				valuers.addItem(new Entry<>(MathValuers.AddInt.class, 1));
 				valuers.addItem(new Entry<>(MathValuers.AddDouble.class, 1d));
 				valuers.addItem(new Entry<>(MathValuers.DivideDouble.class, 10d));
@@ -136,6 +157,17 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 				value.addChangeListener(actionProvider.changeDelegate());
 				valuers.addActionListener(actionProvider.actionDelegate());
+				valuers.addItemListener(new ItemListener() {
+					@Override public void itemStateChanged(ItemEvent e) {
+						Entry entry = valuers.getItemAt(valuers.getSelectedIndex());
+						if (Double.isNaN(entry.refVal.doubleValue())) {
+							value.setEnabled(false);
+						} else {
+							value.setEnabled(true);
+						}
+					}
+					
+				});
 
 				valuers.addItemListener(new TransferDefaultRef());
 				valuers.addActionListener(new TransferDefaultRef());
@@ -146,9 +178,16 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Valuer<?,?> valuer() {
 				Entry<?> e = valuers.getItemAt(valuers.getSelectedIndex());
 				try {
-					Constructor<?> c = e.valuerClass.getConstructor(e.refVal.getClass());
-					Valuer<?,?> v = (Valuer<?,?>) c.newInstance(convert((Number) value.getValue(), e.refVal.getClass()));
-					return v;
+					if (Double.isNaN(e.refVal.doubleValue())) {
+						  Constructor<?> c = e.valuerClass.getConstructor();
+                          Valuer<?,?> v = (Valuer<?,?>) c.newInstance();
+                          return v;
+
+					} else {
+						  Constructor<?> c = e.valuerClass.getConstructor(e.refVal.getClass());
+                          Valuer<?,?> v = (Valuer<?,?>) c.newInstance(convert((Number) value.getValue(), e.refVal.getClass()));
+                          return v;
+					}
 				} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
 					throw new IllegalArgumentException("Error constructing valuer " + e.valuerClass.getSimpleName(), e1);
 				}
@@ -190,58 +229,15 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				}
 
 				public String toString() {return valuerClass.getSimpleName();}
-			}
-		}
-	}
-	
-	public static final class OneArgMathTransfer extends OptionTransfer<OneArgMathTransfer.Controls> {
-		
-		@Override
-		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
-			Transfer t= new General.ValuerTransfer(params.valuer(), params.zero());
-			return extend(t, subsequent);
-		}
-
-		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public String toString() {return "Math (Num->Num)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
-
-		private static final class Controls extends ControlPanel {
-			private JComboBox<Valuer<?,?>> valuers = new JComboBox<>();
-			
-			public Controls() {
 				
-				AppUtil.loadInstances(valuers, MathValuers.class, Valuer.class, null); 
-				valuers.setRenderer(new SimpleNameRenderer<Valuer<?,?>>());
-				this.add(new LabeledItem("Operation:", valuers));
-				valuers.addActionListener(actionProvider.actionDelegate());
-				
-				for (int i=0; i<valuers.getItemCount(); i++) {
-					Valuer<?,?> item = valuers.getItemAt(i);
-					if (item instanceof MathValuers.CubeRoot) {valuers.setSelectedIndex(i); break;}
-				}		
-			}
-			
-			public Valuer<?,?> valuer() {return valuers.getItemAt(valuers.getSelectedIndex());}
-		
-			public Number zero() {
-				Class<?> t;
-				try {
-					t = valuer().getClass().getMethod("value", Number.class).getReturnType();
-				} catch (NoSuchMethodException | SecurityException e) {
-					throw new UnsupportedOperationException("Error construct zero for selected operation: " + valuer(),e);
+				@Override public int hashCode() {return this.toString().hashCode();}
+				@Override public boolean equals(Object other) { 
+					return other != null && this.toString().equals(other.toString());
 				}
 				
-				if (t.equals(Double.class)) {return new Double(0d);}
-				if (t.equals(Integer.class)) {return new Integer(0);}
-				if (t.equals(Float.class)) {return new Float(0d);}
-				if (t.equals(Long.class)) {return new Long(0);}
-				if (t.equals(Short.class)) {return new Short((short) 0);}
-				throw new UnsupportedOperationException("Could not construct zero for selected operation: " + valuer());
 			}
 		}
 	}
-	
 	
 	public static final class Interpolate extends OptionTransfer<Interpolate.Controls> {
 		@Override 
@@ -260,9 +256,9 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		private static class Controls extends ControlPanel {
 			public JSpinner low = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
 			public JSpinner high = new JSpinner(new SpinnerNumberModel(255, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
-			public ColorChooser lowColor = new ColorChooser(Color.white, "Low");
+			public ColorChooser lowColor = new ColorChooser(new Color(255,204,204), "Low");
 			public ColorChooser highColor = new ColorChooser(Color.red, "High");
-			public JCheckBox highDef = new JCheckBox("High Def");
+			public JCheckBox highDef = new JCheckBox("HighDef");
 			
 			public Controls() {
 				super("Interpolate");
