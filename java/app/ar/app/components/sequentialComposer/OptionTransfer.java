@@ -51,6 +51,7 @@ import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	/**Create a new transfer that is based on passed parameters and subsequent transfer.
@@ -80,7 +81,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class ToCount extends OptionTransfer<ControlPanel> {
 
 		@Override
-		@SuppressWarnings({"rawtypes","unchecked"})
 		public Transfer<?,?> transfer(ControlPanel params,Transfer subsequent) {
 			return extend(new Categories.ToCount(), subsequent);
 		}
@@ -97,7 +97,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class RefArgMathTransfer extends OptionTransfer<RefArgMathTransfer.Controls> {
 		
 		@Override
-		@SuppressWarnings({"unchecked","rawtypes"})
 		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
 			Transfer t = new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
 			return extend(t, subsequent);
@@ -163,7 +162,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				return t;
 			}
 			
-			@SuppressWarnings("unchecked")
 			public static <T> T convert(Number v, Class<T> t) {
 				if (t.equals(Double.class)) {return (T) (Double) v.doubleValue();}
 				if (t.equals(Integer.class)) {return (T) (Integer) v.intValue();}
@@ -197,7 +195,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class OneArgMathTransfer extends OptionTransfer<OneArgMathTransfer.Controls> {
 		
 		@Override
-		@SuppressWarnings({"unchecked","rawtypes"})
 		public Transfer<?,?> transfer(Controls params, Transfer subsequent) {
 			Transfer t= new General.ValuerTransfer(params.valuer(), params.zero());
 			return extend(t, subsequent);
@@ -336,6 +333,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	
 	public static final class Seam extends OptionTransfer<Seam.Controls> {
+
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
 			SeamCarving.Delta<Integer> delta = new SeamCarving.DeltaInteger();	//TODO: Generalize to auto-detect type...on specialization perhaps?  Similar to FlexSpread..
@@ -348,13 +346,13 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 			if (params.rows() >0) {
 				Transfer hcarver = new SeamCarving.Carve<Integer>(delta, SeamCarving.Carve.Direction.H, 0);
-				ht = new NTimes<>(params.columns(), hcarver);
+				ht = new NTimes<>(params.rows(), hcarver);
 			}
 			
-			//TODO: There are probably smarter things to do than just horizontal then vertical...
+			//TODO: There are probably smarter things to do than just horizontal followed by vertical...
 			if (vt == null && ht == null) {return subsequent;}
-			if (vt == null && ht != null) {return ht;}
-			if (vt != null && ht == null) {return vt;}
+			if (vt == null && ht != null) {return extend(ht,subsequent);}
+			if (vt != null && ht == null) {return extend(vt,subsequent);}
 			Transfer t = extend(vt, subsequent);
 			t = extend(ht, t);
 			return t;
@@ -765,7 +763,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
-    @SuppressWarnings("unchecked")
 	protected static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {
     	if (first == null) {return second;}
     	if (second == null) {return first;}
