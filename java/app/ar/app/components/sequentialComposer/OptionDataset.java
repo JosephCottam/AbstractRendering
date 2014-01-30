@@ -47,8 +47,7 @@ public final class OptionDataset<G,I> {
 		this.defaultAggregator = defAgg;
 		this.defaultTransfers = Arrays.asList(defTrans);
 	}
-	
-	
+
 	public Glyphset<G,I> dataset() {return glyphs;}
 	public String toString() {return name;}
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}

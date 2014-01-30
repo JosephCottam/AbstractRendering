@@ -108,7 +108,8 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 						ts,
 						aggregates);
 				
-				return (ContourAggregates<N>) rend.transfer(aggregates, t);
+				ContourAggregates<N> rslt = (ContourAggregates<N>) rend.transfer(aggregates, t);
+				return rslt;
 			}
 		}
 	}
@@ -136,7 +137,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 
 			contours.add(new SimpleGlyph<>(s, threshold));
 			if (!fill) {isoDivided = rend.transfer(isoDivided, new General.Simplify<>(isoDivided.defaultValue()));}
-			Aggregates<N> base = rend.transfer(isoDivided, new General.MapWrapper<>(true, threshold, null));
+			Aggregates<N> base = rend.transfer(isoDivided, new General.MapWrapper<>(true, threshold, aggregates.defaultValue()));
 			return new ContourAggregates<>(base, contours);
 		}
 	}

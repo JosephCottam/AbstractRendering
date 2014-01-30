@@ -56,7 +56,7 @@ public class TransferBuilder extends JPanel {
 		
 	public void addActionListener(ActionListener l) {actionProvider.addActionListener(l);}
 	
-	public void configureTo(final List<OptionTransfer> transfers) {
+	public void configureTo(final List<OptionTransfer<?>> transfers) {
 		for (TransferRow tr: transferRows) {center.remove(tr);}
 		transferRows.clear();
 		
