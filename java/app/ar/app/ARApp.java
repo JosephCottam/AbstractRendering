@@ -18,7 +18,7 @@ import ar.app.display.EnhanceHost;
 import ar.renderers.ParallelRenderer;
 import ar.renderers.RenderUtils;
 
-public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
+public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
 	private final JFrame frame = new JFrame();
 
@@ -26,7 +26,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final Presets presets = new Presets(this);
 	private final Status status = new Status();
 
-	public ARDemoApp() {
+	public ARApp() {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -46,18 +46,17 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		enhanceOptions.host(display);
 
 		
-		final ARDemoApp app = this;
 		presets.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				boolean rezoom = presets.doZoomWith(app.display);
-				presets.update(app.display);
+				boolean rezoom = presets.doZoomWith(ARApp.this.display);
+				presets.update(ARApp.this.display);
 				if (rezoom) {
 					display.zoomFit();
 				}
 			}
 		});
 		
-		presets.update(app.display);
+		presets.update(display);
 		
 		frame.add(display, BorderLayout.CENTER);
 
@@ -115,7 +114,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		if (args.length >0 && args[0]!=null && args[0].toUpperCase().equals("-EXT")) {
 			ARComposerApp.main(args);
 		} else {
-			new ARDemoApp();
+			new ARApp();
 		}
 	} 
 }
