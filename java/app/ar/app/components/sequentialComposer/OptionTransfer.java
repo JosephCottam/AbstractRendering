@@ -114,41 +114,41 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Controls() {
 				valuers.addItem(new Entry<>(MathValuers.Log.class, 10d));
 				valuers.addItem(new Entry<>(MathValuers.CubeRoot.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Sqrt.class, Double.NaN));
 
-				valuers.addItem(new Entry<>(MathValuers.AbsDouble.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.AbsFloat.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.AbsInt.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.AbsLong.class, Double.NaN));
+				valuers.addItem(new Entry<>("Abs", MathValuers.AbsDouble.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.AbsFloat.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.AbsInt.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.AbsLong.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Sin.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.Cos.class, Double.NaN));
+				valuers.addItem(new Entry<>(MathValuers.Tan.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.Exp.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.Exponent.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.Floor.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.RInt.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.RoundDouble.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.RoundFloat.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.RInt.class, Double.NaN));
+				valuers.addItem(new Entry<>("Round", MathValuers.RoundDouble.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.RoundFloat.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.Signum.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Sin.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Sqrt.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Tan.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.ToDegrees.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.ToDouble.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.ToInteger.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.ToLong.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.ToDouble.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.ToInteger.class, Double.NaN));
+//				valuers.addItem(new Entry<>(MathValuers.ToLong.class, Double.NaN));
 				valuers.addItem(new Entry<>(MathValuers.ToRadians.class, Double.NaN));
 				
-				valuers.addItem(new Entry<>(MathValuers.AddInt.class, 1));
-				valuers.addItem(new Entry<>(MathValuers.AddDouble.class, 1d));
-				valuers.addItem(new Entry<>(MathValuers.DivideDouble.class, 10d));
-				valuers.addItem(new Entry<>(MathValuers.DivideInt.class, 10));
+				valuers.addItem(new Entry<>("Add", MathValuers.AddDouble.class, 1d));
+				valuers.addItem(new Entry<>("Sub", MathValuers.SubtractDouble.class, 1d));
+				valuers.addItem(new Entry<>("Mult", MathValuers.MultiplyDouble.class, 10d));
+				valuers.addItem(new Entry<>("Divide", MathValuers.DivideDouble.class, 10d));
+//				valuers.addItem(new Entry<>(MathValuers.AddInt.class, 1));
+//				valuers.addItem(new Entry<>(MathValuers.DivideInt.class, 10));
 				valuers.addItem(new Entry<>(MathValuers.EQ.class, 0d));
 				valuers.addItem(new Entry<>(MathValuers.GT.class, 0d));
-				valuers.addItem(new Entry<>(MathValuers.GTE.class, 0d));
 				valuers.addItem(new Entry<>(MathValuers.LT.class, 10d));
-				valuers.addItem(new Entry<>(MathValuers.LTE.class, 10d));
-				valuers.addItem(new Entry<>(MathValuers.MultiplyDouble.class, 10d));
-				valuers.addItem(new Entry<>(MathValuers.MultiplyInt.class, 10));
-				valuers.addItem(new Entry<>(MathValuers.SubtractDouble.class, 1d));
-				valuers.addItem(new Entry<>(MathValuers.SubtractInt.class, 1));
+//				valuers.addItem(new Entry<>(MathValuers.GTE.class, 0d));
+//				valuers.addItem(new Entry<>(MathValuers.LTE.class, 10d));
+//				valuers.addItem(new Entry<>(MathValuers.MultiplyInt.class, 10));
+//				valuers.addItem(new Entry<>(MathValuers.SubtractInt.class, 1));
 				
 				
 				this.setLayout(new GridLayout(1,0));
@@ -222,21 +222,26 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			private static final class Entry<A extends Valuer<?,?>> {
 				public final Class<A> valuerClass;
 				public final Number refVal;
+				public final String label;
 				
-				public Entry(Class<A> valuerClass, Number defVal) {
+				public Entry(Class<A> valuerClass, Number defVal) {this(valuerClass.getSimpleName(), valuerClass, defVal);}
+				public Entry(String label, Class<A> valuerClass, Number defVal) {
+					this.label = label;
 					this.valuerClass = valuerClass;
 					this.refVal = defVal;
 				}
 
-				public String toString() {return valuerClass.getSimpleName();}
+				public String toString() {return label;}
 				
-				@Override public int hashCode() {return this.toString().hashCode();}
+				@Override public int hashCode() {return valuerClass.hashCode();}
 				@Override public boolean equals(Object other) { 
-					return other != null && this.toString().equals(other.toString());
+					return other != null 
+							&& other instanceof Entry 
+							&& valuerClass.equals(((Entry) other).valuerClass);
 				}
 				
 			}
-		}
+		}		
 	}
 	
 	public static final class Interpolate extends OptionTransfer<Interpolate.Controls> {
@@ -258,7 +263,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public JSpinner high = new JSpinner(new SpinnerNumberModel(255, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
 			public ColorChooser lowColor = new ColorChooser(new Color(255,204,204), "Low");
 			public ColorChooser highColor = new ColorChooser(Color.red, "High");
-			public JCheckBox highDef = new JCheckBox("HighDef");
+			public JCheckBox highDef = new JCheckBox("HD");
 			
 			public Controls() {
 				super("Interpolate");
@@ -475,7 +480,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			return extend(t, subsequent);
 		}
 
-		@Override public String toString() {return "Color Keys (CoC<*>->CoC<Color>)";}
+		@Override public String toString() {return "Color Keys (CoC->CoC)";}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 

@@ -1,6 +1,8 @@
 package ar.app.components.sequentialComposer;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -113,9 +115,30 @@ public class TransferBuilder extends JPanel {
 		public static String REMOVE = "R";
 		public static String UP = "U";
 		public static String ENABLED = "E";
+
+		private static final GridBagConstraints TRANSFER_LIST_CONSTRAINTS = new GridBagConstraints();
+		private static final GridBagConstraints TRANSFER_CONTROLS_CONSTRAINTS = new GridBagConstraints();
+		static {
+			TRANSFER_LIST_CONSTRAINTS.gridx = 0;
+			TRANSFER_LIST_CONSTRAINTS.gridy = 0;
+			TRANSFER_LIST_CONSTRAINTS.gridwidth = 1;
+			TRANSFER_LIST_CONSTRAINTS.gridheight = 1;
+			TRANSFER_LIST_CONSTRAINTS.weightx = 0;
+			TRANSFER_LIST_CONSTRAINTS.weighty = 0;
+			
+			
+			TRANSFER_CONTROLS_CONSTRAINTS.gridx = 1;
+			TRANSFER_CONTROLS_CONSTRAINTS.gridy = 0;
+			TRANSFER_CONTROLS_CONSTRAINTS.gridwidth = 3;
+			TRANSFER_CONTROLS_CONSTRAINTS.gridheight = 1;
+			TRANSFER_CONTROLS_CONSTRAINTS.weightx = 1;
+			TRANSFER_CONTROLS_CONSTRAINTS.weighty = 0;
+
+		}
+
 		
 		private final JComboBox<OptionTransfer> transfers = new JComboBox<OptionTransfer>();
-		private final JPanel center = new JPanel(new GridLayout(1,0));
+		private final JPanel center = new JPanel(new GridBagLayout());
 		private final JCheckBox enabled = new JCheckBox("", true);
 		private OptionTransfer.ControlPanel controls;
 
@@ -162,7 +185,8 @@ public class TransferBuilder extends JPanel {
 
 			
 			this.add(controls, BorderLayout.WEST);			
-			center.add(transfers);
+			
+			center.add(transfers,TRANSFER_LIST_CONSTRAINTS);
 			transfers.setSelectedItem(new OptionTransfer.MathTransfer());
 			this.add(center, BorderLayout.CENTER);
 			refreshControls();
@@ -187,7 +211,7 @@ public class TransferBuilder extends JPanel {
 		public void refreshControls() {
 			if (controls != null) {center.remove(controls);}  ///Remove, already present
 			this.controls = transfer().control(transferProvider);
-			center.add(controls);
+			center.add(controls,TRANSFER_CONTROLS_CONSTRAINTS);
 			controls.addActionListener(actionProvider.actionDelegate());
 			revalidate();
 		}
