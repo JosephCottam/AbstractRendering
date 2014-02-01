@@ -29,7 +29,7 @@ import ar.util.Util;
 
 //TODO: Add "subset input", useful for contours
 //TODO: Add "Specialize From Here"
-public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
+public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
 	private final JFrame frame = new JFrame();
 
@@ -38,7 +38,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final Status status = new Status();
 	private final SequentialComposer composer = new SequentialComposer(this);
 	
-	public ARDemoApp() {
+	public ARComposerApp() {
 		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,7 +70,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		export.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
-				ARComponent arc = ARDemoApp.this.getARComponent();
+				ARComponent arc = ARComposerApp.this.getARComponent();
 				int rv = chooser.showSaveDialog(arc);
 				if (rv != JFileChooser.APPROVE_OPTION) {return;}
 				File file = chooser.getSelectedFile();
@@ -92,7 +92,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 
 		
 
-		final ARDemoApp app = this;
+		final ARComposerApp app = this;
 		composer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = composer.doZoomWith(app.display);
@@ -108,6 +108,7 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		frame.add(display, BorderLayout.CENTER);
 
 
+		frame.setLocation(200, 0);
 		frame.setSize(800, 800);
 		frame.validate();
 		frame.setVisible(true);
@@ -173,6 +174,6 @@ public class ARDemoApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		ARComponent.PERF_REP = true;
 		RenderUtils.RECORD_PROGRESS = true;
 		RenderUtils.REPORT_STEP=1_000_000;
-		new ARDemoApp();
+		new ARComposerApp();
 	} 
 }

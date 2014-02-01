@@ -52,7 +52,7 @@ public class SequentialComposer extends JPanel  {
 	}	
 
 	public void transferDefaults() {
-		OptionDataset od = datasets.getItemAt(datasets.getSelectedIndex());
+		OptionDataset<?,?> od = datasets.getItemAt(datasets.getSelectedIndex());
 		aggregators.setSelectedItem(od.defaultAggregator());
 		transferBuilder.configureTo(od.defaultTransfers());
 		actionProvider.fireActionListeners();

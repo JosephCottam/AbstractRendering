@@ -40,6 +40,7 @@ public final class OptionAggregator<G,A> {
 	public static final OptionAggregator<Comparable<?>, CategoricalCounts<Comparable<?>>> COC_COMP
 		= new OptionAggregator<>("Categorical Counts (CoC<Comp>)",new Categories.CountCategories<Comparable<?>>());
 		
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static final OptionAggregator<CategoricalCounts<?>, CategoricalCounts<?>> MERGE_CATS 
 		= new OptionAggregator<>("Merge CoC (CoC<Comp>)", new Categories.MergeCategories());
 }

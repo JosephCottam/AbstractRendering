@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Renderer;
+import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.RefFlatAggregates;
 import ar.renderers.ParallelRenderer;
 import ar.rules.ISOContours;
@@ -202,5 +204,28 @@ public class ISOContoursTests {
 			assertThat("Error at x of " + x, padded.get(x,base.lowY()-1), is(pad));
 			assertThat("Error at x of " + x, padded.get(x,base.highY()+1), is(pad));
 		}
+	}
+	
+	@Test
+	public void DefalultValue() {
+		Aggregates<Integer> base = AggregateUtils.make(10, 10, 0);
+		base.set(5, 5, 4);
+		base.set(6, 6, 6);
+		base.set(7, 7, 8);
+		base.set(8, 8, 10);
+
+		
+		Transfer<Integer, Integer> t = new ISOContours.Single<>(3, true);
+		Aggregates<Integer> rslt = RENDERER.transfer(base, t.specialize(base));
+		assertThat("Single defaultVal equals input defaultVAlue", rslt.defaultValue(), is(base.defaultValue()));
+
+		t = new ISOContours.NContours<>(3, true);
+		rslt = RENDERER.transfer(base, t.specialize(base));
+		assertThat("NContours (fill) defaultVal equals input defaultVAlue", rslt.defaultValue(), is(base.defaultValue()));
+
+		t = new ISOContours.NContours<>(3, false);
+		rslt = RENDERER.transfer(base, t.specialize(base));
+		assertThat("NContours (no fill) defaultVal equals input defaultVAlue", rslt.defaultValue(), is(base.defaultValue()));
+		
 	}
 }
