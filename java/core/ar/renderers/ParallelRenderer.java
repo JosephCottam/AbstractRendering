@@ -31,11 +31,6 @@ public class ParallelRenderer implements Renderer {
 	/**How many tasks should be created for each potential parallel worker during aggregation?*/
 	public static int AGGREGATE_TASK_MULTIPLIER = 2;
 
-	/**Largest task size for aggregation. 
-	 * Aggregation intermediate resources can cause issues (especially in memory mapping) if task sizes are too large.
-	 * */
-	public static int AGGREGATE_TASK_MAX = 2000000;
-	
 	/**How small can a transfer task get before it won't be subdivided anymore.**/
 	public static final long TRANSFER_TASK_MIN = 100000;
 	//-------------------------------------------------------------------------------------
