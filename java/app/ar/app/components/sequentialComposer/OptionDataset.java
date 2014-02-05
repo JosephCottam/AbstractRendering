@@ -53,7 +53,7 @@ public final class OptionDataset<G,I> {
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
 	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
 
-	public static OptionDataset<Point2D, String> BOOST_MEMORY;
+	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
 	static {
 		OptionDataset<Point2D, String> temp;
 		try {
@@ -69,7 +69,7 @@ public final class OptionDataset<G,I> {
 		BOOST_MEMORY = temp;
 	}
 	
-	public static OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS;
+	public static final OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS;
 	static {
 		OptionDataset<Point2D, CategoricalCounts<String>>  temp;
 		try {
@@ -88,7 +88,7 @@ public final class OptionDataset<G,I> {
 	}
 
 	
-	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE;
+	public static final OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE;
 	static {
 		OptionDataset<Point2D, Character> temp;
 		try {
@@ -104,7 +104,7 @@ public final class OptionDataset<G,I> {
 		CENSUS_SYN_PEOPLE = temp;
 	}
 	
-	public static OptionDataset<Point2D, Color> WIKIPEDIA;
+	public static final OptionDataset<Point2D, Color> WIKIPEDIA;
 	static {
 		OptionDataset<Point2D, Color> temp;
 		try {
@@ -120,7 +120,7 @@ public final class OptionDataset<G,I> {
 		WIKIPEDIA = temp;
 	}
 	
-	public static OptionDataset<Point2D, Color> KIVA;
+	public static final OptionDataset<Point2D, Color> KIVA;
 	static {
 		OptionDataset<Point2D, Color> temp;
 		try {
@@ -136,7 +136,7 @@ public final class OptionDataset<G,I> {
 		KIVA = temp;
 	}
 	
-	public static OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
+	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
 	static {
 		OptionDataset<Rectangle2D, Color> temp;
 		try {
@@ -149,11 +149,14 @@ public final class OptionDataset<G,I> {
 		CIRCLE_SCATTER = temp;
 	}
 	
-	private static final int POINT_COUNT = 100_000_000;
-	public static  OptionDataset<Point2D, Integer> SYNTHETIC = new OptionDataset<>(
-			String.format("Synthetic Points (%,d points)", POINT_COUNT),
-			new SyntheticGlyphset<>(POINT_COUNT, 0, new SyntheticGlyphset.SyntheticPoints()),
-			OptionAggregator.COUNT,
-			new OptionTransfer.Interpolate());
+	private static int SYNTHETIC_POINT_COUNT = 100_000_000;
+	public static  OptionDataset<Point2D, Integer> SYNTHETIC = syntheticPoints(SYNTHETIC_POINT_COUNT);
+	public static OptionDataset<Point2D, Integer> syntheticPoints(int size) {
+		return new OptionDataset<>(
+				String.format("Synthetic Points (%,d points)", size),
+				new SyntheticGlyphset<>(size, 0, new SyntheticGlyphset.SyntheticPoints()),
+				OptionAggregator.COUNT,
+				new OptionTransfer.Interpolate());
+	}
 
 }
