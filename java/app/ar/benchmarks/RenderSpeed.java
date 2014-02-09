@@ -50,6 +50,13 @@ public class RenderSpeed {
 		int width = Integer.parseInt(arg(args, "-width", "800"));
 		int height = Integer.parseInt(arg(args, "-height", "800"));
 		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
+		int tasksPerThread = Integer.parseInt(arg(args,"-tasksMult", "-1"));
+		int synPoints = Integer.parseInt(arg(args,"-pc", "-1"));
+
+		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
+		ParallelRenderer.AGGREGATE_TASK_MULTIPLIER = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.AGGREGATE_TASK_MULTIPLIER;
+		OptionDataset.SYNTHETIC = synPoints > 0 ? OptionDataset.syntheticPoints(synPoints) : OptionDataset.SYNTHETIC;
+
 		
 		OptionDataset source;
 		try {
@@ -63,7 +70,6 @@ public class RenderSpeed {
 		Glyphset glyphs = source.dataset();
 		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers(), null);
 	
-		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
 		
 		Renderer render;
 		if (rend.startsWith("PARALLEL")) {

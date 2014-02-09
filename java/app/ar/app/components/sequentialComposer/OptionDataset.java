@@ -53,7 +53,11 @@ public final class OptionDataset<G,I> {
 	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
 	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
 
-	public static OptionDataset<Point2D, String> BOOST_MEMORY = new OptionDataset<> (
+	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
+	static {
+		OptionDataset<Point2D, String> temp;
+		try {
+			temp = new OptionDataset<> (
 					"BGL Memory", 
 					new File("../data/MemVisScaled.hbin"), 
 					new Indexed.ToPoint(true, 0, 1),
@@ -61,56 +65,98 @@ public final class OptionDataset<G,I> {
 					OptionAggregator.COC_COMP,
 					new OptionTransfer.ColorKey(),
 					new OptionTransfer.ColorCatInterpolate());
+		} catch (Exception e) {temp = null;}
+		BOOST_MEMORY = temp;
+	}
 	
-	public static OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS = new OptionDataset<>(
-			"US Census Tracts", 
-			new File("../data/2010Census_RaceTract.hbin"), 
-			new Indexed.ToPoint(true, 0, 1),
-			new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
-			OptionAggregator.MERGE_CATS,
-			new OptionTransfer.Spread(),
-			new OptionTransfer.ToCount(),
-			new OptionTransfer.MathTransfer(),
+	public static final OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS;
+	static {
+		OptionDataset<Point2D, CategoricalCounts<String>>  temp;
+		try {
+			temp = new OptionDataset<>(
+				"US Census Tracts", 
+				new File("../data/2010Census_RaceTract.hbin"), 
+				new Indexed.ToPoint(true, 0, 1),
+				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
+				OptionAggregator.MERGE_CATS,
+				new OptionTransfer.Spread(),
+				new OptionTransfer.ToCount(),
+				new OptionTransfer.MathTransfer(),
+				new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CENSUS_TRACTS = temp;
+	}
+
+	
+	public static final OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE;
+	static {
+		OptionDataset<Point2D, Character> temp;
+		try {
+			temp = new OptionDataset<>(
+				"US Census Synthetic People", 
+				new File("../data/2010Census_RacePersonPoints.hbin"), 
+				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToValue<Indexed,Character>(2),
+				OptionAggregator.COC_COMP,
+				new OptionTransfer.ColorKey(),
+				new OptionTransfer.ColorCatInterpolate());
+		} catch (Exception e) {temp = null;}
+		CENSUS_SYN_PEOPLE = temp;
+	}
+	
+	public static final OptionDataset<Point2D, Color> WIKIPEDIA;
+	static {
+		OptionDataset<Point2D, Color> temp;
+		try {
+			temp = new OptionDataset<>(
+				"Wikipedia BFS adjacnecy", 
+				new File("../data/wiki-adj.hbin"), 
+				new Indexed.ToPoint(false, 0, 1),
+				new Valuer.Constant<Indexed, Color>(Color.RED),
+				OptionAggregator.COUNT,
+				new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		WIKIPEDIA = temp;
+	}
 	
-	public static OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE = new OptionDataset<>(
-			"US Census Synthetic People", 
-			new File("../data/2010Census_RacePersonPoints.hbin"), 
-			new Indexed.ToPoint(true, 0, 1),
-			new Indexed.ToValue<Indexed,Character>(2),
-			OptionAggregator.COC_COMP,
-			new OptionTransfer.ColorKey(),
-			new OptionTransfer.ColorCatInterpolate());
+	public static final OptionDataset<Point2D, Color> KIVA;
+	static {
+		OptionDataset<Point2D, Color> temp;
+		try {
+			temp = new OptionDataset<>(
+				"Kiva", 
+				new File("../data/kiva-adj.hbin"),
+				new Indexed.ToPoint(false, 0, 1),
+				new Valuer.Constant<Indexed, Color>(Color.RED),
+				OptionAggregator.COUNT,
+				new OptionTransfer.MathTransfer(),
+				new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		KIVA = temp;
+	}
 	
-	public static OptionDataset<Point2D, Color> WIKIPEDIA = new OptionDataset<>(
-			"Wikipedia BFS adjacnecy", 
-			new File("../data/wiki-adj.hbin"), 
-			new Indexed.ToPoint(false, 0, 1),
-			new Valuer.Constant<Indexed, Color>(Color.RED),
-			OptionAggregator.COUNT,
-			new OptionTransfer.MathTransfer(),
-			new OptionTransfer.Interpolate());
-	
-	public static OptionDataset<Point2D, Color> KIVA = new OptionDataset<>(
-			"Kiva", 
-			new File("../data/kiva-adj.hbin"),
-			new Indexed.ToPoint(false, 0, 1),
-			new Valuer.Constant<Indexed, Color>(Color.RED),
-			OptionAggregator.COUNT,
-			new OptionTransfer.MathTransfer(),
-			new OptionTransfer.Interpolate());
-	
-	public static OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER = new OptionDataset<>(
+	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
+	static {
+		OptionDataset<Rectangle2D, Color> temp;
+		try {
+			temp = new OptionDataset<>(
 			"Circle Scatter",
 			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
 			OptionAggregator.COUNT,
 			new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CIRCLE_SCATTER = temp;
+	}
 	
-	private static final int POINT_COUNT = 100_000_000;
-	public static  OptionDataset<Point2D, Integer> SYNTHETIC = new OptionDataset<>(
-			String.format("Synthetic Points (%,d points)", POINT_COUNT),
-			new SyntheticGlyphset<>(POINT_COUNT, 0, new SyntheticGlyphset.SyntheticPoints()),
-			OptionAggregator.COUNT,
-			new OptionTransfer.Interpolate());
+	private static int SYNTHETIC_POINT_COUNT = 100_000_000;
+	public static  OptionDataset<Point2D, Integer> SYNTHETIC = syntheticPoints(SYNTHETIC_POINT_COUNT);
+	public static OptionDataset<Point2D, Integer> syntheticPoints(int size) {
+		return new OptionDataset<>(
+				String.format("Synthetic Points (%,d points)", size),
+				new SyntheticGlyphset<>(size, 0, new SyntheticGlyphset.SyntheticPoints()),
+				OptionAggregator.COUNT,
+				new OptionTransfer.Interpolate());
+	}
 
 }

@@ -31,7 +31,6 @@ import ar.rules.ISOContours;
 import ar.rules.Numbers;
 import ar.rules.ISOContours.ContourAggregates;
 import ar.selectors.TouchesPixel;
-import ar.test.TestResources;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
@@ -70,7 +69,7 @@ public class ContourApp {
 		final ISOContours.NContours.Specialized<Double> contour = new ISOContours.NContours.Specialized<>(3, true, magnitudes);
 		//final ISOContours.SpacedContours.Specialized<Double> contour = new ISOContours.SpacedContours.Specialized<>(.5, 0d, false, magnitudes);
 		
-		ContourAggregates<Double> ct = (ContourAggregates<Double>) TestResources.RENDERER.transfer(magnitudes, contour);
+		ContourAggregates<Double> ct = (ContourAggregates<Double>) new ParallelRenderer().transfer(magnitudes, contour);
 
 		
 		

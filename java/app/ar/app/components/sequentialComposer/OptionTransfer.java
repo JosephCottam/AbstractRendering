@@ -653,12 +653,12 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	}
 	
-	public static final class DrawDark extends OptionTransfer<DrawDark.Controls> {
+	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
 			Transfer t = new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());
 			return extend(t, subsequent);
 		}
-		@Override public String toString() {return "Draw Dark (int)";}
+		@Override public String toString() {return "Subpixel Dist. (int)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
