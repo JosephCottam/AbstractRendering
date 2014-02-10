@@ -38,6 +38,8 @@ public class ColorAggregates extends IntegerBackingAggregates implements Aggrega
 	public BufferedImage image() {
 		int w = highX-lowX;
 		int h = highY-lowY;
+		if (w<=0 && h<=0) {return null;}
+		
 		BufferedImage img = new BufferedImage(w,h, BufferedImage.TYPE_INT_ARGB);
 		img.setRGB(0, 0, w, h, values, 0, w);
 		

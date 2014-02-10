@@ -108,7 +108,7 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
-		ARComponent.PERF_REP = true;
+		ARComponent.PERFORMANCE_REPORTING = true;
 		RenderUtils.RECORD_PROGRESS = true;
 		RenderUtils.REPORT_STEP=1_000_000;
 		if (args.length >0 && args[0]!=null && args[0].toUpperCase().equals("-EXT")) {

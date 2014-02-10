@@ -12,6 +12,11 @@ public interface HasViewTransform {
 	/**Set a new view transform.  Should make a copy on acceptance.**/
 	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException;
 	
+	/**Fit the contained data onto the screen.  
+	 * 
+	 * The result from viewTransform() must reflect any transform changed required to complete this operation.**/
 	public void zoomFit();
+	
+	/** @return Bounding box for the underlying data.**/
 	public Rectangle2D dataBounds();
 }

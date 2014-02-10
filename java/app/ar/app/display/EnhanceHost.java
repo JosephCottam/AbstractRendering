@@ -57,7 +57,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		enhanced.setVisible(false);
 		
 		hosted.addAggregatesChangedListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {forceNewRefAggregates();}
+			public void actionPerformed(@SuppressWarnings("unused") ActionEvent e) {forceNewRefAggregates();}
 		});
 	}
 	
@@ -120,7 +120,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		}
 		super.paint(g);
 		
-		AffineTransform vt = hosted.viewTransformRef;
+		AffineTransform vt = hosted.viewTransform();
 		if (enhanceEnabled && vt != null && overlay.selectedArea() != null) {
 			Graphics2D g2 = (Graphics2D) g.create();
 			g2.setColor(SHOW_ENHANCED);
@@ -294,7 +294,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			start = null;
 		}
 		
-		public void mouseClicked(MouseEvent e) {target.clear();}
+		public void mouseClicked(@SuppressWarnings("unused") MouseEvent e) {target.clear();}
 		public void mouseDragged(MouseEvent e) {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
@@ -316,9 +316,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			return new Rectangle2D.Double(x,y,w,h);
 		}
 		
-		public void mouseMoved(MouseEvent e) {}
-		public void mouseEntered(MouseEvent e) {}
-		public void mouseExited(MouseEvent e) {}
+		public void mouseMoved(@SuppressWarnings("unused") MouseEvent e) {}
+		public void mouseEntered(@SuppressWarnings("unused") MouseEvent e) {}
+		public void mouseExited(@SuppressWarnings("unused") MouseEvent e) {}
 	}
 	
 	/**Toggle control for the given overlay.**/

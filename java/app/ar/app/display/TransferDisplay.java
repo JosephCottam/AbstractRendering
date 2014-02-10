@@ -6,13 +6,14 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.MostRecentOnlyExecutor;
-import ar.renderers.SerialRenderer;
+import ar.renderers.ParallelRenderer;
 import ar.util.Util;
 
 /**Panel that will draw a set of aggregates on the screen with a given transfer function.**/
@@ -24,37 +25,55 @@ public class TransferDisplay extends ARComponent {
 	
 	/**Aggregates to render*/
 	private Aggregates<?> aggregates;
+
+	/**What transform was used to produce the base aggregates.**/ 
+	private volatile AffineTransform renderedTransform = new AffineTransform();
+
 	
 	/**Aggregates to use for specialization of the transfer function.
 	 * 
-	 * If null, the regular aggregates will be used for transfer specialization.
-	 * If non-null, this set of aggregates is used.*/
+	 * If null, the full set of aggregates will be used for transfer specialization.
+	 **/
 	private volatile Aggregates<?> refAggregates;
-
 
 	private volatile Aggregates<?> postTransferAggregates;
 	private volatile BufferedImage image;
 
+	/**Transform used to display aggregates on the screen.
+	 * 
+	 * Because this class does NOT have access to raw geometry, this transform
+	 * essentially describes how to position/scale the input aggregates with regards
+	 * to the screen space.   
+	 * **/
+	private volatile AffineTransform viewTransform = new AffineTransform();
+	
+	
 	private final Renderer renderer;
 	private volatile boolean renderError = false;
-	private volatile boolean renderAgain = false;
 
 	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "SimpleDisplay Render Thread");
 	
+	public TransferDisplay(Renderer renderer) {this(null, null, null, renderer);}
+	
 	public TransferDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer) {
-		this(aggregates, transfer, new SerialRenderer());
+		this(aggregates, new AffineTransform(), transfer);
+	}
+
+	public TransferDisplay(Aggregates<?> aggregates, AffineTransform rendererd, Transfer<?,?> transfer) {
+		this(aggregates, rendererd, transfer, new ParallelRenderer());
 	}
 	
-	public TransferDisplay(Aggregates<?> aggregates, Transfer<?,?> transfer, Renderer renderer) {
+	public TransferDisplay(Aggregates<?> aggregates, AffineTransform rendererdTransform, Transfer<?,?> transfer, Renderer renderer) {
 		super();
 		this.renderer = renderer;
 		this.transfer = transfer;
 		this.aggregates = aggregates;
+		this.renderedTransform = rendererdTransform != null ? renderedTransform : new AffineTransform();
 		this.addComponentListener(new ComponentListener(){
-			public void componentResized(ComponentEvent e) {TransferDisplay.this.renderAgain = true;}
-			public void componentMoved(ComponentEvent e) {}
-			public void componentShown(ComponentEvent e) {}
-			public void componentHidden(ComponentEvent e) {}
+			public void componentResized(@SuppressWarnings("unused") ComponentEvent e) {repaint();}
+			public void componentMoved(@SuppressWarnings("unused") ComponentEvent e) {}
+			public void componentShown(@SuppressWarnings("unused") ComponentEvent e) {}
+			public void componentHidden(@SuppressWarnings("unused") ComponentEvent e) {}
 		});
 	}
 	
@@ -63,12 +82,15 @@ public class TransferDisplay extends ARComponent {
 	/**Set the aggregates set in transfer.  
 	 * Used as default set of aggregates if refAggregates is null.
 	 */
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform) {
 		this.aggregates = aggregates;
-		renderAgain = true;
+		this.renderedTransform = renderedTransform;
 		renderError = false;
+		postTransferAggregates = null;
+		viewTransform(new AffineTransform());
 		repaint();
 	}
+	
 	public Aggregates<?> aggregates() {return aggregates;}
 	public Aggregates<?> transferAggregates() {return postTransferAggregates;}
 
@@ -81,8 +103,8 @@ public class TransferDisplay extends ARComponent {
 	public void refAggregates(Aggregates<?> aggs) {
 		if (this.refAggregates != aggs) {
 			this.refAggregates = aggs;
-			renderAgain = true;
 			renderError = false;
+			postTransferAggregates = null;
 		}
 		repaint();
 	}
@@ -90,13 +112,13 @@ public class TransferDisplay extends ARComponent {
 	public Transfer<?,?> transfer() {return transfer;}
 	public void transfer(Transfer<?,?> transfer) {
 		this.transfer = transfer;
-		renderAgain = true;
+		postTransferAggregates = null;
 		renderError = false;
 		repaint();
 	}
 
 	public void renderAgain() {
-		renderAgain=true;
+		postTransferAggregates = null;
 		renderError=false;
 		repaint();
 	}
@@ -106,16 +128,41 @@ public class TransferDisplay extends ARComponent {
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		if (renderAgain && transfer !=null && aggregates !=null && ! renderError) {
+		
+		if (postTransferAggregates == null 
+				&& transfer !=null && aggregates !=null 
+				&& !renderError) {
 			renderPool.execute(new TransferRender());
-			renderAgain = false;
 		}
 
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
 			Graphics2D g2 = (Graphics2D) g;
-			g2.drawRenderedImage(image,g2.getTransform());
+			double deltaX = viewTransform.getTranslateX()-renderedTransform.getTranslateX();
+			double deltaY = viewTransform.getTranslateY()-renderedTransform.getTranslateY();
+			AffineTransform draw = new AffineTransform(viewTransform);
+			
+			try {draw.concatenate(renderedTransform.createInverse());}
+			catch (Exception e) {}
+			//draw.translate(viewTransform.getTranslateX()*renderedTransform.getScaleX(),viewTransform.getTranslateX());
+
+			AffineTransform draw2= new AffineTransform(draw);
+			draw2.concatenate(renderedTransform);
+			
+			System.out.println("----------");
+			System.out.println("R: " + renderedTransform.getTranslateX() + " : " + renderedTransform.getScaleX());
+			System.out.println("V: " + viewTransform.getTranslateX() + ":" + viewTransform.getScaleX());
+			System.out.println("D: " + draw.getTranslateX());
+
+			
+			g2.drawRenderedImage(image,draw);
+
+//			AffineTransform restore = g2.getTransform();
+//			g2.setTransform(draw);
+//			g2.setColor(Color.BLACK);
+//			g2.draw(new Rectangle2D.Double(-.5,-.5,1,1));
+//			g2.setTransform(restore);
 		}
 	}
 	
@@ -132,26 +179,23 @@ public class TransferDisplay extends ARComponent {
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
 				postTransferAggregates = renderer.transfer(aggs, ts);
 				
-				if (postTransferAggregates.defaultValue() instanceof Color) {
-					image = AggregateUtils.asImage((Aggregates<Color>) postTransferAggregates, TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight(), Util.CLEAR);
+				int width = TransferDisplay.this.getWidth();
+				int height = TransferDisplay.this.getHeight();
+				if (postTransferAggregates.defaultValue() instanceof Color ) {
+					image = AggregateUtils.asImage((Aggregates<Color>) postTransferAggregates, width, height, Util.CLEAR);
 				} else {
 					image = null;
 				}
+				
 				long end = System.currentTimeMillis();
-				if (PERF_REP) {
-					//Populated grid measurements...
-					//int width = postTransferAggregates.highX() - postTransferAggregates.lowX();
-					//int height = postTransferAggregates.highY() - postTransferAggregates.lowY();
-					
+				if (PERFORMANCE_REPORTING) {
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
 							(end-start), TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight());
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
-				e.printStackTrace();
-			} finally {
-				renderAgain = false;
-			}
+				if (PERFORMANCE_REPORTING) {e.printStackTrace();}
+			} 
 			
 			TransferDisplay.this.repaint();
 		}
@@ -167,5 +211,28 @@ public class TransferDisplay extends ARComponent {
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();
+	}
+
+	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
+
+	@Override
+	public void viewTransform(AffineTransform vt) {
+		if (vt == null) {vt = new AffineTransform();}
+		this.viewTransform = new AffineTransform(vt);
+		repaint();
+	}
+
+	@Override
+	public void zoomFit() {
+		Rectangle2D content = dataBounds();
+		if (dataBounds() ==null || content.isEmpty()) {return;}
+		viewTransform(Util.zoomFit(content, this.getWidth(), this.getHeight()));
+	}
+
+	@Override
+	public Rectangle2D dataBounds() {
+		Aggregates<?> aggs = aggregates;
+		Rectangle2D content = (aggs == null ? null : AggregateUtils.bounds(aggs));
+		return content;
 	}
 }

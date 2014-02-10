@@ -117,7 +117,7 @@ public class ContourApp {
 
 		public Display(Glyphset.RandomAccess<Shape, N> contours) {
 			this.contours = contours;
-			new ZoomPanHandler().register(this);
+			ZoomPanHandler.installOn(this);
 		}
 
 		public void paintComponent(Graphics g) {

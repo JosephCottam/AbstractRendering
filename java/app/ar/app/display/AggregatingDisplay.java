@@ -3,12 +3,10 @@ package ar.app.display;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
-import ar.aggregates.SubsetWrapper;
 import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
@@ -27,11 +25,9 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	protected Aggregator<?,?> aggregator;
 	protected Glyphset<?,?> dataset;
 	
-	protected AffineTransform viewTransformRef = new AffineTransform();
-	private AffineTransform renderTransform = new AffineTransform();
+	private AffineTransform renderedTransform = new AffineTransform();
 
 	protected volatile boolean fullRender = false;
-	protected volatile boolean subsetRender = false;
 	protected volatile boolean renderError = false;
 	protected volatile Aggregates<?> aggregates;
 	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"FullDisplay Render Thread");
@@ -41,11 +37,11 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public AggregatingDisplay(Renderer renderer) {
 		super();
 		this.renderer = renderer;
-		display = new TransferDisplay(null, null, renderer);
+		display = new TransferDisplay(renderer);
 		this.setLayout(new BorderLayout());
 		this.add(display, BorderLayout.CENTER);
 		
-		new ZoomPanHandler().register(this);	
+		ZoomPanHandler.installOn(this);
 	}
 
 	/**Create a new instance.
@@ -56,7 +52,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.aggregator = aggregator;
 		this.dataset = glyphs;		
 		display.transfer(transfer);
-		new ZoomPanHandler().register(this);
+		ZoomPanHandler.installOn(this);
 	}
 	
 	protected void finalize() {renderPool.shutdown();}
@@ -89,20 +85,18 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public Aggregates<?> transferAggregates() {return display.transferAggregates();}
 	public Aggregates<?> aggregates() {return aggregates;}
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
-		if (aggregates != this.aggregates) {
-			display.refAggregates(aggregates);
-		}
-		this.renderTransform=renderTransform;
-		fullRender=false;
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform) {
+		display.aggregates(aggregates, renderedTransform);
+		display.refAggregates(null);
+
+		this.renderedTransform=renderedTransform;
 		this.aggregates = aggregates;
-		this.repaint();
+		fullRender=false;
 		aggregatesChangedProvider.fireActionListeners();
 	}
 	
 	public void renderAgain() {
 		fullRender=true;
-		subsetRender=true;
 		renderError=false;
 		repaint();
 	}
@@ -119,24 +113,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			action = new AggregateRender();
 			renderPool.execute(action);
 			fullRender = false;
-			subsetRender = false;
-		} else if (subsetRender) {
-			subsetAggregates();
-			subsetRender = false;
 		} 
 
-	}
-		
-	/**Set the subset that will be sent to transfer.**/
-	public void subsetAggregates() {
-		Rectangle viewport = AggregatingDisplay.this.getBounds();				
-		AffineTransform vt = viewTransform();
-		int shiftX = (int) -(vt.getTranslateX()-renderTransform.getTranslateX());
-		int shiftY = (int) -(vt.getTranslateY()-renderTransform.getTranslateY());
-		Aggregates<?> subset = new SubsetWrapper<>(aggregates, shiftX, shiftY, shiftX+viewport.width, shiftY+viewport.height);
-
-		display.aggregates(subset,null);
-		repaint();
 	}
 	
 	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s]", dataset, display.transfer(), aggregator);}
@@ -144,31 +122,24 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
     /**Use this transform to convert values from the absolute system
      * to the screen system.
      */
-	public AffineTransform viewTransform() {return new AffineTransform(viewTransformRef);}	
-	public AffineTransform renderTransform() {return new AffineTransform(renderTransform);}	
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {
+	public AffineTransform viewTransform() {return display.viewTransform();}	
+	public AffineTransform renderTransform() {return new AffineTransform(renderedTransform);}	
+	public void viewTransform(AffineTransform vt) {
 		//Only force full re-render if the zoom factor changed
-		if (renderTransform == null 
-				|| vt.getScaleX() != viewTransformRef.getScaleX()
-				|| vt.getScaleY() != viewTransformRef.getScaleY()) {
+		if (renderedTransform == null 
+				|| vt.getScaleX() != viewTransform().getScaleX()
+				|| vt.getScaleY() != viewTransform().getScaleY()) {
 			fullRender = true;
-			subsetRender = true;
 		} 
-		
-		if (renderTransform == null
-				|| vt.getTranslateX() != viewTransformRef.getTranslateX()
-				|| vt.getTranslateY() != viewTransformRef.getTranslateY()) {
-			subsetRender=true;
-		}
-		
-		this.viewTransformRef = vt;
+
+		display.viewTransform(vt);		
 		repaint();
 	}
 	
 	public void zoomFit() {
 		try {
 			Rectangle2D content = (dataset == null ? null : dataset().bounds());
-			if (dataset() == null || content ==null || content.isEmpty()) {return;}
+			if (content ==null || content.isEmpty()) {return;}
 			
 			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
 			viewTransform(vt);
@@ -193,11 +164,10 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				
 				AggregatingDisplay.this.aggregates(a, rt);
 				long end = System.currentTimeMillis();
-				if (PERF_REP) {
+				if (PERFORMANCE_REPORTING) {
 					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
 							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
 				}
-				AggregatingDisplay.this.subsetAggregates();
 				
 			} catch (Exception e) {
 				renderError = true;

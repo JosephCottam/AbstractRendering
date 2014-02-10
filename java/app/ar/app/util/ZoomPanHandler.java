@@ -22,18 +22,22 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
     private Point2D down = new Point2D.Float();
     private int yLast;
     
-    public void register(JComponent target) {
+    
+    /**Install a new ZoomPanHandler instance on the passed item.**/
+    public static void installOn(JComponent target) {
+    	ZoomPanHandler h = new ZoomPanHandler();
     	if (target instanceof HasViewTransform) {
     		target.setFocusable(true);
     		target.requestFocus();
     		
-    		target.addMouseListener(this);
-    		target.addMouseMotionListener(this);
-    		target.addKeyListener(this);
+    		target.addMouseListener(h);
+    		target.addMouseMotionListener(h);
+    		target.addKeyListener(h);
     	} else {
     		throw new IllegalArgumentException("Target must be *both* a JComponent and implement HasViewTransform");
     	}
     }
+    
     
 	/**
      * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
@@ -176,9 +180,9 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 	}
 
 	
-	public void mouseEntered(MouseEvent e) {/*Ignored.*/}
-	public void mouseExited(MouseEvent e) {/*Ignored.*/}
-	public void mouseMoved(MouseEvent e) {/*Ignored.*/}
-	public void keyPressed(KeyEvent e) {/*Ignored*/}
-	public void keyReleased(KeyEvent e) {/*Ignored*/}
+	public void mouseEntered(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
+	public void mouseExited(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
+	public void mouseMoved(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
+	public void keyPressed(@SuppressWarnings("unused") KeyEvent e) {/*Ignored*/}
+	public void keyReleased(@SuppressWarnings("unused") KeyEvent e) {/*Ignored*/}
 }

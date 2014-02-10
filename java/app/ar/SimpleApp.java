@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 import ar.aggregates.AggregateUtils;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.TransferDisplay;
+import ar.app.util.ZoomPanHandler;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.renderers.ParallelRenderer;
@@ -90,16 +91,15 @@ public class SimpleApp {
 		
 		//A simple display panel can be found in SimpleDisplay.
 		//It takes aggregates and a transfer function to make colors.
-		//This is largely a static display though, since all display decisions have been made.
-		//The ARDisplay includes a renderer (or it can be passed in), but it only
-		//performs the "transfer" step.  As such, we reuse the aggregates from above.
-		//Only the last line of this section is Abstract rendering specific.  The rest
-		//is swing frame boilerplate.
-		JFrame frame = new JFrame("Simple Display");
+		//This display includes zoom/pan capabilities (though they must enabled separately).
+		//(Most of this is swing boilerplate).
+		JFrame frame = new JFrame("Transfer Display");
 		frame.setLayout(new BorderLayout());
 		frame.setSize(width,height);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
+		TransferDisplay td = new TransferDisplay(aggregates, transfer);
+		ZoomPanHandler.installOn(td);
+		frame.add(td, BorderLayout.CENTER);
 		frame.setVisible(true);
 		frame.revalidate();
 		frame.validate();
@@ -109,7 +109,7 @@ public class SimpleApp {
 		//over the process in a more robust but somewhat opaque way.
 		//Since ARPanel drives the whole rendering process, it takes the dataset, rendering strategy
 		//and related definitions in as parameters
-		JFrame frame2 = new JFrame("Full Display");
+		JFrame frame2 = new JFrame("Aggregating Display");
 		frame2.setLocation(100, 0);
 		frame2.setLayout(new BorderLayout());
 		frame2.setSize(width,height);

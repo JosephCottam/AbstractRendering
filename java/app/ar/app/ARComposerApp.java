@@ -171,7 +171,7 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
-		ARComponent.PERF_REP = true;
+		ARComponent.PERFORMANCE_REPORTING = true;
 		RenderUtils.RECORD_PROGRESS = true;
 		RenderUtils.REPORT_STEP=1_000_000;
 		new ARComposerApp();
