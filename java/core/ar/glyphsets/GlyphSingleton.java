@@ -10,6 +10,7 @@ import ar.Glyphset;
 import ar.util.Util;
 
 /**Single-element glyphset.**/
+@SuppressWarnings("unused") 
 public final class GlyphSingleton<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final List<Glyph<G,I>> glyphs;
 	private final Rectangle2D bounds;

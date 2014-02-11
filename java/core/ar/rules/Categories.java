@@ -42,7 +42,9 @@ public class Categories {
 		private static final long serialVersionUID = -8842454931082209229L;
 
 		@Override public Integer emptyValue() {return 0;}
-		@Override public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused") 
+		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
@@ -60,7 +62,9 @@ public class Categories {
 		private static final long serialVersionUID = -8842454931082209229L;
 
 		@Override public Integer emptyValue() {return 0;}
-		@Override public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused") 
+		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
@@ -96,7 +100,9 @@ public class Categories {
 		}
 		
 		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
-		@Override public Rekey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
+		
+		@Override @SuppressWarnings("unused")  
+		public Rekey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 
 		@Override
 		public CategoricalCounts<OUT> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
@@ -241,7 +247,9 @@ public class Categories {
 		}
 		
 		@Override public OUT emptyValue() {return noMatch;}
-		@Override public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused")  
+		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 
 		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -345,7 +353,9 @@ public class Categories {
 		}
 		
 		@Override public Integer emptyValue() {return background;}
-		@Override public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused")  
+		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 
 		@Override
 		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
@@ -393,7 +403,9 @@ public class Categories {
 			else {return noMatch;}
 		}
 
-		@Override public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		
 		@Override public Color emptyValue() {return background;}
 
 		@Override
@@ -514,7 +526,9 @@ public class Categories {
 		}
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
-		@Override public RandomWeave specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused")  
+		public RandomWeave specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {return this;}
 
 		@Override
 		public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
@@ -527,7 +541,9 @@ public class Categories {
 		private final IN label;
 		public Select(IN label) {this.label = label;}
 		@Override public Integer emptyValue() {return 0;}
-		@Override public Specialized<CategoricalCounts<IN>, Integer> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused")  
+		public Specialized<CategoricalCounts<IN>, Integer> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 		
 		@Override
 		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {

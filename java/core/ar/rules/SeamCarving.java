@@ -45,7 +45,7 @@ public class SeamCarving {
 		
 		@Override public A emptyValue() {return empty;}
 		
-		@Override 
+		@Override @SuppressWarnings("unused") 
 		public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 			
 		@Override 
@@ -114,7 +114,8 @@ public class SeamCarving {
 		public Energy(Delta<A> delta) {this.delta=delta;}
 
 		@Override public Double emptyValue() {return 0d;}
-		@Override public Specialized<A, Double> specialize(Aggregates<? extends A> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Specialized<A, Double> specialize(Aggregates<? extends A> aggregates) {return this;}
 
 		@Override
 		public Double at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -130,9 +131,11 @@ public class SeamCarving {
 
 	public static class CumulativeEnergy implements Transfer.Specialized<Double, Double> {
 		@Override public Double emptyValue() {return 0d;}
-		@Override public Specialized<Double, Double> specialize(Aggregates<? extends Double> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Specialized<Double, Double> specialize(Aggregates<? extends Double> aggregates) {return this;}
 
-		@Override
+		//TODO: Parallelize
+		@Override @SuppressWarnings("unused") 
 		public Aggregates<Double> process(Aggregates<? extends Double> aggregates, Renderer render) {
 			Aggregates<Double> cached = AggregateUtils.make(aggregates, 0d);
 			

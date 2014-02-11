@@ -43,7 +43,9 @@ public class General {
 			return identity();
 		}
 		
-		@Override public A combine(A left, A update) {return update;}
+		@Override @SuppressWarnings("unused")  
+		public A combine(A left, A update) {return update;}
+		
 		@Override public A identity() {return id;}
 		@Override public boolean equals(Object other) {return other instanceof Last;}
 		@Override public int hashCode() {return Last.class.hashCode();}
@@ -64,7 +66,10 @@ public class General {
 		}
 
 		@Override public OUT emptyValue() {return empty;}
-		@Override public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		
+		@Override @SuppressWarnings("unused") 
+		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		
 		@Override public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
 		}
@@ -85,7 +90,8 @@ public class General {
 		}
 		
 		@Override public T emptyValue() {return empty;}
-		@Override public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
 
 		@Override
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
@@ -123,7 +129,9 @@ public class General {
 		}
 		
 		@Override public V emptyValue() {return empty;}
-		@Override public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
+		
 		@Override
 		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
@@ -142,7 +150,8 @@ public class General {
 			this.empty = empty;
 		}
 
-		public V emptyValue() {return empty;}
+		@Override public V emptyValue() {return empty;}
+		@Override @SuppressWarnings("unused") 
 		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override
@@ -198,12 +207,12 @@ public class General {
 			this.combiner = combiner;
 		}
 
-		public V emptyValue() {return combiner.identity();}
+		@Override public V emptyValue() {return combiner.identity();}
 		
-		/**Calculations are done at specialization time, so transfer is fast but specialization is slow.**/
+		@Override @SuppressWarnings("unused") 
 		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
-		@Override
+		@Override @SuppressWarnings("unused") 
 		//TODO: Parallelize...
 		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
 			Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
@@ -290,6 +299,7 @@ public class General {
 	/**Aggregator and Transfer that always returns the same value.
 	 * TODO: Can we drop the 'A' parameter?
 	 * **/
+	@SuppressWarnings("unused") 
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
@@ -328,8 +338,8 @@ public class General {
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
 		@Override public T identity() {return emptyValue();}
-		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
-		@Override public T combine(T left, T update) {return update;}
+		@Override @SuppressWarnings("unused") public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
+		@Override @SuppressWarnings("unused") public T combine(T left, T update) {return update;}
 		
 		@Override public T rollup(T left, T right) {
 			if (left != null) {return left;}
@@ -357,7 +367,7 @@ public class General {
 			this.absent=absent;
 		}
 		
-		@Override public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override @SuppressWarnings("unused")  public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		@Override public OUT emptyValue() {return absent;}
 
 		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -406,7 +416,7 @@ public class General {
 		}
 
 		@Override public OUT emptyValue() {return other;}
-		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
 		@Override
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {

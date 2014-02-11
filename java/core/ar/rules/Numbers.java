@@ -19,6 +19,8 @@ public final class Numbers {
 	 ***/
 	public static final class Count<V> implements Aggregator<V, Integer> {
 		private static final long serialVersionUID = 5984959309743633510L;
+		
+		@SuppressWarnings("unused") 
 		public Integer combine(Integer left, V update) {return left+1;}
 		public Integer rollup(Integer left, Integer right) {return left+right;}
 		
@@ -89,7 +91,7 @@ public final class Numbers {
 		}
 		
 		@Override public Color emptyValue() {return background;}
-		@Override public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/

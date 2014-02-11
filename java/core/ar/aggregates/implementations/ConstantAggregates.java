@@ -14,6 +14,7 @@ import ar.Aggregates;
  * TODO: Evaluate if this should be a bi-modal region where in-range is represented
  * in one value and out-of-range as another.  May simplify some operations elsewhere... 
  */
+@SuppressWarnings("unused") 
 public final class ConstantAggregates<A> implements Aggregates<A> {
 	private static final long serialVersionUID = -6013315833630311053L;
 	

@@ -138,25 +138,18 @@ public class TransferDisplay extends ARComponent {
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
-			Graphics2D g2 = (Graphics2D) g;
-			double deltaX = viewTransform.getTranslateX()-renderedTransform.getTranslateX();
-			double deltaY = viewTransform.getTranslateY()-renderedTransform.getTranslateY();
-			AffineTransform draw = new AffineTransform(viewTransform);
+			double tx = viewTransform.getTranslateX()-renderedTransform.getTranslateX();
+			double ty = viewTransform.getTranslateY()-renderedTransform.getTranslateY();
 			
-			try {draw.concatenate(renderedTransform.createInverse());}
-			catch (Exception e) {}
-			//draw.translate(viewTransform.getTranslateX()*renderedTransform.getScaleX(),viewTransform.getTranslateX());
-
-			AffineTransform draw2= new AffineTransform(draw);
-			draw2.concatenate(renderedTransform);
+			AffineTransform draw = AffineTransform.getTranslateInstance(tx, ty);
 			
 			System.out.println("----------");
 			System.out.println("R: " + renderedTransform.getTranslateX() + " : " + renderedTransform.getScaleX());
 			System.out.println("V: " + viewTransform.getTranslateX() + ":" + viewTransform.getScaleX());
 			System.out.println("D: " + draw.getTranslateX());
 
-			
-			g2.drawRenderedImage(image,draw);
+			Graphics2D g2 = (Graphics2D) g;
+			g2.drawRenderedImage(image,new AffineTransform());
 
 //			AffineTransform restore = g2.getTransform();
 //			g2.setTransform(draw);

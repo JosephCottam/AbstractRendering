@@ -36,11 +36,11 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		return new SimpleGlyph<>(shaper.shape(l), val);
 	}
 	
+	@SuppressWarnings("unused") 
 	public static final class SyntheticPoints implements Shaper<Point2D, Long> {
 		public Point2D shape(Long from) {
 			return new Point2D.Double(Math.random()*100, Math.random()*100);
 		}
-		
 	}
 	
 	

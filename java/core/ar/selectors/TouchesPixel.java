@@ -59,8 +59,14 @@ public abstract class TouchesPixel {
 				Aggregates<A> 
 				target, Aggregator<I, A> op) {
 
+			Point2D p1 = new Point2D.Double();
+			Point2D p2 = new Point2D.Double();
 			for (Glyph<? extends Line2D, ? extends I> g: subset) {
-				bressenham(target, op, g.shape(), g.info());
+				Line2D p = g.shape();	//A point has no bounding box...so life is easy
+				view.transform(p.getP1(), p1);
+				view.transform(p.getP2(), p2);
+
+				bressenham(target, op, p1,p2, g.info());
 			}
 
 			return target;
@@ -74,11 +80,11 @@ public abstract class TouchesPixel {
 		}
 		
 		//based on 'optimized' version at http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
-		private static <I,A> void bressenham(Aggregates<A> canvas, Aggregator<I,A> aggregator, Line2D line, I val) {
-			int x0 = (int) line.getX1(); //TODO: Not sure if the rounding should happen here or later....
-			int y0 = (int) line.getY1();
-			int x1 = (int) line.getX2();
-			int y1 = (int) line.getY2();
+		private static <I,A> void bressenham(Aggregates<A> canvas, Aggregator<I,A> aggregator, Point2D start, Point2D end, I val) {
+			int x0 = (int) start.getX(); //TODO: Not sure if the rounding should happen here or later....
+			int y0 = (int) start.getY();
+			int x1 = (int) end.getX();
+			int y1 = (int) end.getY();
 			boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
 			  if (steep) {
 				  int temp = x0;

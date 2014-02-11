@@ -125,7 +125,8 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		}
 
 		@Override public N emptyValue() {return null;}
-		@Override public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {return this;}
 		
 		@Override public ContourAggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {
 			Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, null);  
@@ -272,7 +273,8 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		}
 
 		@Override public Boolean emptyValue() {return Boolean.FALSE;}
-		@Override public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
+		@Override @SuppressWarnings("unused") 
+		public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
 		
 		@Override 
 		public Boolean at(int x, int y, Aggregates<? extends N> aggregates) {
@@ -424,7 +426,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 
 		public MC_TYPE emptyValue() {return MC_TYPE.empty;}
 
-		@Override
+		@Override @SuppressWarnings("unused") 
 		public Specialized<Boolean, MC_TYPE> specialize(Aggregates<? extends Boolean> aggregates) {return this;}
 
 		@Override
@@ -474,7 +476,10 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			}
 		}
 
-		public void set(int x, int y, A val) {throw new UnsupportedOperationException();}
+		public void set(int x, int y, A val) {
+			throw new UnsupportedOperationException(String.format("Attempt to set %d x %d to %s in unmodifiable aggregates.", x,y,val));
+		}
+		
 		public A defaultValue() {return base.defaultValue();}
 		public int lowX() {return base.lowX()-1;}
 		public int lowY() {return base.lowY()-1;}
