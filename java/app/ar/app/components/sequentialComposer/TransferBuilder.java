@@ -194,7 +194,7 @@ public class TransferBuilder extends JPanel {
 		public void cleanup() {
 			ComboBoxModel<OptionTransfer> model = transfers.getModel();
 			for (int i=0; i<model.getSize(); i++) {
-				OptionTransfer t =model.getElementAt(i);
+				OptionTransfer t=model.getElementAt(i);
 				t.cleanup();
 			}
 		}
@@ -213,6 +213,7 @@ public class TransferBuilder extends JPanel {
 			center.add(controls,TRANSFER_CONTROLS_CONSTRAINTS);
 			controls.addActionListener(actionProvider.actionDelegate());
 			revalidate();
+			repaint();
 		}
 		
 		public void fireActionEvent(String command) {actionProvider.fireActionListeners(command);}
