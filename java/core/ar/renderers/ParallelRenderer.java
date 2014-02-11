@@ -84,7 +84,8 @@ public class ParallelRenderer implements Renderer {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
 		long taskSize = Math.max(TRANSFER_TASK_MIN, AggregateUtils.size(aggregates)/pool.getParallelism());
 		
-		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
+		recorder.reset(AggregateUtils.size(aggregates));
+		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(recorder, aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
 		pool.invoke(task);
 		return result;		
 	}

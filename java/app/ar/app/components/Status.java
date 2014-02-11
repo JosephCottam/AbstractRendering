@@ -14,7 +14,7 @@ public class Status extends JPanel {
 	private Renderer watching;
 
 	public Status() {
-		this.add(new LabeledItem("Aggregate Creation:", progress), BorderLayout.CENTER);
+		this.add(new LabeledItem("Processing:", progress), BorderLayout.CENTER);
 		progress.setMaximum(100);
 		progress.setMinimum(0);
 		progress.setStringPainted(true);

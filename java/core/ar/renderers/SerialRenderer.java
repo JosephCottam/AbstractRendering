@@ -51,11 +51,14 @@ public final class SerialRenderer implements Renderer {
 	}
 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
- 		Aggregates<OUT> out = AggregateUtils.make(aggregates, t.emptyValue());
+		recorder.reset(AggregateUtils.size(aggregates));
+		
+		Aggregates<OUT> out = AggregateUtils.make(aggregates, t.emptyValue());
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 				OUT val = t.at(x, y, aggregates);
 				out.set(x,y,val);
+				recorder.update(1);
 			}
 		}
 		return out;

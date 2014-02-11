@@ -4,6 +4,7 @@ import java.util.concurrent.RecursiveAction;
 
 import ar.Aggregates;
 import ar.Transfer;
+import ar.renderers.ProgressReporter;
 import ar.util.Util;
 
 public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
@@ -14,13 +15,16 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 	private final Aggregates<? extends IN> in;
 	private final Transfer.ItemWise<IN, OUT> t;
 	private final long taskSize;
+	private final ProgressReporter reporter;
 	
 	public PixelParallelTransfer(
+			ProgressReporter reporter,
 			Aggregates<? extends IN> input, Aggregates<OUT> result, 
 			Transfer.ItemWise<IN, OUT> t,
 			long taskSize,
 			int lowX, int lowY, int highX, int highY) {
 		
+		this.reporter=reporter;
 		this.lowx=lowX;
 		this.lowy=lowY;
 		this.highx=highX;
@@ -37,10 +41,10 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 		if (width * height >= taskSize) {
 			int centerx = Util.mean(lowx, highx);
 			int centery = Util.mean(lowy, highy);
-			PixelParallelTransfer<IN, OUT> SW = new PixelParallelTransfer<>(in, out, t, taskSize, lowx,    lowy,    centerx, centery);
-			PixelParallelTransfer<IN, OUT> NW = new PixelParallelTransfer<>(in, out, t, taskSize, lowx,    centery, centerx, highy);
-			PixelParallelTransfer<IN, OUT> SE = new PixelParallelTransfer<>(in, out, t, taskSize, centerx, lowy,    highx,   centery);
-			PixelParallelTransfer<IN, OUT> NE = new PixelParallelTransfer<>(in, out, t, taskSize, centerx, centery, highx,   highy);
+			PixelParallelTransfer<IN, OUT> SW = new PixelParallelTransfer<>(reporter, in, out, t, taskSize, lowx,    lowy,    centerx, centery);
+			PixelParallelTransfer<IN, OUT> NW = new PixelParallelTransfer<>(reporter, in, out, t, taskSize, lowx,    centery, centerx, highy);
+			PixelParallelTransfer<IN, OUT> SE = new PixelParallelTransfer<>(reporter, in, out, t, taskSize, centerx, lowy,    highx,   centery);
+			PixelParallelTransfer<IN, OUT> NE = new PixelParallelTransfer<>(reporter, in, out, t, taskSize, centerx, centery, highx,   highy);
 			invokeAll(SW,NW,SE,NE);
 		} else {
 			for (int x=lowx; x<highx; x++) {
@@ -48,7 +52,8 @@ public final class PixelParallelTransfer<IN, OUT> extends RecursiveAction {
 					OUT val = t.at(x, y, in);
 					out.set(x, y, val);
 				}
-			}				
+			}
+			reporter.update((highx-lowx)*(highy-lowy));
 		}
 	}
 }
