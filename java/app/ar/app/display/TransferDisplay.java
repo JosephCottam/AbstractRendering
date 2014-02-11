@@ -138,24 +138,8 @@ public class TransferDisplay extends ARComponent {
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
-			double tx = viewTransform.getTranslateX()-renderedTransform.getTranslateX();
-			double ty = viewTransform.getTranslateY()-renderedTransform.getTranslateY();
-			
-			AffineTransform draw = AffineTransform.getTranslateInstance(tx, ty);
-			
-			System.out.println("----------");
-			System.out.println("R: " + renderedTransform.getTranslateX() + " : " + renderedTransform.getScaleX());
-			System.out.println("V: " + viewTransform.getTranslateX() + ":" + viewTransform.getScaleX());
-			System.out.println("D: " + draw.getTranslateX());
-
 			Graphics2D g2 = (Graphics2D) g;
-			g2.drawRenderedImage(image,new AffineTransform());
-
-//			AffineTransform restore = g2.getTransform();
-//			g2.setTransform(draw);
-//			g2.setColor(Color.BLACK);
-//			g2.draw(new Rectangle2D.Double(-.5,-.5,1,1));
-//			g2.setTransform(restore);
+			g2.drawRenderedImage(image,viewTransform);
 		}
 	}
 	

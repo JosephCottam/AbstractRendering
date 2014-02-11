@@ -26,6 +26,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	protected Glyphset<?,?> dataset;
 	
 	private AffineTransform renderedTransform = new AffineTransform();
+	private AffineTransform viewTransform = new AffineTransform();
 
 	protected volatile boolean fullRender = false;
 	protected volatile boolean renderError = false;
@@ -88,13 +89,14 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform) {
 		display.aggregates(aggregates, renderedTransform);
 		display.refAggregates(null);
+		display.viewTransform(calculateDisplayViewTransform(viewTransform, renderedTransform));
 
 		this.renderedTransform=renderedTransform;
 		this.aggregates = aggregates;
 		fullRender=false;
 		aggregatesChangedProvider.fireActionListeners();
 	}
-	
+
 	public void renderAgain() {
 		fullRender=true;
 		renderError=false;
@@ -122,18 +124,40 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
     /**Use this transform to convert values from the absolute system
      * to the screen system.
      */
-	public AffineTransform viewTransform() {return display.viewTransform();}	
-	public AffineTransform renderTransform() {return new AffineTransform(renderedTransform);}	
+	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}	
+	@Override public AffineTransform renderTransform() {return new AffineTransform(renderedTransform);}	
 	public void viewTransform(AffineTransform vt) {
 		//Only force full re-render if the zoom factor changed
 		if (renderedTransform == null 
-				|| vt.getScaleX() != viewTransform().getScaleX()
-				|| vt.getScaleY() != viewTransform().getScaleY()) {
+				|| vt.getScaleX() != viewTransform.getScaleX()
+				|| vt.getScaleY() != viewTransform.getScaleY()) {
 			fullRender = true;
 		} 
-
-		display.viewTransform(vt);		
+		viewTransform = vt;
+		display.viewTransform(calculateDisplayViewTransform(viewTransform, renderedTransform)); 		
 		repaint();
+	}
+	
+	/**Since some of the view transform is eventually reflected in the rendered transform,
+	 * the display needs a modified view transform to properly position/scale post-transfer results.
+	 * This calculates that new view transform.
+	 * 
+	 * If the rendered transform is non-invertible/null or other exception occurs, 
+	 * then the identity transform is returned.
+	 *  
+	 * @param vt The view transform required
+	 * @param rt The rendered transform assumed to have been already performed
+	 * @return
+	 */
+	private static AffineTransform calculateDisplayViewTransform(AffineTransform vt, AffineTransform rt) {
+		AffineTransform nvt;
+		try {
+			nvt = rt.createInverse();
+			nvt.preConcatenate(vt);
+			return nvt;
+		} catch (Exception e) {
+			return new AffineTransform();
+		}
 	}
 	
 	public void zoomFit() {

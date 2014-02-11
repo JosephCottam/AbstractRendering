@@ -49,7 +49,9 @@ public abstract class ARComponent extends JComponent implements HasViewTransform
 		public abstract Aggregator<?,?> aggregator();
 		public abstract Transfer<?,?> transfer();
 		
-		public abstract AffineTransform viewTransform();
+		@Override public abstract AffineTransform viewTransform();
+		
+		/**Get a copy of the current render transform.  Should return a copy, not a reference.**/
 		public abstract AffineTransform renderTransform();
 	}
 	
