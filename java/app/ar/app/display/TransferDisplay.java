@@ -39,11 +39,11 @@ public class TransferDisplay extends ARComponent {
 	private volatile Aggregates<?> postTransferAggregates;
 	private volatile BufferedImage image;
 
-	/**Transform used to display aggregates on the screen.
-	 * 
-	 * Because this class does NOT have access to raw geometry, this transform
-	 * essentially describes how to position/scale the input aggregates with regards
-	 * to the screen space.   
+	/**Transform being used to put geometry on the screen.
+	 * This is the full view transform, moving from geometry all the way to screen pixels,
+	 * so some of this action ***may*** be captured in the renderedTransform.
+	 * Otherwise said, you can use the view transform by itself to figure out where things 
+	 * will be drawn.
 	 * **/
 	private volatile AffineTransform viewTransform = new AffineTransform();
 	
@@ -51,7 +51,7 @@ public class TransferDisplay extends ARComponent {
 	private final Renderer renderer;
 	private volatile boolean renderError = false;
 
-	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, "SimpleDisplay Render Thread");
+	protected final ExecutorService renderPool = new MostRecentOnlyExecutor(1, this.getClass().getSimpleName() + " Render Thread");
 	
 	public TransferDisplay(Renderer renderer) {this(null, null, null, renderer);}
 	
@@ -87,7 +87,7 @@ public class TransferDisplay extends ARComponent {
 		this.renderedTransform = renderedTransform;
 		renderError = false;
 		postTransferAggregates = null;
-		viewTransform(new AffineTransform());
+		//viewTransform(new AffineTransform());
 		repaint();
 	}
 	
@@ -139,7 +139,31 @@ public class TransferDisplay extends ARComponent {
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
 			Graphics2D g2 = (Graphics2D) g;
-			g2.drawRenderedImage(image,viewTransform);
+			
+			g2.drawRenderedImage(image,offsetTransform(viewTransform, renderedTransform));
+		}
+	}
+	
+	
+	/**In some cases, some of the view transform is reflected in the rendered transform,
+	 * the display needs a modified view transform to properly position/scale post-transfer results.
+	 * This calculates that new view transform.
+	 * 
+	 * If the rendered transform is non-invertible/null or other exception occurs, 
+	 * then the identity transform is returned.
+	 *  
+	 * @param vt The view transform required
+	 * @param rt The rendered transform assumed to have been already performed
+	 * @return
+	 */
+	private static AffineTransform offsetTransform(AffineTransform vt, AffineTransform rt) {
+		AffineTransform nvt;
+		try {
+			nvt = rt.createInverse();
+			nvt.preConcatenate(vt);
+			return nvt;
+		} catch (Exception e) {
+			return new AffineTransform();
 		}
 	}
 	
@@ -178,18 +202,6 @@ public class TransferDisplay extends ARComponent {
 		}
 	}
 		
-	/**Utility method to show a set of aggregates w.r.t. a transfer function in its own window.**/
-	public static <A> void show(String title, int width, int height, Aggregates<? extends A> aggregates, Transfer<A,Color> transfer) {
-		JFrame frame = new JFrame(title);
-		frame.setLayout(new BorderLayout());
-		frame.setSize(width,height);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
-		frame.setVisible(true);
-		frame.revalidate();
-		frame.validate();
-	}
-
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
 
 	@Override
@@ -212,4 +224,17 @@ public class TransferDisplay extends ARComponent {
 		Rectangle2D content = (aggs == null ? null : AggregateUtils.bounds(aggs));
 		return content;
 	}
+
+	/**Utility method to show a set of aggregates w.r.t. a transfer function in its own window.**/
+	public static <A> void show(String title, int width, int height, Aggregates<? extends A> aggregates, Transfer<A,Color> transfer) {
+		JFrame frame = new JFrame(title);
+		frame.setLayout(new BorderLayout());
+		frame.setSize(width,height);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
+		frame.setVisible(true);
+		frame.revalidate();
+		frame.validate();
+	}
+
 }
