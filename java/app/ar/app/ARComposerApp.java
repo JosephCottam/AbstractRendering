@@ -9,7 +9,6 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -163,7 +162,7 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	public Rectangle2D dataBounds() {return display.dataBounds();}
 
 	@Override
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {display.viewTransform(vt);}
+	public void viewTransform(AffineTransform vt, boolean provisional) {display.viewTransform(vt, provisional);}
 	
 	
 

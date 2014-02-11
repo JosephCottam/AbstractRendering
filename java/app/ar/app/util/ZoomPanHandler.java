@@ -75,7 +75,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 
             component.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
             
-            zoom(canvas, zoom);
+            zoom(canvas, zoom, true);
             
             yLast = y;
         } else if (buttonEquals(e, PAN_BUTTON)) {
@@ -93,12 +93,7 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
     	double ty = vt.getTranslateY()+dy;
     	AffineTransform t = AffineTransform.getTranslateInstance(tx,ty);
     	t.scale(vt.getScaleX(), vt.getScaleY());
-        
-    	try {canvas.viewTransform(t);}
-		catch (NoninvertibleTransformException e) {
-			try {canvas.viewTransform(new AffineTransform());}
-			catch (NoninvertibleTransformException e1) {/**Impossible**/}
-		}
+    	canvas.viewTransform(t, false);
     }
     
     /**
@@ -108,15 +103,10 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
      * @param zoom the scale factor by which to zoom
      * coordinates, otherwise it will be treated as screen (pixel) coordinates
      */
-    protected static void zoom(HasViewTransform canvas, double zoom) {
+    protected static void zoom(HasViewTransform canvas, double zoom, boolean provisional) {
     	AffineTransform vt = canvas.viewTransform();
         vt.scale(zoom, zoom);
-        
-        try {canvas.viewTransform(vt);}
-		catch (NoninvertibleTransformException e) {
-			try {canvas.viewTransform(new AffineTransform());}
-			catch (NoninvertibleTransformException e1) {/**Impossible**/}
-		}
+        canvas.viewTransform(vt, provisional);
     }
     
     /**
@@ -127,6 +117,11 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
         if (buttonEquals(e, ZOOM_BUTTON) || buttonEquals(e, PAN_BUTTON)) {
             e.getComponent().setCursor(Cursor.getDefaultCursor());
         } 
+        
+        if (buttonEquals(e, ZOOM_BUTTON)) {
+        	HasViewTransform canvas = (HasViewTransform) e.getComponent();
+        	canvas.viewTransform(canvas.viewTransform(), false);
+        }
     }
     
     private static final boolean buttonEquals(MouseEvent e, int button) {
@@ -164,16 +159,13 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 						
 			AffineTransform t = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY());
 			t.translate(-tx,-ty);
-			try {canvas.viewTransform(t);}
-			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
+			canvas.viewTransform(t, false);
 		} else if (c == '+' || c == '=') {
 			vt.scale(2, 2);
-			try {canvas.viewTransform(vt);}
-			catch (NoninvertibleTransformException e1) {/*Ignored.*/}
+			canvas.viewTransform(vt, false);
 		} else if (c == '-' || c == '_') {
 			vt.scale(.5,.5);
-			try {canvas.viewTransform(vt);}
-			catch (NoninvertibleTransformException e1) {/*Ignored.*/}			
+			canvas.viewTransform(vt, false);
 		} else if (c == 'z' || c == 'Z') {
 			canvas.zoomFit();
 		}

@@ -21,6 +21,8 @@ import java.io.Serializable;
  * OR a specialized one into another one (specialized transfer functions retain the capabilities of generic ones).  
  * The Transfer.Specialized interface
  * indicates that a transfer function is ready for use.
+ * 
+ * TODO: Has Specialized-is-transfer-too outlived its usefulness?  I don't know that it is ever used.... 
  *   
  * **/
 public interface Transfer<IN,OUT> extends Serializable {
@@ -41,6 +43,8 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * For example, high-definition alpha composition needs to know the maximum
 	 * and minimum value in the dataset.  "Specialize" will compute 
 	 * those maximum/minimum values.
+	 * 
+	 * TODO: Java 8 -- default for specialized types is to return 'this'
 	 * 
 	 * @param aggregates Aggregates to determine the parameters for.
 	 * **/

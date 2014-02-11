@@ -12,7 +12,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -152,7 +151,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public void zoomFit() {hosted.zoomFit();}
 	public AffineTransform viewTransform() {return hosted.viewTransform();}
 	public AffineTransform renderTransform() {return hosted.renderTransform();}
-	public void viewTransform(AffineTransform vt) throws NoninvertibleTransformException {hosted.viewTransform(vt);}
+	public void viewTransform(AffineTransform vt, boolean provisional) {hosted.viewTransform(vt, provisional);}
 	public Rectangle2D dataBounds() {return hosted.dataBounds();}
 	
 	

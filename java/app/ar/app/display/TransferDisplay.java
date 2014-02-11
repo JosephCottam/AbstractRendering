@@ -204,8 +204,8 @@ public class TransferDisplay extends ARComponent {
 		
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
 
-	@Override
-	public void viewTransform(AffineTransform vt) {
+	@Override @SuppressWarnings("unused") 
+	public void viewTransform(AffineTransform vt, boolean provisional) {
 		if (vt == null) {vt = new AffineTransform();}
 		this.viewTransform = new AffineTransform(vt);
 		repaint();
@@ -215,7 +215,7 @@ public class TransferDisplay extends ARComponent {
 	public void zoomFit() {
 		Rectangle2D content = dataBounds();
 		if (dataBounds() ==null || content.isEmpty()) {return;}
-		viewTransform(Util.zoomFit(content, this.getWidth(), this.getHeight()));
+		viewTransform(Util.zoomFit(content, this.getWidth(), this.getHeight()), false);
 	}
 
 	@Override

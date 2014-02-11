@@ -137,8 +137,7 @@ public class ContourApp {
 		public AffineTransform viewTransform() {return transform;}
 
 		@Override
-		public void viewTransform(AffineTransform vt)
-				throws NoninvertibleTransformException {
+		public void viewTransform(AffineTransform vt, boolean provisional) {
 			this.transform  =vt;
 			this.repaint();
 		}
@@ -153,11 +152,7 @@ public class ContourApp {
 
 		@Override
 		public void zoomFit() {
-			try {
-				viewTransform(Util.zoomFit(dataBounds(), this.getWidth(), this.getHeight()));
-			} catch (NoninvertibleTransformException e) {
-				throw new RuntimeException("Error zooming...");
-			}			
+			viewTransform(Util.zoomFit(dataBounds(), this.getWidth(), this.getHeight()), false);
 		}
 	}
 	

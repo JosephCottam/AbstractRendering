@@ -124,14 +124,13 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
      */
 	@Override public AffineTransform viewTransform() {return display.viewTransform();}	
 	@Override public AffineTransform renderTransform() {return new AffineTransform(renderedTransform);}	
-	public void viewTransform(AffineTransform vt) {
-		//Only force full re-render if the zoom factor changed
-		if (renderedTransform == null 
-				|| vt.getScaleX() != viewTransform().getScaleX()
-				|| vt.getScaleY() != viewTransform().getScaleY()) {
-			fullRender = true;
-		} 
-		display.viewTransform(vt); 		
+	@Override public void viewTransform(AffineTransform vt, boolean provisional) {
+		//Only force full re-render if the zoom factor changed non-provisionally
+		fullRender = !provisional 
+				&& (renderedTransform == null 
+					|| vt.getScaleX() != renderedTransform.getScaleX()
+					|| vt.getScaleY() != renderedTransform.getScaleY());
+		display.viewTransform(vt, provisional); 		
 		repaint();
 	}
 
@@ -142,7 +141,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			if (content ==null || content.isEmpty()) {return;}
 			
 			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
-			viewTransform(vt);
+			viewTransform(vt, false);
 		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
 	}
 	
