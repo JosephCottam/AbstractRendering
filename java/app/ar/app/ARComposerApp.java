@@ -68,6 +68,7 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 		c.weightx = 1;
 		topRow.add(export, c);
 		export.addActionListener(new ActionListener() {
+			@SuppressWarnings("unused")
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
 				ARComponent arc = ARComposerApp.this.getARComponent();
@@ -94,6 +95,7 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 
 		final ARComposerApp app = this;
 		composer.addActionListener(new ActionListener() {
+			@SuppressWarnings("unused")
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = composer.doZoomWith(app.display);
 				update(app.display);

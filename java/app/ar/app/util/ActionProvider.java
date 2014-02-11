@@ -61,6 +61,8 @@ public class ActionProvider {
 	public static final class ChangeDelegate implements ChangeListener {
 		private final ActionProvider target;
 		public ChangeDelegate(ActionProvider target) {this.target = target;}
+		
+		@SuppressWarnings("unused")
 		public void stateChanged(ChangeEvent e) {target.fireActionListeners(target.prefix + "--Property Change");}
 	}	
 }

@@ -51,7 +51,7 @@ import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
 import ar.util.Util;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	/**Create a new transfer that is based on passed parameters and subsequent transfer.

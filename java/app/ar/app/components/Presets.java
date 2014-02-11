@@ -47,6 +47,7 @@ import ar.rules.Shapes;
 import ar.util.Util;
 import ar.glyphsets.SyntheticGlyphset;
 
+@SuppressWarnings("unused")
 public class Presets extends JPanel {
 	private static final long serialVersionUID = -5290930773909190497L;
 	private final ActionProvider actionProvider = new ActionProvider();  

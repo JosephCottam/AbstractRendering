@@ -18,7 +18,7 @@ import ar.app.util.AppUtil;
 import ar.app.util.LabeledItem;
 import ar.util.HasViewTransform;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes","unused"})
 public class SequentialComposer extends JPanel  {
 	private final ActionProvider actionProvider = new ActionProvider();  
 

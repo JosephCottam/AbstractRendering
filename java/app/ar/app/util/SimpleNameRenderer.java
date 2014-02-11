@@ -9,7 +9,7 @@ import javax.swing.UIDefaults;
 
 /**Renders an item using the class's "SimpleName" (instead of the default "toString")**/
 public class SimpleNameRenderer<A> implements ListCellRenderer<A> {
-	@Override
+	@Override @SuppressWarnings("unused")
 	public Component getListCellRendererComponent(JList<? extends A> list,
 			A value, int index, boolean isSelected, boolean cellHasFocus) {
 		

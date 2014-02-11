@@ -47,6 +47,7 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 
 		
 		presets.addActionListener(new ActionListener() {
+			@SuppressWarnings("unused")
 			public void actionPerformed(ActionEvent e) {
 				boolean rezoom = presets.doZoomWith(ARApp.this.display);
 				presets.update(ARApp.this.display);
