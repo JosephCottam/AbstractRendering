@@ -190,8 +190,11 @@ public class TransferDisplay extends ARComponent {
 				
 				long end = System.currentTimeMillis();
 				if (PERFORMANCE_REPORTING) {
+					Rectangle r = AggregateUtils.bounds(postTransferAggregates);
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
-							(end-start), TransferDisplay.this.getWidth(), TransferDisplay.this.getHeight());
+							(end-start), 
+							Math.max(r.width, TransferDisplay.this.getWidth()), 
+							Math.max(r.height, TransferDisplay.this.getHeight()));
 				}
 			} catch (ClassCastException e) {
 				renderError = true;

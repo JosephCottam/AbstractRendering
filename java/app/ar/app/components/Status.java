@@ -29,9 +29,13 @@ public class Status extends JPanel {
 	}
 	
 	public void setStatus(double status, String message) {
-		status = Math.max(status, 0);
-		progress.setValue((int) (status*100));
-		progress.setString(message);
+		if (Double.isNaN(status)) {
+			progress.setString("... working ...");
+		} else {
+			status = Math.max(status, 0);
+			progress.setValue((int) (status*100));
+			progress.setString(message);
+		}
 	}
 	
 	private class Monitor implements Runnable {

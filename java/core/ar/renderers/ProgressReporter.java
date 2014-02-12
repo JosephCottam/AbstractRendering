@@ -2,11 +2,23 @@ package ar.renderers;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-/**Utility class for recording percent progress through a known task size.**/
+/**Utility class for recording percent progress through a task.
+ * 
+ * Producer Side:
+ * If the task size is known, then reset should be called with
+ * the expected number of steps and update should be called
+ * with a total number equaling the expected.
+ * 
+ * If the task size is not known, then reset should be called with zero as the expected size
+ * at the start.  When done, reset should be called again with a negative value.
+ * 
+ * Consumer side:
+ * Periodically call percent to find out the percentage of work complete.
+ * If the task size was known, these will return appropriate values.
+ * If the task size is not known, then percent will return NaN.
+ * Return of a negative number indicates tracking is not in progress.
+ * **/
 public interface ProgressReporter {
-	/**How many steps have been logged?*/
-	public long count();
-	
 	/**Indicate a certain number of expected steps have been taken.**/
 	public void update(long delta);
 	
@@ -26,7 +38,7 @@ public interface ProgressReporter {
 	@SuppressWarnings("unused")
 	public static final class NOP implements ProgressReporter {
 		public NOP(long reportStep) {}
-		public long count() {return -1;}
+
 		public void update(long delta) {}
 		public void reset(long expected) {}
 		public double percent() {return -1;}
@@ -40,11 +52,12 @@ public interface ProgressReporter {
 		private final long reportStep;
 		
 		public Counter(long reportStep) {this.reportStep = reportStep;}
-		public long count() {return counter.get();}
+
 		public void update(long delta) {counter.addAndGet(delta);}
 		public void reset(long expected) {this.expected = expected; counter.set(0);}
 		public double percent() {
-			if (expected <=0) {return -1;}
+			if (expected ==0) {return Double.NaN;}
+			if (expected <0) {return -1;}
 			return counter.intValue()/((double) expected);
 		}
 		public long reportStep() {return reportStep;}
