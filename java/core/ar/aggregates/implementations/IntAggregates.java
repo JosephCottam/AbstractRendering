@@ -11,7 +11,7 @@ public class IntAggregates extends IntegerBackingAggregates implements Aggregate
 		super(lowX, lowY, highX, highY, defVal);
 	}
 
-	public Iterator<Integer> iterator() {return new Iterator2D<>(this);}
-	public Integer get(int x, int y) {return super.getInt(x, y);}
-	public Integer defaultValue() {return super.defaultInt();}
+	@Override public Iterator<Integer> iterator() {return new Iterator2D<>(this);}
+	@Override public Integer get(int x, int y) {return super.getInt(x, y);}
+	@Override public Integer defaultValue() {return super.defaultInt();}
 }
