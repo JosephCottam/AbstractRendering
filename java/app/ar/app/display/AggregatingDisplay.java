@@ -152,8 +152,10 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		public void run() {
 			long start = System.currentTimeMillis();
 			try {
-				Rectangle databounds = viewTransform().createTransformedShape(dataset.bounds()).getBounds();
+				AffineTransform vt = viewTransform();
+				Rectangle databounds = vt.createTransformedShape(dataset.bounds()).getBounds();
 				AffineTransform rt = Util.zoomFit(dataset.bounds(), databounds.width, databounds.height);
+				rt.scale(vt.getScaleX()/rt.getScaleX(), vt.getScaleY()/rt.getScaleY());
 				
 				@SuppressWarnings({"rawtypes"})
 				Selector selector = TouchesPixel.make(dataset);
