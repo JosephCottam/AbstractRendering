@@ -22,8 +22,6 @@ public class Shapes {
 	 * value the value of any point in the region.
 	 * 
 	 * TODO: Extend to more than CategoricalCounts...
-	 * TODO: Consider adding the view transform to the transfer function specialization process
-	 * 
 	 */
 	public static class ShapeGather implements Transfer<CategoricalCounts<Color>, CategoricalCounts<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;

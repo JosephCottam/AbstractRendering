@@ -30,10 +30,7 @@ public final class Numbers {
 	}
 	
 	
-	/**Retain the largest value seen.
-	 * 
-	 * TODO: Is there a general way to provide for two-argument operators?  That would take care of max/min/gt/lt/etc...
-	 */
+	/**Retain the largest value seen.*/
 	public static final class Max<N extends Number> implements Aggregator<N, N> {
 		private final Valuer<Double,N> wrapper;
 		public Max(Valuer<Double,N> wrapper) {this.wrapper = wrapper;}

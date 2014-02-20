@@ -81,7 +81,7 @@ public abstract class TouchesPixel {
 		
 		//based on 'optimized' version at http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 		private static <I,A> void bressenham(Aggregates<A> canvas, Aggregator<I,A> aggregator, Point2D start, Point2D end, I val) {
-			int x0 = (int) start.getX(); //TODO: Not sure if the rounding should happen here or later....
+			int x0 = (int) start.getX(); 
 			int y0 = (int) start.getY();
 			int x1 = (int) end.getX();
 			int y1 = (int) end.getY();
@@ -157,8 +157,8 @@ public abstract class TouchesPixel {
 
 				I v = g.info();
 
-				for (int x=Math.max(0,lowx); x<highx; x++){//TODO: What is this Max(0, lowX) doing here?
-					for (int y=Math.max(0, lowy); y<highy; y++) {//TODO: What is this Max(0, lowY) doing here?
+				for (int x=lowx; x<highx; x++){
+					for (int y=lowy; y<highy; y++) {
 						update(target, v, x,y, op);
 					}
 				}
@@ -198,8 +198,8 @@ public abstract class TouchesPixel {
 				int highy = (int) Math.ceil(highP.getY());
 
 				I v = g.info();
-				for (int x=Math.max(0,lowx); x<highx; x++){  //TODO: What is this Max(0, lowX) doing here?
-					for (int y=Math.max(0, lowy); y<highy; y++) { //TODO: What is this Max(0, lowY) doing here?
+				for (int x=lowx; x<highx; x++){ 
+					for (int y=lowy; y<highy; y++) { 
 						testP.setLocation(x, y);
 						if (g.shape().contains(testP)) {
 							update(target, v, x,y, op);

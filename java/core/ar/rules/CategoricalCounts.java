@@ -107,8 +107,6 @@ public class CategoricalCounts<T> {
 
 
 	/**Combine multiple CoC objects into a single CoC.
-	 * 
-	 * TODO: The array identity-equal almost never trips.  Can things be modified so the faster check trips?
 	 * **/
 	@SuppressWarnings({ "cast", "unchecked" })
 	public static <T> CategoricalCounts<T> rollupTwo(CategoricalCounts<T> s1, CategoricalCounts<T> s2) {

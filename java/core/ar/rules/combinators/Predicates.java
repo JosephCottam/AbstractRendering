@@ -36,6 +36,7 @@ public abstract class Predicates<IN> {
 			return Boolean.TRUE;			
 		}
 		
+		/**Check if all values are true.  Returns true iff all are true.**/
 		public static Boolean all(Aggregates<Boolean> arg) {
 			for (Boolean v: arg) {if (!v) {return false;}}
 			return true;

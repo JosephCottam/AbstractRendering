@@ -54,13 +54,12 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	//TODO: investigate reifying the glyphs at this point and using GlyphList instead of wrapped list (would also remove the suprress)
 	public Glyphset<G,I> segment(long bottom, long top) throws IllegalArgumentException {
 		int size = (int) (top-bottom);
 		final B[] vals = (B[]) new Object[size];
 		Iterator<B> it = values.iterator();
-		for (long i=0; i<bottom; i++) {it.next();}
-		for (int i=0; i<size; i++) {vals[i]=it.next();}
+		for (long i=0; i<bottom; i++) {it.next();}  //Walk iterator up to the start
+		for (int i=0; i<size; i++) {vals[i]=it.next();} //Copy values over...
 		return new WrappedCollection.List<B,G,I>(Arrays.asList(vals), shaper, valuer);
 	}
 

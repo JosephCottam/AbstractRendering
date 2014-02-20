@@ -11,8 +11,6 @@ import ar.rules.General;
  * If both the pass and fail transfer functions are {@link ar.Transfer.ItemWise},
  * then the predicate will be run item-wise.  Otherwise, the predicate will
  * be applied to the whole set (via {@link ar.rules.combiners.Predicates.All}).
- * 
- *  TODO: Have IfLocal and IfAll.  IfLocal the predicate is testing individual items.  IfAll the predicate is testing the group
  **/
 public class If<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN, Boolean> pred;
@@ -47,6 +45,12 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
     
     @Override public OUT emptyValue() {return empty;}
 
+    /**If the predicate, pass and fail transfers are all item-wise,
+     *   the if will be executed on each item individual.  Some items
+     *   may draw from the pass side while others draw from the fail.
+     * Otherwise, the test will be done globally and and all items will
+     *   draw from either pass or fail.
+     */
     @Override
     public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
         Specialized<IN,OUT> ps = pass.specialize(aggregates);
@@ -67,7 +71,6 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
     /**Check if all values in an aggregate set pass a predicate,
      * dispatches to pass/fail transfer accordingly.
      * 
-     * TODO: Add support for 'ignoreDefault' parameter on the 'all' predicate.
      */
     public static class SetWise<IN,OUT> extends If<IN,OUT> implements Transfer.Specialized<IN,OUT> {
         final Specialized<IN,OUT> pass;

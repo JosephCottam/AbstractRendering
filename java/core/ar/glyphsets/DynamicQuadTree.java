@@ -207,15 +207,12 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		 *   
 		 *   (2) Otherwise,  the current tree becomes a quad in the new tree.
 		 *   Right and above are prioritized higher than left and below.
-		 *   
-		 *   TODO: Investigate better heuristics...
 		 * @return
 		 */
 		private static final <G,V> InnerNode<G,V> growUp(DynamicQuadTree.InnerNode<G,V> current, Rectangle2D toward) {
 			Rectangle2D currentBounds = current.concernBounds();
 			int outCode = currentBounds.outcode(toward.getX(), toward.getY());
 			
-			//TODO: Expand to "touches or is close to"...for some meaning of close...probably proportion of tree's width/height 
 			if (toward.intersects(currentBounds)
 					|| outCode ==0) { 
 				//If the new glyph touches the current bounds, then grow with the current data in the center. 
@@ -261,8 +258,6 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 				double x,y;
 				int replace;
 				
-				//TODO: Would more directions help?
-				//TODO: Would analysis based on tree weights help?
 				if ((outCode & Rectangle2D.OUT_RIGHT) == Rectangle2D.OUT_RIGHT
 						|| (outCode & Rectangle2D.OUT_TOP) == Rectangle2D.OUT_TOP) {
 					x = currentBounds.getX();

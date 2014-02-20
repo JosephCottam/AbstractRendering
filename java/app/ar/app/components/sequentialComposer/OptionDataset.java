@@ -20,10 +20,7 @@ import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
-public final class OptionDataset<G,I> {
-	
-	//TODO: Add "default chain" for ready access to a decent configuration 
-	
+public final class OptionDataset<G,I> {	
 	private final String name;
 	private final Glyphset<G,I> glyphs;
 	private final OptionAggregator<? super I,?> defaultAggregator;

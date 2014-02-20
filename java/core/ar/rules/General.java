@@ -139,10 +139,9 @@ public class General {
 	}
 	
 	/**Fill in empty values based on a function of nearby values.
-	 *
-	 * TODO: Possibly combine with spread.   
-	 * TODO: Add support for a smearing function....Takes a list of "nearby" and distances 
-	 * TODO: Add support for a searching function...
+	 * Does it by searching from each empty point outwards until it finds a non-empty value.
+     * 
+	 * TODO: Add support for a smearing function so search pattern can be controlled 
 	 ***/ 
 	public static class Smear<V> implements Transfer.ItemWise<V,V> {
 		final V empty;
@@ -297,7 +296,6 @@ public class General {
 	}
 	
 	/**Aggregator and Transfer that always returns the same value.
-	 * TODO: Can we drop the 'A' parameter?
 	 * **/
 	@SuppressWarnings("unused") 
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {

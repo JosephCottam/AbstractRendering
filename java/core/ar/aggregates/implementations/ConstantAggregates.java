@@ -10,9 +10,6 @@ import ar.Aggregates;
  * 
  * This class is often used to present a specific region as having a particular value
  * (thus the region is tracked, even though it does not represent a value).
- * 
- * TODO: Evaluate if this should be a bi-modal region where in-range is represented
- * in one value and out-of-range as another.  May simplify some operations elsewhere... 
  */
 @SuppressWarnings("unused") 
 public final class ConstantAggregates<A> implements Aggregates<A> {

@@ -14,7 +14,7 @@ import ar.util.Util;
  * 
  * These are experimental methods of unproven value, use at your own risk.
  *  
- *  TODO: Provide a "Multiple representation" warning where in mapps to multiple outputs
+ *  TODO: Provide a "Multiple representation" warning where an input maps to multiple outputs
  *  
  * @author jcottam
  */

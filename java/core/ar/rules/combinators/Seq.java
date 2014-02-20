@@ -5,8 +5,13 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.renderers.ParallelRenderer;
 
-//TODO: Investigate if specialize generally should take a renderer as an argument...
-
+/**Do one transfer, then pipe its results into another.
+ * The first transfer finishes before the second one starts.
+ *
+ * @param <IN> The expected input type
+ * @param <MID> The result type of the first transfer and input type of the second 
+ * @param <OUT> Output type of the second transfer
+ */
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
 	public static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
     protected final Transfer<IN,MID> first;
