@@ -21,6 +21,8 @@ a discretization of the data at the pixel-level, but not necessarily all
 the way to colors.  This enables many pixel-level concerns to be efficiently 
 and concisely captured.
 
+Sample images can be found in [the wiki](https://github.com/JosephCottam/AbstractRendering/wiki).
+
 Pixel-Level Effects (an example)
 -----------
 
