@@ -89,8 +89,10 @@ public class ARServer extends NanoHTTPD {
 		super(hostname, port);
 	}
 
+	@Override @SuppressWarnings("unused")
 	public Response serve(String uri, Method method,
-			Map<String, String> headers, Map<String, String> parms,
+			Map<String, String> headers, 
+			Map<String, String> parms,
 			Map<String, String> files) {
 		
 		try {

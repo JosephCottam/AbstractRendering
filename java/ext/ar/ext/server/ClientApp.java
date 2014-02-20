@@ -20,11 +20,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import ar.Aggregates;
-import ar.Renderer;
 import ar.Transfer;
 import ar.app.display.*;
 import ar.ext.avro.Converters;
-import ar.renderers.ParallelRenderer;
 
 public class ClientApp {
 	
@@ -34,7 +32,6 @@ public class ClientApp {
 		
 		private final JFrame frame=new JFrame();
 		private final JButton execute = new JButton("Execute");
-		private final Renderer renderer = new ParallelRenderer();
 		private ARComponent display;
 
 		public ClientUI(String host, int port) {
@@ -45,7 +42,7 @@ public class ClientApp {
 			this.add(execute, BorderLayout.SOUTH);
 			
 			execute.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
+				public void actionPerformed(@SuppressWarnings("unused") ActionEvent e) {
 					try {
 						ClientUI.this.changeDisplay();
 					} catch (Exception e1) {
@@ -71,7 +68,7 @@ public class ClientApp {
 			
 			Aggregates<?> aggs = remoteRender(host, port, dataset(), aggregate(), remoteTransfers());
 			
-			ARComponent newDisplay = new TransferDisplay(aggs, localTransfer(), renderer); 
+			ARComponent newDisplay = new TransferDisplay(aggs, localTransfer()); 
 			frame.add(newDisplay, BorderLayout.CENTER);
 			this.display = newDisplay;
 			frame.revalidate();
