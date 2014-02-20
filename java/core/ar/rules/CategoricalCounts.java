@@ -12,25 +12,27 @@ import ar.util.Util;
 public class CategoricalCounts<T> {
 	private final Comparator<T> comp;
 	private final int[] counts;
-	private final Object[] labels;
+	private final T[] labels;
 	private final int fullSize;
 	
 	/**Create a new CoC with "natural" ordering.**/
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public CategoricalCounts() {this(new Util.ComparableComparator(), new Object[0], new int[0], 0);}
+	public CategoricalCounts() {this(new Util.ComparableComparator(), (T[]) new Object[0], new int[0], 0);}
 	
 	/**@param comp Comparator used to order categories.**/
-	public CategoricalCounts(Comparator<T> comp) {this(comp, new Object[0], new int[0], 0);}
+	@SuppressWarnings({ "unchecked"})
+	public CategoricalCounts(Comparator<T> comp) {this(comp, (T[]) new Object[0], new int[0], 0);}
 	
 	/**Create a Categorical count with a single categorical/count pair.**/
+	@SuppressWarnings({ "unchecked"})
 	public CategoricalCounts(Comparator<T> comp, T label, int count) {
-		this(comp, new Object[]{label}, new int[]{count}, count);
+		this(comp, (T[]) new Object[]{label}, new int[]{count}, count);
 	}
 	
 	/**@param counts Map backing this set of counts
 	 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 	 ***/
-	private CategoricalCounts(Comparator<T> comp, Object[] labels, int[] counts, int fullSize) {
+	private CategoricalCounts(Comparator<T> comp, T[] labels, int[] counts, int fullSize) {
 		//System.out.printf("count with %d cats and %d total\n", counts.size(), fullSize);
 		this.counts = counts;
 		this.labels = labels;
@@ -38,24 +40,22 @@ public class CategoricalCounts<T> {
 		this.comp = comp;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public CategoricalCounts<T> extend(T key, int count) {
-		int idx = Arrays.binarySearch((T[]) labels, key, comp);
+		int idx = Arrays.binarySearch(labels, key, comp);
 		if (idx >=0) {
 			int[] newCounts = Arrays.copyOf(counts, counts.length);
 			newCounts[idx] += count;
 			return new CategoricalCounts<>(comp, labels, newCounts, fullSize+count);
 		} else {
 			idx = -(idx +1); 
-			T[] newLabels = Util.insertInto((T[]) labels, key, idx);
+			T[] newLabels = Util.insertInto(labels, key, idx);
 			int[] newCounts = Util.insertInto(counts, count, idx);
 			return new CategoricalCounts<>(comp, newLabels, newCounts, fullSize+count);
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public int count(T key) {
-		int idx = Arrays.binarySearch((T[]) labels, key, comp);
+		int idx = Arrays.binarySearch(labels, key, comp);
 		if (idx >= 0) {return counts[idx];}
 		return 0;
 	}
@@ -77,8 +77,7 @@ public class CategoricalCounts<T> {
 		return b.toString();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public T key(int i) {return (T) labels[i];}
+	public T key(int i) {return labels[i];}
 	
 	public boolean hasKey(T key) {
 		for (Object k: labels) {if (Util.isEqual(k, key)) {return true;}}
@@ -108,15 +107,14 @@ public class CategoricalCounts<T> {
 
 	/**Combine multiple CoC objects into a single CoC.
 	 * **/
-	@SuppressWarnings({ "cast", "unchecked" })
 	public static <T> CategoricalCounts<T> rollupTwo(CategoricalCounts<T> s1, CategoricalCounts<T> s2) {
 		if (s1.labels == s2.labels || Arrays.deepEquals(s1.labels, s2.labels)) {
 			int[] newCounts = Arrays.copyOf(s1.counts, s1.counts.length);
 			for (int i=0; i< newCounts.length; i++) {newCounts[i] += s2.counts[i];}
-			return new CategoricalCounts<>(s1.comp, (T[]) s1.labels, newCounts, s1.fullSize+s2.fullSize);
+			return new CategoricalCounts<>(s1.comp, s1.labels, newCounts, s1.fullSize+s2.fullSize);
 		} else {
 			CategoricalCounts<T> combined = s1;
-			for (T key: (T[]) s2.labels) {
+			for (T key: s2.labels) {
 				combined = combined.extend(key, s2.count(key));
 			}
 			return combined;
