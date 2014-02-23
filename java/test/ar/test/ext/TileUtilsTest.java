@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.SubsetWrapper;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.ext.tiles.TileUtils;
 import ar.rules.Numbers;
 import ar.test.aggregates.TestAggregates;

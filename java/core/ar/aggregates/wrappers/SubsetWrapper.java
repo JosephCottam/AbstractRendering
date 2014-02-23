@@ -1,8 +1,9 @@
-package ar.aggregates;
+package ar.aggregates.wrappers;
 
 import java.util.Iterator;
 
 import ar.Aggregates;
+import ar.aggregates.Iterator2D;
 
 /**Wrap a set of aggregates, but make it have a different high/low X/Y than it did before.
  * This does not SHIFT values, so position x,y will have the same value in the original

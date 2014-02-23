@@ -11,7 +11,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.aggregates.SubsetWrapper;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.AggregationStrategies;

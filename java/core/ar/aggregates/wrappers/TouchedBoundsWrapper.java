@@ -1,8 +1,9 @@
-package ar.aggregates;
+package ar.aggregates.wrappers;
 
 import java.util.Iterator;
 
 import ar.Aggregates;
+import ar.aggregates.Iterator2D;
 import ar.util.Util;
 
 

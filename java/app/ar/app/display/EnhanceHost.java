@@ -27,7 +27,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
-import ar.aggregates.SubsetWrapper;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.util.LabeledItem;
 import ar.util.Util;
 

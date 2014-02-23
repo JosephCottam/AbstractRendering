@@ -7,7 +7,7 @@ import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.TransposeWrapper;
+import ar.aggregates.wrappers.TransposeWrapper;
 import ar.rules.combinators.Seq;
 
 /** Seam-carving is a content-sensitive image resizing technique.
