@@ -12,6 +12,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -683,11 +684,11 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
-		private static final List<Shape> shapes;
+		private static final Collection<Shape> shapes;
 		
 		static {
 			try {
-				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
+				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false)).values();
 				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
 			} catch (Exception e) {throw new RuntimeException(e);}
 		}

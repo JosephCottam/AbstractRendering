@@ -283,11 +283,11 @@ public class Presets extends JPanel {
 	
 	public static class USCensusPopulationWeave implements Preset {
 		HasViewTransform transformProvider = null;
-		private final List<Shape> shapes;
+		private final Collection<Shape> shapes;
 		
 		public USCensusPopulationWeave() {
 			try {
-				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false));
+				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false)).values();
 				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
 			} catch (Exception e) {throw new RuntimeException(e);}
 		}

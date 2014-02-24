@@ -5,8 +5,8 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ar.Aggregates;
@@ -25,14 +25,14 @@ public class Shapes {
 	 */
 	public static class ShapeGather implements Transfer<CategoricalCounts<Color>, CategoricalCounts<Color>> {
 		private static final long serialVersionUID = 4664592034128237981L;
-		final List<Shape> baseRegions;
+		final Collection<Shape> baseRegions;
 		final HasViewTransform transformSource;
 		
 		/**
 		 * @param reg Shapes to use in gathering
 		 * @param transformSource Source of the view transform used to modify shapes
 		 */
-		public ShapeGather(List<Shape> reg, HasViewTransform transformSource) {
+		public ShapeGather(Collection<Shape> reg, HasViewTransform transformSource) {
 			this.transformSource = transformSource;
 			this.baseRegions = reg;
 		}
@@ -44,7 +44,7 @@ public class Shapes {
 		public ShapeGather.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			Map<Shape, CategoricalCounts<Color>> values = new HashMap<>();
 			AffineTransform vt = transformSource.viewTransform();
-			List<Shape> viewRegions = new ArrayList<>();
+			Collection<Shape> viewRegions = new ArrayList<>();
 			for (Shape s: baseRegions) {viewRegions.add(vt.createTransformedShape(s));}
 			for (Shape region: viewRegions) {
 				values.put(region, gather(region, aggregates));
@@ -69,9 +69,9 @@ public class Shapes {
 
 		private static class Specialized extends ShapeGather implements Transfer.ItemWise<CategoricalCounts<Color>, CategoricalCounts<Color>> { 
 			private final Map<Shape, CategoricalCounts<Color>> regionVals;
-			private final List<Shape> viewRegions;
+			private final Collection<Shape> viewRegions;
 			
-			Specialized(List<Shape> baseRegions, List<Shape> viewRegions, HasViewTransform transformSource, Map<Shape, CategoricalCounts<Color>> regionVals) {
+			Specialized(Collection<Shape> baseRegions, Collection<Shape> viewRegions, HasViewTransform transformSource, Map<Shape, CategoricalCounts<Color>> regionVals) {
 				super(baseRegions, transformSource);
 				this.regionVals = regionVals;
 				this.viewRegions = viewRegions;

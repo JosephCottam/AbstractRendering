@@ -6,9 +6,10 @@ import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -26,13 +27,15 @@ public class GeoJSONTools {
 	 * 
 	 * Only loads .json files.
 	 * **/
-	public static List<Shape> loadShapesJSON(File source, boolean recursive) throws Exception {
-		if (source.isFile()) {return Arrays.asList(loadShapeJSON(source));}
-		List<Shape> shapes = new ArrayList<>();
+	public static Map<String,Shape> loadShapesJSON(File source, boolean recursive) throws Exception {
+		if (source.isFile()) {
+			return Collections.singletonMap(source.getName(), loadShapeJSON(source));
+		}
+		Map<String, Shape> shapes = new HashMap<>();
 		for (File f: source.listFiles()) {
-			if (recursive && f.isDirectory()) {shapes.addAll(loadShapesJSON(f, true));}
+			if (recursive && f.isDirectory()) {shapes.putAll(loadShapesJSON(f, true));}
 			if (!f.getName().endsWith(".json")) {continue;}
-			shapes.add(loadShapeJSON(f));
+			shapes.put(f.getName(), loadShapeJSON(f));
 		}
 		return shapes;
 	}
@@ -94,11 +97,11 @@ public class GeoJSONTools {
 
 	/**Change the sign on all y-coordinates.  
 	 * Useful for converting to/from scan-line y-convention (where positive values increase down).**/
-	public static List<Shape> flipY(List<Shape> input) {
+	public static Map<String, Shape> flipY(Map<String, Shape> input) {
 		AffineTransform flip = AffineTransform.getScaleInstance(1, -1);
-		List<Shape> output = new ArrayList<>(input.size());
-		for (Shape s: input) {
-			output.add(flip.createTransformedShape(s));
+		Map<String, Shape> output = new HashMap<>();
+		for (Map.Entry<String, Shape> e: input.entrySet()) {
+			output.put(e.getKey(), flip.createTransformedShape(e.getValue()));
 		}
 		return output;
 		
