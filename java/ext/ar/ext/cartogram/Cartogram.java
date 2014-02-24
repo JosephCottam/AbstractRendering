@@ -40,23 +40,26 @@ public class Cartogram {
 
 	public static void main(String[] args) throws Exception {
 		Rectangle viewBounds = new Rectangle(0, 0, 500,500);
+		Renderer renderer = new ParallelRenderer();
 		
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
 		Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
-				
 		AffineTransform viewTransform = Util.zoomFit(populationSource.bounds(), viewBounds.width, viewBounds.height);
+		Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
+		System.out.println("Population glyphset loaded.");
+
 
 		File statesSource = new File("../data/maps/USStates/");
-		Map<String, Shape> rawShapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false));
-		rawShapes = Shapes.transformAll(rawShapes, viewTransform);
+		final Map<String, Shape> rawShapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false));
 		Glyphset<Shape, String> states = WrappedCollection.wrap(rawShapes.entrySet(), new Shaper.MapValue<String, Shape>(), new Valuer.MapKey<String, Shape>());
+		System.out.println("State shapes loaded.");
 		
-		Renderer renderer = new ParallelRenderer();
-		Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
 		Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
-		
 		Aggregates<Pair<String,Integer>> pairs = CompositeWrapper.wrap(labels, population);
+		System.out.println("Base aggregates created.");
+
+
 		
 //		final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 //		Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
@@ -69,11 +72,11 @@ public class Cartogram {
 
 		final Transfer<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
 		final Transfer<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
-
-		
 		
 		int step=100;
 		for (int seams=0; seams<viewBounds.width; seams+=step) {
+			System.out.println("Starting export on " + seams + " seams");
+
 			final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> carve = new NTimes.Specialized<>(seams, carver);
 			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carve);
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
@@ -85,14 +88,11 @@ public class Cartogram {
 			Aggregates<Color> states2012 = renderer.transfer(carvedStates, color2012.specialize(carvedStates));
 			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008.specialize(carvedStates));
 			
-			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("2008-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("2012-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("%d-seams-population.png",seams)));
-			
+			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("~/Desktop/seams/2008-%d-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("~/Desktop/seams/2012-%d-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("~/Desktop/seams/%d-seams-population.png",seams)));
+			System.out.println("Completed export on " + seams + " seams\n");
 		}
-		
-	
-
 	}
 	
 	public static final Color PARTY1 = Color.green;
@@ -112,6 +112,7 @@ public class Cartogram {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Loaded results data.");
 	}
 
 	public static final Pair<String, Integer> EMPTY = new Pair<>("",0);
