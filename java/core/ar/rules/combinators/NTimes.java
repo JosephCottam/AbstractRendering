@@ -22,7 +22,13 @@ public class NTimes<IN> implements Transfer<IN,IN> {
 
     public static class Specialized<IN> extends NTimes<IN> implements Transfer.Specialized<IN, IN> {
 	    final Transfer.Specialized<IN, IN> spec;
-		public Specialized(int n, Transfer<IN, IN> base, Aggregates<? extends IN> aggregates) {
+
+		public Specialized(int n, Transfer.Specialized<IN, IN> base) {
+			super(n,base);
+			this.spec = base;
+		}
+
+	    public Specialized(int n, Transfer<IN, IN> base, Aggregates<? extends IN> aggregates) {
 			super(n, base);
 	    	this.spec = base.specialize(aggregates);
 	    }

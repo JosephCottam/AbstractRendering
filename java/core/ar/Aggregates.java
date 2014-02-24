@@ -27,14 +27,21 @@ import java.io.Serializable;
  * 
  * @author jcottam
  *
- *
  * @param <A>  Type of the values to be stored in the aggregate set.
  */
 public interface Aggregates<A> extends Serializable, Iterable<A> {
 	/**Get the aggregate value at the given position.**/
 	public A get(int x, int y);
 	
-	/**Set the aggregate value at the given position.**/
+	/**Set the aggregate value at the given position.
+	 * 
+	 * 
+	 * When working with an implementation that supports set,
+	 * setting outside of the region defined by high/low X/Y should result
+	 * in a no-op (not an exception).
+	 * 
+	 * Set may throw an 'UnsupportedOperationExcept'
+	 * **/
 	public void set(int x, int y, A val);
 	
 	/**What is the default value in this set of aggregates?

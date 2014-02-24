@@ -141,13 +141,13 @@ public class General {
 	/**Fill in empty values based on a function of nearby values.
 	 * Does it by searching from each empty point outwards until it finds a non-empty value.
      * 
-	 * TODO: Add support for a smearing function so search pattern can be controlled 
+	 * TODO: Add support for a smearing function so search pattern can be controlled...(vertical, horizontal, spiral, limit range...)
+	 * TODO: Add support for a predicate on whether to smear or not to given location (may be part of the pattern function...) 
 	 ***/ 
 	public static class Smear<V> implements Transfer.ItemWise<V,V> {
 		final V empty;
-		public Smear(V empty) {
-			this.empty = empty;
-		}
+		
+		public Smear(V empty) {this.empty = empty;}
 
 		@Override public V emptyValue() {return empty;}
 		@Override @SuppressWarnings("unused") 

@@ -20,7 +20,11 @@ public class AggregateUtils {
 	public static Rectangle bounds(Aggregates<?> aggs) {
 		return new Rectangle(aggs.lowX(), aggs.lowY(), aggs.highX()-aggs.lowX(), aggs.highY()-aggs.lowY());
 	}
-	
+
+	public static BufferedImage asImage(Aggregates<? extends Color> aggs) {
+		return asImage(aggs, bounds(aggs).width, bounds(aggs).height, Color.white);
+	}
+
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs, int width, int height, Color background) {
 		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}

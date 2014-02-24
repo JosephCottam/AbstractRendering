@@ -43,12 +43,9 @@ public class Shapes {
 		@Override
 		public ShapeGather.Specialized specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 			Map<Shape, CategoricalCounts<Color>> values = new HashMap<>();
-			AffineTransform vt = transformSource.viewTransform();
-			Collection<Shape> viewRegions = new ArrayList<>();
-			for (Shape s: baseRegions) {viewRegions.add(vt.createTransformedShape(s));}
-			for (Shape region: viewRegions) {
-				values.put(region, gather(region, aggregates));
-			}
+			
+			Collection<Shape> viewRegions = Shapes.transformAll(baseRegions, transformSource.viewTransform());
+			for (Shape region: viewRegions) {values.put(region, gather(region, aggregates));}
 			
 			return new Specialized(baseRegions, viewRegions, transformSource, values);
 		}
@@ -102,5 +99,22 @@ public class Shapes {
 				return rend.transfer(aggregates, this);
 			}
 		}
+	}
+
+	/**Transform all shapes in the collection according to the transform.**/
+	public static final Collection<Shape> transformAll(Collection<Shape> sourceShapes, AffineTransform t) {
+		Collection<Shape> transformedShapes = new ArrayList<>();
+		for (Shape s: sourceShapes) {transformedShapes.add(t.createTransformedShape(s));}
+		return transformedShapes;
+	}
+	
+
+	/**Transform all shapes in the map according to the transform.**/
+	public static final Map<String, Shape> transformAll(Map<String, Shape> sourceShapes, AffineTransform t) {
+		Map<String, Shape> transformedShapes = new HashMap<>();
+		for (Map.Entry<String, Shape> e: sourceShapes.entrySet()) {
+			transformedShapes.put(e.getKey(), t.createTransformedShape(e.getValue()));
+		}
+		return transformedShapes ;
 	}
 }

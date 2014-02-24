@@ -17,8 +17,8 @@ public interface Renderer extends Serializable {
 	/**Produces the aggregates for a specific set of glyphs given the current view.
 	 * 
 	 * @param glyphs  The items to render
-	 * @param op Converts a glyph into an aggregate for a specific position
 	 * @param selector Associates glyphs with positions
+	 * @param aggregator Converts a glyph into an aggregate for a specific position
 	 * @param viewTransform The view transform (e.g., geometry to screen) 
 	 * @param width The width of the current viewport
 	 * @param height The height of the current viewport
@@ -27,7 +27,7 @@ public interface Renderer extends Serializable {
 	public <I,G,A> Aggregates<A> aggregate(
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			final Selector<G> selector,
-			final Aggregator<I,A> op, 
+			final Aggregator<I,A> aggregator, 
 			final AffineTransform viewTransform, final int width, final int height);
 	
 	

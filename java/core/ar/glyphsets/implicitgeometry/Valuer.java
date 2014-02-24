@@ -2,6 +2,8 @@ package ar.glyphsets.implicitgeometry;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import ar.rules.CategoricalCounts;
 import ar.util.Util;
@@ -104,5 +106,24 @@ public interface Valuer<I,V> extends Serializable {
 		public Equals(IN ref) {this.ref = ref;}
 		public Boolean value(IN from) {return Util.isEqual(ref, from);}		
 	}
+
+
 	
+	/**Given a map entry, return the value.  Used for maps where the key determines the shape
+	 * and the value determines the info.
+	 * @author jcottam
+	 * @param <V>
+	 */
+	public static final class MapValue<K,V> implements Valuer<Map.Entry<K,V>, V> {
+		@Override public V value(Entry<K,V> from) {return from.getValue();}		
+	}
+
+	/**Given a map entry, return the key.  Used for maps where the key determines the info
+	 * and the value determines the shape.
+	 * @author jcottam
+	 * @param <V>
+	 */
+	public static final class MapKey<K,V> implements Valuer<Map.Entry<K,V>, K> {
+		@Override public K value(Entry<K,V> from) {return from.getKey();}		
+	}
 }
