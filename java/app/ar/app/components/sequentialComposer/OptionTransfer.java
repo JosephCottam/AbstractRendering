@@ -694,9 +694,10 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			return Seq.start(new Shapes.ShapeGather(shapes, params.tp))
-					.then(new Categories.RandomWeave())
-					.then(subsequent);
+			return extend(
+					Seq.start(new Shapes.ShapeGather(shapes, params.tp))
+						.then(new Categories.RandomWeave()),
+					subsequent);
 		}
 
 		@Override
