@@ -88,9 +88,9 @@ public class Cartogram {
 			Aggregates<Color> states2012 = renderer.transfer(carvedStates, color2012.specialize(carvedStates));
 			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008.specialize(carvedStates));
 			
-			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("~/Desktop/seams/2008-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("~/Desktop/seams/2012-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("~/Desktop/seams/%d-seams-population.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/2008-%d-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("./testResults/seams/2012-%d-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("./testResults/seams/%d-seams-population.png",seams)));
 			System.out.println("Completed export on " + seams + " seams\n");
 		}
 	}
