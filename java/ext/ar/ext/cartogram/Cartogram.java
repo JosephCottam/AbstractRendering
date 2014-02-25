@@ -40,7 +40,7 @@ public class Cartogram {
 	public static void main(String[] args) throws Exception {
 		Rectangle viewBounds = new Rectangle(0, 0, 1200,800);
 		Renderer renderer = new ParallelRenderer();
-		
+		int step=100;
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
 		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
@@ -73,13 +73,10 @@ public class Cartogram {
 
 		final Transfer<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
 		final Transfer<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
-		
-		int step=100;
-		for (int seams=0; seams<viewBounds.width; seams+=step) {
-			System.out.println("Starting export on " + seams + " seams");
+		final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> carve = new NTimes.Specialized<>(step, carver);
 
-			final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> carve = new NTimes.Specialized<>(seams, carver);
-			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carve);
+		Aggregates<Pair<String,Integer>> carved = pairs;
+		for (int seams=0; seams<viewBounds.width-seams; seams+=step) {
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
 			
 			Aggregates<Integer> carvedPop = composite.right();
@@ -93,6 +90,9 @@ public class Cartogram {
 			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/%d-2008-seams-election.png",seams)));
 			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("./testResults/seams/%d-2012-seams-election.png",seams)));
 			System.out.println("Completed export on " + seams + " seams\n");
+
+			System.out.println("Starting removing " + seams+seams + " seams");
+			carved = renderer.transfer(carved, carve);
 		}
 	}
 	
