@@ -73,7 +73,7 @@ public class CompositeWrapper<L,R,A> implements Aggregates<A> {
 		Aggregates<R> rightAggs = AggregateUtils.make(aggs, rightEmpty);
 		
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-			for (int y=aggs.lowY(); y<aggs.lowY();y++) {
+			for (int y=aggs.lowY(); y<aggs.highY();y++) {
 				Pair<L,R> v = aggs.get(x, y);
 				leftAggs.set(x, y, v.left);
 				rightAggs.set(x, y, v.right);

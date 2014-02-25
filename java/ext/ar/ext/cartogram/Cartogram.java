@@ -29,7 +29,6 @@ import ar.rules.CategoricalCounts;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
-import ar.rules.Shapes;
 import ar.rules.SeamCarving.Carve.Direction;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
@@ -39,32 +38,30 @@ import ar.util.Util;
 public class Cartogram {
 
 	public static void main(String[] args) throws Exception {
-		Rectangle viewBounds = new Rectangle(0, 0, 500,500);
+		Rectangle viewBounds = new Rectangle(0, 0, 200,200);
 		Renderer renderer = new ParallelRenderer();
 		
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
-		Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
-		AffineTransform viewTransform = Util.zoomFit(populationSource.bounds(), viewBounds.width, viewBounds.height);
-		Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
+		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
+		final AffineTransform viewTransform = Util.zoomFit(populationSource.bounds(), viewBounds.width, viewBounds.height);
+		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
 		System.out.println("Population glyphset loaded.");
-
-
+		
 		File statesSource = new File("../data/maps/USStates/");
-		final Map<String, Shape> rawShapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false));
-		Glyphset<Shape, String> states = WrappedCollection.wrap(rawShapes.entrySet(), new Shaper.MapValue<String, Shape>(), new Valuer.MapKey<String, Shape>());
+		final Map<String, Shape> rawShapes = simplifyKeys(GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false)));
+		final Glyphset<Shape, String> states = WrappedCollection.wrap(rawShapes.entrySet(), new Shaper.MapValue<String, Shape>(), new Valuer.MapKey<String, Shape>());
 		System.out.println("State shapes loaded.");
 		
 		Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
 		Aggregates<Pair<String,Integer>> pairs = CompositeWrapper.wrap(labels, population);
 		System.out.println("Base aggregates created.");
-
-
 		
-//		final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
-//		Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
-
+		
+		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
+		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
 		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.Carve<>(new DeltaPair(), Direction.V, EMPTY);
+
 		final Transfer<Integer, Color> colorPopulation = 
 				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
@@ -88,9 +85,9 @@ public class Cartogram {
 			Aggregates<Color> states2012 = renderer.transfer(carvedStates, color2012.specialize(carvedStates));
 			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008.specialize(carvedStates));
 			
+			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("./testResults/seams/%d-seams-population.png",seams)));
 			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/2008-%d-seams-election.png",seams)));
 			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("./testResults/seams/2012-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("./testResults/seams/%d-seams-population.png",seams)));
 			System.out.println("Completed export on " + seams + " seams\n");
 		}
 	}
@@ -119,10 +116,19 @@ public class Cartogram {
 	
 	public static final class DeltaPair implements SeamCarving.Delta<Pair<String, Integer>> {
 		@Override
-		public double delta(Pair<String, Integer> left,
-				Pair<String, Integer> right) {
+		public double delta(Pair<String, Integer> left, Pair<String, Integer> right) {
 			return left.right - right.right;
 		}
+	}
+	
+	/**Strip off file extensions from keys (if present).**/
+	public static final Map<String,Shape> simplifyKeys(Map<String,Shape> input) {
+		Map<String, Shape> out =new HashMap<>();
+		for (Map.Entry<String, Shape> e:input.entrySet()) {
+			String simpleKey = e.getKey().split("\\.")[0];
+			out.put(simpleKey, e.getValue());
+		}
+		return out;
 	}
 	
 }
