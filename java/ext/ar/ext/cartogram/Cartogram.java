@@ -29,7 +29,7 @@ import ar.rules.CategoricalCounts;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
-import ar.rules.SeamCarving.Carve.Direction;
+import ar.rules.SeamCarving.Direction;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
@@ -64,7 +64,7 @@ public class Cartogram {
 		
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
-		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.Carve<>(new DeltaPair(), Direction.V, EMPTY);
+		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.OptimalCarve<>(new DeltaPair(), Direction.V, EMPTY);
 
 		final Transfer<Integer, Color> colorPopulation = 
 				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))

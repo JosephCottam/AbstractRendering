@@ -22,22 +22,34 @@ import ar.rules.combinators.Seq;
  * rendering framework and generalizes it from just pixels to arbitrary
  * aggregate sets.
  * 
- * Paper: http://www.win.tue.nl/~wstahw/edu/2IV05/seamcarving.pdf
+ * 
+ * Original paper and optimal seam-finding:
+ * Avidan and Shamir; "Seam Carving for Content Aware Image Resizing"
+ * http://www.win.tue.nl/~wstahw/edu/2IV05/seamcarving.pdf
+ * 
+ * Faster, approximate seam finding methods:
+ * Huang, Fu, Rosin, Qi; "Real-time content-aware image resizing"
+ * http://link.springer.com/article/10.1007%2Fs11432-009-0041-9#page-1
+ *  
  */
 public class SeamCarving {
 	/**Calculate the difference between two values.**/
-	public interface Delta<A> {public double delta(A left, A right);}
-
+	public static interface Delta<A> {public double delta(A left, A right);}
+	public enum Direction {H,V}
 	
-	/**Find and remove a single seam.**/
-	public static class Carve<A> implements Transfer.Specialized<A,A> {
-		public enum Direction {H,V}
+	/**Find and remove a single seam, per the Avidan and Shamir method.
+	 * 
+	 * This class will calculate the full energy matrix each time a seam is removed.
+	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
+	 * To remove multiple seams, just call multiple times with the prior results as inputs in the next
+	 * (a perfect fit for the NTimes combinator). 
+	 * **/
+	public static class OptimalCarve<A> implements Transfer.Specialized<A,A> {
+		protected final Delta<A> delta;
+		protected final A empty;
+		protected final Direction dir;
 		
-		final Delta<A> delta;
-		final A empty;
-		Direction dir;
-		
-		public Carve(Delta<A> delta, Direction dir, A empty)  {
+		public OptimalCarve(Delta<A> delta, Direction dir, A empty)  {
 			this.delta = delta;
 			this.empty = empty;
 			this.dir = dir;
@@ -53,9 +65,7 @@ public class SeamCarving {
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			else {return vertical(aggregates, rend);}
 		}
-		
-		public void direction(Direction dir) {this.dir = dir;}
-		
+				
 		public Aggregates<A> horizontal(Aggregates<? extends A> aggs, Renderer rend) {
 			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs), rend));
 		}
@@ -103,6 +113,118 @@ public class SeamCarving {
 				vseam[y-cumEng.lowY()] = x;
 			}
 			return vseam;
+		}
+	}
+	
+	/**Find and remove a single seam per the w1 method of Huang, et al.
+	 * 
+	 */
+	public static class LocalCarve<A> implements Transfer.Specialized<A, A> {
+		final Delta<A> delta;
+		final A empty;
+		final Direction dir;
+		final int seams;
+		
+		public LocalCarve(Delta<A> delta, Direction dir, A empty, int seams)  {
+			this.delta = delta;
+			this.empty = empty;
+			this.dir = dir;
+			this.seams= seams;
+		}
+		
+		@Override public A emptyValue() {return empty;}
+
+		@Override @SuppressWarnings("unused") 
+		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
+
+
+		@Override
+		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (dir == Direction.H) {return horizontal(aggregates, rend);}
+			return vertical(aggregates, rend);
+		}
+			
+		public Aggregates<A> horizontal(Aggregates<? extends A> aggregates, Renderer rend) {
+			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggregates), rend));
+		}
+		
+		public Aggregates<A> vertical(Aggregates<? extends A> aggregates, Renderer rend) {
+			Aggregates<Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
+			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
+
+			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
+			Aggregates<Integer> matchings = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
+			
+			//Proceed by rows through the space
+			//Image nodes arranged like this, and we process node C:
+			//  col       m-2  m-1   m
+			//  row k:     A    B    C
+			//  row k+1:   X    Y    Z
+			for (int k=aggregates.lowY(); k < aggregates.highY(); k++) {
+				double F1=0,F2=0,F3=0;
+				for (int m=aggregates.lowX(); m<aggregates.highX(); m++) {
+					double CZ = energy.between(m,k,m,k+1);
+					double CY= energy.between(m,k,m-1,k+1);
+					double BZ = energy.between(m-1,k,m,k+1);
+					double AX = energy.between(m-2,k,m-2,k+1);
+					
+					if (matchings.get(m-2,k)==m-1) { //Prior nodes are cross-linked, so things could get complicated...
+						double FA=F1+CZ;		//C does down, simple to handle
+						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
+						if (FA > FB) { // C points down, no other changes required.
+							matchings.set(k, m, 0);
+							F3=F2;
+							F2=F1;
+							F1=FA;
+						} else { // C points left, B points right and A points down. 
+							matchings.set(k, m, -1);
+							matchings.set(k, m-1, 1);
+							matchings.set(k, m-2, 0);
+							F3=F2;
+							F2=F1;
+							F1=FB;
+						}
+					} else {
+						double FA=F1+CZ;
+						double FB=F2+CY+BZ;
+						if (FA > FB) { //B can keep pointing wherever it was, point C down
+							matchings.set(k, m, 0);
+							F3=F2;
+							F2=F1;
+							F1=FA;
+						} else { // B was already going down, now just point it right instead
+							matchings.set(k, m, -1);
+							matchings.set(k, m-1, 1);
+							F3=F2;
+							F2=F1;
+							F1=FB;
+						}
+					}
+				}
+			}
+			
+			
+			//Compute seam totals by iterating down matrix
+			//Order seams
+			//As the aggregates are carved, carve the matchings matrix as well (since it is all offsets, items can just be removed)
+			
+			return null;
+		}
+		
+		private static final class EdgeEnergy {
+			final Aggregates<Double> pixelEnergy;
+			public EdgeEnergy(Aggregates<Double> pixelEnergy) {this.pixelEnergy = pixelEnergy;}
+
+			public double between(int x1, int y1, int x2, int y2) {
+				if (!validPoint(x1,y1) || !validPoint(x2,y2)) {return Double.NEGATIVE_INFINITY;}
+				return pixelEnergy.get(x1, y1) * pixelEnergy.get(x2, y2); //w1 version
+				//return pixelEnergy.get(x1, y1) + pixelEnergy.get(x2, y2); //w version
+			}
+			
+			public boolean validPoint(int x, int y) {
+				return x >= pixelEnergy.lowX() && x < pixelEnergy.highX()
+						&& y >= pixelEnergy.lowY() && x < pixelEnergy.highY();
+			}
 		}
 	}
 	

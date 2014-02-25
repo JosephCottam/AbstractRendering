@@ -21,7 +21,7 @@ import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.SeamCarving;
 import ar.rules.Numbers;
-import ar.rules.SeamCarving.Carve.Direction;
+import ar.rules.SeamCarving.Direction;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
@@ -53,7 +53,7 @@ public class CarveApp {
 
 		
 		
-		final Transfer<Integer,Integer> carve = new SeamCarving.Carve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
+		final Transfer<Integer,Integer> carve = new SeamCarving.OptimalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
 		final Transfer<Integer, Color> transfer = 
 				Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()))
 				.then(new NTimes<>(seams, carve))

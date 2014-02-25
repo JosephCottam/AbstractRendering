@@ -344,12 +344,12 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			Transfer vt=null, ht=null;
 			if (params.columns() >0) {
-				Transfer vcarver = new SeamCarving.Carve<Integer>(delta, SeamCarving.Carve.Direction.V, 0);
+				Transfer vcarver = new SeamCarving.OptimalCarve<Integer>(delta, SeamCarving.Direction.V, 0);
 				vt = new NTimes<>(params.columns(), vcarver);
 			}
 
 			if (params.rows() >0) {
-				Transfer hcarver = new SeamCarving.Carve<Integer>(delta, SeamCarving.Carve.Direction.H, 0);
+				Transfer hcarver = new SeamCarving.OptimalCarve<Integer>(delta, SeamCarving.Direction.H, 0);
 				ht = new NTimes<>(params.rows(), hcarver);
 			}
 			
