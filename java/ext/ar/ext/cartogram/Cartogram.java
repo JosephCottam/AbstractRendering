@@ -38,24 +38,28 @@ import ar.util.Util;
 public class Cartogram {
 
 	public static void main(String[] args) throws Exception {
-		Rectangle viewBounds = new Rectangle(0, 0, 200,200);
+		Rectangle viewBounds = new Rectangle(0, 0, 1200,800);
 		Renderer renderer = new ParallelRenderer();
 		
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
 		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
-		final AffineTransform viewTransform = Util.zoomFit(populationSource.bounds(), viewBounds.width, viewBounds.height);
-		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
 		System.out.println("Population glyphset loaded.");
 		
 		File statesSource = new File("../data/maps/USStates/");
 		final Map<String, Shape> rawShapes = simplifyKeys(GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false)));
+		rawShapes.remove("AK");
+		rawShapes.remove("HI");
 		final Glyphset<Shape, String> states = WrappedCollection.wrap(rawShapes.entrySet(), new Shaper.MapValue<String, Shape>(), new Valuer.MapKey<String, Shape>());
 		System.out.println("State shapes loaded.");
+
+		final AffineTransform viewTransform = Util.zoomFit(populationSource.bounds().createUnion(states.bounds()), viewBounds.width, viewBounds.height);
+
 		
-		Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
+		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
+		final Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
 		Aggregates<Pair<String,Integer>> pairs = CompositeWrapper.wrap(labels, population);
-		System.out.println("Base aggregates created.");
+		System.out.println("Base aggregates created.\n");
 		
 		
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
@@ -86,14 +90,14 @@ public class Cartogram {
 			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008.specialize(carvedStates));
 			
 			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("./testResults/seams/%d-seams-population.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/2008-%d-seams-election.png",seams)));
-			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("./testResults/seams/2012-%d-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/%d-2008-seams-election.png",seams)));
+			Util.writeImage(AggregateUtils.asImage(states2012), new File(String.format("./testResults/seams/%d-2012-seams-election.png",seams)));
 			System.out.println("Completed export on " + seams + " seams\n");
 		}
 	}
 	
 	public static final Color PARTY1 = Color.green;
-	public static final Color PARTY2 = Color.orange;
+	public static final Color PARTY2 = Color.pink;
 	
 	public static Map<String, Color> results2008 = new HashMap<>();
 	public static Map<String, Color> results2012 = new HashMap<>();
@@ -103,8 +107,8 @@ public class Cartogram {
 			while (r.ready()) {
 				String line = r.readLine();
 				String[] parts = line.split(",");
-				results2012.put(parts[0], parts[1]=="1" ? PARTY1 : PARTY2);
-				results2008.put(parts[0], parts[2]=="1" ? PARTY1 : PARTY2);
+				results2012.put(parts[0], parts[1].equals("1") ? PARTY1 : PARTY2);
+				results2008.put(parts[0], parts[2].equals("1") ? PARTY1 : PARTY2);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

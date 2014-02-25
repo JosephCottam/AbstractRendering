@@ -56,6 +56,12 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		if ((high-low) > taskSize) {rslt=split();}
 		else {rslt=local();}
 		recorder.update((high-low)/3);
+		
+		if (rslt instanceof TouchedBoundsWrapper) {
+			TouchedBoundsWrapper<A> tbr = (TouchedBoundsWrapper<A>) rslt;
+			if (AggregateUtils.bounds(tbr).equals(AggregateUtils.bounds(tbr.base()))) {return tbr.base();}
+		} 
+
 		return rslt;
 	}
 	

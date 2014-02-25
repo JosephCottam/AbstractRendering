@@ -26,7 +26,8 @@ public interface Selector<G> {
 			Aggregates<A> target, 
 			Aggregator<I,A> op);
 	
-	/***
+	/***Does the given shape touch the indicated bin?
+	 *  
 	 * @param glyph Glyph to consider
 	 * @param view Under this view transform
 	 * @param x X Location of the bin

@@ -15,14 +15,18 @@ import ar.Selector;
 /**Collection of selectors that modify bins that a shape touches.
  * **/
 public abstract class TouchesPixel {
+	
 	/**DESTRUCTIVELY updates the target at x/y with the value passed and the target operation.**/
 	protected static final <A,I> void update(Aggregates<A> target, I v, int x, int y, Aggregator<I,A> op) {
 		A existing = target.get(x,y);
 		A update = op.combine(existing,v);
 		target.set(x, y, update);
 	}
-		
+	
+	
+	
 	public static final class Points implements Selector<Point2D> {
+		/**Sets the value at a single point in the aggregates.**/
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Point2D, ? extends I> subset,
 				AffineTransform view, 
@@ -53,6 +57,7 @@ public abstract class TouchesPixel {
 	}
 
 	public static final class Lines implements Selector<Line2D> {
+		/**Bressenham interpolation on a line.**/
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Line2D, ? extends I> subset,
 				AffineTransform view, 
@@ -133,6 +138,10 @@ public abstract class TouchesPixel {
 	}
 	
 	public static final class Rectangles implements Selector<Rectangle2D> {
+		/**Iterates over the projection of a rectangle (no hit-tests required).
+		 * 
+		 * TODO: Can this be done with Point instead of Point2D?
+		 * **/
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Rectangle2D, ? extends I> subset,
 				AffineTransform view, 
@@ -174,6 +183,10 @@ public abstract class TouchesPixel {
 	}
 
 	public static final class Shapes implements Selector<Shape> {
+		/**Iterates the bounds, with a hit-test to only set values inside of the shape.
+		 * 		 
+		 * TODO: Can this be done with Point instead of Point2D?
+		 **/
 		public <I,A> Aggregates<A> processSubset(
 				Glyphset<? extends Shape, ? extends I> subset,
 				AffineTransform view, 
@@ -185,12 +198,10 @@ public abstract class TouchesPixel {
 			Point2D testP = new Point2D.Double();
 
 			for (Glyph<? extends Shape, ? extends I> g: subset) {
-				Rectangle2D b = g.shape().getBounds2D();
+				Shape transformedShape = view.createTransformedShape(g.shape()); 	//Full new transformed shape to support hit-testing
+				Rectangle2D b = transformedShape.getBounds();
 				lowP.setLocation(b.getMinX(), b.getMinY());
 				highP.setLocation(b.getMaxX(), b.getMaxY());
-
-				view.transform(lowP, lowP);
-				view.transform(highP, highP);
 
 				int lowx = (int) Math.floor(lowP.getX());
 				int lowy = (int) Math.floor(lowP.getY());
@@ -201,7 +212,7 @@ public abstract class TouchesPixel {
 				for (int x=lowx; x<highx; x++){ 
 					for (int y=lowy; y<highy; y++) { 
 						testP.setLocation(x, y);
-						if (g.shape().contains(testP)) {
+						if (transformedShape.contains(testP)) {
 							update(target, v, x,y, op);
 						}
 					}
@@ -220,6 +231,7 @@ public abstract class TouchesPixel {
 	
 
 	@SuppressWarnings("unchecked")
+	/**Construct a selector based on the geometry type of the first item in the glyphset.**/
 	public static <G> Selector<G> make(Glyphset<? extends G, ?> glyphs) {
 		for (Glyph<? extends G, ?> g: glyphs) {
 			Object o = g.shape();
