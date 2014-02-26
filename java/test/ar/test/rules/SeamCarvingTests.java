@@ -10,7 +10,7 @@ import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.rules.SeamCarving;
-import ar.rules.SeamCarving.LocalCarve.EdgeEnergy;
+import ar.rules.SeamCarving.RowPairGlobalCarve.EdgeEnergy;
 import ar.rules.combinators.Predicates;
 
 public class SeamCarvingTests {
@@ -26,7 +26,7 @@ public class SeamCarvingTests {
 			}
 
 			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
-			Aggregates<Integer> matchings = SeamCarving.LocalCarve.matchings(pixelEnergy, energy);
+			Aggregates<Integer> matchings = SeamCarving.RowPairGlobalCarve.matchings(pixelEnergy, energy);
 			assertThat("Matching matrix has incorrect shape.", AggregateUtils.bounds(matchings), is(AggregateUtils.bounds(pixelEnergy)));
 			
 			for (int x=matchings.lowX(); x<matchings.highX(); x++) {
@@ -47,7 +47,7 @@ public class SeamCarvingTests {
 			}
 
 			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
-			Aggregates<Integer> matchings = SeamCarving.LocalCarve.matchings(pixelEnergy, energy);
+			Aggregates<Integer> matchings = SeamCarving.RowPairGlobalCarve.matchings(pixelEnergy, energy);
 			assertThat("Matching matrix has incorrect shape.", AggregateUtils.bounds(matchings), is(AggregateUtils.bounds(pixelEnergy)));
 			
 			for (int x=matchings.lowX(); x<matchings.highX(); x++) {

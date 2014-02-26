@@ -125,8 +125,13 @@ public class SeamCarving {
 	}
 	
 	/**Find and remove seams per the w1 method of Huang, et al.
+	 * 
+	 * Each pair of adjacent rows is treated independently in a pre-processing step 
+	 * to determine the best linkage between all items in the rows (thus "RowPair").
+	 * The list of linkage describes seams that involve all pixels in the image,
+	 * so multiple seams can be removed without recalculating (thus "GlobalCarve").
 	 */
-	public static class LocalCarve<A> implements Transfer.Specialized<A, A> {
+	public static class RowPairGlobalCarve<A> implements Transfer.Specialized<A, A> {
 		final Delta<A> delta;
 		final A empty;
 		final Direction dir;
@@ -138,7 +143,7 @@ public class SeamCarving {
 		 * @param empty 
 		 * @param seams How many seams to remove
 		 */
-		public LocalCarve(Delta<A> delta, Direction dir, A empty, int seams)  {
+		public RowPairGlobalCarve(Delta<A> delta, Direction dir, A empty, int seams)  {
 			this.delta = delta;
 			this.empty = empty;
 			this.dir = dir;
