@@ -166,7 +166,6 @@ public class SeamCarving {
 
 			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
 			Aggregates<Integer> matchings = matchings(pixelEnergy, energy);
-			System.out.println("Matching verified: " + ar.test.rules.SeamCarvingTests.LocalCarve.verifyFullMatching(matchings, true));
 			
 			//Compute seam totals by iterating down the matchings and pixel matrices
 			double[] seamEnergies = new double[pixelEnergy.highX()-pixelEnergy.lowX()]; 
@@ -185,11 +184,9 @@ public class SeamCarving {
 		    for (int i=0;i<seams; i++) {
 		    	int targetSeam = selectSeam(seamEnergies, i);
 		    	int[] seam = compileVSeam(targetSeam, matchings);
-		    	System.out.printf("Removing seam #%d starts at %d with energy %f\n", i, targetSeam, seamEnergies[targetSeam]);
 		    	result = carve(result, seam);
 		    	Aggregates<Integer> newMatchings = carve(matchings, seam);
 		    	matchings = repairMatching(seam, matchings, newMatchings);
-				System.out.println("Matching verified: " + ar.test.rules.SeamCarvingTests.LocalCarve.verifyFullMatching(matchings,true));
 		    	seamEnergies = Util.removeFrom(seamEnergies, targetSeam);
 		    }
 			
