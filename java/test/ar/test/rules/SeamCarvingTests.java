@@ -11,6 +11,7 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.rules.SeamCarving;
 import ar.rules.SeamCarving.LocalCarve.EdgeEnergy;
+import ar.rules.combinators.Predicates;
 
 public class SeamCarvingTests {
 	
@@ -56,6 +57,32 @@ public class SeamCarvingTests {
 				}
 			}
 		}
+		
+		/**Returns true if and only if and only if all cells in a matching are reachable.**/
+		public static boolean verifyFullMatching(Aggregates<Integer> matching, boolean detailReport) {
+			Aggregates<Boolean> reached = AggregateUtils.make(matching,false);
+			
+			for (int x=matching.lowX(); x<matching.highX(); x++) {reached.set(x, reached.lowY(), true);}
+			
+			for (int y=matching.lowY(); y<matching.highY(); y++) {
+				for (int x=matching.lowX(); x<matching.highX();x++) {
+					int dir =matching.get(x, y);
+					reached.set(x+dir, y+1, true);
+				}				
+			}
+			
+			if (detailReport) {
+				for (int y=reached.lowY(); y<reached.highY(); y++) {
+					for (int x=reached.lowX(); x<reached.highX();x++) {
+						if (!reached.get(x, y)) {
+							System.out.printf("Unreachable at %d,%d\n", x,y);
+						} 
+					}				
+				}
+			}
+			
+			return Predicates.All.all(reached);
+		}
 
 	}
 	
@@ -68,7 +95,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) x); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng);
+			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(0));}
@@ -82,7 +109,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) -x); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng);
+			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(cumEng.highX()-1));}
@@ -96,7 +123,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) Math.abs(x-cumEng.highX()/2)); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng);
+			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int e:seam) {assertThat(e, is(4));}
@@ -108,7 +135,7 @@ public class SeamCarvingTests {
 			for (int y=cumEng.lowY(); y<cumEng.highY(); y++) {
 				cumEng.set(y,y,0d); 
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng);
+			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0;i<seam.length;i++) {assertThat(seam[i], is(i));}

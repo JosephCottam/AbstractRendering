@@ -69,5 +69,27 @@ public class Utils {
 		assertThat(s2.mean, is (3.65d));
 	}
 	
+	@Test
+	public void removeFrom() {
+		double[] source = new double[10];
+		for (int i=0; i<source.length; i++) {source[i] = i;}
+		
+		assertThat(source.length, is(10));
+		
+		source = Util.removeFrom(source, 0);
+		assertThat(source.length, is(9));
+		assertThat(source[0],is(1d));
+		assertThat(source[source.length-1], is(9d));
+		
+		source = Util.removeFrom(source, 4);
+		assertThat(source.length, is(8));
+		assertThat(source[0],is(1d));
+		assertThat(source[source.length-1], is(9d));
+		assertThat(source[3], is(4d));
+		assertThat(source[4], is(6d));
+		
+		
+	}
+	
 }
 

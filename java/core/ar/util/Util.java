@@ -377,6 +377,15 @@ public class Util {
 		return newValues;
 	}
 	
+	/**Remove a the item at the given index from the array.**/
+	public static final double[] removeFrom(double[] source, int idx) {
+		double[] rslt = Arrays.copyOf(source, source.length-1);
+		System.arraycopy(source, idx+1, rslt, idx, source.length-idx-1);
+		return rslt;
+	}
+
+	
+	/**Print the contents of an int[].**/
 	public static String deepToString(int[] values) {
 		StringBuilder b = new StringBuilder();
 		b.append("[");
@@ -388,5 +397,4 @@ public class Util {
 		b.append("]");
 		return b.toString();
 	}
-	
 }

@@ -54,8 +54,8 @@ public class CarveApp {
 		
 		final Transfer<Integer, Color> transfer = 
 				Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()))
-				.then(new SeamCarving.OptimalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0,seams))
-				//.then(new SeamCarving.LocalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0, seams))
+				//.then(new SeamCarving.OptimalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0,seams))
+				.then(new SeamCarving.LocalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0, seams))
 				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));

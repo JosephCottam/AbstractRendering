@@ -2,16 +2,13 @@ package ar.rules;
 
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.TransposeWrapper;
+import ar.util.Util;
 
 /** Seam-carving is a content-sensitive image resizing technique.
  * 
@@ -84,37 +81,33 @@ public class SeamCarving {
 
 			@SuppressWarnings("unchecked")
 			Aggregates<A> rslt = (Aggregates<A>) aggs;
-			int baseDispersal=7817*(rslt.highX()-rslt.lowX());
 			
 			for (int i=0; i<seams; i++) {
 				Aggregates<? extends Double> cumEng = rend.transfer(pixelEnergy, new CumulativeEnergy());
-				int nearPosition = (i+baseDispersal)%(rslt.highX()-rslt.lowX());
-				int[] vseam = findVSeam(cumEng, nearPosition);
+				int selectedSeam = selectSeam(seamEnergies(cumEng), i);
+				int[] vseam = findVSeam(cumEng, selectedSeam);
 				rslt = carve(rslt, vseam);
 				pixelEnergy = carve(pixelEnergy,vseam);
 			}
 
 			return rslt;
-			
+		}
+
+		/**Get just the seam energies.
+		 * TODO: Eliminate this method by having a wrapper that presents a row/col of aggregates as a list.  Have selectSeam take List<Double>
+		 * **/
+		private static final double[] seamEnergies(Aggregates<? extends Double> cumEng) {
+			final double[] energies = new double[cumEng.highX()-cumEng.lowX()];
+			for (int x=0; x<energies.length; x++) {
+				energies[x] = cumEng.get(x, cumEng.highY()-1);
+			}
+			return energies;
 		}
 
 		
-		public static int[] findVSeam(Aggregates<? extends Double> cumEng, int nearPosition) {
-			//find the lowest end of the seam
-			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
-			double min = Integer.MAX_VALUE;
-			for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
-				Double eng = cumEng.get(x, cumEng.highY()-1); 
-				
-				//Use the current x as the start if it has lower energy than anything found before OR
-				//   it has the same energy but is closer to the "nearPosition"
-				if (min > eng	
-					|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-vseam[vseam.length-1])))) {
-					min = eng;
-					vseam[vseam.length-1] = x;
-				} 
-			}
-				
+		public static int[] findVSeam(Aggregates<? extends Double> cumEng, int selectedSeam) {
+			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];
+			vseam[vseam.length-1] = selectedSeam;
 			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
 				int x = vseam[y-cumEng.lowY()+1]; //Get the x value for the next row down  
 
@@ -157,7 +150,6 @@ public class SeamCarving {
 		@Override @SuppressWarnings("unused") 
 		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 
-
 		@Override
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
@@ -174,6 +166,7 @@ public class SeamCarving {
 
 			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
 			Aggregates<Integer> matchings = matchings(pixelEnergy, energy);
+			System.out.println("Matching verified: " + ar.test.rules.SeamCarvingTests.LocalCarve.verifyFullMatching(matchings, true));
 			
 			//Compute seam totals by iterating down the matchings and pixel matrices
 			double[] seamEnergies = new double[pixelEnergy.highX()-pixelEnergy.lowX()]; 
@@ -186,29 +179,19 @@ public class SeamCarving {
 				}
 			}
 			
-			//Order seams
-			SortedMap<Double, List<Integer>> seamOrder = new TreeMap<>();
-		    for (int i = 0; i < seamEnergies.length; ++i) {
-		        Double seamEnergy = seamEnergies[i];
-	    		List<Integer> idxs = seamOrder.get(seamEnergy);
-		    	if (idxs==null) {idxs = new ArrayList<>();}
-		    	int size = idxs.size()+1;
-		    	idxs.add(((size+1)*7253)%size, i); //Mix up the order a bit; 7253 is just a prime number I knew
-		    	seamOrder.put(seamEnergy, idxs);
-		    }
-			
 		    @SuppressWarnings("unchecked")
 			Aggregates<A> result = (Aggregates<A>) aggregates;
 			//As the aggregates are carved, carve the matchings matrix as well (since it is all offsets, items can just be removed)
 		    for (int i=0;i<seams; i++) {
-		    	List<Integer> headList = seamOrder.get(seamOrder.firstKey());
-		    	int targetSeam = headList.get(0);
-		    	headList.remove(0);
-		    	if (headList.size()==0) {seamOrder.remove(seamOrder.firstKey());}
-		    	
+		    	int targetSeam = selectSeam(seamEnergies, i);
 		    	int[] seam = compileVSeam(targetSeam, matchings);
+		    	System.out.printf("Removing seam #%d starts at %d with energy %f\n", i, targetSeam, seamEnergies[targetSeam]);
 		    	result = carve(result, seam);
-		    	matchings = carve(matchings, seam);
+		    	//matchings = carve(matchings, seam);
+		    	Aggregates<Integer> newMatchings = carve(matchings, seam);
+		    	matchings = repairMatching(seam, matchings, newMatchings);
+				System.out.println("Matching verified: " + ar.test.rules.SeamCarvingTests.LocalCarve.verifyFullMatching(matchings,true));
+		    	seamEnergies = Util.removeFrom(seamEnergies, targetSeam);
 		    }
 			
 			return result;
@@ -216,9 +199,9 @@ public class SeamCarving {
 		
 		public static final int[] compileVSeam(int x, Aggregates<Integer> matchings) {
 			final int[] seam = new int[matchings.highY()-matchings.lowY()];
-			for (int y=matchings.lowY();y<seam.length;y++) {
+			for (int y=0;y<seam.length;y++) {
 				seam[y] =x;
-				x = x+matchings.get(x, y);
+				x = x+matchings.get(x, y+matchings.lowY());
 			}
 			return seam;
 		}
@@ -241,7 +224,7 @@ public class SeamCarving {
 		private static final Integer ONE = 1;
 		private static final Integer NEGATIVE_ONE = -1;
 		public static final Aggregates<Integer> matchings(Aggregates<Double> aggregates, EdgeEnergy energy) {
-			Aggregates<Integer> matchings = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
+			Aggregates<Integer> matches = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
 			//Proceed by rows through the space
 			//Naming imagines a slice of two rows arranged like this:
 			//  col       m-2  m-1   m
@@ -256,18 +239,18 @@ public class SeamCarving {
 					double BZ = energy.between(x-1,y,x,y+1);
 					double AX = energy.between(x-2,y,x-2,y+1);
 					
-					if (matchings.get(x-2,y)==x-1) { //Prior nodes are cross-linked, so things could get complicated...
+					if (matches.get(x-2,y)==1 && matches.get(x-1,y)==-1) { //Prior nodes are cross-linked, so things could get complicated...
 						double FA=F1+CZ;		//C does down, simple to handle
 						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
-						if (FA >= FB) { // C points down, no other changes required.
-							matchings.set(x, y, ZERO);
+						if (FA >= FB) { // C points down, no changes required.
+							matches.set(x, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // C points left, B points right and A points down. 
-							matchings.set(x, y, NEGATIVE_ONE);
-							matchings.set(x-1, y, ONE);
-							matchings.set(x-2, y, ZERO);
+							matches.set(x, y, NEGATIVE_ONE);
+							matches.set(x-1, y, ONE);
+							matches.set(x-2, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -276,13 +259,13 @@ public class SeamCarving {
 						double FA=F1+CZ;
 						double FB=F2+CY+BZ;
 						if (FA >= FB) { //B can keep pointing wherever it was, point C down
-							matchings.set(x, y, ZERO);
+							matches.set(x, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // B was already going down, now just point it right instead
-							matchings.set(x, y, NEGATIVE_ONE);
-							matchings.set(x-1, y, ONE);
+							matches.set(x, y, NEGATIVE_ONE);
+							matches.set(x-1, y, ONE);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -290,9 +273,42 @@ public class SeamCarving {
 					}
 				}
 			}
-			return matchings;
+			return matches;
 		}
 		
+		/**After carving out seams, any crossing seams need to be straightened to preserve the 1:1 matching between rows.
+		 * 
+		 * 
+		 * If items are matched like so and A is carved ....
+		 * A   B            B
+		 *  \ /     ===>   /
+		 *  / \           / 
+		 * C   D            C
+		 * 
+		 * Notice that B now points off the grid and C has no match.  But it is easy to patch up, all diagonals happen in pairs,
+		 * so Just set B to match DOWN instead of LEFT and you are fixed.  Fixes only need to happen along the old seam
+		 * where the link was not down.
+		 * 
+		 * @param seam  The seam removed
+		 * @param oldMatching What the matching values were (used to check for non-down links)
+		 * @param newMatching The post-carved links (updated in place)
+		 */
+		public static Aggregates<Integer> repairMatching(final int[] seam, Aggregates<Integer> oldMatching, Aggregates<Integer> newMatching) {
+			for (int i=0; i<seam.length; i++) {
+				int x=seam[i];
+				int y=i+oldMatching.lowY();
+
+				int oldDir = oldMatching.get(x,y);
+				if (oldDir ==1) {
+					newMatching.set(x-1, y, ZERO);
+				} else if (oldDir == -1) {
+					newMatching.set(x, y, ZERO);					
+				}
+			}
+			return newMatching;
+		}
+		
+
 		/**Utility class, encapsulates a local energy matrix and computes
 		 * a between-pixel energy matrix. 
 		 */
@@ -311,8 +327,34 @@ public class SeamCarving {
 						&& y >= pixelEnergy.lowY() && y < pixelEnergy.highY();
 			}
 		}
+
 	}
 
+	
+	/**
+	 * @param seamEnergies Array of seam energies
+	 * @param seamIdx Is this the 1st/2nd/3rd call to nextSeam?
+	 * @return The index of the selected seam in seamEnergies
+	 */
+	private static final int selectSeam(final double[] seamEnergies, final int seamIdx) {
+		int selected=0;
+		double min = Integer.MAX_VALUE;
+		int nearPosition=(7817*seamIdx)%seamEnergies.length;
+		
+		for (int x = 0; x < seamEnergies.length; x++) {
+			Double eng = seamEnergies[x]; 
+			
+			//Use the current x as the start if it has lower energy than anything found before OR
+			//   it has the same energy but is closer to the "nearPosition"
+			if (min > eng	
+				|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-selected)))) {
+				min = eng;
+				selected = x;
+			} 
+		}
+		return selected;
+	}
+	
 	/**Carves a vertical seam out.**/
 	private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
 		Aggregates<A> rslt = 
@@ -325,7 +367,6 @@ public class SeamCarving {
 			for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
 		}
 		return rslt;
-
 	}
 	
 	/**Computes the energy of a set of aggregates.
