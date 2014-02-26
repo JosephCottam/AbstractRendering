@@ -22,7 +22,6 @@ import ar.rules.General;
 import ar.rules.SeamCarving;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving.Direction;
-import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
@@ -47,17 +46,16 @@ public class CarveApp {
 
 		int width = 800;
 		int height = 375;
-		int seams = 100;
+		int seams = 400;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
 		
 		
-		//final Transfer<Integer,Integer> carve = new SeamCarving.OptimalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0);
 		final Transfer<Integer, Color> transfer = 
 				Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()))
-				//.then(new NTimes<>(seams, carve))
-				.then(new SeamCarving.LocalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0, 100))
+				.then(new SeamCarving.OptimalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0,seams))
+				//.then(new SeamCarving.LocalCarve<>(new SeamCarving.DeltaInteger(), Direction.V, 0, seams))
 				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));

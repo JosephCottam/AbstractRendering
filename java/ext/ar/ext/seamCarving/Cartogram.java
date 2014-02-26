@@ -30,7 +30,6 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
 import ar.rules.SeamCarving.Direction;
-import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
@@ -62,9 +61,10 @@ public class Cartogram {
 		System.out.println("Base aggregates created.\n");
 		
 		
+		int step=100;
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
-		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.OptimalCarve<>(new DeltaPair(), Direction.V, EMPTY);
+		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.OptimalCarve<>(new DeltaPair(), Direction.V, EMPTY, step);
 
 		final Transfer<Integer, Color> colorPopulation = 
 				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
@@ -74,12 +74,10 @@ public class Cartogram {
 		final Transfer<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
 		final Transfer<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
 		
-		int step=100;
 		for (int seams=0; seams<viewBounds.width; seams+=step) {
 			System.out.println("Starting removing " + seams + " seams");
 
-			final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> carve = new NTimes.Specialized<>(step, carver);
-			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carve);
+			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carver);
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
 			
 			Aggregates<Integer> carvedPop = composite.right();

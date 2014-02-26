@@ -12,7 +12,6 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.TransposeWrapper;
-import ar.rules.combinators.Seq;
 
 /** Seam-carving is a content-sensitive image resizing technique.
  * 
@@ -56,11 +55,13 @@ public class SeamCarving {
 		protected final Delta<A> delta;
 		protected final A empty;
 		protected final Direction dir;
+		protected final int seams;
 		
-		public OptimalCarve(Delta<A> delta, Direction dir, A empty)  {
+		public OptimalCarve(Delta<A> delta, Direction dir, A empty, int seams)  {
 			this.delta = delta;
 			this.empty = empty;
 			this.dir = dir;
+			this.seams = seams;
 		}
 		
 		@Override public A emptyValue() {return empty;}
@@ -79,24 +80,39 @@ public class SeamCarving {
 		}
 		
 		public Aggregates<A> vertical(Aggregates<? extends A> aggs, Renderer rend) {
-			Transfer<A, Double> energy = new Seq<>(new Energy<>(delta), new CumulativeEnergy());
-			Aggregates<? extends Double> cumEng = rend.transfer(aggs, energy.specialize(aggs));
-			int[] vseam = findVSeam(cumEng);
-			return carve(aggs, vseam);
+			Aggregates<? extends Double> pixelEnergy = rend.transfer(aggs, new Energy<>(delta));
+
+			@SuppressWarnings("unchecked")
+			Aggregates<A> rslt = (Aggregates<A>) aggs;
+			int baseDispersal=7817*(rslt.highX()-rslt.lowX());
+			
+			for (int i=0; i<seams; i++) {
+				Aggregates<? extends Double> cumEng = rend.transfer(pixelEnergy, new CumulativeEnergy());
+				int nearPosition = (i+baseDispersal)%(rslt.highX()-rslt.lowX());
+				int[] vseam = findVSeam(cumEng, nearPosition);
+				rslt = carve(rslt, vseam);
+				pixelEnergy = carve(pixelEnergy,vseam);
+			}
+
+			return rslt;
 			
 		}
 
 		
-		public static int[] findVSeam(Aggregates<? extends Double> cumEng) {
+		public static int[] findVSeam(Aggregates<? extends Double> cumEng, int nearPosition) {
 			//find the lowest end of the seam
 			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];			
 			double min = Integer.MAX_VALUE;
 			for (int x = cumEng.lowX(); x < cumEng.highX(); x++) {
 				Double eng = cumEng.get(x, cumEng.highY()-1); 
-				if (min > eng) {
+				
+				//Use the current x as the start if it has lower energy than anything found before OR
+				//   it has the same energy but is closer to the "nearPosition"
+				if (min > eng	
+					|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-vseam[vseam.length-1])))) {
 					min = eng;
 					vseam[vseam.length-1] = x;
-				}
+				} 
 			}
 				
 			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
