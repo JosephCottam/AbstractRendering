@@ -43,13 +43,13 @@ public class SeamCarving {
 	/**Carve horizontally or vertically?**/
 	public enum Direction {H,V}
 	
-	/**Find and remove a single seam, per the Avidan and Shamir method.
+	/**Find and remove a seams, per the Avidan and Shamir method.
 	 * 
 	 * This class will calculate the full energy matrix each time a seam is removed.
 	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
-	 * To remove multiple seams, just call multiple times with the prior results as inputs in the next
-	 * (a perfect fit for the NTimes combinator).  For faster results, try other "Carve" methods in
-	 * this class.  Each has a different set of tradeoffs, but they all run significanlty faster.  
+	 * 
+	 * For faster results, try other "Carve" classes.
+	 * Each has a different set of tradeoffs, but they all run significantly faster.  
 	 * 
 	 * **/
 	public static class OptimalCarve<A> implements Transfer.Specialized<A,A> {
@@ -163,7 +163,7 @@ public class SeamCarving {
 			double[] seamEnergies = new double[pixelEnergy.highX()-pixelEnergy.lowX()]; 
 			for (int x=pixelEnergy.lowX(); x<pixelEnergy.highX(); x++) {
 				int sourceX=x;
-				for (int y=pixelEnergy.lowY(); y<pixelEnergy.highY(); y++) {
+				for (int y=pixelEnergy.lowY(); y<pixelEnergy.highY()-1; y++) {//If you look down past the last row, you get -inf....
 					int targetX = sourceX + matchings.get(sourceX,y);
 					seamEnergies[x] += energy.between(sourceX, y, targetX, y+1);
 					sourceX=targetX;
@@ -200,7 +200,7 @@ public class SeamCarving {
 		
 		public static final int[] compileVSeam(int x, Aggregates<Integer> matchings) {
 			final int[] seam = new int[matchings.highY()-matchings.lowY()];
-			for (int y=0;y<seam.length;y++) {
+			for (int y=matchings.lowY();y<seam.length;y++) {
 				seam[y] =x;
 				x = x+matchings.get(x, y);
 			}
@@ -221,6 +221,9 @@ public class SeamCarving {
 		 * @param energy
 		 * @return
 		 */
+		private static final Integer ZERO = 0;
+		private static final Integer ONE = 1;
+		private static final Integer NEGATIVE_ONE = -1;
 		public static final Aggregates<Integer> matchings(Aggregates<Double> aggregates, EdgeEnergy energy) {
 			Aggregates<Integer> matchings = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
 			//Proceed by rows through the space
@@ -240,15 +243,15 @@ public class SeamCarving {
 					if (matchings.get(x-2,y)==x-1) { //Prior nodes are cross-linked, so things could get complicated...
 						double FA=F1+CZ;		//C does down, simple to handle
 						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
-						if (FA > FB) { // C points down, no other changes required.
-							matchings.set(x, y, 0);
+						if (FA >= FB) { // C points down, no other changes required.
+							matchings.set(x, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // C points left, B points right and A points down. 
-							matchings.set(x, y, -1);
-							matchings.set(x-1, y, 1);
-							matchings.set(x-2, y, 0);
+							matchings.set(x, y, NEGATIVE_ONE);
+							matchings.set(x-1, y, ONE);
+							matchings.set(x-2, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -256,14 +259,14 @@ public class SeamCarving {
 					} else {
 						double FA=F1+CZ;
 						double FB=F2+CY+BZ;
-						if (FA > FB) { //B can keep pointing wherever it was, point C down
-							matchings.set(x, y, 0);
+						if (FA >= FB) { //B can keep pointing wherever it was, point C down
+							matchings.set(x, y, ZERO);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // B was already going down, now just point it right instead
-							matchings.set(x, y, -1);
-							matchings.set(x-1, y, 1);
+							matchings.set(x, y, NEGATIVE_ONE);
+							matchings.set(x-1, y, ONE);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -274,7 +277,10 @@ public class SeamCarving {
 			return matchings;
 		}
 		
-		private static final class EdgeEnergy {
+		/**Utility class, encapsulates a local energy matrix and computes
+		 * a between-pixel energy matrix. 
+		 */
+		public static final class EdgeEnergy {
 			final Aggregates<Double> pixelEnergy;
 			public EdgeEnergy(Aggregates<Double> pixelEnergy) {this.pixelEnergy = pixelEnergy;}
 
@@ -286,7 +292,7 @@ public class SeamCarving {
 			
 			public boolean validPoint(int x, int y) {
 				return x >= pixelEnergy.lowX() && x < pixelEnergy.highX()
-						&& y >= pixelEnergy.lowY() && x < pixelEnergy.highY();
+						&& y >= pixelEnergy.lowY() && y < pixelEnergy.highY();
 			}
 		}
 	}
