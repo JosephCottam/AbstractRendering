@@ -2,13 +2,17 @@ package ar.rules;
 
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.TransposeWrapper;
-import ar.util.Util;
 
 /** Seam-carving is a content-sensitive image resizing technique.
  * 
@@ -122,6 +126,48 @@ public class SeamCarving {
 			}
 			return vseam;
 		}
+		
+		
+		/**
+		 * @param seamEnergies Array of seam energies
+		 * @param seamIdx Is this the 1st/2nd/3rd call to nextSeam?
+		 * @return The index of the selected seam in seamEnergies
+		 */
+		private static final int selectSeam(final double[] seamEnergies, final int seamIdx) {
+			int selected=0;
+			double min = Integer.MAX_VALUE;
+			int nearPosition=(7817*seamIdx)%seamEnergies.length;
+
+			for (int x = 0; x < seamEnergies.length; x++) {
+				Double eng = seamEnergies[x]; 
+
+				//Use the current x as the start if it has lower energy than anything found before OR
+				//   it has the same energy but is closer to the "nearPosition"
+				if (min > eng   
+						|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-selected)))) {
+					min = eng;
+					selected = x;
+				} 
+			}
+
+			return selected;
+		}
+		
+
+		
+		/**Carves a vertical seam out.**/
+		private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
+			Aggregates<A> rslt = 
+					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
+					//AggregateUtils.make(aggs, (A) aggs.defaultValue());
+			
+			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
+				int split = vseam[y-aggs.lowY()];
+				for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
+				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
+			}
+			return rslt;
+		}
 	}
 	
 	/**Find and remove seams per the w1 method of Huang, et al.
@@ -183,19 +229,59 @@ public class SeamCarving {
 				}
 			}
 			
-		    @SuppressWarnings("unchecked")
-			Aggregates<A> result = (Aggregates<A>) aggregates;
-			//As the aggregates are carved, carve the matchings matrix as well (since it is all offsets, items can just be removed)
-		    for (int i=0;i<seams; i++) {
-		    	int targetSeam = selectSeam(seamEnergies, i);
-		    	int[] seam = compileVSeam(targetSeam, matchings);
-		    	result = carve(result, seam);
-		    	Aggregates<Integer> newMatchings = carve(matchings, seam);
-		    	matchings = repairMatching(seam, matchings, newMatchings);
-		    	seamEnergies = Util.removeFrom(seamEnergies, targetSeam);
+			//Order seams
+			SortedMap<Double, List<Integer>> seamOrder = new TreeMap<>();
+		    for (int i = 0; i < seamEnergies.length; ++i) {
+		        Double seamEnergy = seamEnergies[i];
+	    		List<Integer> idxs = seamOrder.get(seamEnergy);
+		    	if (idxs==null) {idxs = new ArrayList<>();}
+		    	int size = idxs.size()+1;
+		    	idxs.add(((size+1)*7253)%size, i); //Mix up the order a bit; 7253 is just a prime number I knew
+		    	seamOrder.put(seamEnergy, idxs);
 		    }
 			
-			return result;
+		    //Select seams in order
+		    int[][] seamPoints = new int[seams][];
+		    for (int i=0;i<seams; i++) {
+		    	List<Integer> headList = seamOrder.get(seamOrder.firstKey());
+		    	int targetSeam = headList.get(0);
+		    	headList.remove(0);
+		    	if (headList.size()==0) {seamOrder.remove(seamOrder.firstKey());}
+		    	seamPoints[i] = compileVSeam(targetSeam, matchings);		    	
+		    }
+					    
+	    	seamPoints = transpose(seamPoints);
+	    	for (int i=0;i<seamPoints.length;i++) {
+	    		Arrays.sort(seamPoints[i]);
+	    	}
+		    
+	    	//Carve ALL seam-points out of the aggregates...
+			Aggregates<A> result = AggregateUtils.make(aggregates, (A) aggregates.defaultValue());
+	    	for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
+	    		int i = y-aggregates.lowY();
+	    		int dropCount=0;
+	    		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+	    			if (seamPoints[i][dropCount] == x) {
+	    				dropCount++; 
+	    				continue;
+	    			}
+	    			result.set(x-dropCount, y, aggregates.get(x, y));
+	    		}
+	    	}
+	    	return result;
+		}
+	
+		public static int[][] transpose(int[][] in) {
+			int width = in.length;
+			int height = in[0].length;
+			int[][] out = new int[height][width];
+			
+			for (int x=0; x<width;x++) {
+				for (int y=0; y<height; y++) {
+					out[y][x]=in[x][y];
+				}
+			}
+			return out;
 		}
 		
 		public static final int[] compileVSeam(int x, Aggregates<Integer> matchings) {
@@ -331,44 +417,6 @@ public class SeamCarving {
 
 	}
 
-	
-	/**
-	 * @param seamEnergies Array of seam energies
-	 * @param seamIdx Is this the 1st/2nd/3rd call to nextSeam?
-	 * @return The index of the selected seam in seamEnergies
-	 */
-	private static final int selectSeam(final double[] seamEnergies, final int seamIdx) {
-		int selected=0;
-		double min = Integer.MAX_VALUE;
-		int nearPosition=(7817*seamIdx)%seamEnergies.length;
-		
-		for (int x = 0; x < seamEnergies.length; x++) {
-			Double eng = seamEnergies[x]; 
-			
-			//Use the current x as the start if it has lower energy than anything found before OR
-			//   it has the same energy but is closer to the "nearPosition"
-			if (min > eng	
-				|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-selected)))) {
-				min = eng;
-				selected = x;
-			} 
-		}
-		return selected;
-	}
-	
-	/**Carves a vertical seam out.**/
-	private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
-		Aggregates<A> rslt = 
-				AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-				//AggregateUtils.make(aggs, (A) aggs.defaultValue());
-		
-		for (int y = aggs.lowY(); y<aggs.highY(); y++) {
-			int split = vseam[y-aggs.lowY()];
-			for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
-			for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
-		}
-		return rslt;
-	}
 	
 	/**Computes the energy of a set of aggregates.
 	 */
