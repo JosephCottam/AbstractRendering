@@ -187,7 +187,6 @@ public class SeamCarving {
 		    	int[] seam = compileVSeam(targetSeam, matchings);
 		    	System.out.printf("Removing seam #%d starts at %d with energy %f\n", i, targetSeam, seamEnergies[targetSeam]);
 		    	result = carve(result, seam);
-		    	//matchings = carve(matchings, seam);
 		    	Aggregates<Integer> newMatchings = carve(matchings, seam);
 		    	matchings = repairMatching(seam, matchings, newMatchings);
 				System.out.println("Matching verified: " + ar.test.rules.SeamCarvingTests.LocalCarve.verifyFullMatching(matchings,true));
@@ -299,10 +298,10 @@ public class SeamCarving {
 				int y=i+oldMatching.lowY();
 
 				int oldDir = oldMatching.get(x,y);
-				if (oldDir ==1) {
-					newMatching.set(x-1, y, ZERO);
+				if (oldDir == 1) {
+					newMatching.set(x, y, ZERO);
 				} else if (oldDir == -1) {
-					newMatching.set(x, y, ZERO);					
+					newMatching.set(x-1, y, ZERO);					
 				}
 			}
 			return newMatching;
