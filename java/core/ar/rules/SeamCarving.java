@@ -2,6 +2,10 @@ package ar.rules;
 
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ar.Aggregates;
 import ar.Renderer;
@@ -35,6 +39,8 @@ import ar.rules.combinators.Seq;
 public class SeamCarving {
 	/**Calculate the difference between two values.**/
 	public static interface Delta<A> {public double delta(A left, A right);}
+	
+	/**Carve horizontally or vertically?**/
 	public enum Direction {H,V}
 	
 	/**Find and remove a single seam, per the Avidan and Shamir method.
@@ -42,7 +48,9 @@ public class SeamCarving {
 	 * This class will calculate the full energy matrix each time a seam is removed.
 	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
 	 * To remove multiple seams, just call multiple times with the prior results as inputs in the next
-	 * (a perfect fit for the NTimes combinator). 
+	 * (a perfect fit for the NTimes combinator).  For faster results, try other "Carve" methods in
+	 * this class.  Each has a different set of tradeoffs, but they all run significanlty faster.  
+	 * 
 	 * **/
 	public static class OptimalCarve<A> implements Transfer.Specialized<A,A> {
 		protected final Delta<A> delta;
@@ -74,17 +82,8 @@ public class SeamCarving {
 			Transfer<A, Double> energy = new Seq<>(new Energy<>(delta), new CumulativeEnergy());
 			Aggregates<? extends Double> cumEng = rend.transfer(aggs, energy.specialize(aggs));
 			int[] vseam = findVSeam(cumEng);
+			return carve(aggs, vseam);
 			
-			Aggregates<A> rslt = 
-					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-					//AggregateUtils.make(aggs, (A) aggs.defaultValue());
-			
-			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
-				int split = vseam[y-aggs.lowY()];
-				for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
-				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
-			}
-			return rslt;
 		}
 
 		
@@ -116,8 +115,7 @@ public class SeamCarving {
 		}
 	}
 	
-	/**Find and remove a single seam per the w1 method of Huang, et al.
-	 * 
+	/**Find and remove seams per the w1 method of Huang, et al.
 	 */
 	public static class LocalCarve<A> implements Transfer.Specialized<A, A> {
 		final Delta<A> delta;
@@ -125,6 +123,12 @@ public class SeamCarving {
 		final Direction dir;
 		final int seams;
 		
+		/**
+		 * @param delta Comparison function used to compute the energy matrix
+		 * @param dir Direction seams run
+		 * @param empty 
+		 * @param seams How many seams to remove
+		 */
 		public LocalCarve(Delta<A> delta, Direction dir, A empty, int seams)  {
 			this.delta = delta;
 			this.empty = empty;
@@ -153,33 +157,98 @@ public class SeamCarving {
 			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
 
 			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
-			Aggregates<Integer> matchings = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
+			Aggregates<Integer> matchings = matchings(pixelEnergy, energy);
 			
+			//Compute seam totals by iterating down the matchings and pixel matrices
+			double[] seamEnergies = new double[pixelEnergy.highX()-pixelEnergy.lowX()]; 
+			for (int x=pixelEnergy.lowX(); x<pixelEnergy.highX(); x++) {
+				int sourceX=x;
+				for (int y=pixelEnergy.lowY(); y<pixelEnergy.highY(); y++) {
+					int targetX = sourceX + matchings.get(sourceX,y);
+					seamEnergies[x] += energy.between(sourceX, y, targetX, y+1);
+					sourceX=targetX;
+				}
+			}
+			
+			//Order seams
+			SortedMap<Double, List<Integer>> seamOrder = new TreeMap<>();
+		    for (int i = 0; i < seamEnergies.length; ++i) {
+		        Double seamEnergy = seamEnergies[i];
+	    		List<Integer> idxs = seamOrder.get(seamEnergy);
+		    	if (idxs==null) {idxs = new ArrayList<>();}
+		    	int size = idxs.size()+1;
+		    	idxs.add(((size+1)*7253)%size, i); //Mix up the order a bit; 7253 is just a prime number I knew
+		    	seamOrder.put(seamEnergy, idxs);
+		    }
+			
+		    @SuppressWarnings("unchecked")
+			Aggregates<A> result = (Aggregates<A>) aggregates;
+			//As the aggregates are carved, carve the matchings matrix as well (since it is all offsets, items can just be removed)
+		    for (int i=0;i<seams; i++) {
+		    	List<Integer> headList = seamOrder.get(seamOrder.firstKey());
+		    	int targetSeam = headList.get(0);
+		    	headList.remove(0);
+		    	if (headList.size()==0) {seamOrder.remove(seamOrder.firstKey());}
+		    	
+		    	int[] seam = compileVSeam(targetSeam, matchings);
+		    	result = carve(result, seam);
+		    	matchings = carve(matchings, seam);
+		    }
+			
+			return result;
+		}
+		
+		public static final int[] compileVSeam(int x, Aggregates<Integer> matchings) {
+			final int[] seam = new int[matchings.highY()-matchings.lowY()];
+			for (int y=0;y<seam.length;y++) {
+				seam[y] =x;
+				x = x+matchings.get(x, y);
+			}
+			return seam;
+		}
+		
+		/** Match each pixel in each row with another pixel in the next row down.
+		 * 
+		 * All matchings are 1:1 and the total matching maximizes the sum of the energy 
+		 * in pairs between the rows.  This maximization has been shown to increase 
+		 * the variance, therefore it tends to produce seams that are either clearly 
+		 * important or clearly not.  
+		 * 
+		 * This is a strictly local calculation.  There are other methods (method w2 in particular)
+		 * that also take into account global information. 
+		 *
+		 * @param aggregates
+		 * @param energy
+		 * @return
+		 */
+		public static final Aggregates<Integer> matchings(Aggregates<Double> aggregates, EdgeEnergy energy) {
+			Aggregates<Integer> matchings = AggregateUtils.make(aggregates, Integer.MIN_VALUE);
 			//Proceed by rows through the space
-			//Image nodes arranged like this, and we process node C:
+			//Naming imagines a slice of two rows arranged like this:
 			//  col       m-2  m-1   m
 			//  row k:     A    B    C
 			//  row k+1:   X    Y    Z
-			for (int k=aggregates.lowY(); k < aggregates.highY(); k++) {
+			// Processing tries to find the match for "C" (either Y or Z) but may change A and B as well in one case
+			for (int y=aggregates.lowY(); y < aggregates.highY(); y++) {
 				double F1=0,F2=0,F3=0;
-				for (int m=aggregates.lowX(); m<aggregates.highX(); m++) {
-					double CZ = energy.between(m,k,m,k+1);
-					double CY= energy.between(m,k,m-1,k+1);
-					double BZ = energy.between(m-1,k,m,k+1);
-					double AX = energy.between(m-2,k,m-2,k+1);
+				for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
+					double CZ = energy.between(x,y,x,y+1);
+					double CY= energy.between(x,y,x-1,y+1);
+					double BZ = energy.between(x-1,y,x,y+1);
+					double AX = energy.between(x-2,y,x-2,y+1);
 					
-					if (matchings.get(m-2,k)==m-1) { //Prior nodes are cross-linked, so things could get complicated...
+					if (matchings.get(x-2,y)==x-1) { //Prior nodes are cross-linked, so things could get complicated...
 						double FA=F1+CZ;		//C does down, simple to handle
 						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
 						if (FA > FB) { // C points down, no other changes required.
-							matchings.set(k, m, 0);
+							matchings.set(x, y, 0);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // C points left, B points right and A points down. 
-							matchings.set(k, m, -1);
-							matchings.set(k, m-1, 1);
-							matchings.set(k, m-2, 0);
+							matchings.set(x, y, -1);
+							matchings.set(x-1, y, 1);
+							matchings.set(x-2, y, 0);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -188,13 +257,13 @@ public class SeamCarving {
 						double FA=F1+CZ;
 						double FB=F2+CY+BZ;
 						if (FA > FB) { //B can keep pointing wherever it was, point C down
-							matchings.set(k, m, 0);
+							matchings.set(x, y, 0);
 							F3=F2;
 							F2=F1;
 							F1=FA;
 						} else { // B was already going down, now just point it right instead
-							matchings.set(k, m, -1);
-							matchings.set(k, m-1, 1);
+							matchings.set(x, y, -1);
+							matchings.set(x-1, y, 1);
 							F3=F2;
 							F2=F1;
 							F1=FB;
@@ -202,13 +271,7 @@ public class SeamCarving {
 					}
 				}
 			}
-			
-			
-			//Compute seam totals by iterating down matrix
-			//Order seams
-			//As the aggregates are carved, carve the matchings matrix as well (since it is all offsets, items can just be removed)
-			
-			return null;
+			return matchings;
 		}
 		
 		private static final class EdgeEnergy {
@@ -226,6 +289,21 @@ public class SeamCarving {
 						&& y >= pixelEnergy.lowY() && x < pixelEnergy.highY();
 			}
 		}
+	}
+
+	/**Carves a vertical seam out.**/
+	private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
+		Aggregates<A> rslt = 
+				AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
+				//AggregateUtils.make(aggs, (A) aggs.defaultValue());
+		
+		for (int y = aggs.lowY(); y<aggs.highY(); y++) {
+			int split = vseam[y-aggs.lowY()];
+			for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
+			for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
+		}
+		return rslt;
+
 	}
 	
 	/**Computes the energy of a set of aggregates.

@@ -1,4 +1,4 @@
-package ar.ext.cartogram;
+package ar.ext.seamCarving;
 
 import java.awt.Color;
 import java.awt.Rectangle;
