@@ -10,12 +10,12 @@ import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.rules.SeamCarving;
-import ar.rules.SeamCarving.RowPairGlobalCarve.EdgeEnergy;
+import static ar.rules.SeamCarving.*;
 import ar.rules.combinators.Predicates;
 
 public class SeamCarvingTests {
 	
-	public static class LocalCarve {
+	public static class CarveSweepTests {
 		@Test
 		public void testMatchingDown() {
 			Aggregates<Double> pixelEnergy = AggregateUtils.make(5,3,0d);
@@ -25,8 +25,9 @@ public class SeamCarvingTests {
 				}
 			}
 
-			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
-			Aggregates<Integer> matchings = SeamCarving.RowPairGlobalCarve.matchings(pixelEnergy, energy);
+			Aggregates<Double> cumEng = AggregateUtils.make(pixelEnergy, 0d);
+			Weights weights = new CarveSweep.EdgeWeights(pixelEnergy);
+			Aggregates<Integer> matchings = SeamCarving.matchings(weights, cumEng);
 			assertThat("Matching matrix has incorrect shape.", AggregateUtils.bounds(matchings), is(AggregateUtils.bounds(pixelEnergy)));
 			
 			for (int x=matchings.lowX(); x<matchings.highX(); x++) {
@@ -46,8 +47,9 @@ public class SeamCarvingTests {
 				}
 			}
 
-			EdgeEnergy energy = new EdgeEnergy(pixelEnergy);
-			Aggregates<Integer> matchings = SeamCarving.RowPairGlobalCarve.matchings(pixelEnergy, energy);
+			Aggregates<Double> cumEng = AggregateUtils.make(pixelEnergy, 0d);
+			Weights weights = new CarveSweep.EdgeWeights(pixelEnergy);
+			Aggregates<Integer> matchings = SeamCarving.matchings(weights, cumEng);
 			assertThat("Matching matrix has incorrect shape.", AggregateUtils.bounds(matchings), is(AggregateUtils.bounds(pixelEnergy)));
 			
 			for (int x=matchings.lowX(); x<matchings.highX(); x++) {
@@ -86,7 +88,7 @@ public class SeamCarvingTests {
 
 	}
 	
-	public static class OptimalCarve {
+	public static class CarveIterativeTests {
 		@Test
 		public void testFindLeftSeam() {
 			Aggregates<Double> cumEng = AggregateUtils.make(9, 9, 0d);
@@ -95,7 +97,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) x); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(0));}
@@ -109,7 +111,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) -x); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(cumEng.highX()-1));}
@@ -123,7 +125,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) Math.abs(x-cumEng.highX()/2)); 
 				}
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int e:seam) {assertThat(e, is(4));}
@@ -135,7 +137,7 @@ public class SeamCarvingTests {
 			for (int y=cumEng.lowY(); y<cumEng.highY(); y++) {
 				cumEng.set(y,y,0d); 
 			}
-			int[] seam = SeamCarving.OptimalCarve.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0;i<seam.length;i++) {assertThat(seam[i], is(i));}

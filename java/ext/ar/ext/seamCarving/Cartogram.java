@@ -64,7 +64,7 @@ public class Cartogram {
 		int step=100;
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
-		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.OptimalCarve<>(new DeltaPair(), Direction.V, EMPTY, step);
+		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, step);
 
 		final Transfer<Integer, Color> colorPopulation = 
 				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))

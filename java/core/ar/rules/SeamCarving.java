@@ -225,13 +225,14 @@ public class SeamCarving {
 
 			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
 			Aggregates<Integer> matchings = matchings(weights, AggregateUtils.make(pixelEnergy, 0d));
-			return carveN(seams, aggregates, matchings, weights);
+			int[][] dropList = computeDropList(seams, matchings, weights);
+			return carveN(aggregates, dropList);
 		}
 		
 		/**Utility class, encapsulates a local energy matrix and computes
 		 * a between-pixel energy matrix. 
 		 */
-		public static final class EdgeWeights implements Weight {
+		public static final class EdgeWeights implements Weights {
 			final Aggregates<Double> pixelEnergy;
 			public EdgeWeights(Aggregates<Double> pixelEnergy) {this.pixelEnergy = pixelEnergy;}
 
@@ -301,11 +302,12 @@ public class SeamCarving {
 					new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
 			
 			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
-			EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
+			EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
 	
-			Aggregates<Integer> matchings = matchings(energy, cumEng);
+			Aggregates<Integer> matchings = matchings(weights, cumEng);
 			
-			return carveN(seams, aggregates, matchings, energy);
+			int[][] dropList = computeDropList(seams, matchings, weights);
+			return carveN(aggregates, dropList);
 		}
 	
 		
@@ -313,7 +315,7 @@ public class SeamCarving {
 		/**Utility class, encapsulates a local energy matrix and computes
 		 * a between-pixel energy matrix. 
 		 */
-		private static final class EdgeWeights implements Weight {
+		public static final class EdgeWeights implements Weights {
 			final Aggregates<Double> globalEnergy;
 			final Aggregates<Double> cumEnergy;
 			public EdgeWeights(Aggregates<Double> globalEnergy, Aggregates<Double> cumEnergy) {
@@ -334,7 +336,199 @@ public class SeamCarving {
 		}
 	}
 	
-	protected interface Weight {public double between(int x1, int y1, int x2, int y2);}
+	/**Find and remove seams per the w2 method of Huang, et al.
+	 * 
+	 * Similar to TwoSweeps, but only develops the requested number of seams
+	 * (while TwoSweeps develops a seam for every row).
+	 */
+	public static class CarveTwoHalfSweeps<A> implements Transfer.Specialized<A, A> {
+		final Delta<A> delta;
+		final A empty;
+		final Direction dir;
+		final int seams;
+		
+		/**
+		 * @param delta Comparison function used to compute the energy matrix
+		 * @param dir Direction seams run
+		 * @param empty 
+		 * @param seams How many seams to remove
+		 */
+		public CarveTwoHalfSweeps(Delta<A> delta, Direction dir, A empty, int seams)  {
+			this.delta = delta;
+			this.empty = empty;
+			this.dir = dir;
+			this.seams= seams;
+		}
+		
+		@Override public A emptyValue() {return empty;}
+	
+		@Override @SuppressWarnings("unused") 
+		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
+	
+		@Override
+		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (dir == Direction.H) {return horizontal(aggregates, rend);}
+			return vertical(aggregates, rend);
+		}
+			
+		public Aggregates<A> horizontal(Aggregates<? extends A> aggregates, Renderer rend) {
+			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggregates), rend));
+		}
+		
+		public Aggregates<A> vertical(Aggregates<? extends A> aggregates, Renderer rend) {
+			Aggregates<Double> globalEnergy = rend.transfer(
+					aggregates, 
+					new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
+			
+			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+			EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
+	
+			Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
+			
+			int[][] dropList = compileDropList(matchings, seams);	
+			return carveN(aggregates, dropList);
+		}
+		
+		public int[][] compileDropList(Aggregates<Integer> matchings, int seams) {
+			int[][] dropList = new int[matchings.highY()-matchings.lowY()][seams];
+			for (int y=matchings.lowY(); y<matchings.highY(); y++) {
+				int offset=0;
+				for (int x=matchings.lowX(); x<matchings.highX(); x++){
+					int v = matchings.get(x, y);
+					if (v != Integer.MIN_VALUE) {
+						dropList[y-matchings.lowY()][offset] = x;
+						offset++;
+					}
+				}
+				System.out.println(offset);
+			}
+			return dropList;
+		}
+		
+		/** Concurrent find N seams.  Uses cumulative energy combined with 
+		 * @param weights Function to determine the weight between two points
+		 * @param cumEng Place to store the cumulative energy of a seam.  Will be DESTRUCTIVELY updated.
+		 * @return
+		 */
+		private static final Integer ZERO = 0;
+		private static final Integer ONE = 1;
+		private static final Integer NEGATIVE_ONE = -1;
+		private static final Aggregates<Integer> nSeamsMatchings(int seams, Weights weights, Aggregates<Double> cumEng, Aggregates<Double> globalEnergy) {
+			
+			//Order global energy starts
+			SortedMap<Double, List<Integer>> seamOrder = new TreeMap<>();
+		    for (int x = globalEnergy.lowX(); x < globalEnergy.highX(); x++) {
+		        Double seamEnergy = globalEnergy.get(x, 0);
+	    		List<Integer> idxs = seamOrder.get(seamEnergy);
+		    	if (idxs==null) {idxs = new ArrayList<>();}
+		    	int size = idxs.size()+1;
+		    	idxs.add(((size+1)*7253)%size, x); //Mix up the order a bit; 7253 is just a prime number I knew
+		    	seamOrder.put(seamEnergy, idxs);
+		    }
+			
+		    //Select start positions in order of potential energy
+			Aggregates<Integer> matches = AggregateUtils.make(cumEng, Integer.MIN_VALUE);
+		    for (int i=0;i<seams; i++) {
+		    	List<Integer> headList = seamOrder.get(seamOrder.firstKey());
+		    	int x= headList.get(0);
+		    	matches.set(x+matches.lowX(), matches.lowY(), 0);//Flag selected starts with a valid value
+		    	cumEng.set(x+matches.lowX(), matches.lowY(), 0d);
+		    	headList.remove(0);
+		    	if (headList.size()==0) {seamOrder.remove(seamOrder.firstKey());}
+		    }
+			
+			//Proceed by rows through the space
+			//Naming imagines a slice of two rows arranged like this:
+			//  col       m-2  m-1   m
+			//  row k:     A    B    C
+			//  row k+1:   X    Y    Z
+			// Processing tries to find the match for "C" (either Y or Z) but may change A and B as well in one case
+			for (int y=cumEng.lowY()+1; y < cumEng.highY(); y++) {
+				double F1=0,F2=0,F3=0;
+				for (int x=cumEng.lowX(); x<cumEng.highX(); x++) {
+					if (matches.get(x,y) < -2) {continue;}
+					
+					double CZ = weights.between(x, y, x, y+1);
+					double CY= weights.between(x, y, x-1, y+1);
+					double BZ = weights.between(x-1, y, x, y+1);
+					double AX = weights.between(x-2, y, x-2, y+1);
+					
+					if (matches.get(x-2,y)==1 && matches.get(x-1,y)==-1) { //Prior nodes are cross-linked, so things could get complicated...
+						double FA=F1+CZ;		//C does down, simple to handle
+						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
+						if (FA >= FB) { // C points down (CZ linked), no changes required.
+							matches.set(x, y, ZERO);  //point C's linkage
+							cumEng.set(x, y+1, cumEng.get(x,y)+CZ); //point Z's cumulative energy
+							F3=F2;
+							F2=F1;
+							F1=FA;
+						} else { // C points left, B points right and A points down. 
+							matches.set(x, y, NEGATIVE_ONE); //point C linkage
+							matches.set(x-1, y, ONE);		 //point B
+							matches.set(x-2, y, ZERO);		 //point A
+
+							cumEng.set(x, y+1, cumEng.get(x,y)+CY);				 //Point Z cumulative energy
+							cumEng.set(x-1, y+1, cumEng.get(x-1,y)+BZ);			 //Point Y 
+							cumEng.set(x-2, y+1, cumEng.get(x-2,y)+AX);			 //Point X 
+							
+							F3=F2;
+							F2=F1;
+							F1=FB;
+						}
+					} else {
+						double FA=F1+CZ;
+						double FB=F2+CY+BZ;
+						if (FA >= FB) { //B can keep pointing wherever it was, point C down
+							matches.set(x, y, ZERO);
+							cumEng.set(x, y+1, cumEng.get(x,y)+CZ); //point Z's cumulative energy
+
+							F3=F2;
+							F2=F1;
+							F1=FA;
+						} else { // B was already going down, now just point it right instead
+							matches.set(x, y, NEGATIVE_ONE);
+							matches.set(x-1, y, ONE);
+
+							cumEng.set(x, y+1, cumEng.get(x,y)+CY);				 //Point Z cumulative energy
+							cumEng.set(x-1, y+1, cumEng.get(x-1,y)+BZ);			 //Point Y 
+
+							F3=F2;
+							F2=F1;
+							F1=FB;
+						}
+					}
+				}
+			}
+			return matches;
+		}
+	
+		
+	
+		/**Utility class, encapsulates a local energy matrix and computes
+		 * a between-pixel energy matrix. 
+		 */
+		public static final class EdgeWeights implements Weights {
+			final Aggregates<Double> globalEnergy;
+			final Aggregates<Double> cumEnergy;
+			public EdgeWeights(Aggregates<Double> globalEnergy, Aggregates<Double> cumEnergy) {
+				this.globalEnergy = globalEnergy;
+				this.cumEnergy = cumEnergy;
+			}
+	
+			public double between(int x1, int y1, int x2, int y2) {
+				if (!validPoint(x1,y1) || !validPoint(x2,y2)) {return Double.NEGATIVE_INFINITY;}
+				return cumEnergy.get(x1, y1) * globalEnergy.get(x2, y2); //cumEnergy to here * best-case energy to last row
+				
+			}
+			
+			public boolean validPoint(int x, int y) {
+				return x >= globalEnergy.lowX() && x < globalEnergy.highX()
+						&& y >= globalEnergy.lowY() && y < globalEnergy.highY();
+			}
+		}
+	}
+	
+	public interface Weights {public double between(int x1, int y1, int x2, int y2);}
 
 	/**Transpose a 2D array of ints.  Assumes the 2D array is rectangular.**/
 	public static int[][] transpose(int[][] in) {
@@ -380,8 +574,9 @@ public class SeamCarving {
 	private static final Integer ZERO = 0;
 	private static final Integer ONE = 1;
 	private static final Integer NEGATIVE_ONE = -1;
-	private static final Aggregates<Integer> matchings(Weight weights, Aggregates<Double> cumEng) {
+	public static final Aggregates<Integer> matchings(Weights weights, Aggregates<Double> cumEng) {
 		Aggregates<Integer> matches = AggregateUtils.make(cumEng, Integer.MIN_VALUE);
+		
 		//Proceed by rows through the space
 		//Naming imagines a slice of two rows arranged like this:
 		//  col       m-2  m-1   m
@@ -445,8 +640,16 @@ public class SeamCarving {
 		return matches;
 	}
 	
-	/**Remove N seams.**/
-	public static <A> Aggregates<A> carveN(int seams, Aggregates<? extends A> aggregates, Aggregates<Integer> matchings, Weight energy) {
+	/**Locate the indicated number of seams given the matchings and energy functions.
+	 * Assumes the matching function is total (e.g., all values are -1/0/1).
+	 * Will pick the lowest energy seams first.
+	 * 
+	 * @param seams Number of seams to remove
+	 * @param matchings Total matching
+	 * @param energy Energy function.
+	 * @return For x=int[A][B], x is the B'th x index to drop in row A
+	 */
+	private static int[][] computeDropList(int seams, Aggregates<Integer> matchings, Weights energy) {
 		//Compute seam totals by iterating down the matchings and pixel matrices
 		double[] seamEnergies = new double[matchings.highX()-matchings.lowX()]; 
 		for (int x=matchings.lowX(); x<matchings.highX(); x++) {
@@ -461,7 +664,7 @@ public class SeamCarving {
 		
 		//Order seams
 		SortedMap<Double, List<Integer>> seamOrder = new TreeMap<>();
-	    for (int i = 0; i < seamEnergies.length; ++i) {
+	    for (int i = 0; i < seamEnergies.length; i++) {
 	        Double seamEnergy = seamEnergies[i];
     		List<Integer> idxs = seamOrder.get(seamEnergy);
 	    	if (idxs==null) {idxs = new ArrayList<>();}
@@ -479,19 +682,28 @@ public class SeamCarving {
 	    	if (headList.size()==0) {seamOrder.remove(seamOrder.firstKey());}
 	    	seamPoints[i] = compileVSeam(targetSeam, matchings);		    	
 	    }
-				    
-    	seamPoints = transpose(seamPoints);
-    	for (int i=0;i<seamPoints.length;i++) {
-    		Arrays.sort(seamPoints[i]);
+	    
+    	int[][] dropList = transpose(seamPoints);
+    	for (int i=0;i<dropList.length;i++) {
+    		Arrays.sort(dropList[i]);
     	}
 	    
+	    return dropList;
+	}
+	
+	/**Remove N seams.*
+	 * 
+	 * @param aggregates Item to carve
+	 * @param dropList List of items to remove.  For x=int[A][B], x is the B'th x index to drop in row A (i.e., a sorted transpose of a seam list).
+	 * */
+	public static <A> Aggregates<A> carveN(final Aggregates<? extends A> aggregates, final int[][] dropList) {
     	//Carve ALL seam-points out of the aggregates...
 		Aggregates<A> result = AggregateUtils.make(aggregates, (A) aggregates.defaultValue());
     	for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
     		int i = y-aggregates.lowY();
     		int dropCount=0;
     		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
-    			if (seamPoints[i][dropCount] == x) {
+    			if (dropList[i][dropCount] == x) {
     				dropCount++; 
     				continue;
     			}

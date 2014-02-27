@@ -344,11 +344,11 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			Transfer vt=null, ht=null;
 			if (params.columns() >0) {
-				vt = new SeamCarving.OptimalCarve<Integer>(delta, SeamCarving.Direction.V, 0,params.columns());
+				vt = new SeamCarving.CarveIncremental<Integer>(delta, SeamCarving.Direction.V, 0,params.columns());
 			}
 
 			if (params.rows() >0) {
-				ht = new SeamCarving.OptimalCarve<Integer>(delta, SeamCarving.Direction.H, 0,params.rows());
+				ht = new SeamCarving.CarveIncremental<Integer>(delta, SeamCarving.Direction.H, 0,params.rows());
 			}
 			
 			//TODO: There are probably smarter things to do than just horizontal followed by vertical...
