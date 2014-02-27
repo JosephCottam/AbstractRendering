@@ -400,7 +400,6 @@ public class SeamCarving {
 						offset++;
 					}
 				}
-				System.out.println(offset);
 			}
 			return dropList;
 		}
@@ -440,64 +439,69 @@ public class SeamCarving {
 			//Proceed by rows through the space
 			//Naming imagines a slice of two rows arranged like this:
 			//  col       m-2  m-1   m
-			//  row k:     A    B    C
+		    //  row k:     A    B    C
 			//  row k+1:   X    Y    Z
-			// Processing tries to find the match for "C" (either Y or Z) but may change A and B as well in one case
-			for (int y=cumEng.lowY()+1; y < cumEng.highY(); y++) {
-				double F1=0,F2=0,F3=0;
+			// Processing tries to find the match for "B"
+		    //
+		    // The only unusual item is that if AY is currently selected, then BZ is disallowed and A may be switched to AX.  
+		    // This keeps negative-slope parallel lines from forming, full handling of which is O(n^2).  Disallowing the left parallel case makes this O(n).
+		    // (If the algorithm went from right-to-left through the rows then right-parallel lines would be disallowed).
+			for (int y=cumEng.lowY(); y < cumEng.highY(); y++) {
 				for (int x=cumEng.lowX(); x<cumEng.highX(); x++) {
-					if (matches.get(x,y) < -2) {continue;}
+					if (cumEng.get(x,y).equals(cumEng.defaultValue())) {continue;}
+
+					double AX = weights.between(x-1, y, x-1, y+1);
+					double AY = weights.between(x-1, y, x, y+1);
+					boolean AXExists = !Double.isInfinite(AX);
+					boolean AYExists = !Double.isInfinite(AY);
+
+					double BX  = weights.between(x, y, x-1, y+1);
+					double BY  = weights.between(x, y, x, y+1);
+					double BZ  = weights.between(x, y, x+1, y+1);
 					
-					double CZ = weights.between(x, y, x, y+1);
-					double CY= weights.between(x, y, x-1, y+1);
-					double BZ = weights.between(x-1, y, x, y+1);
-					double AX = weights.between(x-2, y, x-2, y+1);
+					boolean doAX=false, doAY=false, doBX=false, doBY=false, doBZ=false;
 					
-					if (matches.get(x-2,y)==1 && matches.get(x-1,y)==-1) { //Prior nodes are cross-linked, so things could get complicated...
-						double FA=F1+CZ;		//C does down, simple to handle
-						double FB=F3+CY+BZ+AX;  //C goes left, and A needs to change too
-						if (FA >= FB) { // C points down (CZ linked), no changes required.
-							matches.set(x, y, ZERO);  //point C's linkage
-							cumEng.set(x, y+1, cumEng.get(x,y)+CZ); //point Z's cumulative energy
-							F3=F2;
-							F2=F1;
-							F1=FA;
-						} else { // C points left, B points right and A points down. 
-							matches.set(x, y, NEGATIVE_ONE); //point C linkage
-							matches.set(x-1, y, ONE);		 //point B
-							matches.set(x-2, y, ZERO);		 //point A
-
-							cumEng.set(x, y+1, cumEng.get(x,y)+CY);				 //Point Z cumulative energy
-							cumEng.set(x-1, y+1, cumEng.get(x-1,y)+BZ);			 //Point Y 
-							cumEng.set(x-2, y+1, cumEng.get(x-2,y)+AX);			 //Point X 
-							
-							F3=F2;
-							F2=F1;
-							F1=FB;
-						}
-					} else {
-						double FA=F1+CZ;
-						double FB=F2+CY+BZ;
-						if (FA >= FB) { //B can keep pointing wherever it was, point C down
-							matches.set(x, y, ZERO);
-							cumEng.set(x, y+1, cumEng.get(x,y)+CZ); //point Z's cumulative energy
-
-							F3=F2;
-							F2=F1;
-							F1=FA;
-						} else { // B was already going down, now just point it right instead
-							matches.set(x, y, NEGATIVE_ONE);
-							matches.set(x-1, y, ONE);
-
-							cumEng.set(x, y+1, cumEng.get(x,y)+CY);				 //Point Z cumulative energy
-							cumEng.set(x-1, y+1, cumEng.get(x-1,y)+BZ);			 //Point Y 
-
-							F3=F2;
-							F2=F1;
-							F1=FB;
-						}
+					if (!AXExists && !AYExists) {
+						if      (BX <= BY && BX <= BZ) {doBX=true;}
+						else if (BY <= BX && BY <= BZ) {doBY=true;}
+						else if (BZ <= BX && BZ <= BY) {doBZ=true;}
+						else {throw new Error("Missed case...");}
+					} else {//Need to check some compound options
+						double o1 = AX+BY, o2=AY+BX, o3=AX+BZ;//compound options
+						if      (BY <= BX && BY <= BZ) {doBY=true;}
+						else if (BZ <= BX && BZ <= BY) {doBZ=true;}
+						else if (o1 <= o2 && o1 <= o3) {doAX=true;doBY=true;}
+						else if (o2 <= o1 && o2 <= o3) {doAY=true;doBX=true;}
+						else if (o3 <= o1 && o3 <= o2) {doAX=true;doBZ=true;}
+						else {throw new Error("Missed case...");}
+					} 
+					
+					if (doAX) {
+						matches.set(x-1, y, ZERO);
+						cumEng.set(x-1, y+1, cumEng.get(x-1,y)+AX);
+					}
+					
+					if (doAY) {
+						matches.set(x, y, ONE);
+						cumEng.set(x-1, y+1, cumEng.get(x-1,y)+BY);
+					}
+					
+					if (doBX) {
+						matches.set(x, y, NEGATIVE_ONE);
+						cumEng.set(x-1, y+1, cumEng.get(x,y)+BX);
+					}
+					
+					if (doBY) {
+						matches.set(x, y, ZERO);
+						cumEng.set(x, y+1, cumEng.get(x,y)+BY);
+					}
+					
+					if (doBZ) {
+						matches.set(x, y, ONE);
+						cumEng.set(x+1, y+1, cumEng.get(x,y)+BZ);
 					}
 				}
+
 			}
 			return matches;
 		}
@@ -516,7 +520,7 @@ public class SeamCarving {
 			}
 	
 			public double between(int x1, int y1, int x2, int y2) {
-				if (!validPoint(x1,y1) || !validPoint(x2,y2)) {return Double.NEGATIVE_INFINITY;}
+				if (!validPoint(x1,y1) || !validPoint(x2,y2)) {return Double.POSITIVE_INFINITY;}
 				return cumEnergy.get(x1, y1) * globalEnergy.get(x2, y2); //cumEnergy to here * best-case energy to last row
 				
 			}
@@ -766,6 +770,13 @@ public class SeamCarving {
 		}
 	}
 	
+
+	
+	public static final class LeftValue implements Delta<Number> {
+		@SuppressWarnings("unused") 
+		public double delta(Number left, Number right) {return left.doubleValue();}
+	}
+
 	
 	public static final class DeltaDouble implements Delta<Double> {
 		public double delta(Double left, Double right) {return left-right;}
