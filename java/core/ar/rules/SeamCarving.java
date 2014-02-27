@@ -336,12 +336,11 @@ public class SeamCarving {
 		}
 	}
 	
-	/**Find and remove seams per the w2 method of Huang, et al.
-	 * 
-	 * Similar to TwoSweeps, but only develops the requested number of seams
-	 * (while TwoSweeps develops a seam for every row).
+	/**Find exactly N seams and remove them.  Unlike CarveSweep and CarveTwoSweeps,
+	 * which calculate seams for all pixels in all rows, this version only calculates seams
+	 * for N pixels in each row.
 	 */
-	public static class CarveTwoHalfSweeps<A> implements Transfer.Specialized<A, A> {
+	public static class CarveSweepN<A> implements Transfer.Specialized<A, A> {
 		final Delta<A> delta;
 		final A empty;
 		final Direction dir;
@@ -353,7 +352,7 @@ public class SeamCarving {
 		 * @param empty 
 		 * @param seams How many seams to remove
 		 */
-		public CarveTwoHalfSweeps(Delta<A> delta, Direction dir, A empty, int seams)  {
+		public CarveSweepN(Delta<A> delta, Direction dir, A empty, int seams)  {
 			this.delta = delta;
 			this.empty = empty;
 			this.dir = dir;
@@ -505,8 +504,6 @@ public class SeamCarving {
 			}
 			return matches;
 		}
-	
-		
 	
 		/**Utility class, encapsulates a local energy matrix and computes
 		 * a between-pixel energy matrix. 
@@ -772,7 +769,7 @@ public class SeamCarving {
 	
 
 	
-	public static final class LeftValue implements Delta<Number> {
+	public static final class LeftValue<A extends Number> implements Delta<A> {
 		@SuppressWarnings("unused") 
 		public double delta(Number left, Number right) {return left.doubleValue();}
 	}
