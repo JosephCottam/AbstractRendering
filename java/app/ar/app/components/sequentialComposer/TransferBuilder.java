@@ -24,7 +24,7 @@ import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.util.HasViewTransform;
 
-@SuppressWarnings({"rawtypes","unused"})
+@SuppressWarnings({"rawtypes"})
 public class TransferBuilder extends JPanel {
 	private final ActionProvider actionProvider = new ActionProvider("Transfer Changed");  
 	private final List<TransferRow> transferRows = new ArrayList<>();

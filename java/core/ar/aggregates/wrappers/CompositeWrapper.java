@@ -28,7 +28,7 @@ public class CompositeWrapper<L,R,A> implements Aggregates<A> {
 	@Override public int highY() {return Math.max(left.highY(), right.highY());}
 	@Override public Iterator<A> iterator() {return new Iterator2D<>(this);}
 
-	@Override @SuppressWarnings("unused")
+	@Override
 	public void set(int x, int y, A val) {throw new UnsupportedOperationException("Cannot set in composite aggregates.");}
 	
 	public Aggregates<L> left() {return left;}

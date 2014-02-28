@@ -44,7 +44,7 @@ public class General {
 			return identity();
 		}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public A combine(A left, A update) {return update;}
 		
 		@Override public A identity() {return id;}
@@ -68,7 +68,7 @@ public class General {
 
 		@Override public OUT emptyValue() {return empty;}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
 		@Override public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
@@ -91,7 +91,7 @@ public class General {
 		}
 		
 		@Override public T emptyValue() {return empty;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
 
 		@Override
@@ -130,7 +130,7 @@ public class General {
 		}
 		
 		@Override public V emptyValue() {return empty;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override
@@ -151,7 +151,7 @@ public class General {
 		public Smear(V empty) {this.empty = empty;}
 
 		@Override public V emptyValue() {return empty;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override
@@ -209,10 +209,10 @@ public class General {
 
 		@Override public V emptyValue() {return combiner.identity();}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		//TODO: Parallelize...
 		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
 			Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
@@ -298,7 +298,7 @@ public class General {
 	
 	/**Aggregator and Transfer that always returns the same value.
 	 * **/
-	@SuppressWarnings("unused") 
+	
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
@@ -337,8 +337,8 @@ public class General {
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
 		@Override public T identity() {return emptyValue();}
-		@Override @SuppressWarnings("unused") public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
-		@Override @SuppressWarnings("unused") public T combine(T left, T update) {return update;}
+		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
+		@Override public T combine(T left, T update) {return update;}
 		
 		@Override public T rollup(T left, T right) {
 			if (left != null) {return left;}
@@ -346,7 +346,7 @@ public class General {
 			return emptyValue();
 		}
 		
-		@Override @SuppressWarnings("unused")
+		@Override
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
 			return AggregateUtils.copy(aggregates, emptyValue());
 		}
@@ -366,7 +366,7 @@ public class General {
 			this.absent=absent;
 		}
 		
-		@Override @SuppressWarnings("unused")  public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override  public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		@Override public OUT emptyValue() {return absent;}
 
 		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -415,7 +415,7 @@ public class General {
 		}
 
 		@Override public OUT emptyValue() {return other;}
-		@Override @SuppressWarnings("unused") public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
+		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
 		@Override
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {

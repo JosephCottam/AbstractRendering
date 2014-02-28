@@ -149,7 +149,7 @@ public class Cartogram {
 
 		@Override public Pair<String, Integer> emptyValue() {return empty;}
 
-		@Override @SuppressWarnings("unused")
+		@Override
 		public ar.Transfer.Specialized<Pair<String, Integer>, Pair<String, Integer>> specialize(
 				Aggregates<? extends Pair<String, Integer>> aggregates) {
 			return this;

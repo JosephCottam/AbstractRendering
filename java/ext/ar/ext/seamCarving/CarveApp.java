@@ -41,8 +41,9 @@ public class CarveApp {
 						new Indexed.ToValue<Indexed,Character>(2),
 						1, null);
 
-		String selected = Util.argKey(args, "-carvers", null);
-		int spread = Integer.parseInt(Util.argKey(args, "-spread", "0"));
+		final String selected = Util.argKey(args, "-carvers", null);
+		final int spread = Integer.parseInt(Util.argKey(args, "-spread", "0"));
+		final int seams = Integer.parseInt(Util.argKey(args, "-seams", "400"));
 		
 		Renderer r = new ParallelRenderer();
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
@@ -50,7 +51,6 @@ public class CarveApp {
 
 		int width = 1200;
 		int height = 800;
-		final int seams = 400;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 

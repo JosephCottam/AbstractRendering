@@ -70,10 +70,10 @@ public class TransferDisplay extends ARComponent {
 		this.aggregates = aggregates;
 		this.renderedTransform = rendererdTransform != null ? renderedTransform : new AffineTransform();
 		this.addComponentListener(new ComponentListener(){
-			public void componentResized(@SuppressWarnings("unused") ComponentEvent e) {repaint();}
-			public void componentMoved(@SuppressWarnings("unused") ComponentEvent e) {}
-			public void componentShown(@SuppressWarnings("unused") ComponentEvent e) {}
-			public void componentHidden(@SuppressWarnings("unused") ComponentEvent e) {}
+			public void componentResized(ComponentEvent e) {repaint();}
+			public void componentMoved(ComponentEvent e) {}
+			public void componentShown(ComponentEvent e) {}
+			public void componentHidden(ComponentEvent e) {}
 		});
 	}
 	
@@ -207,7 +207,7 @@ public class TransferDisplay extends ARComponent {
 		
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
 
-	@Override @SuppressWarnings("unused") 
+	@Override 
 	public void viewTransform(AffineTransform vt, boolean provisional) {
 		if (vt == null) {vt = new AffineTransform();}
 		this.viewTransform = new AffineTransform(vt);

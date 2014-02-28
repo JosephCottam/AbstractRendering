@@ -16,7 +16,6 @@ public class BoundsSpeed {
 		
 		File root = new File("../data/");
 		File[] files = root.listFiles(new FilenameFilter(){
-			@SuppressWarnings("unused")
 			public boolean accept(File dir, String name) {
 				return name.toUpperCase().endsWith("FULL.HBIN");
 			}

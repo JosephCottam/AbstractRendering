@@ -11,7 +11,6 @@ import ar.Aggregates;
  * This class is often used to present a specific region as having a particular value
  * (thus the region is tracked, even though it does not represent a value).
  */
-@SuppressWarnings("unused") 
 public final class ConstantAggregates<A> implements Aggregates<A> {
 	private static final long serialVersionUID = -6013315833630311053L;
 	

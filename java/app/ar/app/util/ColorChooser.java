@@ -27,7 +27,7 @@ public final class ColorChooser extends JPanel {
 		setColor(initial);
 		
 		button.addActionListener(new ActionListener() {
-			@Override @SuppressWarnings("unused")
+			@Override 
 			public void actionPerformed(ActionEvent e) {
 				chooser.setColor(current);
 				chooser.setPreviewPanel(new JPanel());

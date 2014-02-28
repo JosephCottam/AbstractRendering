@@ -25,7 +25,7 @@ public class Debug {
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
 
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<Object, Color> specialize(
 				Aggregates<? extends Object> aggregates) {return this;}
 		

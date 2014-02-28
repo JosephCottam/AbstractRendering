@@ -125,7 +125,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		}
 
 		@Override public N emptyValue() {return null;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Transfer.Specialized<N, N> specialize(Aggregates<? extends N> aggregates) {return this;}
 		
 		@Override public ContourAggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {
@@ -273,7 +273,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		}
 
 		@Override public Boolean emptyValue() {return Boolean.FALSE;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<N, Boolean> specialize(Aggregates<? extends N> aggregates) {return this;}
 		
 		@Override 
@@ -426,7 +426,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 
 		public MC_TYPE emptyValue() {return MC_TYPE.empty;}
 
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<Boolean, MC_TYPE> specialize(Aggregates<? extends Boolean> aggregates) {return this;}
 
 		@Override

@@ -79,7 +79,7 @@ public class Advise {
 			}
 
 			@Override public Boolean emptyValue() {return Boolean.FALSE;}
-			@Override @SuppressWarnings("unused") 
+			@Override 
 			public Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {return this;}
 
 			@Override
@@ -163,7 +163,7 @@ public class Advise {
 
 			@Override public Boolean emptyValue() {return false;}
 
-			@Override @SuppressWarnings("unused")
+			@Override
 			public Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
 				return this;
 			}
@@ -275,12 +275,12 @@ public class Advise {
 				@Override
 				public Color emptyValue() {return empty;}
 
-				@Override @SuppressWarnings("unused")
+				@Override
 				public ar.Transfer.Specialized<A, Color> specialize(Aggregates<? extends A> aggregates) {
 					return this;
 				}
 			
-				@Override @SuppressWarnings("unused")
+				@Override
 				//TODO: Investigate unspecialized version
 				public Color at(int x, int y, Aggregates<? extends A> aggregates) {
 					boolean below = unders.get(x, y);
@@ -354,7 +354,7 @@ public class Advise {
 
 			@Override public Double emptyValue() {return 0d;}
 
-			@Override @SuppressWarnings("unused") 
+			@Override 
 			public ItemWise<Number, Number> specialize(Aggregates<? extends Number> aggregates) {return this;}
 			
 			public Double at(int x, int y, Aggregates<? extends Number> aggregates) {

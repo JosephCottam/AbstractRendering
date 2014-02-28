@@ -42,7 +42,6 @@ public class ScatterControl extends JPanel {
 	protected final JButton refresh = new JButton("Refresh");
 	Transfer<Number, Color> basis = new Numbers.Interpolate<>(new Color(255,200,200), Color.RED); 
 
-	@SuppressWarnings("unused")
 	public ScatterControl() {
 		this.setLayout(new BorderLayout());
 		this.plot = new Plot(this);
@@ -197,7 +196,6 @@ public class ScatterControl extends JPanel {
 			} 
 		}
 		
-		@SuppressWarnings("unused")
 		public final class AdjustRange implements MouseListener, MouseMotionListener {
 			Point2D start;
 			
@@ -228,7 +226,6 @@ public class ScatterControl extends JPanel {
 			}
 		}
 
-		@SuppressWarnings("unused")
 		private final class ClearListener implements KeyListener {
 			public void keyTyped(KeyEvent e) {
 				if (e.getKeyChar() == '-') {
@@ -291,7 +288,7 @@ public class ScatterControl extends JPanel {
 		private final class Predicate implements Transfer.ItemWise<Number, Boolean> {
 			@Override public Boolean emptyValue() {return false;}
 
-			@Override @SuppressWarnings("unused")
+			@Override
 			public ar.Transfer.Specialized<Number, Boolean> specialize(
 					Aggregates<? extends Number> aggregates) {return this;}
 

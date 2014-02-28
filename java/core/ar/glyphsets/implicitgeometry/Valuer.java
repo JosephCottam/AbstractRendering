@@ -48,7 +48,6 @@ public interface Valuer<I,V> extends Serializable {
 	 * @param <I> Input type
 	 * @param <V> Value return type
 	 */
-	@SuppressWarnings("unused") 
 	public final class Constant<I,V> implements Valuer<I,V> {
 		private static final long serialVersionUID = -8933986990047616101L;
 		private final V c;

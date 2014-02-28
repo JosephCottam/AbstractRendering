@@ -42,7 +42,7 @@ public class ClientApp {
 			this.add(execute, BorderLayout.SOUTH);
 			
 			execute.addActionListener(new ActionListener() {
-				public void actionPerformed(@SuppressWarnings("unused") ActionEvent e) {
+				public void actionPerformed(ActionEvent e) {
 					try {
 						ClientUI.this.changeDisplay();
 					} catch (Exception e1) {

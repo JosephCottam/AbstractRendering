@@ -56,7 +56,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		enhanced.setVisible(false);
 		
 		hosted.addAggregatesChangedListener(new ActionListener() {
-			public void actionPerformed(@SuppressWarnings("unused") ActionEvent e) {forceNewRefAggregates();}
+			public void actionPerformed(ActionEvent e) {forceNewRefAggregates();}
 		});
 	}
 	
@@ -293,7 +293,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			start = null;
 		}
 		
-		public void mouseClicked(@SuppressWarnings("unused") MouseEvent e) {target.clear();}
+		public void mouseClicked(MouseEvent e) {target.clear();}
 		public void mouseDragged(MouseEvent e) {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
@@ -315,9 +315,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			return new Rectangle2D.Double(x,y,w,h);
 		}
 		
-		public void mouseMoved(@SuppressWarnings("unused") MouseEvent e) {}
-		public void mouseEntered(@SuppressWarnings("unused") MouseEvent e) {}
-		public void mouseExited(@SuppressWarnings("unused") MouseEvent e) {}
+		public void mouseMoved(MouseEvent e) {}
+		public void mouseEntered(MouseEvent e) {}
+		public void mouseExited(MouseEvent e) {}
 	}
 	
 	/**Toggle control for the given overlay.**/

@@ -172,9 +172,9 @@ public class ZoomPanHandler implements MouseListener, MouseMotionListener, KeyLi
 	}
 
 	
-	public void mouseEntered(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
-	public void mouseExited(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
-	public void mouseMoved(@SuppressWarnings("unused") MouseEvent e) {/*Ignored.*/}
-	public void keyPressed(@SuppressWarnings("unused") KeyEvent e) {/*Ignored*/}
-	public void keyReleased(@SuppressWarnings("unused") KeyEvent e) {/*Ignored*/}
+	public void mouseEntered(MouseEvent e) {/*Ignored.*/}
+	public void mouseExited(MouseEvent e) {/*Ignored.*/}
+	public void mouseMoved(MouseEvent e) {/*Ignored.*/}
+	public void keyPressed(KeyEvent e) {/*Ignored*/}
+	public void keyReleased(KeyEvent e) {/*Ignored*/}
 }

@@ -38,7 +38,6 @@ public class ExportAggregates extends JPanel {
 		fc.setFileFilter(CSV);
 		
 		export.addActionListener(new ActionListener() {
-			@SuppressWarnings("unused")
 			public void actionPerformed(ActionEvent e) {
 				 JFileChooser fd = new JFileChooser("Export Aggregates (e.g., reduction results)");
 				 fd.setSelectedFile(new File("../TransferJS/aggregates.json"));

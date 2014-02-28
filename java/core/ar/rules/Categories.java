@@ -43,7 +43,7 @@ public class Categories {
 
 		@Override public Integer emptyValue() {return 0;}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
@@ -63,7 +63,7 @@ public class Categories {
 
 		@Override public Integer emptyValue() {return 0;}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
@@ -101,7 +101,7 @@ public class Categories {
 		
 		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public Rekey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 
 		@Override
@@ -248,7 +248,7 @@ public class Categories {
 		
 		@Override public OUT emptyValue() {return noMatch;}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 
 		@Override
@@ -354,7 +354,7 @@ public class Categories {
 		
 		@Override public Integer emptyValue() {return background;}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 
 		@Override
@@ -403,7 +403,7 @@ public class Categories {
 			else {return noMatch;}
 		}
 
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 		
 		@Override public Color emptyValue() {return background;}
@@ -527,7 +527,7 @@ public class Categories {
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public RandomWeave specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {return this;}
 
 		@Override
@@ -542,7 +542,7 @@ public class Categories {
 		public Select(IN label) {this.label = label;}
 		@Override public Integer emptyValue() {return 0;}
 		
-		@Override @SuppressWarnings("unused")  
+		@Override  
 		public Specialized<CategoricalCounts<IN>, Integer> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 		
 		@Override

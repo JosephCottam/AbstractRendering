@@ -43,7 +43,6 @@ public class FileOptions extends JPanel {
 		fc.setFileFilter(CSV_HBIN);
 		
 		chooseFile.addActionListener(new ActionListener(){
-			@SuppressWarnings("unused")
 			public void actionPerformed(ActionEvent e) {
 				int rc = fc.showOpenDialog(FileOptions.this);
 				if (rc== JFileChooser.APPROVE_OPTION) {

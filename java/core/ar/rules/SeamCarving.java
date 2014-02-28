@@ -14,6 +14,7 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.TransposeWrapper;
 import ar.rules.combinators.Seq;
+import ar.util.Util;
 
 /** Seam-carving is a content-sensitive image resizing technique.
  * 
@@ -68,7 +69,7 @@ public class SeamCarving {
 		
 		@Override public A emptyValue() {return empty;}
 		
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 			
 		@Override 
@@ -207,7 +208,7 @@ public class SeamCarving {
 		
 		@Override public A emptyValue() {return empty;}
 
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 
 		@Override
@@ -285,7 +286,7 @@ public class SeamCarving {
 		
 		@Override public A emptyValue() {return empty;}
 	
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 	
 		@Override
@@ -365,7 +366,7 @@ public class SeamCarving {
 		
 		@Override public A emptyValue() {return empty;}
 	
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 	
 		@Override
@@ -731,7 +732,7 @@ public class SeamCarving {
 		public Energy(Delta<A> delta) {this.delta=delta;}
 
 		@Override public Double emptyValue() {return 0d;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<A, Double> specialize(Aggregates<? extends A> aggregates) {return this;}
 
 		@Override
@@ -748,11 +749,11 @@ public class SeamCarving {
 
 	public static class CumulativeEnergy implements Transfer.Specialized<Double, Double> {
 		@Override public Double emptyValue() {return 0d;}
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Specialized<Double, Double> specialize(Aggregates<? extends Double> aggregates) {return this;}
 
 		//TODO: Parallelize
-		@Override @SuppressWarnings("unused") 
+		@Override 
 		public Aggregates<Double> process(Aggregates<? extends Double> aggregates, Renderer render) {
 			Aggregates<Double> cached = AggregateUtils.make(aggregates, 0d);
 			
@@ -778,7 +779,6 @@ public class SeamCarving {
 
 	
 	public static final class LeftValue<A extends Number> implements Delta<A> {
-		@SuppressWarnings("unused") 
 		public double delta(Number left, Number right) {return left.doubleValue();}
 	}
 

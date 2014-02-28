@@ -34,7 +34,7 @@ public class ActionProvider {
 		final ActionEvent e = new ActionEvent(source, count++, prefix + ":" + command);
 		for (ActionListener l: listeners) {
 			final ActionListener l2 = l;
-			SwingUtilities.invokeLater(new Runnable() {public void run() {l2.actionPerformed(e);}});
+			SwingUtilities.invokeLater(new Runnable() {@Override public void run() {l2.actionPerformed(e);}});
 		}
 	}
 	
@@ -46,14 +46,14 @@ public class ActionProvider {
 	public static final class ActionDelegate implements ActionListener {
 		private final ActionProvider target;
 		public ActionDelegate(ActionProvider target) {this.target = target;}
-		public void actionPerformed(ActionEvent e) {target.fireActionListeners(e.getActionCommand());}
+		@Override public void actionPerformed(ActionEvent e) {target.fireActionListeners(e.getActionCommand());}
 	}
 	
 	/**Utility class that listens to an item and generates action events in response.**/
 	public static final class ItemDelegate implements ItemListener {
 		private final ActionProvider target;
 		public ItemDelegate(ActionProvider target) {this.target = target;}
-		public void itemStateChanged(ItemEvent e) {target.fireActionListeners(e.paramString());}
+		@Override public void itemStateChanged(ItemEvent e) {target.fireActionListeners(e.paramString());}
 	}
 
 	
@@ -62,7 +62,6 @@ public class ActionProvider {
 		private final ActionProvider target;
 		public ChangeDelegate(ActionProvider target) {this.target = target;}
 		
-		@SuppressWarnings("unused")
-		public void stateChanged(ChangeEvent e) {target.fireActionListeners(target.prefix + "--Property Change");}
+		@Override public void stateChanged(ChangeEvent e) {target.fireActionListeners(target.prefix + "--Property Change");}
 	}	
 }

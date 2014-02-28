@@ -75,7 +75,7 @@ public class Shapes {
 			}
 
 
-			@Override @SuppressWarnings("unused") 
+			@Override 
 			public CategoricalCounts<Color> at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
 				Shape region = touches(x,y);
 				if (region == null) {return emptyValue();}
