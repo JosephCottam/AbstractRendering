@@ -61,7 +61,7 @@ public class Cartogram {
 		System.out.println("Base aggregates created.\n");
 		
 		
-		int step=400;
+		int step=100;
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
 
@@ -70,23 +70,25 @@ public class Cartogram {
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 
-		final Transfer<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
-		final Transfer<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
+		final General.MapWrapper<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
+		final General.MapWrapper<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
 		
 		for (int seams=0; seams<viewBounds.width; seams+=step) {
 			System.out.println("Starting removing " + seams + " seams");
 
-			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
-			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
 			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carver);
+			//carved = renderer.transfer(carved, new Borders(EMPTY));
+			
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
 			
 			Aggregates<Integer> carvedPop = composite.right();
 			Aggregates<String> carvedStates = composite.left();
 			
 			Aggregates<Color> popImg = renderer.transfer(carvedPop, colorPopulation.specialize(carvedPop));
-			Aggregates<Color> states2012 = renderer.transfer(carvedStates, color2012.specialize(carvedStates));
-			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008.specialize(carvedStates));
+			Aggregates<Color> states2012 = renderer.transfer(carvedStates, color2012);
+			Aggregates<Color> states2008 = renderer.transfer(carvedStates, color2008);
 			
 			Util.writeImage(AggregateUtils.asImage(popImg), new File(String.format("./testResults/seams/%d-seams-population.png",seams)));
 			Util.writeImage(AggregateUtils.asImage(states2008), new File(String.format("./testResults/seams/%d-2008-seams-election.png",seams)));
@@ -97,7 +99,7 @@ public class Cartogram {
 	
 	public static final Color PARTY1 = Color.green;
 	public static final Color PARTY2 = Color.pink;
-	
+	public static final String BOARDER = "BOARDER";
 	public static Map<String, Color> results2008 = new HashMap<>();
 	public static Map<String, Color> results2012 = new HashMap<>();
 	static {
@@ -112,6 +114,8 @@ public class Cartogram {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		results2012.put(BOARDER, Color.black);
+		results2008.put(BOARDER, Color.black);
 		System.out.println("Loaded results data.");
 	}
 
@@ -134,4 +138,42 @@ public class Cartogram {
 		return out;
 	}
 	
+	public static final class Borders implements Transfer.ItemWise<Pair<String,Integer>, Pair<String,Integer>> {
+		private final Pair<String,Integer> empty;
+		public Borders(Pair<String,Integer> empty) {this.empty = empty;}
+		
+		@Override
+		public Aggregates<Pair<String, Integer>> process(Aggregates<? extends Pair<String, Integer>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+
+		@Override public Pair<String, Integer> emptyValue() {return empty;}
+
+		@Override @SuppressWarnings("unused")
+		public ar.Transfer.Specialized<Pair<String, Integer>, Pair<String, Integer>> specialize(
+				Aggregates<? extends Pair<String, Integer>> aggregates) {
+			return this;
+		}
+
+		@Override
+		public Pair<String, Integer> at(int x, int y, Aggregates<? extends Pair<String, Integer>> aggs) {
+			String ref = state(aggs, x,y);
+			
+			String up = state(aggs,x,y+1);
+			String down = state(aggs,x,y-1);
+			String left = state(aggs,x-1,y);
+			String right = state(aggs,x+1,y);
+			
+			Pair<String,Integer> v = aggs.get(x, y);
+			if (ref.equals(up) && ref.equals(down) && ref.equals(left) && ref.equals(right)) {
+				return v;
+			} else {
+				return new Pair<>(BOARDER,v.right);
+			}
+			
+		}
+		
+		private static final String state(Aggregates<? extends Pair<String, Integer>> aggs, int x, int y) {return aggs.get(x,y).left;}
+		
+	}
 }
