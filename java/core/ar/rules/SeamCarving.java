@@ -45,6 +45,39 @@ public class SeamCarving {
 	/**Carve horizontally or vertically?**/
 	public enum Direction {H,V}
 	
+	/**Interface for instrumented Carvers.**/
+	public static abstract class Carver<A> implements Transfer.Specialized<A,A>{
+		protected final Delta<A> delta;
+		protected final A empty;
+		protected final Direction dir;
+		protected final int seams;
+		
+		public Carver(Delta<A> delta, Direction dir, A empty, int seams)  {
+			this.delta = delta;
+			this.empty = empty;
+			this.dir = dir;
+			this.seams= seams;
+		}
+		
+		@Override public final A emptyValue() {return empty;}
+
+		@Override public final ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
+
+		@Override
+		public final Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
+			
+			int[][] dropList = dropList(aggregates, rend);
+			return carveN(aggregates, dropList);
+		}
+
+		
+		/**Alternative entry point for Carver that just computes the drop list
+		 * instead of modifying the image.
+		 */
+		public abstract int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend);
+	}
+	
 	/**Find and remove a seams, per the Avidan and Shamir method but only remove one seam at a time.
 	 * 
 	 * This class will calculate the full energy matrix each time a seam is removed.
@@ -182,54 +215,31 @@ public class SeamCarving {
 	 * image, and thus does not create as nice of images as the CarveIncremental BUT it is
 	 * much faster.  The principal downfall of this method is that it only uses local information
 	 * to create linkages.
-	 * 
-	 * TODO: What if you only need to N seams instead of a full set of linkages?  Do it locally in each step, 
-	 *       but leaves more options open for the matchings in a lot of cases.  
-     *
 	 */
-	public static class CarveSweep<A> implements Transfer.Specialized<A, A> {
-		final Delta<A> delta;
-		final A empty;
-		final Direction dir;
-		final int seams;
-		
+	public static class CarveSweep<A> extends Carver<A> {
 		/**
 		 * @param delta Comparison function used to compute the energy matrix
 		 * @param dir Direction seams run
 		 * @param empty 
 		 * @param seams How many seams to remove
 		 */
-		public CarveSweep(Delta<A> delta, Direction dir, A empty, int seams)  {
-			this.delta = delta;
-			this.empty = empty;
-			this.dir = dir;
-			this.seams= seams;
-		}
+		public CarveSweep(Delta<A> delta, Direction dir, A empty, int seams)  {super(delta, dir, empty, seams);}
 		
-		@Override public A emptyValue() {return empty;}
-
-		@Override 
-		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
-
 		@Override
-		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
-			if (dir == Direction.H) {return horizontal(aggregates, rend);}
-			return vertical(aggregates, rend);
-		}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend) {return dropList(aggregates, rend, dir);}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+			if (seams == 0) {return new int[0][0];}
 			
-		private Aggregates<A> horizontal(Aggregates<? extends A> aggregates, Renderer rend) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggregates), rend));
-		}
-		
-		private Aggregates<A> vertical(Aggregates<? extends A> aggregates, Renderer rend) {
-			Aggregates<Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
-			EdgeWeights weights = new EdgeWeights(pixelEnergy);
+			if (d == Direction.H) {
+					return transpose(dropList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
+			} else {
+				Aggregates<Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
+				EdgeWeights weights = new EdgeWeights(pixelEnergy);
 
-			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
-			Aggregates<Integer> matchings = matchings(weights, AggregateUtils.make(pixelEnergy, 0d));
-			int[][] dropList = computeDropList(seams, matchings, weights);
-			return carveN(aggregates, dropList);
+				//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
+				Aggregates<Integer> matchings = matchings(weights, AggregateUtils.make(pixelEnergy, 0d));
+				return computeDropList(seams, matchings, weights);
+			}
 		}
 		
 		/**Utility class, encapsulates a local energy matrix and computes
@@ -258,64 +268,34 @@ public class SeamCarving {
 	 * but creates all seams at once (like CarveSweep).
 	 * In a reverse cumulative energy matrix M, the value M(i,j) is the lowest-cost
 	 * seam that starts at (i,j) and goes to the last row.  This integrates
-	 * some globa information into the matching equations with a cost of only
+	 * some global information into the matching equations with a cost of only
 	 * one additional sweep through the matrix.
-	 *  
-	 * TODO: What if you only need to N seams instead of a full set of linkages?  Do it locally in each step, 
-	 *       but leaves more options open for the matchings in a lot of cases.  
-	 *
 	 */
-	public static class CarveTwoSweeps<A> implements Transfer.Specialized<A, A> {
-		final Delta<A> delta;
-		final A empty;
-		final Direction dir;
-		final int seams;
-		
-		/**
-		 * @param delta Comparison function used to compute the energy matrix
-		 * @param dir Direction seams run
-		 * @param empty 
-		 * @param seams How many seams to remove
-		 */
+	public static class CarveTwoSweeps<A> extends Carver<A> {
 		public CarveTwoSweeps(Delta<A> delta, Direction dir, A empty, int seams)  {
-			this.delta = delta;
-			this.empty = empty;
-			this.dir = dir;
-			this.seams= seams;
+			super(delta, dir, empty, seams);
 		}
 		
-		@Override public A emptyValue() {return empty;}
-	
-		@Override 
-		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
-	
 		@Override
-		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
-
-			if (dir == Direction.H) {return horizontal(aggregates, rend);}
-			return vertical(aggregates, rend);
-		}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend) {return dropList(aggregates, rend, dir);}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+			if (seams == 0) {return new int[0][0];}
 			
-		public Aggregates<A> horizontal(Aggregates<? extends A> aggregates, Renderer rend) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggregates), rend));
-		}
+			if (d == Direction.H) {
+					return transpose(dropList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
+			} else {
+				Aggregates<Double> globalEnergy = rend.transfer(
+						aggregates, 
+						new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
+				
+				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+				EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
 		
-		public Aggregates<A> vertical(Aggregates<? extends A> aggregates, Renderer rend) {
-			Aggregates<Double> globalEnergy = rend.transfer(
-					aggregates, 
-					new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
-			
-			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
-			EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
-	
-			Aggregates<Integer> matchings = matchings(weights, cumEng);
-			
-			int[][] dropList = computeDropList(seams, matchings, weights);
-			return carveN(aggregates, dropList);
+				Aggregates<Integer> matchings = matchings(weights, cumEng);
+				
+				return computeDropList(seams, matchings, weights);
+			}
 		}
-	
-		
 	
 		/**Utility class, encapsulates a local energy matrix and computes
 		 * a between-pixel energy matrix. 
@@ -345,52 +325,30 @@ public class SeamCarving {
 	 * which calculate seams for all pixels in all rows, this version only calculates 
 	 * N total seams.
 	 */
-	public static class CarveSweepN<A> implements Transfer.Specialized<A, A> {
-		final Delta<A> delta;
-		final A empty;
-		final Direction dir;
-		final int seams;
-		
-		/**
-		 * @param delta Comparison function used to compute the energy matrix
-		 * @param dir Direction seams run
-		 * @param empty 
-		 * @param seams How many seams to remove
-		 */
+	public static class CarveSweepN<A> extends Carver<A> {
 		public CarveSweepN(Delta<A> delta, Direction dir, A empty, int seams)  {
-			this.delta = delta;
-			this.empty = empty;
-			this.dir = dir;
-			this.seams= seams;
+			super(delta, dir, empty, seams);
 		}
-		
-		@Override public A emptyValue() {return empty;}
-	
-		@Override 
-		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
-	
+				
 		@Override
-		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (dir == Direction.H) {return horizontal(aggregates, rend);}
-			return vertical(aggregates, rend);
-		}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend) {return dropList(aggregates, rend, dir);}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+			if (seams == 0) {return new int[0][0];}
 			
-		public Aggregates<A> horizontal(Aggregates<? extends A> aggregates, Renderer rend) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggregates), rend));
-		}
+			if (d == Direction.H) {
+					return transpose(dropList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
+			} else {
+				Aggregates<Double> globalEnergy = rend.transfer(
+						aggregates, 
+						new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
+				
+				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+				EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
 		
-		public Aggregates<A> vertical(Aggregates<? extends A> aggregates, Renderer rend) {
-			Aggregates<Double> globalEnergy = rend.transfer(
-					aggregates, 
-					new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
-			
-			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
-			EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
-	
-			Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
-			
-			int[][] dropList = compileDropList(matchings, seams);	
-			return carveN(aggregates, dropList);
+				Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
+				
+				return compileDropList(matchings, seams);
+			}
 		}
 		
 		public int[][] compileDropList(Aggregates<Integer> matchings, int seams) {
@@ -803,6 +761,34 @@ public class SeamCarving {
 				  Math.pow(left.getRed()  - right.getRed(), 2)
 				+ Math.pow(left.getGreen()- right.getGreen(), 2) 
 				+ Math.pow(left.getBlue() - right.getBlue(), 2));
+		}
+	}
+	
+	public static final class DrawSeams<A> implements Transfer.Specialized<A, Color> {
+		private final Carver<A> carver;
+		private final Color seam;
+		private final Color notSeam = Util.CLEAR;
+		
+		public DrawSeams(Carver<A> carver, Color seam) {
+			this.carver = carver;
+			this.seam = seam;
+		}
+
+		@Override public Color emptyValue() {return notSeam;}
+
+		@Override public ar.Transfer.Specialized<A, Color> specialize(Aggregates<? extends A> aggregates) {return this;}
+
+		@Override
+		public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			int[][] drops = carver.dropList(aggregates, rend);
+			
+			Aggregates<Color> seams = AggregateUtils.make(aggregates, notSeam);
+			for (int y=0; y<drops.length;y++) {
+				for (int x=0; x<drops.length;x++) {
+					seams.set(x, y, seam);
+				}
+			}
+			return seams;
 		}
 	}
 }
