@@ -72,7 +72,8 @@ public class SeamCarving {
 		public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
 			
 		@Override 
-		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) { 
+		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (seams ==0) {return (Aggregates<A>) aggregates;}
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			else {return vertical(aggregates, rend);}
 		}
@@ -211,6 +212,7 @@ public class SeamCarving {
 
 		@Override
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (seams ==0) {return (Aggregates<A>) aggregates;}
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			return vertical(aggregates, rend);
 		}
@@ -288,6 +290,8 @@ public class SeamCarving {
 	
 		@Override
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (seams ==0) {return (Aggregates<A>) aggregates;}
+
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			return vertical(aggregates, rend);
 		}
@@ -651,13 +655,13 @@ public class SeamCarving {
 	 * @return For x=int[A][B], x is the B'th x index to drop in row A
 	 */
 	private static int[][] computeDropList(int seams, Aggregates<Integer> matchings, Weights energy) {
-		//Compute seam totals by iterating down the matchings and pixel matrices
+		//Compute seam totals by iterating down the matchings  matrix
 		double[] seamEnergies = new double[matchings.highX()-matchings.lowX()]; 
 		for (int x=matchings.lowX(); x<matchings.highX(); x++) {
 			int sourceX=x;
 			for (int y=matchings.lowY(); y<matchings.highY()-1; y++) {//If you look down past the last row, you get -inf....
 				int targetX = sourceX + matchings.get(sourceX,y);
-				seamEnergies[x] += energy.between(sourceX, y, targetX, y+1);
+				seamEnergies[x-matchings.lowX()] += energy.between(sourceX, y, targetX, y+1);
 				sourceX=targetX;
 			}
 		}

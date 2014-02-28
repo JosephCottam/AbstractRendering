@@ -61,10 +61,9 @@ public class Cartogram {
 		System.out.println("Base aggregates created.\n");
 		
 		
-		int step=100;
+		int step=400;
 		//final Transfer.Specialized<Pair<String,Integer>,Pair<String,Integer>> smear = new General.Smear<>(EMPTY);
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
-		Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, step);
 
 		final Transfer<Integer, Color> colorPopulation = 
 				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
@@ -77,6 +76,8 @@ public class Cartogram {
 		for (int seams=0; seams<viewBounds.width; seams+=step) {
 			System.out.println("Starting removing " + seams + " seams");
 
+			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
 			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carver);
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
 			

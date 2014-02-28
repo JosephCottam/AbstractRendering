@@ -45,8 +45,8 @@ public class CarveApp {
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Point2D> selector = TouchesPixel.make(dataset);
 
-		int width = 800;
-		int height = 375;
+		int width = 1200;
+		int height = 800;
 		int seams = 400;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
@@ -56,9 +56,9 @@ public class CarveApp {
 		final Transfer<Integer, Color> transfer = 
 				Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()))
 				//.then(new SeamCarving.CarveIncremental<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0,seams))
-				//.then(new SeamCarving.CarveSweep<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
+				.then(new SeamCarving.CarveSweep<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
 				//.then(new SeamCarving.CarveTwoSweeps<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
-				.then(new SeamCarving.CarveSweepN<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
+				//.then(new SeamCarving.CarveSweepN<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
 				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
 				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
