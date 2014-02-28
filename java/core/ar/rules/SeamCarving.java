@@ -44,7 +44,7 @@ public class SeamCarving {
 	/**Carve horizontally or vertically?**/
 	public enum Direction {H,V}
 	
-	/**Find and remove a seams, per the Avidan and Shamir method.
+	/**Find and remove a seams, per the Avidan and Shamir method but only remove one seam at a time.
 	 * 
 	 * This class will calculate the full energy matrix each time a seam is removed.
 	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
@@ -341,8 +341,8 @@ public class SeamCarving {
 	}
 	
 	/**Find exactly N seams and remove them.  Unlike CarveSweep and CarveTwoSweeps,
-	 * which calculate seams for all pixels in all rows, this version only calculates seams
-	 * for N pixels in each row.
+	 * which calculate seams for all pixels in all rows, this version only calculates 
+	 * N total seams.
 	 */
 	public static class CarveSweepN<A> implements Transfer.Specialized<A, A> {
 		final Delta<A> delta;
