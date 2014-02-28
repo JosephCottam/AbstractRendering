@@ -674,7 +674,7 @@ public class SeamCarving {
     		List<Integer> idxs = seamOrder.get(seamEnergy);
 	    	if (idxs==null) {idxs = new ArrayList<>();}
 	    	int size = idxs.size()+1;
-	    	idxs.add(((size+1)*7253)%size, i); //Mix up the order a bit; 7253 is just a prime number I knew
+	    	idxs.add(((size+1)*7253)%size,i+matchings.lowX()); //Mix up the order a bit; 7253 is just a prime number I knew
 	    	seamOrder.put(seamEnergy, idxs);
 	    }
 		
@@ -703,7 +703,11 @@ public class SeamCarving {
 	 * */
 	public static <A> Aggregates<A> carveN(final Aggregates<? extends A> aggregates, final int[][] dropList) {
     	//Carve ALL seam-points out of the aggregates...
-		Aggregates<A> result = AggregateUtils.make(aggregates, (A) aggregates.defaultValue());
+		Aggregates<A> result = AggregateUtils.make(aggregates.lowX(), 
+													aggregates.lowY(), 
+													aggregates.highX()-dropList[0].length, 
+													aggregates.highY(), (A) aggregates.defaultValue());
+		
     	for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
     		int i = y-aggregates.lowY();
     		int dropCount=0;
