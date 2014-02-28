@@ -42,6 +42,19 @@ public class AggregateUtils {
 		}
 		return i;
 	}
+	
+	/**Make a new set of aggregates with the same values in the same positions as the old one.
+	 * This is a new set of aggregates, with a new set of backing data. 
+	 * **/
+	public static <A> Aggregates<A> copy(Aggregates<? extends A> source, A defVal) {
+		Aggregates<A> target = make(source, defVal);
+		for (int x=source.lowX(); x<source.highX(); x++) {
+			for (int y=source.lowY(); y<source.highY(); y++) {
+				target.set(x, y, source.get(x,y));
+			}
+		}
+		return target;
+	}
 
 	public static <A> Aggregates<A> make(Aggregates<?> like, A defVal) {return make(like.lowX(), like.lowY(), like.highX(), like.highY(),defVal);}
 

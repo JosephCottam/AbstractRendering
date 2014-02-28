@@ -73,7 +73,7 @@ public class SeamCarving {
 			
 		@Override 
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return (Aggregates<A>) aggregates;}
+			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			else {return vertical(aggregates, rend);}
 		}
@@ -212,7 +212,7 @@ public class SeamCarving {
 
 		@Override
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return (Aggregates<A>) aggregates;}
+			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			return vertical(aggregates, rend);
 		}
@@ -290,7 +290,7 @@ public class SeamCarving {
 	
 		@Override
 		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return (Aggregates<A>) aggregates;}
+			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
 
 			if (dir == Direction.H) {return horizontal(aggregates, rend);}
 			return vertical(aggregates, rend);

@@ -12,6 +12,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 
@@ -345,9 +346,9 @@ public class General {
 			return emptyValue();
 		}
 		
-		@Override
+		@Override @SuppressWarnings("unused")
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
+			return AggregateUtils.copy(aggregates, emptyValue());
 		}
 	}
 
