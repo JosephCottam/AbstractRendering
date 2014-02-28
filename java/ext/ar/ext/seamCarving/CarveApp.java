@@ -63,13 +63,15 @@ public class CarveApp {
 		}};
 		
 		Map<String, Transfer<Integer,Integer>> carvers;
-		if (selected != null) {
+		if (selected == null || selected.equals("*")) { 
+			carvers = allCarvers;
+		} else {
 			carvers = new HashMap<>();
 			for (String c:selected.split(",")) {
 				c = c.toLowerCase();
 				if (allCarvers.containsKey(c)) {carvers.put(c, allCarvers.get(c));}
 			}
-		} else {carvers = allCarvers;}
+		}
 		
 		for (String carver:carvers.keySet()) {
 			ARComponent.PERFORMANCE_REPORTING = true;
