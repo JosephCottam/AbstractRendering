@@ -712,7 +712,7 @@ public class SeamCarving {
     		int i = y-aggregates.lowY();
     		int dropCount=0;
     		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
-    			if (dropList[i][dropCount] == x) {
+    			if (dropCount < dropList[i].length && dropList[i][dropCount] == x) {
     				dropCount++; 
     				continue;
     			}
