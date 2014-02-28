@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JFrame;
 
@@ -39,7 +41,8 @@ public class CarveApp {
 						new Indexed.ToValue<Indexed,Character>(2),
 						1, null);
 
-		
+		String selected = Util.argKey(args, "-carvers", null);
+		int spread = Integer.parseInt(Util.argKey(args, "-spread", "0"));
 		
 		Renderer r = new ParallelRenderer();
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
@@ -47,32 +50,45 @@ public class CarveApp {
 
 		int width = 1200;
 		int height = 800;
-		int seams = 400;
+		final int seams = 400;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 
 		
-		ARComponent.PERFORMANCE_REPORTING = true;
-		final Transfer<Integer, Color> transfer = 
-				Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(0), new Numbers.Count<Integer>()))
-				//.then(new SeamCarving.CarveIncremental<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0,seams))
-				.then(new SeamCarving.CarveSweep<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
-				//.then(new SeamCarving.CarveTwoSweeps<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
-				//.then(new SeamCarving.CarveSweepN<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams))
-				.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
-				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
-				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
-				
-		JFrame frame = new JFrame("Seam Carving -- Removed " + seams + " seams");
-		frame.setLayout(new BorderLayout());
-		frame.setSize(width,height);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
-		frame.setVisible(true);
-		frame.revalidate();
-		frame.validate();
+		Map<String, Transfer<Integer,Integer>> allCarvers = new HashMap<String, Transfer<Integer,Integer>>() {{
+				put("incremental", new SeamCarving.CarveIncremental<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0,seams));
+				put("sweep", new SeamCarving.CarveSweep<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
+				put("twosweep", new SeamCarving.CarveTwoSweeps<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
+				put("sweepn", new SeamCarving.CarveSweepN<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
+		}};
 		
+		Map<String, Transfer<Integer,Integer>> carvers;
+		if (selected != null) {
+			carvers = new HashMap<>();
+			for (String c:selected.split(",")) {
+				c = c.toLowerCase();
+				if (allCarvers.containsKey(c)) {carvers.put(c, allCarvers.get(c));}
+			}
+		} else {carvers = allCarvers;}
 		
+		for (String carver:carvers.keySet()) {
+			ARComponent.PERFORMANCE_REPORTING = true;
+			final Transfer<Integer, Color> transfer = 
+					Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(spread), new Numbers.Count<Integer>()))
+					.then(carvers.get(carver))
+					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
+					.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
+					.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
+					
+			JFrame frame = new JFrame(String.format("Seam Carving -- Removed %d seams (%s method)", seams, carver));
+			frame.setLayout(new BorderLayout());
+			frame.setSize(width,height);
+			frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			frame.add(new TransferDisplay(aggregates, transfer), BorderLayout.CENTER);
+			frame.setVisible(true);
+			frame.revalidate();
+			frame.validate();
+		}
 	}
 	
 }
