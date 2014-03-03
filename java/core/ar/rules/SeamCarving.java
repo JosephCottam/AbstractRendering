@@ -78,130 +78,6 @@ public class SeamCarving {
 		public abstract int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend);
 	}
 	
-	/**Find and remove a seams, per the Avidan and Shamir method but only remove one seam at a time.
-	 * 
-	 * This class will calculate the full energy matrix each time a seam is removed.
-	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
-	 * 
-	 * For faster results, try other "Carve" classes.
-	 * Each has a different set of tradeoffs, but they all run significantly faster.  
-	 * 
-	 * **/
-	public static class CarveIncremental<A> extends AbstractCarver<A> {
-		public CarveIncremental(Delta<A> delta, Direction dir, A empty, int seams)  {
-			super(delta, dir, empty, seams);
-		}
-		
-		@Override
-		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend) {return dropList(aggregates, rend, dir);}
-		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
-			if (seams == 0) {return new int[0][0];}
-			
-			if (d == Direction.H) {
-					return transpose(dropList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
-			} else {
-				Aggregates<? extends Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
-				CumulativeEnergy cumulativeEnergy = new CumulativeEnergy();
-				
-				@SuppressWarnings("unchecked")
-				Aggregates<A> rslt = (Aggregates<A>) aggregates;
-				
-				int[][] seamList = new int[seams][];
-				for (int i=0; i<seams; i++) {
-					Aggregates<Double> cumEng = rend.transfer(pixelEnergy, cumulativeEnergy);
-					int selectedSeam = selectSeam(seamEnergies(cumEng), i);
-					seamList[i] = findVSeam(cumEng, selectedSeam);
-					rslt = carve(rslt, seamList[i]);
-					pixelEnergy = carve(pixelEnergy,seamList[i]);
-					correctSeam(seamList, i);
-				}
-
-				return  sortRows(transpose(seamList));
-			}
-		}
-
-
-		/**
-		 */
-		public static final void correctSeam(int[][] seams, int focus) {
-			for (int entry=0; entry < seams[focus].length; entry++) {
-				int increase =0;
-				for (int seam=focus-1; seam>=0; seam--) {
-					if (seams[seam][entry] <= focus) {increase++;}
-				}
-				seams[focus][entry] += increase;
-			}
-		}
-		
-		/**Get just the seam energies.**/
-		private static final double[] seamEnergies(Aggregates<? extends Double> cumEng) {
-			final double[] energies = new double[cumEng.highX()-cumEng.lowX()];
-			for (int x=0; x<energies.length; x++) {
-				energies[x] = cumEng.get(x, cumEng.highY()-1);
-			}
-			return energies;
-		}
-
-		
-		public static int[] findVSeam(Aggregates<? extends Double> cumEng, int selectedSeam) {
-			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];
-			vseam[vseam.length-1] = selectedSeam;
-			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
-				int x = vseam[y-cumEng.lowY()+1]; //Get the x value for the next row down  
-
-				double upLeft = x-1 >= cumEng.lowX() ? cumEng.get(x-1, y) : Double.MAX_VALUE;
-				double up = cumEng.get(x, y);
-				double upRight = x+1 < cumEng.highX() ? cumEng.get(x+1, y) : Double.MAX_VALUE;
-
-				if (upLeft < up && upLeft < upRight) {x = x-1;}
-				else if (up > upRight) {x = x+1;}
-				
-				vseam[y-cumEng.lowY()] = x;
-			}
-			return vseam;
-		}
-		
-		
-		/**
-		 * @param seamEnergies Array of seam energies
-		 * @param seamIdx Is this the 1st/2nd/3rd call to nextSeam?
-		 * @return The index of the selected seam in seamEnergies
-		 */
-		private static final int selectSeam(final double[] seamEnergies, final int seamIdx) {
-			int selected=0;
-			double min = Integer.MAX_VALUE;
-			int nearPosition=(7817*seamIdx)%seamEnergies.length;
-
-			for (int x = 0; x < seamEnergies.length; x++) {
-				Double eng = seamEnergies[x]; 
-
-				//Use the current x as the start if it has lower energy than anything found before OR
-				//   it has the same energy but is closer to the "nearPosition"
-				if (min > eng   
-						|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-selected)))) {
-					min = eng;
-					selected = x;
-				} 
-			}
-
-			return selected;
-		}
-		
-		/**Carves a vertical seam out.**/
-		private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
-			Aggregates<A> rslt = 
-					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-			
-			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
-				int split = vseam[y-aggs.lowY()];
-				for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
-				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
-			}
-			return rslt;
-		}
-		
-	}
-	
 	/**Find and remove seams per the w1 method of Huang, et al.
 	 * 
 	 * Each pair of adjacent rows is treated independently in a pre-processing step 
@@ -764,6 +640,144 @@ public class SeamCarving {
 				+ Math.pow(left.getBlue() - right.getBlue(), 2));
 		}
 	}
+	
+	
+	/**Find and remove a seams, per the Avidan and Shamir method but only remove one seam at a time.
+	 * 
+	 * This class will calculate the full energy matrix each time a seam is removed.
+	 * Since the whole matrix is calculated each time, its slow BUT it is also stateless.
+	 * 
+	 * For faster results, try other "Carve" classes.
+	 * Each has a different set of tradeoffs, but they all run significantly faster.  
+	 * 
+	 * **/
+	public static class CarveIncremental<A> implements Transfer.Specialized<A,A> {
+		protected final Delta<A> delta;
+		protected final A empty;
+		protected final Direction dir;
+		protected final int seams;
+		
+		public CarveIncremental(Delta<A> delta, Direction dir, A empty, int seams)  {
+			this.delta = delta;
+			this.empty = empty;
+			this.dir = dir;
+			this.seams= seams;
+		}
+		
+
+		@Override public A emptyValue() {return empty;}
+
+		@Override
+		public ar.Transfer.Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
+
+		@Override
+		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			if (dir == Direction.H) {
+				return new TransposeWrapper<>(carve(new TransposeWrapper<>(aggregates), rend));
+			} else {
+				return carve(aggregates, rend);
+			}
+		}
+		
+		private Aggregates<A> carve(Aggregates<? extends A> aggregates, Renderer rend) {
+			Aggregates<? extends Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
+			CumulativeEnergy cumulativeEnergy = new CumulativeEnergy();
+			
+			@SuppressWarnings("unchecked")
+			Aggregates<A> rslt = (Aggregates<A>) aggregates;
+			
+			for (int i=0; i<seams; i++) {
+				Aggregates<Double> cumEng = rend.transfer(pixelEnergy, cumulativeEnergy);
+				int selectedSeam = selectSeam(seamEnergies(cumEng), i);
+				int[] seam = findVSeam(cumEng, selectedSeam);
+				rslt = carve(rslt, seam);
+				pixelEnergy = carve(pixelEnergy,seam);
+			}
+			return rslt;
+		}
+
+
+		/**
+		 */
+		public static final void correctSeam(int[][] seams, int focus) {
+			for (int entry=0; entry < seams[focus].length; entry++) {
+				int increase =0;
+				for (int seam=focus-1; seam>=0; seam--) {
+					if (seams[seam][entry] <= focus) {increase++;}
+				}
+				seams[focus][entry] += increase;
+			}
+		}
+		
+		/**Get just the seam energies.**/
+		private static final double[] seamEnergies(Aggregates<? extends Double> cumEng) {
+			final double[] energies = new double[cumEng.highX()-cumEng.lowX()];
+			for (int x=0; x<energies.length; x++) {
+				energies[x] = cumEng.get(x, cumEng.highY()-1);
+			}
+			return energies;
+		}
+
+		
+		public static int[] findVSeam(Aggregates<? extends Double> cumEng, int selectedSeam) {
+			int[] vseam = new int[cumEng.highY()-cumEng.lowY()];
+			vseam[vseam.length-1] = selectedSeam;
+			for (int y = cumEng.highY()-2; y>=cumEng.lowY(); y--) {
+				int x = vseam[y-cumEng.lowY()+1]; //Get the x value for the next row down  
+
+				double upLeft = x-1 >= cumEng.lowX() ? cumEng.get(x-1, y) : Double.MAX_VALUE;
+				double up = cumEng.get(x, y);
+				double upRight = x+1 < cumEng.highX() ? cumEng.get(x+1, y) : Double.MAX_VALUE;
+
+				if (upLeft < up && upLeft < upRight) {x = x-1;}
+				else if (up > upRight) {x = x+1;}
+				
+				vseam[y-cumEng.lowY()] = x;
+			}
+			return vseam;
+		}
+		
+		
+		/**
+		 * @param seamEnergies Array of seam energies
+		 * @param seamIdx Is this the 1st/2nd/3rd call to nextSeam?
+		 * @return The index of the selected seam in seamEnergies
+		 */
+		private static final int selectSeam(final double[] seamEnergies, final int seamIdx) {
+			int selected=0;
+			double min = Integer.MAX_VALUE;
+			int nearPosition=(7817*seamIdx)%seamEnergies.length;
+
+			for (int x = 0; x < seamEnergies.length; x++) {
+				Double eng = seamEnergies[x]; 
+
+				//Use the current x as the start if it has lower energy than anything found before OR
+				//   it has the same energy but is closer to the "nearPosition"
+				if (min > eng   
+						|| (min == eng && (Math.abs(nearPosition-x) < Math.abs(nearPosition-selected)))) {
+					min = eng;
+					selected = x;
+				} 
+			}
+
+			return selected;
+		}
+		
+		/**Carves a vertical seam out.**/
+		private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
+			Aggregates<A> rslt = 
+					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
+			
+			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
+				int split = vseam[y-aggs.lowY()];
+				for (int x=aggs.lowX(); x<split; x++) {rslt.set(x, y, aggs.get(x,y));}
+				for (int x=split; x<aggs.highX(); x++) {rslt.set(x, y, aggs.get(x+1,y));}
+			}
+			return rslt;
+		}
+	}
+	
+
 	
 	public static final class DrawSeams<A> implements Transfer.Specialized<A, Color> {
 		private final AbstractCarver<A> carver;
