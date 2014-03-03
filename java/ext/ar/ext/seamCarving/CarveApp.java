@@ -43,14 +43,21 @@ public class CarveApp {
 
 		final String selected = Util.argKey(args, "-carvers", null);
 		final int spread = Integer.parseInt(Util.argKey(args, "-spread", "0"));
-		final int seams = Integer.parseInt(Util.argKey(args, "-seams", "400"));
+		final int perhapsSeams = Integer.parseInt(Util.argKey(args, "-seams", "100"));
+		final float seamFactor = Float.parseFloat(Util.argKey(args, "-sf", "0"));
+		final int width = Integer.parseInt(Util.argKey(args, "-width", "800"));
+		final int height = Integer.parseInt(Util.argKey(args, "-height", "300"));
+
+		final int seams;
+		if (seamFactor != 0) {seams = (int) (width*seamFactor);}
+		else {seams = perhapsSeams;}
+
 		
 		Renderer r = new ParallelRenderer();
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Point2D> selector = TouchesPixel.make(dataset);
 
-		int width = 1200;
-		int height = 800;
+
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
 		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
 

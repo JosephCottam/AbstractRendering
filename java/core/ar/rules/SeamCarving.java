@@ -46,13 +46,13 @@ public class SeamCarving {
 	public enum Direction {H,V}
 	
 	/**Interface for instrumented Carvers.**/
-	public static abstract class Carver<A> implements Transfer.Specialized<A,A>{
+	public static abstract class AbstractCarver<A> implements Transfer.Specialized<A,A>{
 		protected final Delta<A> delta;
 		protected final A empty;
 		protected final Direction dir;
 		protected final int seams;
 		
-		public Carver(Delta<A> delta, Direction dir, A empty, int seams)  {
+		public AbstractCarver(Delta<A> delta, Direction dir, A empty, int seams)  {
 			this.delta = delta;
 			this.empty = empty;
 			this.dir = dir;
@@ -87,55 +87,53 @@ public class SeamCarving {
 	 * Each has a different set of tradeoffs, but they all run significantly faster.  
 	 * 
 	 * **/
-	public static class CarveIncremental<A> implements Transfer.Specialized<A,A> {
-		protected final Delta<A> delta;
-		protected final A empty;
-		protected final Direction dir;
-		protected final int seams;
-		
+	public static class CarveIncremental<A> extends AbstractCarver<A> {
 		public CarveIncremental(Delta<A> delta, Direction dir, A empty, int seams)  {
-			this.delta = delta;
-			this.empty = empty;
-			this.dir = dir;
-			this.seams = seams;
+			super(delta, dir, empty, seams);
 		}
 		
-		@Override public A emptyValue() {return empty;}
-		
-		@Override 
-		public Specialized<A, A> specialize(Aggregates<? extends A> aggregates) {return this;}
+		@Override
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend) {return dropList(aggregates, rend, dir);}
+		public int[][] dropList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+			if (seams == 0) {return new int[0][0];}
 			
-		@Override 
-		public Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
-			if (dir == Direction.H) {return horizontal(aggregates, rend);}
-			else {return vertical(aggregates, rend);}
-		}
+			if (d == Direction.H) {
+					return transpose(dropList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
+			} else {
+				Aggregates<? extends Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
+				CumulativeEnergy cumulativeEnergy = new CumulativeEnergy();
 				
-		public Aggregates<A> horizontal(Aggregates<? extends A> aggs, Renderer rend) {
-			return TransposeWrapper.transpose(vertical(TransposeWrapper.transpose(aggs), rend));
+				@SuppressWarnings("unchecked")
+				Aggregates<A> rslt = (Aggregates<A>) aggregates;
+				
+				int[][] seamList = new int[seams][];
+				for (int i=0; i<seams; i++) {
+					Aggregates<Double> cumEng = rend.transfer(pixelEnergy, cumulativeEnergy);
+					int selectedSeam = selectSeam(seamEnergies(cumEng), i);
+					seamList[i] = findVSeam(cumEng, selectedSeam);
+					rslt = carve(rslt, seamList[i]);
+					pixelEnergy = carve(pixelEnergy,seamList[i]);
+					correctSeam(seamList, i);
+				}
+
+				return  sortRows(transpose(seamList));
+			}
+		}
+
+
+		/**
+		 */
+		public static final void correctSeam(int[][] seams, int focus) {
+			for (int entry=0; entry < seams[focus].length; entry++) {
+				int increase =0;
+				for (int seam=focus-1; seam>=0; seam--) {
+					if (seams[seam][entry] <= focus) {increase++;}
+				}
+				seams[focus][entry] += increase;
+			}
 		}
 		
-		public Aggregates<A> vertical(Aggregates<? extends A> aggs, Renderer rend) {
-			Aggregates<? extends Double> pixelEnergy = rend.transfer(aggs, new Energy<>(delta));
-
-			@SuppressWarnings("unchecked")
-			Aggregates<A> rslt = (Aggregates<A>) aggs;
-			
-			for (int i=0; i<seams; i++) {
-				Aggregates<? extends Double> cumEng = rend.transfer(pixelEnergy, new CumulativeEnergy());
-				int selectedSeam = selectSeam(seamEnergies(cumEng), i);
-				int[] vseam = findVSeam(cumEng, selectedSeam);
-				rslt = carve(rslt, vseam);
-				pixelEnergy = carve(pixelEnergy,vseam);
-			}
-
-			return rslt;
-		}
-
-		/**Get just the seam energies.
-		 * TODO: Eliminate this method by having a wrapper that presents a row/col of aggregates as a list.  Have selectSeam take List<Double>
-		 * **/
+		/**Get just the seam energies.**/
 		private static final double[] seamEnergies(Aggregates<? extends Double> cumEng) {
 			final double[] energies = new double[cumEng.highX()-cumEng.lowX()];
 			for (int x=0; x<energies.length; x++) {
@@ -189,13 +187,10 @@ public class SeamCarving {
 			return selected;
 		}
 		
-
-		
 		/**Carves a vertical seam out.**/
 		private static final <A> Aggregates<A> carve(Aggregates<? extends A> aggs, int[] vseam) {
 			Aggregates<A> rslt = 
 					AggregateUtils.make(aggs.lowX(), aggs.lowY(), aggs.highX()-1, aggs.highY(), (A) aggs.defaultValue());
-					//AggregateUtils.make(aggs, (A) aggs.defaultValue());
 			
 			for (int y = aggs.lowY(); y<aggs.highY(); y++) {
 				int split = vseam[y-aggs.lowY()];
@@ -204,6 +199,7 @@ public class SeamCarving {
 			}
 			return rslt;
 		}
+		
 	}
 	
 	/**Find and remove seams per the w1 method of Huang, et al.
@@ -216,7 +212,7 @@ public class SeamCarving {
 	 * much faster.  The principal downfall of this method is that it only uses local information
 	 * to create linkages.
 	 */
-	public static class CarveSweep<A> extends Carver<A> {
+	public static class CarveSweep<A> extends AbstractCarver<A> {
 		/**
 		 * @param delta Comparison function used to compute the energy matrix
 		 * @param dir Direction seams run
@@ -271,7 +267,7 @@ public class SeamCarving {
 	 * some global information into the matching equations with a cost of only
 	 * one additional sweep through the matrix.
 	 */
-	public static class CarveTwoSweeps<A> extends Carver<A> {
+	public static class CarveTwoSweeps<A> extends AbstractCarver<A> {
 		public CarveTwoSweeps(Delta<A> delta, Direction dir, A empty, int seams)  {
 			super(delta, dir, empty, seams);
 		}
@@ -325,7 +321,7 @@ public class SeamCarving {
 	 * which calculate seams for all pixels in all rows, this version only calculates 
 	 * N total seams.
 	 */
-	public static class CarveSweepN<A> extends Carver<A> {
+	public static class CarveSweepN<A> extends AbstractCarver<A> {
 		public CarveSweepN(Delta<A> delta, Direction dir, A empty, int seams)  {
 			super(delta, dir, empty, seams);
 		}
@@ -508,6 +504,14 @@ public class SeamCarving {
 		return out;
 	}
 	
+	/**Sorts each row of the passed matrix IN PLACE.**/
+	public static int[][] sortRows(int[][] in) {
+    	for (int i=0;i<in.length;i++) {
+    		Arrays.sort(in[i]);
+    	}
+    	return in;
+	}
+	
 	/**Follow a seam, accumulate each index along the way so the seam can be followed
 	 * without the matchings matrix.**/
 	public static final int[] compileVSeam(int x, Aggregates<Integer> matchings) {
@@ -647,10 +651,7 @@ public class SeamCarving {
 	    	seamPoints[i] = compileVSeam(targetSeam, matchings);		    	
 	    }
 	    
-    	int[][] dropList = transpose(seamPoints);
-    	for (int i=0;i<dropList.length;i++) {
-    		Arrays.sort(dropList[i]);
-    	}
+    	int[][] dropList = sortRows(transpose(seamPoints));
 	    
 	    return dropList;
 	}
@@ -765,11 +766,11 @@ public class SeamCarving {
 	}
 	
 	public static final class DrawSeams<A> implements Transfer.Specialized<A, Color> {
-		private final Carver<A> carver;
+		private final AbstractCarver<A> carver;
 		private final Color seam;
 		private final Color notSeam = Util.CLEAR;
 		
-		public DrawSeams(Carver<A> carver, Color seam) {
+		public DrawSeams(AbstractCarver<A> carver, Color seam) {
 			this.carver = carver;
 			this.seam = seam;
 		}

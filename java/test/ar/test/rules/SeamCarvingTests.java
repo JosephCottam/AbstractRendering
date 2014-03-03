@@ -88,7 +88,7 @@ public class SeamCarvingTests {
 
 	}
 	
-	public static class CarveIterativeTests {
+	public static class CarveIncrementalTests {
 		@Test
 		public void testFindLeftSeam() {
 			Aggregates<Double> cumEng = AggregateUtils.make(9, 9, 0d);
@@ -164,6 +164,26 @@ public class SeamCarvingTests {
 					assertThat(String.format("Error at %s,%s",x,y), cumEng.get(x, y), is(val));
 				}
 			}		
+		}
+		
+		@Test 
+		public void testCorrectSeam() {
+			int[][] seams = {{1,2},{1,1},{2,1},{1,1}};
+			for (int i=0; i<seams.length; i++) {
+				SeamCarving.CarveIncremental.correctSeam(seams,i);
+			}
+			
+			assertThat(seams[0][0], is(1));
+			assertThat(seams[0][1], is(2));
+			assertThat(seams[1][0], is(2));
+			assertThat(seams[1][1], is(1));
+			
+			assertThat(seams[2][0], is(4));
+			assertThat(seams[2][1], is(3));
+			assertThat(seams[3][0], is(3));
+			assertThat(seams[3][1], is(4));
+
+			
 		}
 	}
 }
