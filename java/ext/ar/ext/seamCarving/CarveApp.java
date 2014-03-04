@@ -41,12 +41,13 @@ public class CarveApp {
 						new Indexed.ToValue<Indexed,Character>(2),
 						1, null);
 
-		final String selected = Util.argKey(args, "-carvers", null);
+		final boolean showSeams = Boolean.parseBoolean(Util.argKey(args, "-showseams", "false"));
+		final String selected = Util.argKey(args, "-carvers", "*");
 		final int spread = Integer.parseInt(Util.argKey(args, "-spread", "0"));
 		final int perhapsSeams = Integer.parseInt(Util.argKey(args, "-seams", "100"));
 		final float seamFactor = Float.parseFloat(Util.argKey(args, "-sf", "0"));
-		final int width = Integer.parseInt(Util.argKey(args, "-width", "800"));
-		final int height = Integer.parseInt(Util.argKey(args, "-height", "300"));
+		final int width = Integer.parseInt(Util.argKey(args, "-width", "1200"));
+		final int height = Integer.parseInt(Util.argKey(args, "-height", "800"));
 
 		final int seams;
 		if (seamFactor != 0) {seams = (int) (width*seamFactor);}
@@ -80,14 +81,31 @@ public class CarveApp {
 			}
 		}
 		
-		for (String carver:carvers.keySet()) {
+		Map<String, Transfer<Integer,Color>> carvers2 = new HashMap<>();
+		if (showSeams) {
+			for (Map.Entry<String, Transfer<Integer,Integer>> e: carvers.entrySet()) {
+				if (e.getValue() instanceof SeamCarving.AbstractCarver) { //TODO: Remove check when/if incremental joins the AbstractCarver framework...
+					Transfer<Integer, Color> nc = new SeamCarving.DrawSeams<>((SeamCarving.AbstractCarver<Integer>) e.getValue(), new Color(100,149,237), Color.blue);
+					carvers2.put(e.getKey(), nc);
+				} 
+			}
+		} else {
+			final Transfer<Integer, Color> rest = 
+					Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
+					.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
+					.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
+
+			for (Map.Entry<String, Transfer<Integer,Integer>> e: carvers.entrySet()) {
+				carvers2.put(e.getKey(), new Seq<>(e.getValue(), rest));
+			}
+		}
+		
+		
+		for (String carver:carvers2.keySet()) {
 			ARComponent.PERFORMANCE_REPORTING = true;
 			final Transfer<Integer, Color> transfer = 
 					Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(spread), new Numbers.Count<Integer>()))
-					.then(carvers.get(carver))
-					.then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
-					.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
-					.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
+					.then(carvers2.get(carver));
 					
 			JFrame frame = new JFrame(String.format("Seam Carving -- Removed %d seams (%s method)", seams, carver));
 			frame.setLayout(new BorderLayout());
