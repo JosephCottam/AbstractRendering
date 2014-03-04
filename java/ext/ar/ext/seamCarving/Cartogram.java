@@ -76,8 +76,8 @@ public class Cartogram {
 		for (int seams=0; seams<viewBounds.width; seams+=step) {
 			System.out.println("Starting removing " + seams + " seams");
 
-			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
-			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
 			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carver);
 			//carved = renderer.transfer(carved, new Borders(EMPTY));
 			
