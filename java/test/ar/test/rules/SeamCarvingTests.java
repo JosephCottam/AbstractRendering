@@ -97,7 +97,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) x); 
 				}
 			}
-			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,0);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(0));}
@@ -111,7 +111,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) -x); 
 				}
 			}
-			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,8);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0; i<seam.length;i++) {assertThat("Error at " + i, seam[i], is(cumEng.highX()-1));}
@@ -125,7 +125,7 @@ public class SeamCarvingTests {
 					cumEng.set(x, y, (double) Math.abs(x-cumEng.highX()/2)); 
 				}
 			}
-			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,4);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int e:seam) {assertThat(e, is(4));}
@@ -137,7 +137,8 @@ public class SeamCarvingTests {
 			for (int y=cumEng.lowY(); y<cumEng.highY(); y++) {
 				cumEng.set(y,y,0d); 
 			}
-			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,1);
+			
+			int[] seam = SeamCarving.CarveIncremental.findVSeam(cumEng,8);
 			
 			assertThat(seam.length, is (cumEng.highY()-cumEng.lowY()));
 			for (int i=0;i<seam.length;i++) {assertThat(seam[i], is(i));}
