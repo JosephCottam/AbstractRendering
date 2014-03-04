@@ -44,6 +44,8 @@ import ar.rules.ISOContours;
 import ar.rules.Legend;
 import ar.rules.SeamCarving;
 import ar.rules.Legend.Formatter;
+import ar.rules.SeamCarving.Delta;
+import ar.rules.SeamCarving.Direction;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
@@ -337,19 +339,15 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	
 	public static final class Seam extends OptionTransfer<Seam.Controls> {
+		static final SeamCarving.Delta<Integer> delta = new SeamCarving.DeltaInteger();	//TODO: Generalize to auto-detect type...on specialization perhaps?  Similar to FlexSpread..
 
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			SeamCarving.Delta<Integer> delta = new SeamCarving.DeltaInteger();	//TODO: Generalize to auto-detect type...on specialization perhaps?  Similar to FlexSpread..
 			
 			Transfer vt=null, ht=null;
-			if (params.columns() >0) {
-				vt = new SeamCarving.CarveIncremental<Integer>(delta, SeamCarving.Direction.V, 0,params.columns());
-			}
+			if (params.columns() >0) {vt = params.colCarver();}
 
-			if (params.rows() >0) {
-				ht = new SeamCarving.CarveIncremental<Integer>(delta, SeamCarving.Direction.H, 0,params.rows());
-			}
+			if (params.rows() >0) {ht = params.rowCarver();}
 			
 			//TODO: There are probably smarter things to do than just horizontal followed by vertical...
 			if (vt == null && ht == null) {return subsequent;}
@@ -367,17 +365,63 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public static final class Controls extends ControlPanel {
 			private final JSpinner rows = new JSpinner(new SpinnerNumberModel(0, 0, 2000, 5));
 			private final JSpinner cols = new JSpinner(new SpinnerNumberModel(0, 0, 2000, 5));
+			private final JComboBox carver = new JComboBox();
 			
 			public Controls() {
-				super("Seam-carve");				
+				super("Seam-carve");
+				//setLayout(new GridLayout(1,3));
+				add(carver);
 				add(new LabeledItem("Rows:", rows));
-				add(new LabeledItem("Columns:", cols));
+				add(new LabeledItem("Cols:", cols));
+				
+				carver.addItem("Sweep");
+				carver.addItem("Two Sweeps");
+				carver.addItem("Exactly N");
+				carver.addItem("Incremental");
+				
 				rows.addChangeListener(actionProvider.changeDelegate());
 				cols.addChangeListener(actionProvider.changeDelegate());
+				carver.addActionListener(actionProvider.actionDelegate());
+				
+				
+				
 			}
 			
-			public int columns() {return (int) cols.getValue();}
 			public int rows() {return (int) rows.getValue();}
+			public int columns() {return (int) cols.getValue();}
+
+			public Transfer<Integer,Integer> rowCarver() {return carver(Direction.H, rows());}
+			public Transfer<Integer,Integer> colCarver() {return carver(Direction.V, columns());}
+
+			private Transfer<Integer,Integer> carver(Direction d, int seams) {
+				try {
+					Constructor c = constructor();
+					return (Transfer<Integer, Integer>) c.newInstance(delta, d, 0, seams);
+				} catch (InstantiationException | IllegalAccessException
+						| IllegalArgumentException | InvocationTargetException 
+						| NoSuchMethodException | SecurityException e) {
+					e.printStackTrace();
+					return new SeamCarving.CarveSweep(delta, d, 0, 0);
+				} 
+			}
+			
+			
+			
+			private Constructor constructor() throws NoSuchMethodException, SecurityException {
+				Class[] params = {Delta.class, Direction.class, Object.class, int.class};
+				
+				if (carver.getSelectedItem().equals("Sweep")) {
+					return SeamCarving.CarveSweep.class.getConstructor(params);
+				} else if (carver.getSelectedItem().equals("Two Sweeps")) {
+					return SeamCarving.CarveTwoSweeps.class.getConstructor(params);
+				} else if (carver.getSelectedItem().equals("Exactly N")) {
+					return SeamCarving.CarveSweepN.class.getConstructor(params);
+				} else if (carver.getSelectedItem().equals("Incremental")) {
+					return SeamCarving.CarveIncremental.class.getConstructor(params);
+				} else {
+					throw new IllegalArgumentException("Unknown carver selected: " + carver.getSelectedItem());
+				}
+			}
 			
 		}
 	}
