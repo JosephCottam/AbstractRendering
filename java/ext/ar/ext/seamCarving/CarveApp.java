@@ -66,7 +66,7 @@ public class CarveApp {
 		Map<String, Transfer<Integer,Integer>> allCarvers = new HashMap<String, Transfer<Integer,Integer>>() {{
 				put("incremental", new SeamCarving.CarveIncremental<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0,seams));
 				put("sweep", new SeamCarving.CarveSweep<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
-				put("twosweep", new SeamCarving.CarveTwoSweeps<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
+				put("twosweeps", new SeamCarving.CarveTwoSweeps<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
 				put("sweepn", new SeamCarving.CarveSweepN<>(new SeamCarving.LeftValue<Integer>(), Direction.V, 0, seams));
 		}};
 		
