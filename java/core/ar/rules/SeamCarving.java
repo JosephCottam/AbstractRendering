@@ -70,15 +70,20 @@ public class SeamCarving {
 		public final Aggregates<A> process(Aggregates<? extends A> aggregates, Renderer rend) {
 			if (seams ==0) {return AggregateUtils.copy(aggregates,emptyValue());}
 			
-			int[][] seamList = seamList(aggregates, rend);
-			return carveN(aggregates, sortRows(transpose(seamList)));
+			if (dir == Direction.H) {
+				Aggregates<? extends A> transposed = TransposeWrapper.transpose(aggregates);
+				int[][] seamList = verticalSeamList(transposed , rend);
+				Aggregates<A> aggs = carveN(transposed, sortRows(transpose(seamList)));
+				return TransposeWrapper.transpose(aggs);			
+			} else {
+				int[][] seamList = verticalSeamList(aggregates, rend);
+				return carveN(aggregates, sortRows(transpose(seamList)));
+			}
 		}
-
 		
-		/**Alternative entry point for Carver that just computes the drop list
-		 * instead of modifying the image.
+		/**Determine a set of vertical seams.
 		 */
-		public abstract int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend);
+		public abstract int[][] verticalSeamList(Aggregates<? extends A> aggregates, Renderer rend);
 	}
 	
 	/**Find and remove seams per the w1 method of Huang, et al.
@@ -101,20 +106,15 @@ public class SeamCarving {
 		public CarveSweep(Delta<A> delta, Direction dir, A empty, int seams)  {super(delta, dir, empty, seams);}
 		
 		@Override
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend) {return seamList(aggregates, rend, dir);}
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+		public int[][] verticalSeamList(Aggregates<? extends A> aggregates, Renderer rend) {
 			if (seams == 0) {return new int[0][0];}
 			
-			if (d == Direction.H) {
-					return transpose(seamList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
-			} else {
-				Aggregates<Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
-				EdgeWeights weights = new EdgeWeights(pixelEnergy);
+			Aggregates<Double> pixelEnergy = rend.transfer(aggregates, new Energy<>(delta));
+			EdgeWeights weights = new EdgeWeights(pixelEnergy);
 
-				//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
-				Aggregates<Integer> matchings = matchings(weights, AggregateUtils.make(pixelEnergy, 0d));
-				return computeSeamList(seams, matchings, weights);
-			}
+			//Matchings encode the offset to get to the matched node in the next level down.  Will always be -1/0/1
+			Aggregates<Integer> matchings = matchings(weights, AggregateUtils.make(pixelEnergy, 0d));
+			return computeSeamList(seams, matchings, weights);
 		}
 		
 		/**Utility class, encapsulates a local energy matrix and computes
@@ -152,26 +152,21 @@ public class SeamCarving {
 		}
 		
 		@Override
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend) {return seamList(aggregates, rend, dir);}
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+		public int[][] verticalSeamList(Aggregates<? extends A> aggregates, Renderer rend) {
 			if (seams == 0) {return new int[0][0];}
 			
-			if (d == Direction.H) {
-					return transpose(seamList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
-			} else {
-				Aggregates<Double> globalEnergy = rend.transfer(
-						aggregates, 
-						new Seq.Specialized<>(new Energy<>(delta), new CumulativeEnergy()));
-				
-				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
-				for (int x=cumEng.lowX(); x< cumEng.highX(); x++) {cumEng.set(x, cumEng.lowY(), 0d);}
+			Aggregates<Double> globalEnergy = rend.transfer(
+					aggregates, 
+					new Seq.Specialized<>(new Energy<>(delta), new CumulativeEnergy()));
+			
+			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+			for (int x=cumEng.lowX(); x< cumEng.highX(); x++) {cumEng.set(x, cumEng.lowY(), 0d);}
 
-				EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
-		
-				Aggregates<Integer> matchings = matchings(weights, cumEng);
-				
-				return computeSeamList(seams, matchings, weights);
-			}
+			EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
+	
+			Aggregates<Integer> matchings = matchings(weights, cumEng);
+			
+			return computeSeamList(seams, matchings, weights);
 		}
 	
 		/**Utility class, encapsulates a local energy matrix and computes
@@ -208,25 +203,20 @@ public class SeamCarving {
 		}
 				
 		@Override
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend) {return seamList(aggregates, rend, dir);}
-		public int[][] seamList(Aggregates<? extends A> aggregates, Renderer rend, Direction d) {
+		public int[][] verticalSeamList(Aggregates<? extends A> aggregates, Renderer rend) {
 			if (seams == 0) {return new int[0][0];}
-			
-			if (d == Direction.H) {
-					return transpose(seamList(TransposeWrapper.transpose(aggregates), rend, Direction.V));
-			} else {
-				Aggregates<Double> globalEnergy = rend.transfer(
-						aggregates, 
-						new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
-				
-				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
-
-				EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
 		
-				Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
-				
-				return compileSeamList(matchings, seams);
-			}
+			Aggregates<Double> globalEnergy = rend.transfer(
+					aggregates, 
+					new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
+			
+			Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+
+			EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
+	
+			Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
+			
+			return compileSeamList(matchings, seams);
 		}
 		
 		public int[][] compileSeamList(Aggregates<Integer> matchings, int seams) {
@@ -811,9 +801,17 @@ public class SeamCarving {
 
 		@Override
 		public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			int[][] seamList = carver.seamList(aggregates, rend);
-			
-			Aggregates<Color> seams = AggregateUtils.make(aggregates, notSeam);
+			if (carver.dir == Direction.H) {
+				int[][] seamList = carver.verticalSeamList(TransposeWrapper.transpose(aggregates), rend);
+				return TransposeWrapper.transpose(colorSeams(aggregates, seamList));			
+			} else {
+				int[][] seamList = carver.verticalSeamList(aggregates, rend);
+				return colorSeams(aggregates,seamList);
+			}
+		}
+
+		private Aggregates<Color> colorSeams(Aggregates<?> like, int[][] seamList) {
+			Aggregates<Color> seams = AggregateUtils.make(like, notSeam);
 			for (int x=0; x<seamList.length;x++) {
 				for (int y=0; y<seamList[x].length;y++) {
 					seams.set(seamList[x][y], y, Util.interpolate(lowSeam, highSeam, 0, seamList[x].length, x));
@@ -821,5 +819,6 @@ public class SeamCarving {
 			}
 			return seams;
 		}
+
 	}
 }

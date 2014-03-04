@@ -6,9 +6,11 @@ import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
 
 import ar.Aggregates;
+import ar.Renderer;
 import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
+import ar.renderers.ParallelRenderer;
 import ar.rules.SeamCarving;
 import static ar.rules.SeamCarving.*;
 import ar.rules.combinators.Predicates;
@@ -85,7 +87,65 @@ public class SeamCarvingTests {
 			
 			return Predicates.All.all(reached);
 		}
+		
+		@Test
+		public void testCarveRows() {
+			testCarve(new SeamCarving.CarveSweep<>(new SeamCarving.DeltaDouble(), Direction.H, 0d, 3),
+					Direction.H, 3);
+		}
 
+		@Test
+		public void testCarveCols() {
+			testCarve(new SeamCarving.CarveSweep<>(new SeamCarving.DeltaDouble(), Direction.V, 0d, 3),
+					Direction.V, 3);
+		}
+	}
+
+	
+	public static class CarveTwoSweepsTests {
+		@Test
+		public void testCarveRows() {
+			testCarve(new SeamCarving.CarveTwoSweeps<>(new SeamCarving.DeltaDouble(), Direction.H, 0d, 3),
+					Direction.H, 3);
+		}
+
+		@Test
+		public void testCarveCols() {
+			testCarve(new SeamCarving.CarveTwoSweeps<>(new SeamCarving.DeltaDouble(), Direction.V, 0d, 3),
+					Direction.V, 3);
+		}
+	}
+	
+	public static class CarveSweepNTests {
+		@Test
+		public void testCarveRows() {
+			testCarve(new SeamCarving.CarveSweepN<>(new SeamCarving.DeltaDouble(), Direction.H, 0d, 3),
+					Direction.H, 3);
+		}
+
+		@Test
+		public void testCarveCols() {
+			testCarve(new SeamCarving.CarveSweepN<>(new SeamCarving.DeltaDouble(), Direction.V, 0d, 3),
+					Direction.V, 3);
+		}
+	}
+	
+	private static final void testCarve(Transfer.Specialized<Double, Double> carver, Direction d, int seams) {
+		Aggregates<Double> input = AggregateUtils.make(5,7,0d);
+		for (int x=input.lowX(); x<input.highX(); x++) {
+			for (int y=input.lowY(); y<input.highY(); y++) {
+				input.set(x, y, (double) y); 
+			}
+		}
+		
+		Renderer r = new ParallelRenderer();
+		Aggregates<Double> rslt = r.transfer(input, carver);
+		
+		if (d == Direction.H) {
+			assertThat("Incorrect number of rows.", rslt.highY()-rslt.lowY(), is(input.highY()-input.lowY()-seams));
+		} else {
+			assertThat("Incorrect number of cols.", rslt.highX()-rslt.lowX(), is(input.highX()-input.lowX()-seams));
+		}
 	}
 	
 	public static class CarveIncrementalTests {
@@ -185,6 +245,18 @@ public class SeamCarvingTests {
 			assertThat(seams[3][1], is(4));
 
 			
+		}
+		
+		@Test
+		public void testCarveRows() {
+			testCarve(new SeamCarving.CarveIncremental<>(new SeamCarving.DeltaDouble(), Direction.H, 0d, 3),
+					Direction.H, 3);
+		}
+
+		@Test
+		public void testCarveCols() {
+			testCarve(new SeamCarving.CarveIncremental<>(new SeamCarving.DeltaDouble(), Direction.V, 0d, 3),
+					Direction.V, 3);
 		}
 	}
 }
