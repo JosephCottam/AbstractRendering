@@ -207,6 +207,7 @@ public class Util {
 		if (v>max) {v=max;}
 		if (v<min) {v=min;}
 		double distance = 1-((max-v)/(max-min));
+		if (Double.isNaN(distance) || Double.isInfinite(distance)) {return high;}
 		int r = (int) weightedAverage(high.getRed(), low.getRed(), distance);
 		int g = (int) weightedAverage(high.getGreen(), low.getGreen(), distance);
 		int b = (int) weightedAverage(high.getBlue(), low.getBlue(), distance);
