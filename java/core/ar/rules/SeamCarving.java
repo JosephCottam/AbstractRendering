@@ -4,7 +4,10 @@ package ar.rules;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -158,9 +161,11 @@ public class SeamCarving {
 			} else {
 				Aggregates<Double> globalEnergy = rend.transfer(
 						aggregates, 
-						new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
+						new Seq.Specialized<>(new Energy<>(delta), new CumulativeEnergy()));
 				
 				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+				for (int x=cumEng.lowX(); x< cumEng.highX(); x++) {cumEng.set(x, cumEng.lowY(), 0d);}
+
 				EdgeWeights weights = new EdgeWeights(globalEnergy, cumEng);
 		
 				Aggregates<Integer> matchings = matchings(weights, cumEng);
@@ -215,6 +220,7 @@ public class SeamCarving {
 						new Seq<>(new Energy<>(delta), new CumulativeEnergy()).specialize(aggregates));
 				
 				Aggregates<Double> cumEng = AggregateUtils.make(globalEnergy, Double.NEGATIVE_INFINITY);
+
 				EdgeWeights energy = new EdgeWeights(globalEnergy, cumEng);
 		
 				Aggregates<Integer> matchings = nSeamsMatchings(seams, energy, cumEng, globalEnergy);
@@ -254,11 +260,17 @@ public class SeamCarving {
 		        Double seamEnergy = globalEnergy.get(x, 0);
 	    		List<Integer> idxs = seamOrder.get(seamEnergy);
 		    	if (idxs==null) {idxs = new ArrayList<>();}
-		    	int size = idxs.size()+1;
-		    	idxs.add(((size+1)*7253)%size, x); //Mix up the order a bit; 7253 is just a prime number I knew
+		    	idxs.add(x);
 		    	seamOrder.put(seamEnergy, idxs);
 		    }
-			
+
+		    //Mix up the order a bit
+		    Random r = new Random(7253);
+		    for (Map.Entry<Double, List<Integer>> e: seamOrder.entrySet()) {
+		    	Collections.shuffle(e.getValue(), r);
+		    }
+
+		    
 		    //Select start positions in order of potential energy
 			Aggregates<Integer> matches = AggregateUtils.make(cumEng, Integer.MIN_VALUE);
 		    for (int i=0;i<seams; i++) {
@@ -512,11 +524,16 @@ public class SeamCarving {
 	        Double seamEnergy = seamEnergies[i];
     		List<Integer> idxs = seamOrder.get(seamEnergy);
 	    	if (idxs==null) {idxs = new ArrayList<>();}
-	    	int size = idxs.size()+1;
-	    	idxs.add(((size+1)*7253)%size,i+matchings.lowX()); //Mix up the order a bit; 7253 is just a prime number I knew
+	    	idxs.add(i+matchings.lowX());
 	    	seamOrder.put(seamEnergy, idxs);
 	    }
-		
+
+//	    //Mix up the order
+	    Random r = new Random(7253);
+	    for (Map.Entry<Double, List<Integer>> e: seamOrder.entrySet()) {
+	    	Collections.shuffle(e.getValue(), r);
+	    }
+	    
 	    //Select seams in order
 	    int[][] seamPoints = new int[seams][];
 	    for (int i=0;i<seams; i++) {
