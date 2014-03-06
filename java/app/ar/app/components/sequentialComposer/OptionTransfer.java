@@ -672,7 +672,8 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			
 			
 			private Formatter decide(Object val) {
-				if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutput(examples);}
+				//if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutputDistribution(examples);}
+				if (val instanceof CategoricalCounts) {return new Legend.FormatCategoriesByOutputStream(examples);}
 				else if (val instanceof Comparable) {return new Legend.DiscreteComparable(examples);}
 				else {throw new IllegalArgumentException("Could not detect the type of formatter to use.  Please explicitly supply.");}
 			}
