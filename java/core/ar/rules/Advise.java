@@ -181,7 +181,7 @@ public class Advise {
 	}
 	
 	/** Mark regions where multiple values are represented in the same way as the minimum or maximum values.*/
-	public static class OverUnder<A> implements Transfer<A, Color> {
+	public static class Clipwarn<A> implements Transfer<A, Color> {
 		private static final long serialVersionUID = 7662347822550778810L;
 		protected final Transfer<A, Color> base;
 		protected final Transfer<A, Boolean> under;
@@ -191,7 +191,7 @@ public class Advise {
 		protected final double lowTolerance; //TODO: use under.tolerance instead....
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
+		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
 			this(overColor, underColor, base, lowTolerance, new Util.ComparableComparator());
 		}
 		
@@ -202,7 +202,7 @@ public class Advise {
 		 * @param lowTolerance How close should be considered too-close in undersaturation
 		 * @param comp Comparator used to determine similarity between items
 		 */
-		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
+		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
@@ -224,7 +224,7 @@ public class Advise {
 			return new Specialized<A>(overColor, underColor, b2,o2,u2, comp, lowTolerance);
 		}
 		
-		protected static final class Specialized<A> extends OverUnder<A> implements Transfer.Specialized<A, Color> {
+		protected static final class Specialized<A> extends Clipwarn<A> implements Transfer.Specialized<A, Color> {
 			private static final long serialVersionUID = 7535365761511428962L;
 			private final Transfer.Specialized<A, Color> base;
 			private final Transfer.Specialized<A, Boolean> under;
@@ -310,7 +310,7 @@ public class Advise {
 	 * examined. 
 	 * 
 	 * **/
-	public static class DrawDark implements Transfer<Number, Color> {
+	public static class SubPixel implements Transfer<Number, Color> {
 		private static final long serialVersionUID = 4417984252053517048L;
 		
 		/**How large is the neighborhood?**/
@@ -325,13 +325,13 @@ public class Advise {
 		 * @param high Color to represent high value for the neighborhood
 		 * @param distance Distance that defines the neighborhood.
 		 */
-		public DrawDark(Color low, Color high, int distance) {
+		public SubPixel(Color low, Color high, int distance) {
 			this.distance=distance;
 			inner = new Numbers.Interpolate<>(low,high,high);
 		}
 		
 		/**Draw dark using the given transfer for interpolation of the values.**/ 
-		public DrawDark(int distance, Transfer<Number,Color> inner) {
+		public SubPixel(int distance, Transfer<Number,Color> inner) {
 			this.distance = distance;
 			this.inner = inner;
 		}
@@ -377,7 +377,7 @@ public class Advise {
 
 		public Color emptyValue() {return inner.emptyValue();}
 
-		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
+		protected static final class Specialized extends SubPixel implements Transfer.Specialized<Number,Color> {
 			private static final long serialVersionUID = 2548271516304517444L;
 			private final Transfer.Specialized<Number, Color> seq;
 			
@@ -393,13 +393,6 @@ public class Advise {
 		}
 	}
 	
-	/**Implementation of number comparator.  
-	 * Mimics behavior of Java 1.7 Number.compare.
-	 */
-	public static class NumberComp implements Comparator<Number> {
-		public int compare(Number o1, Number o2) {return (int) (o1.doubleValue()-o2.doubleValue());}
-	}
-
 	/**Find the smallest value.  
 	 * 
 	 * @param aggs Set of aggregates to search

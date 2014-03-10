@@ -40,7 +40,7 @@ import ar.rules.Categories.Rekey;
 import ar.rules.General;
 import ar.rules.ISOContours;
 import ar.rules.Numbers;
-import ar.rules.Advise.DrawDark;
+import ar.rules.Advise.SubPixel;
 import ar.rules.combinators.Seq;
 import ar.rules.combinators.If;
 import ar.rules.Shapes;
@@ -194,7 +194,7 @@ public class Presets extends JPanel {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
 		public Glyphset<?,?> glyphset() {return KIVA_ADJ;}
 		public Transfer<?,?> transfer() {
-			return new DrawDark(Color.black, Color.white, 6);
+			return new SubPixel(Color.black, Color.white, 6);
 		}
 		public String name() {return "Kiva: DrawDark";}
 		public String toString() {return fullName(this);}

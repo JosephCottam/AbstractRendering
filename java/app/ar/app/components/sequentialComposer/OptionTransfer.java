@@ -29,6 +29,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.app.util.ActionProvider;
 import ar.app.util.ColorChooser;
 import ar.app.util.GeoJSONTools;
@@ -49,6 +50,7 @@ import ar.rules.SeamCarving.Direction;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.rules.combinators.Fan;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
@@ -601,7 +603,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			if (params.underDelta() == 0) {return subsequent;}
-			return new Advise.OverUnder(params.highColor.color(), params.lowColor.color(), subsequent, params.underDelta());
+			return new Advise.Clipwarn(params.highColor.color(), params.lowColor.color(), subsequent, params.underDelta());
 		}
 
 		@Override
@@ -698,8 +700,13 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
-			Transfer t = new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());
-			return extend(t, subsequent);
+			Transfer t = new Advise.SubPixel(p.lowColor.color(), p.highColor.color(), p.radius());
+			if (subsequent == null) {
+				return t;
+			} else {
+				Transfer f = new Fan(new MergeLeftOver(), t, subsequent);
+				return f;
+			}
 		}
 		@Override public String toString() {return "Subpixel Dist. (int)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
@@ -723,6 +730,32 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public int radius() {return (int) radius.getValue();}
 		}
 
+		private static final class MergeLeftOver implements Fan.Merge<Color> {
+
+			@Override
+			public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
+				final int lowX = Math.min(left.lowX(), right.lowX());
+				final int lowY = Math.min(left.lowY(), right.lowY());
+				final int highX = Math.max(left.highX(), right.highX());
+				final int highY = Math.max(left.highY(), right.highY());
+				
+				Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
+				for (int x=lowX; x<highX; x++) {
+					for (int y=lowY; y<highY; y++) {
+						Color over = left.get(x,y);
+						if (over == left.defaultValue()) {
+							out.set(x, y, right.get(x, y));
+						} else {
+							out.set(x,y, over);
+						}						
+					}
+				}
+				return out;
+			}
+
+			@Override public Color identity() {return Util.CLEAR;}			
+		}
+		
 	}
 	
 	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
