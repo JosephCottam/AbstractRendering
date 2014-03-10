@@ -7,7 +7,6 @@ import java.util.Comparator;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.rules.combinators.Seq;
 import ar.util.Util;
 
 /**Advise methods provide information about where to look in a visualization.
@@ -300,47 +299,34 @@ public class Advise {
 
 	
 	
-	/**Highlight aggregates that carry an unusually high amount of value in their neighborhood.
+	/**Scores aggregates according to how uniform the local neighborhood is.  
+	 * Unusual aggregate values in a neighborhood get a high value, while common values get a low value.
+	 * In a uniform neighborhood, the scores are all 0 (regardless of the underlying aggregate values).
 	 * 
-	 * Only pixels with a value will be colored.
+	 * Neighborhood is a square of size 2*distance+1 and the aggregate under consideration as its center.
+	 * Dataset edge effects are reduced by weighting all measures based on the number aggregates
+	 * examined and only examining values inside of the aggregates bounding box.
 	 * 
-	 * Neighborhood is generally square of size 2*distance+1 and the aggregate set under consideration as its center.
-	 * However, no items beyond the bounding box of the data are considered.  
-	 * This edge effect is factored out by weighting all measures based on the number aggregates
-	 * examined. 
+	 * TODO: What about never scoring a pixel that is defaultValue? 
 	 * 
 	 * **/
-	public static class SubPixel implements Transfer<Number, Color> {
+	public static class SubPixel implements Transfer.Specialized<Number, Number> {
 		private static final long serialVersionUID = 4417984252053517048L;
 		
 		/**How large is the neighborhood?**/
 		public final int distance;
 		
-		/**Transfer function used to determine the colors after the ratios have been determined.**/
-		public final Transfer<Number, Color> inner;
 		
 		/**Construct a draw dark using a linear HD interpolation as the inner function.
 		 * 
-		 * @param low Color to represent average or low value in the neighborhood
-		 * @param high Color to represent high value for the neighborhood
 		 * @param distance Distance that defines the neighborhood.
 		 */
-		public SubPixel(Color low, Color high, int distance) {
+		public SubPixel(int distance) {
 			this.distance=distance;
-			inner = new Numbers.Interpolate<>(low,high,high);
 		}
 		
-		/**Draw dark using the given transfer for interpolation of the values.**/ 
-		public SubPixel(int distance, Transfer<Number,Color> inner) {
-			this.distance = distance;
-			this.inner = inner;
-		}
-	
 		@Override
-		public Specialized specialize(Aggregates<? extends Number> aggs) {
-			return new Specialized(distance, inner, aggs);
-		}
-		
+		public Specialized<Number,Number> specialize(Aggregates<? extends Number> aggs) {return this;}
 		
 		private static final class RatioNeighbors implements Transfer.ItemWise<Number, Number> {
 			private final int distance;
@@ -375,21 +361,11 @@ public class Advise {
 			}
 		}
 
-		public Color emptyValue() {return inner.emptyValue();}
+		public Number emptyValue() {return 0d;}
 
-		protected static final class Specialized extends SubPixel implements Transfer.Specialized<Number,Color> {
-			private static final long serialVersionUID = 2548271516304517444L;
-			private final Transfer.Specialized<Number, Color> seq;
-			
-			public Specialized(int distance, Transfer<Number, Color> inner, Aggregates<? extends Number> aggs) {
-				super(distance, inner);
-				this.seq= new Seq<>(new RatioNeighbors(distance), inner).specialize(aggs);
-			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-				return seq.process(aggregates, rend);
-			}
+		@Override
+		public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, new RatioNeighbors(distance));
 		}
 	}
 	
