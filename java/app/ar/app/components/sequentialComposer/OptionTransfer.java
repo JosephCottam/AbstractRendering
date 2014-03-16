@@ -700,12 +700,12 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	
 	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
-			Transfer t = new Advise.SubPixel(p.lowColor.color(), p.highColor.color(), p.radius());
+			Transfer t = new Seq(new Advise.SubPixel(p.radius()), new Numbers.Interpolate<>(Util.CLEAR, p.highColor()));
+ 
 			if (subsequent == null) {
 				return t;
 			} else {
-				Transfer f = new Fan(new MergeLeftOver(), t, subsequent);
-				return f;
+				return new Fan(new BlendLeftOver(), t, subsequent);
 			}
 		}
 		@Override public String toString() {return "Subpixel Dist. (int)";}
@@ -714,23 +714,21 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
-			public ColorChooser lowColor = new ColorChooser(Color.black, "Low");
-			public ColorChooser highColor = new ColorChooser(Color.white, "High");
+			public ColorChooser highColor = new ColorChooser(Color.black, "Highlight");
 			public Controls() {
 				super("DrawDark");
 				this.setLayout(new GridLayout(1,0));
 				add(new LabeledItem("Radius:", radius));
-				add(lowColor);
 				add(highColor);
 				radius.addChangeListener(actionProvider.changeDelegate());
-				lowColor.addActionListener(actionProvider.actionDelegate());
 				highColor.addActionListener(actionProvider.actionDelegate());
 			}
 			
 			public int radius() {return (int) radius.getValue();}
+			public Color highColor() {return highColor.color();}
 		}
 
-		private static final class MergeLeftOver implements Fan.Merge<Color> {
+		private static final class BlendLeftOver implements Fan.Merge<Color> {
 
 			@Override
 			public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
@@ -746,7 +744,8 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 						if (over == left.defaultValue()) {
 							out.set(x, y, right.get(x, y));
 						} else {
-							out.set(x,y, over);
+							Color under = right.defaultValue();
+							out.set(x,y, Util.premultiplyAlpha(over, under));
 						}						
 					}
 				}
