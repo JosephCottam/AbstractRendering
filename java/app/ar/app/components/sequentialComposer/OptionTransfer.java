@@ -698,9 +698,11 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	}
 	
-	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
+	public static final class DataEdgeBoost extends OptionTransfer<DataEdgeBoost.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
-			Transfer t = new Seq(new Advise.SubPixel(p.radius()), new Numbers.Interpolate<>(Util.CLEAR, p.highColor()));
+			Transfer t = new Seq(
+					new Advise.DataEdgeBoost(p.radius()), 
+					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), p.highColor()));
  
 			if (subsequent == null) {
 				return t;
@@ -708,24 +710,28 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				return new Fan(new BlendLeftOver(), t, subsequent);
 			}
 		}
-		@Override public String toString() {return "Subpixel Dist. (int)";}
+		@Override public String toString() {return "Edge Boost (*)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
-			public ColorChooser highColor = new ColorChooser(Color.black, "Highlight");
+			public ColorChooser highColor = new ColorChooser(Color.white, "Highlight");
+			public ColorChooser lowColor = new ColorChooser(Color.black, "Lowlight");
 			public Controls() {
-				super("DrawDark");
+				super("EdgeBoost");
 				this.setLayout(new GridLayout(1,0));
 				add(new LabeledItem("Radius:", radius));
+				add(lowColor);
 				add(highColor);
 				radius.addChangeListener(actionProvider.changeDelegate());
 				highColor.addActionListener(actionProvider.actionDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
 			}
 			
 			public int radius() {return (int) radius.getValue();}
 			public Color highColor() {return highColor.color();}
+			public Color lowColor() {return lowColor.color();}
 		}
 
 		private static final class BlendLeftOver implements Fan.Merge<Color> {
@@ -756,6 +762,74 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 	}
+	
+	
+
+	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
+		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
+			Transfer t = new Seq(
+					new Advise.NeighborhoodDistribution(p.radius()), 
+					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), p.highColor()));
+ 
+			if (subsequent == null) {
+				return t;
+			} else {
+				return new Fan(new BlendLeftOver(), t, subsequent);
+			}
+		}
+		@Override public String toString() {return "Sub Pixel (Num)";}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+
+		private static class Controls extends ControlPanel {
+			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
+			public ColorChooser highColor = new ColorChooser(Color.white, "Highlight");
+			public ColorChooser lowColor = new ColorChooser(Color.black, "Lowlight");
+			public Controls() {
+				super("SubPixel");
+				this.setLayout(new GridLayout(1,0));
+				add(new LabeledItem("Radius:", radius));
+				add(lowColor);
+				add(highColor);
+				radius.addChangeListener(actionProvider.changeDelegate());
+				highColor.addActionListener(actionProvider.actionDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public int radius() {return (int) radius.getValue();}
+			public Color highColor() {return highColor.color();}
+			public Color lowColor() {return lowColor.color();}
+		}
+
+		private static final class BlendLeftOver implements Fan.Merge<Color> {
+
+			@Override
+			public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
+				final int lowX = Math.min(left.lowX(), right.lowX());
+				final int lowY = Math.min(left.lowY(), right.lowY());
+				final int highX = Math.max(left.highX(), right.highX());
+				final int highY = Math.max(left.highY(), right.highY());
+				
+				Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
+				for (int x=lowX; x<highX; x++) {
+					for (int y=lowY; y<highY; y++) {
+						Color over = left.get(x,y);
+						if (over == left.defaultValue()) {
+							out.set(x, y, right.get(x, y));
+						} else {
+							Color under = right.defaultValue();
+							out.set(x,y, Util.premultiplyAlpha(over, under));
+						}						
+					}
+				}
+				return out;
+			}
+
+			@Override public Color identity() {return Util.CLEAR;}			
+		}
+		
+	}
+	
 	
 	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
 		private static final Collection<Shape> shapes;

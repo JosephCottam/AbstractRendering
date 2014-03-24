@@ -7,6 +7,7 @@ import java.util.Comparator;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.util.Util;
 
 /**Advise methods provide information about where to look in a visualization.
@@ -299,73 +300,103 @@ public class Advise {
 
 	
 	
-	/**Scores aggregates according to how uniform the local neighborhood is.  
-	 * Unusual aggregate values in a neighborhood get a high value, while common values get a low value.
-	 * In a uniform neighborhood, the scores are all 0 (regardless of the underlying aggregate values).
+	/**Scores aggregates according to how uniform the local neighborhood is.
+	 * The score is the current value divided by the average of the neighborhood (excluding self).
 	 * 
-	 * Neighborhood is a square of size 2*distance+1 and the aggregate under consideration as its center.
-	 * Dataset edge effects are reduced by weighting all measures based on the number aggregates
-	 * examined and only examining values inside of the aggregates bounding box.
+	 * This is the heart of sub-pixel distribution analysis.
 	 * 
-	 * TODO: What about never scoring a pixel that is defaultValue? 
+	 * For non-numbers, first transform values to distance from a reference point, then apply this transfer.  
 	 * 
 	 * **/
-	public static class SubPixel implements Transfer.Specialized<Number, Number> {
+	public static class NeighborhoodDistribution implements Transfer.ItemWise<Number, Number> {
 		private static final long serialVersionUID = 4417984252053517048L;
 		
-		/**How large is the neighborhood?**/
-		public final int distance;
+		/**Number of divisions to use to create sub-pixels?**/
+		public final int divisions ;
 		
-		
-		/**Construct a draw dark using a linear HD interpolation as the inner function.
+		/**Analyze the neighborhood data distribution.  Give a high score to areas that are different from
+		 * their neighborhood and a low score to areas that are the same.
 		 * 
-		 * @param distance Distance that defines the neighborhood.
+		 * Can be used for sub-pixel when the input resolution of this is finer than that of the actual screen.
+		 * 
+		 * @param divisions Number of x/y divisions to use to create sub-pixels.
 		 */
-		public SubPixel(int distance) {
-			this.distance=distance;
+		public NeighborhoodDistribution(int divisions) {
+			this.divisions=divisions;
 		}
 		
 		@Override
 		public Specialized<Number,Number> specialize(Aggregates<? extends Number> aggs) {return this;}
-		
-		private static final class RatioNeighbors implements Transfer.ItemWise<Number, Number> {
-			private final int distance;
-			
-			public RatioNeighbors(int distance) {this.distance = distance;}
 
-			@Override
-			public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-
-			@Override public Double emptyValue() {return 0d;}
-
-			@Override 
-			public ItemWise<Number, Number> specialize(Aggregates<? extends Number> aggregates) {return this;}
-			
-			public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
-				double surroundingSum =0;
-				int cellCount = 0;
-				for (int dx=-distance; dx<=distance; dx++) {
-					for (int dy=-distance; dy<=distance; dy++) {
-						int cx=x+dx;
-						int cy=y+dy;
-						if (cx < aggregates.lowX() || cy < aggregates.lowY() 
-								|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-						cellCount++;
-						double dv = aggregates.get(cx,cy).doubleValue();
-						if (dv != 0) {surroundingSum++;}
-					}
-				}
-				return surroundingSum/cellCount;
-			}
-		}
-
-		public Number emptyValue() {return 0d;}
+		@Override public Number emptyValue() {return 0d;}
 
 		@Override
 		public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, new RatioNeighbors(distance));
+			return rend.transfer(aggregates, this);
+		}
+		
+		@Override
+		public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
+			Aggregates<? extends Number> subset = new SubsetWrapper<>(aggregates, x-divisions, y-divisions, x+divisions, y+divisions);
+			Util.Stats<? extends Number> stats = Util.stats(subset, true,true,true);
+			return stats.stdev;
+		}
+	}
+	
+	
+	/**Highlights places where these is a value next to no value.
+	 * 
+	 * Sometimes the presence of a signal, regardless of size, next to 
+	 * no signal at all is important.  This transfer highlights places
+	 * where it goes from signal to no signal in a given radius.  
+	 * Pixels with values are the only ones that will receive non-zero values.
+	 * The higher the non-zero, the more non-value pixels in the neighborhood.
+	 * The net effect is highlight valued pixels in the midst of non-valued pixels
+	 * and suppress valued pixels surrounded by other valued pixels.
+	 * 
+	 * Always returns a value between 0 and 1.  Zero means either the current cell was 
+	 * the default value OR all neighbors were populated.  1 means the current cell was
+	 * non-default and all neighbors were default value.  In between values are the ratio
+	 * of default to non-default neighbors.  
+	 * 
+	 * **/
+	public static class DataEdgeBoost<A> implements Transfer.ItemWise<A, Number> {
+		private static final long serialVersionUID = 4417984252053517048L;
+		
+		/**Number of divisions to use to create sub-pixels?**/
+		public final int radius;
+		
+		public DataEdgeBoost(int radius) {this.radius=radius;}
+		
+		@Override
+		public Specialized<A,Number> specialize(Aggregates<? extends A> aggs) {return this;}
+
+		@Override public Double emptyValue() {return 0d;}
+
+		@Override
+		public Aggregates<Number> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+		
+		@Override
+		public Double at(int x, int y, Aggregates<? extends A> aggregates) {
+			A defVal = aggregates.defaultValue();
+			int defaultNeighbors = 0;			
+			
+			if (Util.isEqual(aggregates.get(x,y), defVal)) {return emptyValue();} //Only non-default values will be considered.
+			
+			for (int dx=-radius; dx<=radius; dx++) {
+				for (int dy=-radius; dy<=radius; dy++) {
+					if (dx == x && dy==y) {continue;}  //Don't consider 'self'
+					int cx=x+dx;
+					int cy=y+dy;
+					A v = aggregates.get(cx,cy);					
+					if (Util.isEqual(v, defVal)) {defaultNeighbors++;}
+				}
+			}
+			
+			double neighbors = (radius*radius)-1;  //-1 because you never count yourself
+			return (neighbors-defaultNeighbors)/neighbors;
 		}
 	}
 	
