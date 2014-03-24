@@ -733,34 +733,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Color highColor() {return highColor.color();}
 			public Color lowColor() {return lowColor.color();}
 		}
-
-		private static final class BlendLeftOver implements Fan.Merge<Color> {
-
-			@Override
-			public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
-				final int lowX = Math.min(left.lowX(), right.lowX());
-				final int lowY = Math.min(left.lowY(), right.lowY());
-				final int highX = Math.max(left.highX(), right.highX());
-				final int highY = Math.max(left.highY(), right.highY());
-				
-				Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
-				for (int x=lowX; x<highX; x++) {
-					for (int y=lowY; y<highY; y++) {
-						Color over = left.get(x,y);
-						if (over == left.defaultValue()) {
-							out.set(x, y, right.get(x, y));
-						} else {
-							Color under = right.defaultValue();
-							out.set(x,y, Util.premultiplyAlpha(over, under));
-						}						
-					}
-				}
-				return out;
-			}
-
-			@Override public Color identity() {return Util.CLEAR;}			
-		}
-		
 	}
 	
 	
@@ -769,7 +741,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
 			Transfer t = new Seq(
 					new Advise.NeighborhoodDistribution(p.radius()), 
-					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), p.highColor()));
+					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), Util.CLEAR));
  
 			if (subsequent == null) {
 				return t;
@@ -777,14 +749,15 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				return new Fan(new BlendLeftOver(), t, subsequent);
 			}
 		}
+		
 		@Override public String toString() {return "Sub Pixel (Num)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
-			public ColorChooser highColor = new ColorChooser(Color.white, "Highlight");
-			public ColorChooser lowColor = new ColorChooser(Color.black, "Lowlight");
+			public ColorChooser highColor = new ColorChooser(Color.black, "Highlight");
+			public ColorChooser lowColor = new ColorChooser(Util.CLEAR, "Lowlight");
 			public Controls() {
 				super("SubPixel");
 				this.setLayout(new GridLayout(1,0));
@@ -800,34 +773,34 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Color highColor() {return highColor.color();}
 			public Color lowColor() {return lowColor.color();}
 		}
+	}
+	
+	/**Blends two colors per alpha composition 'over' rule with the left on top.**/ 
+	private static final class BlendLeftOver implements Fan.Merge<Color> {
 
-		private static final class BlendLeftOver implements Fan.Merge<Color> {
-
-			@Override
-			public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
-				final int lowX = Math.min(left.lowX(), right.lowX());
-				final int lowY = Math.min(left.lowY(), right.lowY());
-				final int highX = Math.max(left.highX(), right.highX());
-				final int highY = Math.max(left.highY(), right.highY());
-				
-				Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
-				for (int x=lowX; x<highX; x++) {
-					for (int y=lowY; y<highY; y++) {
-						Color over = left.get(x,y);
-						if (over == left.defaultValue()) {
-							out.set(x, y, right.get(x, y));
-						} else {
-							Color under = right.defaultValue();
-							out.set(x,y, Util.premultiplyAlpha(over, under));
-						}						
-					}
+		@Override
+		public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
+			final int lowX = Math.min(left.lowX(), right.lowX());
+			final int lowY = Math.min(left.lowY(), right.lowY());
+			final int highX = Math.max(left.highX(), right.highX());
+			final int highY = Math.max(left.highY(), right.highY());
+			
+			Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
+			for (int x=lowX; x<highX; x++) {
+				for (int y=lowY; y<highY; y++) {
+					Color over = left.get(x,y);
+					if (over == left.defaultValue()) {
+						out.set(x, y, right.get(x, y));
+					} else {
+						Color under = right.get(x, y);
+						out.set(x,y, Util.premultiplyAlpha(over, under));
+					}						
 				}
-				return out;
 			}
-
-			@Override public Color identity() {return Util.CLEAR;}			
+			return out;
 		}
-		
+
+		@Override public Color identity() {return Util.CLEAR;}			
 	}
 	
 	
