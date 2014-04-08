@@ -17,7 +17,7 @@ All demo applications are available through the demo-application build (i.e, the
 If there is no ARApp.jar, the demo app has not been built.
 
 The simplest application is titled "SimpleApp." It is executed with
-"java -cp ARapp.jar ar.SimpleApp".  This will produce a simple scatterplot visualization.
+"java -cp ARApp.jar ar.SimpleApp".  This will produce a simple scatterplot visualization.
 The source code (found in app/ar/SimpleApp.jar) provides documented example of how
 to use Abstract Rendering through the provided swing panel or to produce images directly.
 
