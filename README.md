@@ -13,8 +13,8 @@ so it can be used as epilogue to many existing techniques.
 
 
 In standard rendering, geometric objects are projected to an image and 
-represented on that image's discrete pixels.  The source space is an
-abstract canvas that contains logically continuous geometric primitives 
+represented on that image's discrete pixels.  The source space is a
+canvas that contains logically continuous geometric primitives 
 and the target space is an image that contains discrete colors.
 Abstract Rendering fits between these two states.  It introduces
 a discretization of the data at the pixel-level, but not necessarily all
@@ -37,7 +37,7 @@ for more common alpha levels).
 Taking a step back, the alpha composition is essentially trying to communicate
 how many items touch each pixel.  Instead of directly converting to colors
 (and composing them), why not count the items that touch each pixel and then transform those counts into
-colors directly.  Over-saturation can be completely avoided because the whole
+colors directly?  Over-saturation can be completely avoided because the whole
 data range can be known and interpolated over.  Additionally, the minimum
 value can also be set to ensure visibility of even a single element.
 
@@ -51,7 +51,7 @@ The Framework
 An abstract rendering program looks like a collection of four functions combined into two equations.
 These equations operate on 'glyphs.'
 Glyphs are geometric descriptions with accompanying data annotations.  
-The data annotations may be a colors or categories or a source-data values.  
+The data annotations may be a color or category label or other source-data values.  
 Conceptually, the framework creates a bin for each pixel, aggregates the values from a
  glyph-set into that bin and then transforms the bin values into pixels.
 
@@ -72,7 +72,7 @@ This equation is a direct derivation of the 'transfer function' seen in
 more traditional scientific visualization, and is also called a 'transfer function.'
 In many cases, there is only one stage to transfer (directly converting from the
  aggregate values to colors).  However, in other cases it is useful to do several
- smaller transfermations.  The transfermations after aggregation are collectively 
+ smaller transformations.  The transformations after aggregation are collectively 
  called 'the transfer function' regardless of the number of functions actually applied. 
 Much of the power of the transfer function is derived from the fact that it has all of the 
 aggregates already available.  Therefore, it can perform operations
@@ -87,7 +87,7 @@ The basic system described above can be extended in a variety of ways.
 This repository represents investigation into efficient and
 convenient ways to work with such pixel-level intermediates.
 It explores multiple ways to store and access data, including
-two parallelization strategies, out-of-core data access, distributed rendering
+parallelization strategies, out-of-core data access, distributed rendering
 and interfacing with preexisting data structures.  In all, the variety of options
 leads to many efficient (and some inefficient) ways of realizing the
 system described above.
