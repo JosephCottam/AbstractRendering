@@ -1,8 +1,8 @@
 <ivy-module version="2.0">
   <info organisation="edu.indiana" module="AbstractRendering"/>
   <configurations>
-    <conf name="dev" description="binary jars location"/>
-    <conf name="deploy" description="binary jars location"/>
+    <conf name="dev" description="Jars required for development only"/>
+    <conf name="deploy" description="Jars required to deploy"/>
   </configurations>    
   <dependencies>
     <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>

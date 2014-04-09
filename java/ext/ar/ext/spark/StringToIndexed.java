@@ -1,6 +1,6 @@
 package ar.ext.spark;
 
-import spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function;
 import ar.glyphsets.implicitgeometry.Indexed;
 
 /**Take a string, make an indexed entity from it by splitting on the passed pattern

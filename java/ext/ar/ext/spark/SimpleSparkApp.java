@@ -5,8 +5,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 
-import spark.api.java.JavaRDD;
-import spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import ar.Aggregates;
 import ar.Glyph;
 import ar.app.display.TransferDisplay;
@@ -30,16 +30,16 @@ public class SimpleSparkApp {
 
 	public static void main(String[] args){
 		if (args.length == 0) {
-			System.err.println("Usage: JavaTC -host <host> -in <data> -out <out> -sh <spark-home> -jars <jars>");
+			System.err.println("Usage: JavaTC -host <host> -in <data.csv> -out <out> -sh <spark-home> -jars <jars>");
 			System.exit(1);
 		}
 		
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
-		String host = arg(args, "-host", "localhost");
+		String host = arg(args, "-host", "localhost:7077");
 		String inFile = arg(args, "-in", null);
 		String outFile= arg(args, "-out", null);
-		String sparkhome = arg(args, "-spark", System.getenv("SPARK_HOME"));
+		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "").split(":");
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
@@ -54,7 +54,7 @@ public class SimpleSparkApp {
 
  		
  		RDDRender render = new RDDRender();
- 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<>(), view, width, height);
+ 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<Integer>(), view, width, height);
 
 		
 		if (outFile == null) {

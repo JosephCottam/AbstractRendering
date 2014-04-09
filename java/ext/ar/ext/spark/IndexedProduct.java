@@ -1,7 +1,7 @@
 package ar.ext.spark;
 
 import scala.Product;
-import spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function;
 import ar.glyphsets.implicitgeometry.Indexed;
 
 /**Bridges the implicit geometry's "indexed" type with scala's "product" type.**/

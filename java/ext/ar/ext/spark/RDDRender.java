@@ -14,9 +14,10 @@ import ar.aggregates.AggregateUtils;
 import ar.renderers.AggregationStrategies;
 import ar.renderers.SerialRenderer;
 import ar.util.Util;
-import spark.api.java.JavaRDD;
-import spark.api.java.function.Function;
-import spark.api.java.function.Function2;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 
 /**Near drop-in for the standard render using spark.
  * Also provides utility methods for working with RDDs.
@@ -40,13 +41,13 @@ public class RDDRender implements Serializable {
 	 * @param height
 	 * @return Aggregate set that results from collecting all items
 	 */
-	public <A,G> Aggregates<G,A> aggregate(
+	public <A,G> Aggregates<A> aggregate(
 			JavaRDD<Glyph<G,A>> glyphs,
 			Aggregator<A, A> op, 
 			AffineTransform view, 
 			int width,
 			int height) {
-		JavaRDD<Aggregates<A>> aggset = glyphs.map(new GlyphToAggregates<A>(view));
+		JavaRDD<Aggregates<A>> aggset = glyphs.map(new GlyphToAggregates<G,A>(view));
 		return aggset.reduce(new Rollup<A>(op));
 	}
 	
@@ -62,11 +63,11 @@ public class RDDRender implements Serializable {
 
 	/**Utility method for calculating the bounds on an RDD glyphset.
 	 ***/
-	public static <G> Rectangle2D bounds(JavaRDD<Glyph<G,?>> glyphs) {
-		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<G,?>,Rectangle2D>() {
+	public static <G,I> Rectangle2D bounds(JavaRDD<Glyph<G,I>> glyphs) {
+		JavaRDD<Rectangle2D> rects = glyphs.map(new Function<Glyph<G,I>,Rectangle2D>() {
 			private static final long serialVersionUID = 7387911686369652132L;
 
-			public Rectangle2D call(Glyph<G,?> glyph) throws Exception {
+			public Rectangle2D call(Glyph<G,I> glyph) throws Exception {
 				return Util.boundOne(glyph.shape());
 			}});
 		
@@ -120,6 +121,5 @@ public class RDDRender implements Serializable {
 			Aggregates<A> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
 			return aggs;
 		}
-	}
-	
+	}	
 }

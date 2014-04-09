@@ -23,7 +23,7 @@
 
 
   <!--Will exclude spark extensions if the spark jar is not found-->
-  <available property="spark.absent" file="./lib/spark-core-assembly-0.7.2.jar"  value="false"/>
+  <available property="spark.absent" file="./lib/spark-core_2.10-0.9.0-incubating.jar"  value="false"/>
   <property name="spark.absent" value="true"/>
 
   <target name="build" description="Main build target." depends="clean,fetch,core,app,docs" />
@@ -62,6 +62,8 @@
   <target name="ext"
     depends="core,app" 
     description="Build the extensions libraries with the core system; this is core-plus.">
+
+    <echo message="Spark absent flag set to: ${spark.absent}"/>
 
     <mkdir dir="${extBin}"/>
     <javac destdir="${extBin}" sourcepath="" srcdir="${extSrc}" 
