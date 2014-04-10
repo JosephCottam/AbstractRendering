@@ -206,15 +206,25 @@
     <delete dir="${lib}"/>
     <delete dir="${ivy.jar.dir}"/>
   </target>
+  
 
-  <target name="fetch-dev" description="Fetch dependencies need for development.">
+  <target name="fetch" depends="init,markdown" description="Fetch runtime/basic-build dependencies for app and core">
+    <ivy:retrieve conf="core"/>
+  </target>
+
+  <target name="fetch-ext" depends="init,markdown" description="Fetch extension dependencies EXCEPT Spark">
+    <ivy:retrieve conf="ext"/>
+  </target>
+
+  <target name="fetch-spark" depends="init,markdown" description="Fetch Spark runtime dependencies">
+    <ivy:retrieve conf="spark"/>
+  </target>
+
+  <target name="fetch-dev" description="Fetch dependencies useful durring development but not required.">
     <!--Some things are only needed by developers, get those with this task.-->
     <ivy:retrieve conf="dev"/>
   </target>
 
-  <target name="fetch" depends="init,markdown" description="Fetch runtime/basic-build dependencies">
-    <ivy:retrieve conf="deploy"/>
-  </target>
 
   <target name="markdown">
     <!--Couldn't find a place for ivy to get the markdown plugin, 
