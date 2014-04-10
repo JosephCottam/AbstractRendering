@@ -30,14 +30,15 @@ public class SimpleSparkApp {
 
 	public static void main(String[] args){
 		if (args.length == 0) {
-			System.err.println("Usage: JavaTC -host <host> -in <data.csv> -out <out> -sh <spark-home> -jars <jars>");
+			System.err.println("Parameters: -host <host> -in <data.csv> -out <out> -sh <spark-home> -jars <jars>");
+			System.err.println("Parameters are order independent and all have reasonable defaults.");
 			System.exit(1);
 		}
 		
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
 		String host = arg(args, "-host", "localhost:7077");
-		String inFile = arg(args, "-in", null);
+		String inFile = arg(args, "-in", "../data/circlepoints.csv");
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "").split(":");
