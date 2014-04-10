@@ -5,6 +5,8 @@
     <conf name="deploy" description="Jars required to deploy"/>
   </configurations>    
   <dependencies>
+    <!--dependency org="org.apache.spark" name="spark-assembly_2.10" rev="0.9.1" /-->
+    <dependency org="org.apache.spark" name="spark-core_2.10" rev="0.9.1" />
     <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
     <dependency org="commons-io" name="commons-io" rev="2.4"/>
     <dependency org="org.apache.avro" name="avro" rev="1.7.4"/>
@@ -16,6 +18,7 @@
     <exclude type="javadoc" ext="jar" conf="deploy"/>
     <exclude type="sources" ext="jar" conf="deploy"/>
     <exclude type="source" ext="jar" conf="deploy"/>
+    <exclude org="org.eclipse.jetty.orbit" conf="*"/>
     <exclude org="org.tukaani" conf="deploy" />
     <exclude org="com.thoughtworks.paranamer" conf="deploy"/>
     <exclude org="org.xerial.snappy" conf="deploy"/>
