@@ -37,11 +37,11 @@ public class SimpleSparkApp {
 		
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
-		String host = arg(args, "-host", "localhost:7077");
+		String host = arg(args, "-host", "local");
 		String inFile = arg(args, "-in", "../data/circlepoints.csv");
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
-		String jars[] = arg(args, "-jars", "").split(":");
+		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
 		JavaRDD<String> source = ctx.textFile(inFile);
