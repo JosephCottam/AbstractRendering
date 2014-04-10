@@ -1,11 +1,12 @@
 package ar.aggregates.implementations;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import ar.aggregates.AggregateUtils;
 
 /**Set of color aggregates backed by a buffered image.**/
-abstract class IntegerBackingAggregates {
+abstract class IntegerBackingAggregates implements Serializable {
 	protected final int[] values;
 	protected final Integer defVal;
 	protected final int lowX, lowY, highX, highY;
