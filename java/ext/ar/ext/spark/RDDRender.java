@@ -47,6 +47,7 @@ public class RDDRender implements Serializable, Renderer {
 		@SuppressWarnings("unchecked") //Will only read from...so this is OK (I think...).  No heap polution as long as we don't try to change the rdd.
 		JavaRDD<Glyph<G, I>> rdd = ((GlyphsetRDD<G, I>) glyphs).base();
 		
+		//TODO: Maybe use "mapPartitions" here.  That might match the 'segments' performance better... 
 		JavaRDD<Aggregates<A>> eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
 		return eachAggs.reduce(new Rollup<A>(aggregator));
 	}
