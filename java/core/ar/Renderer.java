@@ -57,6 +57,6 @@ public interface Renderer extends Serializable {
 	 */
 	public ProgressReporter progress();
 	
-	/**Given the glyphset, how many tasks are aniticipated?**/
+	/**Given the glyphset, how many items are expected in a given task?**/
 	public long taskSize(Glyphset<?,?> glyphs);
 }

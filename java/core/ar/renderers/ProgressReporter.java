@@ -37,7 +37,7 @@ public interface ProgressReporter {
 	/**Dummy progress recorder.  Always returns -1 for status inquiries.**/
 	@SuppressWarnings("unused")
 	public static final class NOP implements ProgressReporter {
-		public NOP(long reportStep) {}
+		public NOP() {}
 
 		public void update(long delta) {}
 		public void reset(long expected) {}
