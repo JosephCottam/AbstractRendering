@@ -9,9 +9,15 @@ import java.io.Serializable;
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Glyph;
+import ar.Glyphset;
+import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
+import ar.Transfer.ItemWise;
+import ar.Transfer.Specialized;
 import ar.aggregates.AggregateUtils;
 import ar.renderers.AggregationStrategies;
+import ar.renderers.ProgressReporter;
 import ar.renderers.SerialRenderer;
 import ar.util.Util;
 
@@ -41,7 +47,7 @@ public class RDDRender implements Serializable {
 	 * @param height
 	 * @return Aggregate set that results from collecting all items
 	 */
-	public <A,G> Aggregates<A> aggregate(
+	public <G,A> Aggregates<A> aggregate(
 			JavaRDD<Glyph<G,A>> glyphs,
 			Aggregator<A, A> op, 
 			AffineTransform view, 
@@ -51,14 +57,42 @@ public class RDDRender implements Serializable {
 		return aggset.reduce(new Rollup<A>(op));
 	}
 	
+//
+//	@Override
+//	public <I, G, A> Aggregates<A> aggregate(
+//			Glyphset<? extends G, ? extends I> glyphs, 
+//			Selector<G> selector,
+//			Aggregator<I, A> aggregator, 
+//			AffineTransform viewTransform,
+//			int width, int height) {
+//		
+//		Use Map: SELECTOR becomes the splatting function (passed to GlyphToAggregates)
+//		Use aggregate: OP needs to get wrapped so it works on whole aggregate sets (idSet<A> --> set<I> --> set<A> --> set<A>), 
+//		    not just on pixels (I -> A -> A)
+//		    This includes creating a ConstantAggregates that is an identity
+//		    Similar to Rollup wrapper, but better....
+//		
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//	
+//	@Override
+//	public <IN, OUT> Aggregates<OUT> transfer(
+//			Aggregates<? extends IN> aggregates, Specialized<IN, OUT> t) {
+//		if (t instanceof ItemWise) {return transfer(aggregates, (ItemWise<IN,OUT>) t);}
+//		return new SerialRenderer().transfer(aggregates, t);
+//	}
+//
+//
+//	@Override
+//	public <IN, OUT> Aggregates<OUT> transfer(
+//			Aggregates<? extends IN> aggregates, ItemWise<IN, OUT> t) {
+//		//Use Map
+//		return null;
+//	}
 
-	public <IN, OUT> Aggregates<OUT> transfer(
-			Aggregates<? extends IN> aggregates, Transfer<IN, OUT> t) {
-		Transfer.Specialized<IN, OUT> t2 = t.specialize(aggregates);
-		return new SerialRenderer().transfer(aggregates, t2);
-	}
-
-	public double progress() {return -1;}
+//	@Override public long taskSize(Glyphset<?, ?> glyphs) {return 1;}
+//	@Override public ProgressReporter progress() {return new ProgressReporter.NOP();}
 
 
 	/**Utility method for calculating the bounds on an RDD glyphset.
@@ -121,5 +155,6 @@ public class RDDRender implements Serializable {
 			Aggregates<A> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, v);
 			return aggs;
 		}
-	}	
+	}
+
 }
