@@ -34,7 +34,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Selector<G> selector,
 		Aggregator<I,A> op,
 		AffineTransform view,
-		Rectangle viewport,
+		Rectangle viewport,  //TODO: Remove, lift empty check out (or don't bother with it...)
 		long taskSize,
 		ProgressReporter recorder,
 		long low, long high) {
