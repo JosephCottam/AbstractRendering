@@ -22,7 +22,7 @@ public interface Selector<G> extends Serializable {
 	 * @return
 	 */
 	public <I,A> Aggregates<A> processSubset(
-			Glyphset<? extends G, ? extends I> glyphset, 
+			Iterable<? extends Glyph<? extends G, ? extends I>> glyphset, 
 			AffineTransform view,
 			Aggregates<A> target, 
 			Aggregator<I,A> op);

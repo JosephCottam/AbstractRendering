@@ -4,6 +4,8 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Iterator;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -21,6 +23,7 @@ import ar.renderers.SerialRenderer;
 import ar.util.Util;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 
@@ -32,6 +35,7 @@ import org.apache.spark.api.java.function.Function2;
  */
 public class RDDRender implements Serializable, Renderer {
 	private static final long serialVersionUID = 4036940240319014563L;
+	public static boolean MAP_PARTITIONS = false;
 
 	@Override
 	public <I, G, A> Aggregates<A> aggregate(
@@ -47,8 +51,12 @@ public class RDDRender implements Serializable, Renderer {
 		@SuppressWarnings("unchecked") //Will only read from...so this is OK (I think...).  No heap polution as long as we don't try to change the rdd.
 		JavaRDD<Glyph<G, I>> rdd = ((GlyphsetRDD<G, I>) glyphs).base();
 		
-		//TODO: Maybe use "mapPartitions" here.  That might match the 'segments' performance better... 
-		JavaRDD<Aggregates<A>> eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
+		JavaRDD<Aggregates<A>> eachAggs;
+		if (!MAP_PARTITIONS) {
+			eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
+		} else {
+			eachAggs = rdd.mapPartitions(new GlyphsToAggregates<I,G,A>(selector, aggregator, viewTransform));
+		}
 		return eachAggs.reduce(new Rollup<A>(aggregator));
 	}
 	
@@ -111,4 +119,29 @@ public class RDDRender implements Serializable, Renderer {
 		}
 	}
 
+	/**Render a single glyph into a set of aggregates.**/
+	public class GlyphsToAggregates<I,G,A> extends FlatMapFunction<Iterator<Glyph<G, I>>, Aggregates<A>> {
+		private static final long serialVersionUID = 7666400467739718445L;
+		
+		private final AffineTransform vt;
+		private final Selector<G> selector;
+		private final Aggregator<I,A> op;
+		public GlyphsToAggregates(
+				Selector<G> selector,
+				Aggregator<I,A> op,
+				AffineTransform vt) {
+			
+			this.selector = selector;
+			this.op = op;
+			this.vt = vt;
+		}
+		
+		public Iterable<Aggregates<A>> call(Iterator<Glyph<G, I>> glyphs) throws Exception {
+			Shape s = vt.createTransformedShape(Util.bounds(glyphs));
+			Rectangle bounds = s.getBounds();
+			Aggregates<A> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, op.identity());
+			return Arrays.asList(selector.processSubset(new IterableIterator<>(glyphs), vt, aggs, op));
+		}
+	}
+	
 }
