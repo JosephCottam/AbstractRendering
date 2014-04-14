@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -26,6 +27,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
+
+import com.google.common.collect.Lists;
 
 /**Near drop-in for the standard render using spark.
  * Also provides utility methods for working with RDDs.
@@ -57,6 +60,8 @@ public class RDDRender implements Serializable, Renderer {
 		} else {
 			eachAggs = rdd.mapPartitions(new GlyphsToAggregates<I,G,A>(selector, aggregator, viewTransform));
 		}
+		
+		
 		return eachAggs.reduce(new Rollup<A>(aggregator));
 	}
 	
@@ -119,6 +124,22 @@ public class RDDRender implements Serializable, Renderer {
 		}
 	}
 
+	
+	public class BoundPartitions<G> extends FlatMapFunction<Iterator<Glyph<G,?>>, Rectangle> {
+
+		private final AffineTransform vt;
+
+		public BoundPartitions(AffineTransform vt) {this.vt = vt;}
+
+		@Override
+		public Iterable<Rectangle> call(Iterator<Glyph<G, ?>> glyphs) throws Exception {
+			Shape s = vt.createTransformedShape(Util.bounds(glyphs));
+			Rectangle bounds = s.getBounds();
+			return Arrays.asList(bounds);
+		}
+		
+	}
+	
 	/**Render a single glyph into a set of aggregates.**/
 	public class GlyphsToAggregates<I,G,A> extends FlatMapFunction<Iterator<Glyph<G, I>>, Aggregates<A>> {
 		private static final long serialVersionUID = 7666400467739718445L;
@@ -137,10 +158,11 @@ public class RDDRender implements Serializable, Renderer {
 		}
 		
 		public Iterable<Aggregates<A>> call(Iterator<Glyph<G, I>> glyphs) throws Exception {
-			Shape s = vt.createTransformedShape(Util.bounds(glyphs));
+			ArrayList<Glyph<G,I>> glyphList = Lists.newArrayList(new IterableIterator<>(glyphs));
+			Shape s = vt.createTransformedShape(Util.bounds(glyphList));
 			Rectangle bounds = s.getBounds();
 			Aggregates<A> aggs = AggregateUtils.make(bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, op.identity());
-			return Arrays.asList(selector.processSubset(new IterableIterator<>(glyphs), vt, aggs, op));
+			return Arrays.asList(selector.processSubset(glyphList, vt, aggs, op));
 		}
 	}
 	

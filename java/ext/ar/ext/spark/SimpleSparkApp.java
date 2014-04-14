@@ -33,7 +33,7 @@ public class SimpleSparkApp {
 		if (args.length >0) {
 			String first = args[0].toLowerCase();
 			if (first.equals("-h") || first.equals("-help") || first.equals("--help")) {
-				System.err.println("Parameters: -server <server> -in <data.csv> -out <out> -spark <spark-home> -jars <jars>");
+				System.err.println("Parameters: -server <server> -in <data.csv> -out <out> -spark <spark-home> -jars <jar:jar...> -partitions <true|false>");
 				System.err.println("Parameters are order independent and all have reasonable defaults.");
 				System.exit(1);
 			}
@@ -46,6 +46,7 @@ public class SimpleSparkApp {
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
+		RDDRender.MAP_PARTITIONS = Boolean.parseBoolean(arg(args, "-partitions", "false"));
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
 		JavaRDD<String> source = ctx.textFile(inFile);
