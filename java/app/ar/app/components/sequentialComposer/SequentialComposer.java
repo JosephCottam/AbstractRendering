@@ -53,8 +53,8 @@ public class SequentialComposer extends JPanel  {
 
 	public void transferDefaults() {
 		OptionDataset<?,?> od = datasets.getItemAt(datasets.getSelectedIndex());
-		aggregators.setSelectedItem(od.defaultAggregator());
-		transferBuilder.configureTo(od.defaultTransfers());
+		aggregators.setSelectedItem(od.defaultAggregator);
+		transferBuilder.configureTo(od.defaultTransfers);
 		actionProvider.fireActionListeners();
 	}
 	
@@ -68,7 +68,7 @@ public class SequentialComposer extends JPanel  {
 				|| !oldPanel.aggregator().equals(aggregator());
 	}
 	
-	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).dataset();}
+	public Glyphset<?,?> dataset() {return datasets.getItemAt(datasets.getSelectedIndex()).glyphset;}
 	public Aggregator<?,?> aggregator() {return aggregators.getItemAt(aggregators.getSelectedIndex()).aggregator();}
 	public Transfer<?,?> transfer() {return transferBuilder.transfer();}
 }

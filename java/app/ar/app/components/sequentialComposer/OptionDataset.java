@@ -21,17 +21,20 @@ import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public final class OptionDataset<G,I> {	
-	private final String name;
-	private final Glyphset<G,I> glyphs;
-	private final OptionAggregator<? super I,?> defaultAggregator;
-	private final List<OptionTransfer<?>> defaultTransfers;
+	public final String name;
+	public final Glyphset<G,I> glyphset;
+	public final File sourceFile;
+	public final Shaper<G,Indexed> shaper;
+	public final Valuer<Indexed, I> valuer;
+	public final OptionAggregator<? super I,?> defaultAggregator;
+	public final List<OptionTransfer<?>> defaultTransfers;
 	
 	public OptionDataset(
 			String name, File file, 
 			Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
-		this(name, new MemMapList<>(file, shaper, valuer), defAgg, defTrans);
+		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, defTrans);
 	}
 	
 	public OptionDataset(
@@ -39,17 +42,25 @@ public final class OptionDataset<G,I> {
 			Glyphset<G,I> glyphset,
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
+		this(name, glyphset, null, null, null, defAgg, defTrans);
+	}
+	
+	private OptionDataset(
+			String name, 
+			Glyphset<G,I> glyphset,
+			File file, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
+			OptionAggregator<? super I,?> defAgg,
+			OptionTransfer<?>... defTrans) {
 		this.name = name;
-		glyphs = glyphset;
+		this.sourceFile = file;
+		this.shaper = shaper;
+		this.valuer = valuer;
+		this.glyphset = glyphset;
 		this.defaultAggregator = defAgg;
 		this.defaultTransfers = Arrays.asList(defTrans);
+	
 	}
-
-	public Glyphset<G,I> dataset() {return glyphs;}
-	public String toString() {return name;}
-	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
-	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
-
+			
 	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
 	static {
 		OptionDataset<Point2D, String> temp;

@@ -135,7 +135,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected long recordOffset(long i) {return (i*recordLength)+dataTableOffset;}
 	
 	protected IndexedEncoding entryAt(long recordOffset) {
-		MappedFile buffer = this.buffer;
 		return new IndexedEncoding(types, recordOffset, buffer, offsets);
 	}
 

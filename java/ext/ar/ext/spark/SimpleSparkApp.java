@@ -5,11 +5,19 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import ar.Aggregates;
+import ar.Aggregator;
+import ar.Glyphset;
+import ar.Transfer;
+import ar.app.components.sequentialComposer.OptionDataset;
+import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.app.display.TransferDisplay;
+import ar.ext.spark.hbin.DataInputRecord;
+import ar.ext.spark.hbin.HBINInputFormat;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -18,6 +26,8 @@ import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
+
+
 
 /**Main class for driving an ARSpark application.**/
 public class SimpleSparkApp {
@@ -29,6 +39,7 @@ public class SimpleSparkApp {
 		return def;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static void main(String[] args){
 		if (args.length >0) {
 			String first = args[0].toLowerCase();
@@ -42,18 +53,36 @@ public class SimpleSparkApp {
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
 		String host = arg(args, "-server", "local");
-		String inFile = arg(args, "-in", "../data/circlepoints.csv");
+		String config = arg(args, "-config", "CENSUS_SYN_PEOPLE");
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
 		RDDRender.MAP_PARTITIONS = Boolean.parseBoolean(arg(args, "-partitions", "false"));
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
-		JavaRDD<String> source = ctx.textFile(inFile);
-		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
 		Shaper<Rectangle2D, Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
 		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
+		
+		
+		OptionDataset dataset;
+		try {
+			dataset= (OptionDataset) OptionDataset.class.getField(config).get(null);
+		} catch (
+				IllegalAccessException |
+				IllegalArgumentException |
+				NoSuchFieldException | NullPointerException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find -config indicated: " + config);
+		}
 
+		
+		JavaPairRDD<Long, Indexed> base = ctx.hadoopFile(dataset.sourceFile.getAbsolutePath(), HBINInputFormat.class, Long.class, Indexed.class);
+//		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
+//		Aggregator aggregator = source.defaultAggregator().aggregator();
+//		Glyphset glyphs = source.dataset();
+//		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers(), null);
+
+		JavaRDD<String> source = ctx.textFile("");
+		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
 		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper,valuer)).cache());
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
 

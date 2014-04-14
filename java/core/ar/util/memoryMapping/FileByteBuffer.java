@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-/**Wraps a byte buffer with long-based indexing (ostensibly to file positions).**/
+/**Wraps a byte buffer with long-based indexing (ostensibly to file positions).
+ * 
+ * TODO: Investigate just taking in a ByteBuffer...and rename some related stuff
+ * **/
 public class FileByteBuffer implements MappedFile {
 	private final ByteBuffer buffer;
 	private final long fileOffset;

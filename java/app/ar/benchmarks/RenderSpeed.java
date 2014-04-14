@@ -66,9 +66,9 @@ public class RenderSpeed {
 		}
 
 		
-		Aggregator aggregator = source.defaultAggregator().aggregator();
-		Glyphset glyphs = source.dataset();
-		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers(), null);
+		Aggregator aggregator = source.defaultAggregator.aggregator();
+		Glyphset glyphs = source.glyphset;
+		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers, null);
 	
 		
 		Renderer render;
