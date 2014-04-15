@@ -1,17 +1,18 @@
 package ar.ext.spark;
 
-import java.awt.Color;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.io.IOException;
 
+import org.apache.hadoop.io.LongWritable;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 
+import scala.Tuple2;
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.Glyphset;
 import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
@@ -19,10 +20,6 @@ import ar.app.display.TransferDisplay;
 import ar.ext.spark.hbin.DataInputRecord;
 import ar.ext.spark.hbin.HBINInputFormat;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
-import ar.glyphsets.implicitgeometry.Indexed.*;
-import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
@@ -40,7 +37,7 @@ public class SimpleSparkApp {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static void main(String[] args){
+	public static <G,I,A> void main(String[] args) throws IOException{
 		if (args.length >0) {
 			String first = args[0].toLowerCase();
 			if (first.equals("-h") || first.equals("-help") || first.equals("--help")) {
@@ -53,18 +50,16 @@ public class SimpleSparkApp {
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
 		String host = arg(args, "-server", "local");
-		String config = arg(args, "-config", "CENSUS_SYN_PEOPLE");
+		String config = arg(args, "-config", "BOOST_MEMORY");
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
 		RDDRender.MAP_PARTITIONS = Boolean.parseBoolean(arg(args, "-partitions", "false"));
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
-		Shaper<Rectangle2D, Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
-		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
 		
 		
-		OptionDataset dataset;
+		OptionDataset<G,I> dataset;
 		try {
 			dataset= (OptionDataset) OptionDataset.class.getField(config).get(null);
 		} catch (
@@ -75,24 +70,30 @@ public class SimpleSparkApp {
 		}
 
 		
-		JavaPairRDD<Long, Indexed> base = ctx.hadoopFile(dataset.sourceFile.getAbsolutePath(), HBINInputFormat.class, Long.class, Indexed.class);
-//		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
-//		Aggregator aggregator = source.defaultAggregator().aggregator();
-//		Glyphset glyphs = source.dataset();
-//		Transfer transfer = OptionTransfer.toTransfer(source.defaultTransfers(), null);
+		JavaRDD<Indexed> base;
+		if (!dataset.sourceFile.getName().endsWith(".csv")) {
+			JavaPairRDD<LongWritable, DataInputRecord> source = ctx.hadoopFile(dataset.sourceFile.getAbsolutePath(), HBINInputFormat.class, LongWritable.class, DataInputRecord.class);
+			base = (JavaRDD<Indexed>) (JavaRDD) source.map(new Function<Tuple2<LongWritable, DataInputRecord>, DataInputRecord>() {
+				public DataInputRecord call(Tuple2<LongWritable, DataInputRecord> pair) throws Exception {return pair._2;}
+			});
+		} else {
+			JavaRDD<String> source = ctx.textFile(dataset.sourceFile.getCanonicalPath());
+			base = source.map(new StringToIndexed("\\s*,\\s*"));
+		}
 
-		JavaRDD<String> source = ctx.textFile("");
-		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
-		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper,valuer)).cache());
+		Glypher<G,I> glypher = new Glypher<>(dataset.shaper,dataset.valuer);
+		GlyphsetRDD<G, I> glyphs = new GlyphsetRDD<>(base.map(glypher).cache());
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
 
- 		
+		Aggregator<I, A> aggregator = (Aggregator<I, A>) dataset.defaultAggregator.aggregator();
+		Transfer transfer = OptionTransfer.toTransfer(((OptionDataset) dataset).defaultTransfers, null);
+		
  		RDDRender render = new RDDRender();
- 		Aggregates<Integer> aggs = render.aggregate(glyphs, TouchesPixel.make(glyphs), new Numbers.Count<Integer>(), view, width, height);
+ 		Aggregates<A> aggs = render.aggregate(glyphs, TouchesPixel.make(glyphs), aggregator, view, width, height);
 
 		
 		if (outFile == null) {
-			TransferDisplay.show("", width, height, aggs, new Numbers.Interpolate<>(new Color(230,230,255), Color.BLUE));
+			TransferDisplay.show("", width, height, aggs, transfer);
 		} else {
 			AggregatesToCSV.export(aggs, new File(outFile));
 		}

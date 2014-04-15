@@ -7,13 +7,24 @@ import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 public class DataInputRecord implements Indexed {
 
+	private final TYPE[] types;
 	private final Object[] values;
 	
+	public DataInputRecord(TYPE[] types) {
+		this.types = types;
+		values = new Object[types.length];
+	}
 	
 	public DataInputRecord(TYPE[] types, DataInputStream source) {
-		super();
-		this.values = new Object[types.length];
-		
+		this(types);
+		fill(source);
+	}
+
+
+	@Override public Object get(int i) {return values[i];}
+	
+	/**Populate this record and return it.**/
+	public DataInputRecord fill(DataInputStream source) {
 		try {
 			for (int i=0; i< values.length; i++) {
 				switch (types[i]) {
@@ -29,9 +40,8 @@ public class DataInputRecord implements Indexed {
 				}
 			}
 		} catch (Exception e) {throw new RuntimeException(e);}
+		return this;
 	}
 
-
-	@Override public Object get(int i) {return values[i];}
 
 }
