@@ -39,11 +39,7 @@ public class IndexedReader implements RecordReader<LongWritable, DataInputRecord
         FileSystem fs = file.getFileSystem(conf);
         FSDataInputStream input = fs.open(split.getPath());
         
-		long shift = dataOffset%recordLength;
-        long recordCount = start/recordLength; 
-        long nextRecord = Math.max((recordCount*recordLength)+shift, dataOffset);
-        
-        this.pos = nextRecord;
+        this.pos = start;
         this.input = input;
         input.seek(pos);
 	}
@@ -62,8 +58,6 @@ public class IndexedReader implements RecordReader<LongWritable, DataInputRecord
 			return false;
 		}  
 		
-		
-		input.seek(pos);
 		val.fill(input);
 		key.set(pos);
 		pos = pos + recordLength;
