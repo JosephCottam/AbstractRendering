@@ -60,6 +60,8 @@ public final class OptionDataset<G,I> {
 		this.defaultTransfers = Arrays.asList(defTrans);
 	
 	}
+	
+	public String toString() {return name;}
 			
 	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
 	static {
@@ -156,6 +158,22 @@ public final class OptionDataset<G,I> {
 		} catch (Exception e) {temp = null;}
 		CIRCLE_SCATTER = temp;
 	}
+	
+	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER_HBIN;
+	static {
+		OptionDataset<Rectangle2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>(
+			"Circle Scatter (HBIN)",
+			new File("../data/circlepoints.hbin"),
+			new Indexed.ToRect(.1,0,1),
+			new Valuer.Constant<Indexed, Integer>(1),
+			OptionAggregator.COUNT,
+			new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CIRCLE_SCATTER_HBIN = temp;
+	}
+
 	
 	private static int SYNTHETIC_POINT_COUNT = 100_000_000;
 	public static  OptionDataset<Point2D, Integer> SYNTHETIC = syntheticPoints(SYNTHETIC_POINT_COUNT);

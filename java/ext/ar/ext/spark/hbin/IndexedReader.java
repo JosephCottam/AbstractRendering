@@ -1,6 +1,5 @@
 package ar.ext.spark.hbin;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -22,7 +21,7 @@ public class IndexedReader implements RecordReader<LongWritable, DataInputRecord
 	private final TYPE[] types;
 	private final int recordLength;
 	
-	private final DataInputStream input;
+	private final FSDataInputStream input;
 	private long pos;
 	
 	/**
@@ -33,19 +32,20 @@ public class IndexedReader implements RecordReader<LongWritable, DataInputRecord
 		this.types =  types;
 		this.recordLength = MemMapEncoder.recordLength(types);
 
-		end = split.getLength() + start;
+		this.start = split.getStart();
+		end = start + split.getLength();
 
 		final Path file = split.getPath();
         FileSystem fs = file.getFileSystem(conf);
         FSDataInputStream input = fs.open(split.getPath());
         
-		long start = split.getStart() -1; //Just in case we got passed a start at a record boundary, this will make subsequent math work out
-        long recordID = (start-dataOffset)/recordLength; //Which record is the first byte in?
-        long nextRecord = ((recordID+1)* recordLength) + start; //Start of the first record in the segment
-        this.start = nextRecord;
-        this.pos = start;
-        input.seek(start);
+		long shift = dataOffset%recordLength;
+        long recordCount = start/recordLength; 
+        long nextRecord = Math.max((recordCount*recordLength)+shift, dataOffset);
+        
+        this.pos = nextRecord;
         this.input = input;
+        input.seek(pos);
 	}
 	
 	
@@ -54,12 +54,16 @@ public class IndexedReader implements RecordReader<LongWritable, DataInputRecord
 	@Override public DataInputRecord createValue() {return new DataInputRecord(types);}
 	@Override public long getPos() throws IOException {return pos;}
 
+	
 	@Override
 	public boolean next(LongWritable key, DataInputRecord val) throws IOException {
-		if (pos + recordLength > end) {return false;}  //HACK!!!!! HORRIBLE HACK!!!!! DROPS DATA !!!! FOR TESTING ONLY!!!!
-		//if (pos > end) {return false;}
+		if (pos + recordLength > end) {
+			if (pos != end) {System.out.printf("WARNING: Dropping %d bytes\n", end-pos);}
+			return false;
+		}  
 		
 		
+		input.seek(pos);
 		val.fill(input);
 		key.set(pos);
 		pos = pos + recordLength;

@@ -20,7 +20,6 @@ public class DataInputRecord implements Indexed {
 		fill(source);
 	}
 
-
 	@Override public Object get(int i) {return values[i];}
 	
 	/**Populate this record and return it.**/

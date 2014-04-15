@@ -36,4 +36,16 @@ public class HBINInputFormat extends FileInputFormat<LongWritable, DataInputReco
 		TYPE[] types =  header.types;
 		return new IndexedReader(dataOffset,types, split, conf);
 	}	
+//	
+//	@Override
+//	public InputSplit[] getSplits(JobConf job, int numSplits) {
+//		InputSplit[] splits = new InputSplit[numSplits];
+//		for (int i=0; i<numSplits; i++) {
+//			Path path = job.getWorkingDirectory();
+//			long start = ;
+//			long length;
+//			FileSplit s = new FileSplit(path, start, length, (String[]) null);
+//		}
+//	}
+	
 }
