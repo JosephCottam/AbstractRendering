@@ -39,36 +39,31 @@ public class HBINInputFormat extends FileInputFormat<LongWritable, DataInputReco
 	}	
 	
 	@Override
-	public InputSplit[] getSplits(JobConf job, int numSplits) {
+	public InputSplit[] getSplits(JobConf job, int numSplits) throws IOException {
 		FileStatus fileStatus;
         MemMapEncoder.Header header;
         Path path;
-        numSplits = Math.max(job.getNumMapTasks(), numSplits);
+        
+        numSplits = super.getSplits(job, numSplits).length;
 
-        try {
-        	FileStatus[] statuses = this.listStatus(job);
-			if (statuses.length != 1) {throw new RuntimeException("HBIN input can only be used with single-file jobs.");}
-			fileStatus = statuses[0];
-			path = fileStatus.getPath(); 	        
-	        try (DataInputStream stream = path.getFileSystem(job).open(path)) {
-	        	header = MemMapEncoder.Header.from(stream);
-	        }
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		
+    	FileStatus[] statuses = this.listStatus(job);
+		if (statuses.length != 1) {throw new RuntimeException("HBIN input can only be used with single-file jobs.");}
+		fileStatus = statuses[0];
+		path = fileStatus.getPath(); 	        
+        try (DataInputStream stream = path.getFileSystem(job).open(path)) {
+        	header = MemMapEncoder.Header.from(stream);
+        }
+	
 		long fileLength = fileStatus.getLen();
-
         long dataOffset = header.dataTableOffset;
         TYPE[] types =  header.types;
         long recordLength = MemMapEncoder.recordLength(types);
-
         
         long start = dataOffset;
         long dataLength = fileLength-start;
-        long records = ((dataLength*fileStatus.getBlockSize()-dataOffset)/recordLength);
-        long recordsPerSplit = (records/numSplits)+1;
-        long splitLength = (recordsPerSplit*recordLength)/fileStatus.getBlockSize();
+        long records = dataLength/recordLength;
+        long recordsPerSplit = (records/numSplits)+ (records%numSplits == 0 ? 0 : 1);// +1 ensures that if items don't divide up evenly, no extra splits are needed 
+        long splitLength = recordsPerSplit*recordLength;
 		
         List<InputSplit> splits = new ArrayList<InputSplit>(numSplits);
 		for (int i=0; i<numSplits; i++) {
