@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -355,7 +356,7 @@ public class Util {
 	}
 	
 	/**Comparator to wrap the compareTo method of comparable items.**/
-	public static class ComparableComparator<T extends Comparable<T>> implements Comparator<T> {
+	public static class ComparableComparator<T extends Comparable<T>> implements Comparator<T>, Serializable {
 		public int compare(T lhs, T rhs) {return lhs.compareTo(rhs);}
 	}
 	

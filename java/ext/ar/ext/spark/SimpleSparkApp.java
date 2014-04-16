@@ -1,6 +1,7 @@
 package ar.ext.spark;
 
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,6 +14,7 @@ import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Selector;
 import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
@@ -54,7 +56,7 @@ public class SimpleSparkApp {
 		String outFile= arg(args, "-out", null);
 		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
 		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
-		RDDRender.MAP_PARTITIONS = Boolean.parseBoolean(arg(args, "-partitions", "false"));
+		boolean partition = Boolean.parseBoolean(arg(args, "-partitions", "true"));
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
 		
@@ -82,15 +84,18 @@ public class SimpleSparkApp {
 		}
 
 		Glypher<G,I> glypher = new Glypher<>(dataset.shaper,dataset.valuer);
-		GlyphsetRDD<G, I> glyphs = new GlyphsetRDD<>(base.map(glypher).cache());
+		GlyphsetRDD<G, I> glyphs = new GlyphsetRDD<>(base.map(glypher), true, partition);
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
+ 		Selector selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
 
 		Aggregator<I, A> aggregator = (Aggregator<I, A>) dataset.defaultAggregator.aggregator();
 		Transfer transfer = OptionTransfer.toTransfer(((OptionDataset) dataset).defaultTransfers, null);
 		
  		RDDRender render = new RDDRender();
- 		Aggregates<A> aggs = render.aggregate(glyphs, TouchesPixel.make(glyphs), aggregator, view, width, height);
 
+ 		long start = System.currentTimeMillis();
+ 		Aggregates<A> aggs = render.aggregate(glyphs, selector, aggregator, view, width, height);
+ 		long end = System.currentTimeMillis();
 		
 		if (outFile == null) {
 			TransferDisplay.show("", width, height, aggs, transfer);

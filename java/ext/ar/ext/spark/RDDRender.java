@@ -38,27 +38,28 @@ import com.google.common.collect.Lists;
  */
 public class RDDRender implements Serializable, Renderer {
 	private static final long serialVersionUID = 4036940240319014563L;
-	public static boolean MAP_PARTITIONS = false;
 
 	@Override
 	public <I, G, A> Aggregates<A> aggregate(
-			Glyphset<? extends G, ? extends I> glyphs, 
+			Glyphset<? extends G, ? extends I> genericGlyphs, 
 			Selector<G> selector,
 			Aggregator<I, A> aggregator, 
 			AffineTransform viewTransform,
 			int width, int height) {
 		
 		//TODO: Can we do auto-conversion to RDD here?  
-		if (!(glyphs instanceof GlyphsetRDD)) {throw new IllegalArgumentException("Can only use RDD Glyphsets");}
-		
+		if (!(genericGlyphs instanceof GlyphsetRDD)) {throw new IllegalArgumentException("Can only use RDD Glyphsets");}
+
 		@SuppressWarnings("unchecked") //Will only read from...so this is OK (I think...).  No heap polution as long as we don't try to change the rdd.
-		JavaRDD<Glyph<G, I>> rdd = ((GlyphsetRDD<G, I>) glyphs).base();
+		GlyphsetRDD<G,I> glyphs = (GlyphsetRDD<G, I>) genericGlyphs;
+		
+		JavaRDD<Glyph<G, I>> rdd = glyphs.base();
 		
 		JavaRDD<Aggregates<A>> eachAggs;
-		if (!MAP_PARTITIONS) {
-			eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
-		} else {
+		if (!glyphs.mapPartitions()) {
 			eachAggs = rdd.mapPartitions(new GlyphsToAggregates<I,G,A>(selector, aggregator, viewTransform));
+		} else {
+			eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
 		}
 		
 		
