@@ -45,13 +45,16 @@ Extensions
 
 Extensions are experimental or task-specific tools being co-developed with the core
 Abstract Rendering system. Extensions are all compiled together (no cherry-picking 
-extensions at this time).  To compile extensions, invoke "ant ext".
+extensions at this time).  To compile extensions, invoke "ant fetch-ext ext".
 
 ### Avro
 The avro extensions provide tools for working with [apache avro](avro.apache.org) serialization.
 Support for saving/restoring aggregate sets and raw datasets (through implicit geometry) are implemented.
 Serialization is based on schemas that are included as JAR resources (current count, RLE and color
 are supported as aggregate types). Avro can be used to serialize to binary or to JSON files.
+
+### Seam Carving
+Image retargeting based on [seam-carving](http://en.wikipedia.org/wiki/Seam_carving).
 
 ### Sever
 The ARServer is a self-contained HTTP server that responds to post messages that describe
@@ -66,17 +69,13 @@ Abstract Rendering implementation to run in the [AMP Spark](http://spark-project
 This uses many of the standard tools, but different driver (e.g., not true "Renderer" class)
 to do aggregation in a distributed memory environment.  Transfer is still done locally.
 
-Unlike other extensions, the Spark extension requires the Spark jar to be provided "by hand."
-If the a jar named spark-core-assembly-0.7.2.jar is not found in the lib directory, the spark
-extensions will not be included in the resulting jar file.  This is a restriction is because
-the spark jar file needs to be compiled differently depending on the runtime environment.
+Because there are many Spark-specific dependencies, they are acquired with "ant fetch-spark".
+Run with "java -cp ./*:lib/* ar.ext.spark.SimpleSparkApp" for a basic demo.  For access to
+other demos, use "java -cp ./*:lib/* ar.ext.spark.SparkDemoApp" and related options.
  
 ### Tiles
 Tools for manipulating aggregates for use with a tile-server.
 Can create tiles from aggregates or combine multiple tiles into an aggregate set.
 RElies on the Avro extension.
-
-### RHIPE Tools
-A set of tools for working with R-integration. Targeted at the [RHIPE](http://www.datadr.org/).
 
 

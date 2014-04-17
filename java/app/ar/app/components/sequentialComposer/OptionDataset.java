@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import ar.Glyphset;
-import ar.app.util.GlyphsetUtils;
-import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -146,20 +144,21 @@ public final class OptionDataset<G,I> {
 		KIVA = temp;
 	}
 	
-	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
-	static {
-		OptionDataset<Rectangle2D, Color> temp;
-		try {
-			temp = new OptionDataset<>(
-			"Circle Scatter",
-			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
-			OptionAggregator.COUNT,
-			new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
-		CIRCLE_SCATTER = temp;
-	}
+//	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
+//	static {
+//		OptionDataset<Rectangle2D, Color> temp;
+//		try {
+//			temp = new OptionDataset<>(
+//			"Circle Scatter",
+//			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
+//			OptionAggregator.COUNT,
+//			new OptionTransfer.Interpolate());
+//		} catch (Exception e) {temp = null;}
+//		CIRCLE_SCATTER = temp;
+//	}
 	
-	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER_HBIN;
+	
+	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER;
 	static {
 		OptionDataset<Rectangle2D, Integer> temp;
 		try {
@@ -171,7 +170,7 @@ public final class OptionDataset<G,I> {
 			OptionAggregator.COUNT,
 			new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
-		CIRCLE_SCATTER_HBIN = temp;
+		CIRCLE_SCATTER = temp;
 	}
 
 	
