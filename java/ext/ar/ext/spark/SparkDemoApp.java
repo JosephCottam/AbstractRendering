@@ -4,6 +4,7 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -42,16 +43,19 @@ public class SparkDemoApp {
 		try {
 			StringBuilder b = new StringBuilder();
 			for(Field f: OptionDataset.class.getFields()) {
+				
+				if (!Modifier.isStatic(f.getModifiers())) {continue;}
+				
 				Object value = f.get(null);
 				if (value != null 
 						&& value instanceof OptionDataset
 						&& ((OptionDataset<?,?>) value).sourceFile != null) {
 					
-					b.append(((OptionDataset<?,?>) value).name);
+					b.append(f.getName());
 					b.append(", ");
 				}
-				b.delete(b.length()-2, b.length());
 			}
+			b.delete(b.length()-2, b.length());
 			return b.toString();
 		} catch (Exception e) {return "Error generating config list: " + e.getMessage();}
 	}
