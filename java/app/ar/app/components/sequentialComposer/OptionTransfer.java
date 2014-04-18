@@ -471,16 +471,29 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
-			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner up = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner down = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner left = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner right = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
 			
 			public Controls() {
 				super("spread");				
-				add(new LabeledItem("Radius:", spinner));
-				spinner.addChangeListener(actionProvider.changeDelegate());
+				add(new LabeledItem("Up:", up));
+				add(new LabeledItem("Down:", down));
+				add(new LabeledItem("Left:", left));
+				add(new LabeledItem("Right:", right));
+				
+				up.addChangeListener(actionProvider.changeDelegate());
+				down.addChangeListener(actionProvider.changeDelegate());
+				left.addChangeListener(actionProvider.changeDelegate());
+				right.addChangeListener(actionProvider.changeDelegate());
 			}
 			
-			public Spreader spreader() {return new General.Spread.UnitSquare<Integer>(radius());}
-			public int radius() {return (int) spinner.getValue();}
+			public Spreader spreader() {return new General.Spread.UnitRectangle<Integer>(up(), down(), left(), right());}
+			public int up() {return (int) up.getValue();}
+			public int down() {return (int) down.getValue();}
+			public int left() {return (int) left.getValue();}
+			public int right() {return (int) right.getValue();}
 		}
 		
 		public static class FlexSpread<V> implements Transfer<V,V> {

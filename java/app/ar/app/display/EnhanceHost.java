@@ -113,10 +113,11 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	///Subset related options ---------------------------------------------------------------------------
 	public void updateLimit() {
 		Glyphset<?,?> replacement;
-		if (enableLimit()) {
+		Rectangle2D bounds = limitBounds();
+		if (bounds == null || enableLimit()) {
 			Glyphset<?,?> original = hosted.dataset();
 			if (original instanceof BoundingWrapper) {original = ((BoundingWrapper<?,?>) original).base();}
-			replacement = new BoundingWrapper<>(original, limitBounds());
+			replacement = new BoundingWrapper<>(original, bounds);
 		} else {
 			replacement = hosted.dataset();
 			if (replacement instanceof BoundingWrapper) {replacement = ((BoundingWrapper<?,?>) replacement).base();}
@@ -127,10 +128,14 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		this.repaint();
 	}
 	
-	public Rectangle2D limitBounds() {return overlay.selected.getBounds2D();}
+	public Rectangle2D limitBounds() {
+		Area a = overlay.selected;
+		if (a == null) {return null;}
+		else {return a.getBounds2D();}
+	}
+	
 	public boolean enableLimit() {return limitEnabled;}
 	public void enableLimit(boolean limit) {limitEnabled = limit; updateLimit();}
-
 	
 	public void paint(Graphics g) {
 		if (redoRefAggregates) {

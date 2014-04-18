@@ -218,7 +218,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()))
+					  .then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
 					  .then(new General.ValuerTransfer<>(new MathValuers.DivideInt<Integer>(4000),0))
 					  .then(new Numbers.FixedInterpolate<Integer>(Color.white, Color.red, 0, 255));
 		}
@@ -233,7 +233,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()))
+					  .then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
 					  .then(new General.ValuerTransfer<>(new MathValuers.DivideInt<Integer>(4000),0))
 					  .then(new Numbers.FixedInterpolate<Integer>(Color.white, Color.red, 0, 25));
 		}
@@ -247,7 +247,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()))
+					  .then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
 					  .then(new Numbers.Interpolate<Integer>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Linear)";}
@@ -261,7 +261,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()))
+					  .then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
 					  .then(new General.Present<Integer,Color>(Color.RED, Color.white));
 		}
 		public String name() {return "US Population (Opaque)";}
@@ -274,7 +274,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_MM;}
 		public Transfer<?,?> transfer() {
 			return Seq.start(new Categories.ToCount<>())
-					  .then(new General.Spread<>(new General.Spread.UnitSquare<Integer>(1), new Numbers.Count<Integer>()))
+					  .then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
 					  .then(new General.ValuerTransfer<>(new MathValuers.Raise<Integer>(.333333d), 0d))
 				  	  .then(new  Numbers.Interpolate<Double>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
@@ -344,7 +344,7 @@ public class Presets extends JPanel {
 			Transfer<CategoricalCounts<Color>, Color> stratAlpha = new HighDefAlpha(Color.white, .1, true);
 			return Seq.start(rekey)
 					  .then(new General.Spread<>(
-							  new General.Spread.UnitSquare<CategoricalCounts<Color>>(1), 
+							  new General.Spread.UnitRectangle<CategoricalCounts<Color>>(1), 
 							  new Categories.MergeCategories<Color>()))
 					  .then(stratAlpha);
 		}
@@ -388,7 +388,7 @@ public class Presets extends JPanel {
 			
 			return Seq.start(rekey)
 					  .then(new General.Spread<>(
-							  new General.Spread.UnitSquare<CategoricalCounts<Color>>(1), 
+							  new General.Spread.UnitRectangle<CategoricalCounts<Color>>(1), 
 							  new Categories.MergeCategories<Color>()))
 					  .then(lift);
 		}
