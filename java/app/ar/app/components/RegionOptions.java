@@ -3,6 +3,7 @@ package ar.app.components;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
@@ -15,12 +16,12 @@ public class RegionOptions  extends JPanel {
 	
 	EnhanceHost.Control modSelection = new EnhanceHost.Control();
 	JCheckBox enhance = new JCheckBox();
-	JCheckBox limit = new JCheckBox();
+	JButton limit = new JButton("Limit/Zoom");
 	
 	public RegionOptions() {
 		this.add(modSelection);
 		this.add(new LabeledItem("Enhance:", enhance));
-		this.add(new LabeledItem("Limit:", limit));
+		this.add(limit);
 		
 		enhance.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -32,10 +33,8 @@ public class RegionOptions  extends JPanel {
 		
 		limit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JCheckBox b = (JCheckBox) e.getSource();
-				modSelection.host().enableLimit(b.isSelected());
+				modSelection.host().enableLimit(modSelection.host().showOverlay()); //HACK!!!! 
 			}
-			
 		});
 	}
 	

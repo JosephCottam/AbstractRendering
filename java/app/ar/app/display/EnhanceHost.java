@@ -121,8 +121,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			replacement = hosted.dataset();
 			if (replacement instanceof BoundingWrapper) {replacement = ((BoundingWrapper<?,?>) replacement).base();}
 			
-		}
-		hosted.dataset(replacement, hosted.aggregator, hosted.transfer());
+		}		
+		hosted.dataset(replacement, hosted.aggregator, hosted.transfer(), false);
+		hosted.zoomFit();
 		this.repaint();
 	}
 	
@@ -161,7 +162,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
-	public Glyphset<?,?> dataset() {return hosted.dataset();}
+	public Glyphset<?,?> dataset() {
+		if (hosted.dataset() instanceof BoundingWrapper) {
+			return ((BoundingWrapper<?,?>) hosted.dataset()).base();
+		} else {return hosted.dataset();}
+	}
+	
 	public void renderAgain() {hosted.renderAgain();}
 	
 	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
