@@ -41,22 +41,24 @@ public class Cartogram {
 		Renderer renderer = new ParallelRenderer();
 		
 		
-		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
-		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
-		System.out.println("Population glyphset loaded.");
+		final Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
+		//final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
+		System.out.printf("Population glyphset loaded.  Bounds %s\n", populationSource.bounds());
 		
 		File statesSource = new File("../data/maps/USStates/");
 		final Map<String, Shape> rawShapes = simplifyKeys(GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(statesSource, false)));
 		rawShapes.remove("AK");
 		rawShapes.remove("HI");
+		rawShapes.remove("PR");
 		final Glyphset<Shape, String> states = WrappedCollection.wrap(rawShapes.entrySet(), new Shaper.MapValue<String, Shape>(), new Valuer.MapKey<String, Shape>());
-		System.out.println("State shapes loaded.");
+		System.out.printf("State shapes loaded. Bounds %s\n", states.bounds());
 
-		final AffineTransform viewTransform = Util.zoomFit(populationSource.bounds().createUnion(states.bounds()), viewBounds.width, viewBounds.height);
+		//HACK: Approximate co-alignment by making the two data sets fit the same rectangle...only works if they have the same projection
+		final AffineTransform popTransform = Util.zoomFit(populationSource.bounds(), viewBounds.width, viewBounds.height);
+		final AffineTransform stateTransform = Util.zoomFit(states.bounds(), viewBounds.width, viewBounds.height);
 
-		
-		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
-		final Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
+		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), popTransform, viewBounds.width, viewBounds.height);
+		final Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), stateTransform, viewBounds.width, viewBounds.height);
 		Aggregates<Pair<String,Integer>> pairs = CompositeWrapper.wrap(labels, population);
 		System.out.println("Base aggregates created.\n");
 		
@@ -77,9 +79,11 @@ public class Cartogram {
 			System.out.println("Starting removing " + seams + " seams");
 
 			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveIncremental<>(new DeltaPair(), Direction.V, EMPTY, seams);
-			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweep<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			//Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveSweepN<>(new DeltaPair(), Direction.V, EMPTY, seams);
+			Transfer.Specialized<Pair<String,Integer>, Pair<String,Integer>> carver = new SeamCarving.CarveTwoSweeps<>(new DeltaPair(), Direction.V, EMPTY, seams);
 			Aggregates<Pair<String,Integer>> carved = renderer.transfer(pairs, carver);
-			//carved = renderer.transfer(carved, new Borders(EMPTY));
+			carved = renderer.transfer(carved, new Borders(EMPTY));
 			
 			CompositeWrapper<String,Integer, ?> composite = CompositeWrapper.convert(carved, "", 0);
 			
@@ -97,9 +101,14 @@ public class Cartogram {
 		}
 	}
 	
-	public static final Color PARTY1 = Color.green;
-	public static final Color PARTY2 = Color.pink;
-	public static final String BOARDER = "BOARDER";
+//	public static final Color PARTY1 = Color.green;
+//	public static final Color PARTY2 = Color.pink;
+	
+	public static final Color PARTY1 = new Color(215,106,89);
+	public static final Color PARTY2 = new Color(91,124,182);
+
+	
+	public static final String BORDER = "BORDER";
 	public static Map<String, Color> results2008 = new HashMap<>();
 	public static Map<String, Color> results2012 = new HashMap<>();
 	static {
@@ -114,8 +123,8 @@ public class Cartogram {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		results2012.put(BOARDER, Color.black);
-		results2008.put(BOARDER, Color.black);
+		results2012.put(BORDER, Color.black);
+		results2008.put(BORDER, Color.black);
 		System.out.println("Loaded results data.");
 	}
 
@@ -160,15 +169,18 @@ public class Cartogram {
 			String ref = state(aggs, x,y);
 			
 			String up = state(aggs,x,y+1);
-			String down = state(aggs,x,y-1);
-			String left = state(aggs,x-1,y);
+			//String down = state(aggs,x,y-1);
+			//String left = state(aggs,x-1,y);
 			String right = state(aggs,x+1,y);
 			
 			Pair<String,Integer> v = aggs.get(x, y);
-			if (ref.equals(up) && ref.equals(down) && ref.equals(left) && ref.equals(right)) {
+			if (ref.equals(up) 
+					//&& ref.equals(down) 
+					//&& ref.equals(left) 
+					&& ref.equals(right)) {
 				return v;
 			} else {
-				return new Pair<>(BOARDER,v.right);
+				return new Pair<>(BORDER,v.right);
 			}
 			
 		}
