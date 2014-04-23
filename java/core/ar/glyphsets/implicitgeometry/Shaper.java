@@ -12,7 +12,7 @@ import java.util.Map.Entry;
  * @param <G> Geometry-type returned;
  * @param <I> Input value type
  * **/
-public interface Shaper<G,I> extends Serializable {
+public interface Shaper<I,G> extends Serializable {
 	/**Create a shape from the passed item.**/
 	public G shape (I from);
 	
@@ -27,7 +27,7 @@ public interface Shaper<G,I> extends Serializable {
 	 * @author jcottam
 	 * @param <V>
 	 */
-	public static final class MapValue<K,G> implements Shaper<G, Map.Entry<K,G>> {
+	public static final class MapValue<K,G> implements Shaper<Map.Entry<K,G>, G> {
 		@Override public G shape(Entry<K, G> from) {return from.getValue();}
 	}
 
@@ -36,7 +36,7 @@ public interface Shaper<G,I> extends Serializable {
 	 * @author jcottam
 	 * @param <V>
 	 */
-	public static final class MapKey<G,V> implements Shaper<G, Map.Entry<G, V>> {
+	public static final class MapKey<G,V> implements Shaper<Map.Entry<G, V>, G> {
 		@Override public G shape(Entry<G, V> from) {return from.getKey();}
 	}
 }

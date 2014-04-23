@@ -22,12 +22,12 @@ import ar.util.Util;
  * **/
 public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	protected Collection<B> values;
-	protected Shaper<G,B> shaper;
+	protected Shaper<B,G> shaper;
 	protected Valuer<B,I> valuer;
 	
 	/**Wrap the passed collection, ready to construct glyphs with the passed shaper/valuer.**/
 	public WrappedCollection(Collection<B> values, 
-							Shaper<G,B> shaper, 
+							Shaper<B,G> shaper, 
 							Valuer<B,I> valuer) {
 		this.values = values;
 		this.shaper = shaper;
@@ -70,7 +70,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		
 		/**List-specific wrapped collection constructor.**/
 		public List(java.util.List<B> values,
-				Shaper<G,B> shaper, 
+				Shaper<B,G> shaper, 
 				Valuer<B,I> valuer) {
 			super(values, shaper, valuer);
 			this.values=values;
@@ -101,7 +101,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	 * Attempts to pick the most efficient option for the given basis.**/
 	public static <B,G,I> WrappedCollection<B,G,I> wrap(
 				Collection<B> basis, 
-				Shaper<G,B> shaper, 
+				Shaper<B,G> shaper, 
 				Valuer<B,I> valuer) {
 		
 		if (basis instanceof java.util.List) {
@@ -118,7 +118,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	 */
 	public static <B,G,I> Glyphset.RandomAccess<G,I> toList(
 			Collection<B> basis, 
-			Shaper<G,B> shaper, 
+			Shaper<B,G> shaper, 
 			Valuer<B,I> valuer) {
 		GlyphList<G,I> glyphs = new GlyphList<>();
 		for (B val: basis) {
@@ -135,7 +135,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	 * **/
 	public static <B,G,I> Glyphset<G,I> toQuadTree(
 			Collection<B> basis, 
-			Shaper<G,B> shaper, 
+			Shaper<B,G> shaper, 
 			Valuer<B,I> valuer) {
 		DynamicQuadTree<G,I> glyphs = DynamicQuadTree.make();
 		for (B val: basis) {

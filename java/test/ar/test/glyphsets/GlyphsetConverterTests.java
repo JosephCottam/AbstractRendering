@@ -34,7 +34,7 @@ public class GlyphsetConverterTests {
 	}
 
 
-	public Shaper<Rectangle2D, Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
+	public Shaper<Indexed, Rectangle2D> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Integer> valuer() {return new Indexed.ToValue<Object,Integer>(2);}
 	public Valuer<Integer, Double> converter() {
 		return new Valuer<Integer,Double>() {

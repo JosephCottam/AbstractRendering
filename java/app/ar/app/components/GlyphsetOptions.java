@@ -56,7 +56,7 @@ public class GlyphsetOptions extends JPanel  {
 			return new GlyphList<Rectangle2D, Color>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (double) size.getSelectedItem();
-			Shaper<Rectangle2D, Indexed> shaper = new ToRect(sz, sz, false, 0,1);
+			Shaper<Indexed, Rectangle2D> shaper = new ToRect(sz, sz, false, 0,1);
 			Valuer<Indexed, Color> valuer = new Constant<Indexed,Color>(Color.red);
 			return new MemMapList<>(null, shaper, valuer);
 		} else {

@@ -89,7 +89,7 @@ public class GlyphsetUtils {
 		catch (Exception e) {throw new RuntimeException(e);}
 	}
 
-	public static final <G,V> Glyphset<G,V> memMap(String label, String file, Shaper<G,Indexed> shaper, Valuer<Indexed, V> valuer, int skip, String types) {
+	public static final <G,V> Glyphset<G,V> memMap(String label, String file, Shaper<Indexed,G> shaper, Valuer<Indexed, V> valuer, int skip, String types) {
 		System.out.printf("## Memory mapping %s...", label);
 		File f = new File(file);
 

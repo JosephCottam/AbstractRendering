@@ -28,7 +28,7 @@ public final class OptionDataset<G,I> {
 	
 	public OptionDataset(
 			String name, File file, 
-			Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
+			Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
 		this(name, new MemMapList<>(file, shaper, valuer), defAgg, defTrans);
