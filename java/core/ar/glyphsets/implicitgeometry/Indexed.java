@@ -57,14 +57,13 @@ public interface Indexed extends Serializable {
 		@Override
 		public Object get(int i) {
 			Object v = values.get(i);
-			String s = v.toString();
 			switch (types[i]) {
-				case INT: return v instanceof Integer ? (Integer) v : Integer.valueOf(s);
-				case SHORT: return v instanceof Short ? (Short) v : Short.valueOf(s);
-				case LONG: return v instanceof Long ? (Long) v : Long.valueOf(s);
-				case FLOAT: return v instanceof Float ? (Float) v : Float.valueOf(s);
-				case DOUBLE: return v instanceof Double ? (Double) v : Double.valueOf(s);
-				case COLOR: return v instanceof Color ? (Color) v : ColorNames.byName(s, null);
+				case INT: return v instanceof Integer ? (Integer) v : Integer.valueOf(v.toString());
+				case SHORT: return v instanceof Short ? (Short) v : Short.valueOf(v.toString());
+				case LONG: return v instanceof Long ? (Long) v : Long.valueOf(v.toString());
+				case FLOAT: return v instanceof Float ? (Float) v : Float.valueOf(v.toString());
+				case DOUBLE: return v instanceof Double ? (Double) v : Double.valueOf(v.toString());
+				case COLOR: return v instanceof Color ? (Color) v : ColorNames.byName(v.toString(), null);
 				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
 			}
 		}
