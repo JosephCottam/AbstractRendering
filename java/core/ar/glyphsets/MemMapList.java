@@ -135,7 +135,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected long recordOffset(long i) {return (i*recordLength)+dataTableOffset;}
 	
 	protected IndexedEncoding entryAt(long recordOffset) {
-		MappedFile buffer = this.buffer;
 		return new IndexedEncoding(types, recordOffset, buffer, offsets);
 	}
 
@@ -165,6 +164,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+			mf.order(buffer.order());
 			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
 		} catch (Exception e) {throw new RuntimeException("Error segmenting glyphset", e);}
 	}
