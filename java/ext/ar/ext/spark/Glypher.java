@@ -12,9 +12,9 @@ import org.apache.spark.api.java.function.Function;
 public class Glypher<G,I> extends Function<Indexed, Glyph<G,I>> {
 	private static final long serialVersionUID = -2010087917940244951L;
 	
-	final Shaper<G,Indexed> shaper;
+	final Shaper<Indexed, G> shaper;
 	final Valuer<Indexed, I> valuer;
-	public Glypher(Shaper<G,Indexed> shaper, Valuer<Indexed, I> valuer) {
+	public Glypher(Shaper<Indexed, G> shaper, Valuer<Indexed, I> valuer) {
 		this.shaper=shaper;
 		this.valuer=valuer;
 	}

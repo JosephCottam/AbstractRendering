@@ -64,7 +64,7 @@ public class GlyphsetTools {
 	public static <G,V,INNER> Glyphset<G,V> wrappedLoad(
 			File source, 
 			Valuer<GenericRecord,INNER> realizer,
-			Shaper<G,INNER> shaper, 
+			Shaper<INNER, G> shaper, 
 			Valuer<INNER, V> valuer) throws IOException {
 		
 		DataFileReader<GenericRecord> reader = reader(source); 
