@@ -400,7 +400,6 @@ public class General {
 		/**
 		 * @param mappings Backing map
 		 * @param other Value to return if the backing map does not include a requested key
-		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
 		 */
 		public MapWrapper(Map<IN, OUT> mappings, OUT other) {
 			this.mappings=mappings;

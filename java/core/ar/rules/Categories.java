@@ -120,7 +120,6 @@ public class Categories {
 		 * @param missing Use this key if the source has a key not found in the mapping 
 		 * @param source Input keys
 		 * @param target Item to update.  Will be updaed with 'extend', and thus this procedure is mutative if target.extend is.
-		 * @return
 		 */
 		public static final<IN, OUT> CategoricalCounts<OUT> rekey(Map<IN,OUT> mapping, OUT missing, CategoricalCounts<IN> source, CategoricalCounts<OUT> target) {
 			for (int i=0; i<source.size();i++) {

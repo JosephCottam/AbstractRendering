@@ -25,7 +25,6 @@ public interface Shaper<I,G> extends Serializable {
 	/**Given a map entry, return the value.  Used for maps where the key determines the shape
 	 * and the value determines the info.
 	 * @author jcottam
-	 * @param <V>
 	 */
 	public static final class MapValue<K,G> implements Shaper<Map.Entry<K,G>, G> {
 		@Override public G shape(Entry<K, G> from) {return from.getValue();}
