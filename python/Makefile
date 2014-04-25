@@ -2,13 +2,13 @@
 CC=clang
 CFLAGS=-O3 -Wall -march=native -std=c++11 -fno-rtti -fno-exceptions -fPIC -lstdc++ -dynamiclib
 
-all: libtransform.dylib libtransform_libdispatch.dylib
+all: transform.so transform_libdispatch.so
 
-libtransform.dylib: transform.cpp
+transform.so: transform.cpp
 	$(CC) $(CFLAGS) -o $@ $<
 
-libtransform_libdispatch.dylib: transform_libdispatch.cpp
+transform_libdispatch.so: transform_libdispatch.cpp
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -rf libtransform.dylib libtransform_libdispatch.dylib
+	rm -rf transform.so transform_libdispatch.so

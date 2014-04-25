@@ -1,8 +1,10 @@
 .DS_Store
 .metadata/
+build/
 bin
 data
 wiki
+*.so
 *.dylib
 *.jar
 *.pyc

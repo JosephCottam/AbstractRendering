@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 import numpy as np
 from math import floor 
 import ctypes
@@ -12,7 +13,7 @@ except ImportError:
   print "Error loading numba."
   autojit = lambda f: f
 
-_lib = ctypes.CDLL('libtransform.dylib')
+_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 
 ############################  Core System ####################
 def enum(**enums): return type('Enum', (), enums)

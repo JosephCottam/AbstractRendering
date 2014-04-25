@@ -33,11 +33,11 @@ def _type_lib(lib):
         lib.async_transform_d_end.argtypes = [c_void_p]
         lib.async_transform_d_next.argtypes = [c_void_p, c_void_p, c_void_p]
 
-_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'libtransform.dylib'))
+_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 _type_lib(_lib)
 
 try:
-    _lib_dispatch = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'libtransform_libdispatch.dylib'))
+    _lib_dispatch = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform_libdispatch.so'))
     _type_lib(_lib_dispatch)
 except OSError:
     print ("no libdispatch version found")
