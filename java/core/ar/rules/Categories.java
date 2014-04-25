@@ -57,7 +57,10 @@ public class Categories {
 	}
 	
 	
-	/**Convert a set of categorical counts to its total.**/ 
+	/**Convert a set of categorical counts to its total.
+	 * 
+	 * @param <IN> The category type (not important to any processing, but required to make typed statements line up properly)
+	 * **/ 
 	public static final class ToCount<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
 
