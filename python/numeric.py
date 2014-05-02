@@ -53,6 +53,45 @@ class FlattenCategories(ar.Transfer):
     return grid._aggregates.sum(axis=1)
 
 
+class Floor(ar.Transfer):
+  def transfer(self, grid):
+    return np.floor(grid._aggregates)
+ 
+class Interpolate(ar.Transfer):
+  """Interpolate between two numbers.
+     Projects the input values between the low and high values passed.
+     Default is 0 to 1
+     empty values are preserved (default is np.nan)
+  """
+  def __init__(self, low=0, high=1, empty=np.nan):
+    this.low = low
+    this.high = high
+    this.empty = empty
+
+  def transfer(self, grid):
+    items = grid._aggregates
+    mask = (grid._aggregates == self.empty)
+    min = items[~mask].min()
+    max = items[~mask].max()
+    span = float(max-min) 
+    percents = (items-min)/span
+    return percents * (self.high-self.low)
+
+class Power(ar.Transfer):
+  """Raise to a power.  Power may be fracional."""
+  def __init__(self, pow):
+    this.pow = pow
+
+  def transfer(self, grid):
+    return np.power(grid._aggregates, self.pow)
+
+class Cuberoot(Power):
+  def __init__(self): super(Power, 1/3.0)
+
+class Sqrt(ar.Transfer):
+  def transfer(self, grid): return np.sqrt(grid._aggregates, self.pow)
+
+
 class AbsSegment(ar.Transfer):
   """
   Paint all pixels with aggregate value above divider one color 
@@ -73,9 +112,7 @@ class AbsSegment(ar.Transfer):
     outgrid[~mask] = self.low
     return outgrid
 
-
-
-class Interpolate(ar.Transfer):
+class InterpolateColors(ar.Transfer):
   """
   High-definition interpolation between two colors.
   Zero-values are treated separately from other values.

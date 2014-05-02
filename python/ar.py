@@ -117,13 +117,41 @@ class Aggregator(object):
 class Transfer(object):
   input_spec = None # tuple of (shape, dtype)
   # For now assume output is RGBA32
-  #output = None
 
   def makegrid(self, grid):
     return np.ndarray((grid.width, grid.height, 4), dtype=np.uint8)
 
   def transfer(self, grid):
     raise NotImplementedError
+  
+  def __add__(self, other): 
+    if (not isinstance(other, Transfer)): 
+        raise TypeError("Can only extend with a transfer.  Received a " + str(type(other)))
+    return Seq(self, other) 
+
+
+class Seq(Transfer):
+  """Transfer that does a sequence of other transfers."""
+     
+  def __init__(self, *args):
+    self._parts = args
+
+  def makegrid(self, grid):
+    for t in parts:
+      grid = t.makegrid(grid)
+    return grid
+
+  def transfer(self, grid):
+    for t in _parts:
+      grid = t.transfer(grid)
+    return grid
+
+  def __add__(self, other):
+    if (other is None) : return self
+    if (not isinstance(other, Transfer)): 
+        raise TypeError("Can only extend transfer with another transfer.  Received a " + str(type(other)))
+    return Seq(list(self._parts) + other) 
+
 
 class PixelAggregator(Aggregator):
   def __init__(self, pixelfunc):
@@ -134,9 +162,7 @@ class PixelAggregator(Aggregator):
       #outgrid = np.empty_like(self._projected, dtype=aggregator.out_dtype)
       outgrid.ravel()[:] = map(lambda ids: self.pixelfunc(self._glyphset, ids), self._projected.flat)
 
-    
 
- 
 class PixelTransfer(Transfer):
   """Transfer function that does non-vectorized per-pixel transfers."""
 
