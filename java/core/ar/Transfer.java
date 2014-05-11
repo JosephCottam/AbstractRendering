@@ -78,14 +78,12 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * a single thread, so implementations must provide for thread safety.
 	 */
 	public static interface ItemWise<IN,OUT> extends Specialized<IN,OUT> {
-		/**
+		/**Process a single location.  May LOOK at other locations in the input,
+		 * but may only UPDATE one position in the output.
 		 * 
-		 * @param x
-		 * @param y
-		 * @param aggregates
-		 * @return
+		 * @return Value that results in translating the input value at position x/y 
 		 */
-		public OUT at(int x, int y, Aggregates<? extends IN> aggregates);
+		public OUT at(int x, int y, Aggregates<? extends IN> input);
 	}
 	
 

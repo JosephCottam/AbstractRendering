@@ -75,11 +75,6 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
      * TODO: Investigate adding the aggregates type as a parameter...probably requires having transfers parameterized by aggregate return type as well...
      * TODO: Should this interface be pushed back into the Aggregator, and item-wise aggregation be a special case?  (Similar to Transfer.Specialized vs Transfer.ItemWise).
      * TODO: Investigate merge into a new type...merge(AGG1 acc, AGG2 new)  
-     * TODO: Investigate an itemWise variant...otherwise a lot of loops get made...(If ItemWise merge is passed, return an itemwise specialization as well)
-     * 
-     * 
-     * @param <IN>
-     * @param <OUT>
      */
     public static interface Merge<A>  {
     	public Aggregates<A> merge(Aggregates<A> left, Aggregates<A> right);

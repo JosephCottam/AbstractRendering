@@ -200,9 +200,9 @@ public class General {
 	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer.Specialized<V,V> {
 		final Spreader<V> spreader;
-		final Aggregator<V,V> combiner;
+		final Aggregator<?,V> combiner;
 		
-		public Spread(Spreader<V> spreader, Aggregator<V,V> combiner) {
+		public Spread(Spreader<V> spreader, Aggregator<?,V> combiner) {
 			this.spreader = spreader;
 			this.combiner = combiner;
 		}
@@ -233,7 +233,7 @@ public class General {
 		 * This capability can be used to implement (for example) a map with circles centered-on and proportional to a value. 
 		 */
 		public static interface Spreader<V> {
-			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<V,V> op);
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?,V> op);
 		}
 		
 		
@@ -250,9 +250,10 @@ public class General {
 			}
 
 			@Override
-			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<V, V> op) {
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?, V> op) {
 				for (int xx=-left; xx<=right; xx++) {
 					for (int yy=-up; yy<=down; yy++) {
+
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
@@ -267,7 +268,7 @@ public class General {
 			private final int radius;
 			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
 			
-			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
+			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<?,V> op) {
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
@@ -287,7 +288,7 @@ public class General {
 		 * the value found in the cell.
 		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
-			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<N,N> op) {
+			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<?,N> op) {
 				int radius = (int) base.doubleValue();
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
@@ -409,7 +410,6 @@ public class General {
 		/**
 		 * @param mappings Backing map
 		 * @param other Value to return if the backing map does not include a requested key
-		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
 		 */
 		public MapWrapper(Map<IN, OUT> mappings, OUT other) {
 			this.mappings=mappings;

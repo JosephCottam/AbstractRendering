@@ -10,7 +10,7 @@ import ar.rules.General;
  * 
  * If both the pass and fail transfer functions are {@link ar.Transfer.ItemWise},
  * then the predicate will be run item-wise.  Otherwise, the predicate will
- * be applied to the whole set (via {@link ar.rules.combiners.Predicates.All}).
+ * be applied to the whole set (via {@link ar.rules.combinators.Predicates.All}).
  **/
 public class If<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN, Boolean> pred;

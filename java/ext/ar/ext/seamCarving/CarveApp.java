@@ -104,7 +104,7 @@ public class CarveApp {
 		for (String carver:carvers2.keySet()) {
 			ARComponent.PERFORMANCE_REPORTING = true;
 			final Transfer<Integer, Color> transfer = 
-					Seq.start(new General.Spread<>(new General.Spread.UnitSquare<Integer>(spread), new Numbers.Count<Integer>()))
+					Seq.start(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(spread), new Numbers.Count<Integer>()))
 					.then(carvers2.get(carver));
 					
 			JFrame frame = new JFrame(String.format("Seam Carving -- Removed %d seams (%s method)", seams, carver));
