@@ -57,7 +57,10 @@ public class Categories {
 	}
 	
 	
-	/**Convert a set of categorical counts to its total.**/ 
+	/**Convert a set of categorical counts to its total.
+	 * 
+	 * @param <IN> The category type (not important to any processing, but required to make typed statements line up properly)
+	 * **/ 
 	public static final class ToCount<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
 
@@ -120,7 +123,6 @@ public class Categories {
 		 * @param missing Use this key if the source has a key not found in the mapping 
 		 * @param source Input keys
 		 * @param target Item to update.  Will be updaed with 'extend', and thus this procedure is mutative if target.extend is.
-		 * @return
 		 */
 		public static final<IN, OUT> CategoricalCounts<OUT> rekey(Map<IN,OUT> mapping, OUT missing, CategoricalCounts<IN> source, CategoricalCounts<OUT> target) {
 			for (int i=0; i<source.size();i++) {

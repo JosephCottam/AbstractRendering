@@ -68,7 +68,7 @@ public class BatchExport {
 					//Transfer<Number, Color> t = new Numbers.FixedInterpolate(Color.white, Color.red, 0, 25);
 					//Transfer<Number, Color> t = new Advise.DrawDark(Color.black, Color.white, 5);;
 					//Transfer<Number, Color> t = new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red);
-					Transfer<Number, Color> t = new Advise.OverUnder<>(Color.BLACK, Color.BLACK, new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5), 20);
+					Transfer<Number, Color> t = new Advise.Clipwarn<>(Color.BLACK, Color.BLACK, new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5), 20);
 					Transfer.Specialized<Number, Color> ts = t.specialize(aggs);
 					Aggregates<Color> colors = render.transfer(aggs, ts);
 					BufferedImage img = AggregateUtils.asImage(colors, width, height, Color.white);

@@ -43,7 +43,7 @@ public class ParallelRenderer implements Renderer {
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
-	 * @param ForkJoinPool -- Pool to use.  Null to create a pool
+	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
 	public ParallelRenderer(ForkJoinPool pool) {
 		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_PARALLELISM);}

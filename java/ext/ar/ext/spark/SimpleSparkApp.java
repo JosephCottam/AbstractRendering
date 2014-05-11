@@ -9,7 +9,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import ar.Aggregates;
-import ar.Glyph;
 import ar.Selector;
 import ar.app.display.TransferDisplay;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -52,7 +51,7 @@ public class SimpleSparkApp {
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
 		JavaRDD<String> source = ctx.textFile(inFile);
 		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
-		Shaper<Rectangle2D, Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
+		Shaper<Indexed, Rectangle2D> shaper = new ToRect(.1, .1, false, 2, 3);
 		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
 
 		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper, valuer)));

@@ -15,19 +15,24 @@ import java.io.Serializable;
 public interface Selector<G> extends Serializable {
 	/**Process all items in a glyphset towards a given aggregates target.
 	 * 
-	 * @param subset
-	 * @param view
-	 * @param target
-	 * @param op
-	 * @return
+	 * This method is used in glyph-parallel aggregation because it is can be efficiently
+	 * used on a group of glyphs without allocating lots of aggregates.
+	 * 
+	 * @param glyphset Glyphs to process
+	 * @param view View transform to apply
+	 * @param existing Existing aggregates MAY be destructively updated 
+	 * @param op Aggregator operation to use.
+	 * @return Aggregates representing the existing aggregates updated by the glyphset
 	 */
 	public <I,A> Aggregates<A> processSubset(
 			Iterable<? extends Glyph<? extends G, ? extends I>> glyphset, 
 			AffineTransform view,
-			Aggregates<A> target, 
+			Aggregates<A> existing, 
 			Aggregator<I,A> op);
 	
 	/***Does the given shape touch the indicated bin?
+	 * 
+	 * This method is used in pixel-parallel aggregation.
 	 *  
 	 * @param glyph Glyph to consider
 	 * @param view Under this view transform

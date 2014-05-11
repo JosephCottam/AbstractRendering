@@ -197,7 +197,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		 * 
 		 * @param classified The line-segment classifiers
 		 * @param isoDivided Original classification, used to disambiguate saddle conditions
-		 * @return
+		 * @return Resulting contour
 		 */
 		public static final GeneralPath assembleContours(Aggregates<MC_TYPE> classified, Aggregates<Boolean> isoDivided) {
 			GeneralPath isoPath = new GeneralPath(GeneralPath.WIND_EVEN_ODD);

@@ -22,14 +22,14 @@ public final class OptionDataset<G,I> {
 	public final String name;
 	public final Glyphset<G,I> glyphset;
 	public final File sourceFile;
-	public final Shaper<G,Indexed> shaper;
+	public final Shaper<Indexed, G> shaper;
 	public final Valuer<Indexed, I> valuer;
 	public final OptionAggregator<? super I,?> defaultAggregator;
 	public final List<OptionTransfer<?>> defaultTransfers;
 	
 	public OptionDataset(
 			String name, File file, 
-			Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
+			Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
 		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, defTrans);
@@ -46,7 +46,7 @@ public final class OptionDataset<G,I> {
 	private OptionDataset(
 			String name, 
 			Glyphset<G,I> glyphset,
-			File file, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, 
+			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
 		this.name = name;

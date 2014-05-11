@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 /**Sliding buffer across a large file to get around the int-limit of memory maps.
@@ -67,6 +68,9 @@ public class BigFileByteBuffer implements MappedFile {
 		try {inputFile.close();}
 		catch (IOException e) {}
 	}
+	
+	public ByteOrder order() {return buffer.order();}
+	public void order(ByteOrder order) {buffer.order(order);}
 	
 	/**Number of bytes in the file.**/
 	public long fileSize() {return fileSize;}

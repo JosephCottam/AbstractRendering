@@ -30,7 +30,7 @@ public class AvroGlyphsTest {
 
 	public class AvroRect<V> implements Valuer<GenericRecord, Glyph<Rectangle2D, V>> {
 		private static final long serialVersionUID = 1897764346439188788L;
-		Shaper<Rectangle2D, Indexed> shaper;
+		Shaper<Indexed, Rectangle2D> shaper;
 		Valuer<Indexed, V> valuer;
 		public AvroRect(double size, int xfield, int yfield, int vfield) {
 			shaper = new Indexed.ToRect(size, size, false, xfield, yfield);

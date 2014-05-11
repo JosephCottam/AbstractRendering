@@ -64,7 +64,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 
 	private final TYPE[] types;
 	private final Valuer<Indexed,I> valuer;
-	private final Shaper<G,Indexed> shaper;
+	private final Shaper<Indexed,G> shaper;
 
 	private final File source; //TODO: Remove, make this a general "ByteBackedList" or something like that..
 	private final int recordLength;
@@ -75,7 +75,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 
 	/**Create a new memory mapped list, types are read from the source.
 	 * @throws IOException **/
-	public MemMapList(File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer) {
+	public MemMapList(File source, Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer) {
 		this.valuer = valuer;
 		this.shaper = shaper;
 		this.source = source;
@@ -113,7 +113,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 	}
 	
-	public MemMapList(MappedFile buffer, File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
+	public MemMapList(MappedFile buffer, File source, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
 		this.buffer = buffer;
 		this.shaper = shaper;
 		this.valuer = valuer;
@@ -142,7 +142,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Valuer<Indexed,I> valuer() {return valuer;}
 	
 	/**Shaper being used to provide geometry for each entry.**/ 
-	public Shaper<G,Indexed> shaper() {return shaper;}
+	public Shaper<Indexed,G> shaper() {return shaper;}
 	
 	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
@@ -164,6 +164,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+			mf.order(buffer.order());
 			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
 		} catch (Exception e) {throw new RuntimeException("Error segmenting glyphset", e);}
 	}

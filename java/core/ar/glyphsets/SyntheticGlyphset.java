@@ -11,9 +11,9 @@ import ar.glyphsets.implicitgeometry.Shaper;
 public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	private final I val;
 	private final long size;
-	private final Shaper<G, Long> shaper;
+	private final Shaper<Long, G> shaper;
 	
-	public SyntheticGlyphset(long size, I val, Shaper<G, Long> shaper) {
+	public SyntheticGlyphset(long size, I val, Shaper<Long, G> shaper) {
 		this.val = val;
 		this.size = size;
 		this.shaper = shaper;
@@ -36,7 +36,7 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		return new SimpleGlyph<>(shaper.shape(l), val);
 	}
 	
-	public static final class SyntheticPoints implements Shaper<Point2D, Long> {
+	public static final class SyntheticPoints implements Shaper<Long, Point2D> {
 		public Point2D shape(Long from) {
 			return new Point2D.Double(Math.random()*100, Math.random()*100);
 		}

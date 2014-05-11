@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 /**Wraps a byte buffer with long-based indexing (ostensibly to file positions).
@@ -46,6 +47,9 @@ public class FileByteBuffer implements MappedFile {
 	public void get(byte[] target, long offset, int length) {buffer.get(target, bufferPos(offset), length);}
 	public long position() {return buffer.position();}
 	public long capacity() {return size;}
+	
+	public ByteOrder order() {return buffer.order();}
+	public void order(ByteOrder order) {buffer.order(order);}
 	
 	public long filePosition() {return fileOffset;}
 }

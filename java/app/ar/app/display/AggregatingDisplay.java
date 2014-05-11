@@ -66,14 +66,16 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public Renderer renderer() {return renderer;}
 	
 	public Glyphset<?,?> dataset() {return dataset;}
-	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
+
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {dataset(data,aggregator, transfer, true);}
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer, boolean rerender) {
 		this.dataset = data;
 		this.aggregator = aggregator;
 		this.transfer(transfer);
 		aggregates(null, null);
-		fullRender = true;
+		fullRender = rerender;
 		renderError = false;
-		this.repaint();
+		if (rerender) {this.repaint();}
 	}
 	
 	public Transfer<?,?> transfer() {return display.transfer();}

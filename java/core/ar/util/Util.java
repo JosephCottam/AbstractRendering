@@ -131,7 +131,7 @@ public class Util {
 			Glyphset<G,I> glyphs, 
 			DelimitedReader reader, 
 			Indexed.Converter converter, 
-			Shaper<G, Indexed> shaper, 
+			Shaper<Indexed, G> shaper, 
 			Valuer<Indexed, I> valuer) {
 		int count =0;
 		
@@ -348,9 +348,10 @@ public class Util {
 	
 	public static final Color premultiplyAlpha(Color fgColor, Color bgColor) {
 		int r, g, b;
-		r = fgColor.getRed() * fgColor.getAlpha() + bgColor.getRed() * (255 - fgColor.getAlpha());
-		g = fgColor.getGreen() * fgColor.getAlpha() + bgColor.getGreen() * (255 - fgColor.getAlpha());
-		b = fgColor.getBlue() * fgColor.getAlpha() + bgColor.getBlue() * (255 - fgColor.getAlpha());
+		int fgAlpha = fgColor.getAlpha();
+		r = fgColor.getRed() * fgAlpha + bgColor.getRed() * (255 - fgAlpha);
+		g = fgColor.getGreen() * fgAlpha + bgColor.getGreen() * (255 - fgAlpha);
+		b = fgColor.getBlue() * fgAlpha + bgColor.getBlue() * (255 - fgAlpha);
 		Color result = new Color(r / 255, g / 255, b / 255);
 		return result;
 	}

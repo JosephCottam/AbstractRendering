@@ -24,7 +24,7 @@ public class SpreadTests {
 		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
 		
-		Spreader<Integer> spread4 = new General.Spread.UnitSquare<>(4);
+		Spreader<Integer> spread4 = new General.Spread.UnitRectangle<>(4);
 		General.Spread<Integer> transfer4 = new General.Spread<Integer>(spread4 , combiner);
 		Specialized<Integer,Integer> s4 = transfer4.specialize(aggs);
 		
@@ -43,7 +43,7 @@ public class SpreadTests {
 		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(9,9,0);
 		aggs.set(4, 4, 1);
 		
-		Spreader<Integer> spread2 = new General.Spread.UnitSquare<>(2);
+		Spreader<Integer> spread2 = new General.Spread.UnitRectangle<>(2);
 		General.Spread<Integer> transfer2 = new General.Spread<Integer>(spread2, combiner);
 		Specialized<Integer,Integer> s2 = transfer2.specialize(aggs);
 		Aggregates<Integer> rslt = r.transfer(aggs, s2);

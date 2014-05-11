@@ -106,7 +106,7 @@ public class SparkDemoApp {
 			base = source.map(new StringToIndexed("\\s*,\\s*"));
 		}
 
-		Glypher<G,I> glypher = new Glypher<>(dataset.shaper,dataset.valuer);
+		Glypher<G,I> glypher = new Glypher<G,I>(dataset.shaper,dataset.valuer);
 		GlyphsetRDD<G, I> glyphs = new GlyphsetRDD<>(base.map(glypher), true, partition);
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
  		Selector selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
@@ -116,10 +116,8 @@ public class SparkDemoApp {
 		
  		RDDRender render = new RDDRender();
 
- 		long start = System.currentTimeMillis();
  		Aggregates<A> aggs = render.aggregate(glyphs, selector, aggregator, view, width, height);
- 		long end = System.currentTimeMillis();
-		
+ 		
 		if (outFile == null) {
 			TransferDisplay.show("", width, height, aggs, transfer);
 		} else {
