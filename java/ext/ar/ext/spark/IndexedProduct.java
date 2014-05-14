@@ -10,7 +10,8 @@ public class IndexedProduct implements Indexed {
 	private final Product p;
 	
 	public IndexedProduct(Product p) {this.p =p;}
-	public Object get(int i) {return p.productElement(i);} 
+	@Override public Object get(int i) {return p.productElement(i);} 
+	@Override public int size() {return p.productArity();} 
 	
 	
 	/**Spark functional expression of wrapping.  Use this class to convert a 

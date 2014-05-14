@@ -23,7 +23,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
-import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Collection of various utilities that don't have other homes.**/
 public class Util {
@@ -37,24 +36,6 @@ public class Util {
 			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
 		}
 		return def;
-	}
-	
-	
-	/**Convert from the types understood by the memory mappers to the types understood by this system.**/
-	public static final Converter.TYPE[] transcodeTypes(TYPE... types) {
-		Converter.TYPE[] newTypes = new Converter.TYPE[types.length];
-		for (int i=0; i< types.length; i++) {
-			switch(types[i]) {
-				case X: newTypes[i] = Converter.TYPE.X; break;
-				case INT: newTypes[i] = Converter.TYPE.INT; break;
-				case SHORT: newTypes[i] = Converter.TYPE.SHORT; break;
-				case LONG: newTypes[i] = Converter.TYPE.LONG; break;
-				case DOUBLE: newTypes[i] = Converter.TYPE.DOUBLE; break;
-				case FLOAT: newTypes[i] = Converter.TYPE.FLOAT; break;
-				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
-			}
-		}
-		return newTypes;
 	}
 	
 	
@@ -187,11 +168,7 @@ public class Util {
 		w = Double.isNaN(w) ? 0 : w;
 		h = Double.isNaN(h) ? 0 : h;
 
-		if (target.isEmpty()) {
-			target.setFrame(x,y,w,h);
-		} else if (!more.isEmpty()) {
-			target.add(new Rectangle2D.Double(x,y,w,h));
-		}
+		target.add(new Rectangle2D.Double(x,y,w,h));
 	}
 
 	

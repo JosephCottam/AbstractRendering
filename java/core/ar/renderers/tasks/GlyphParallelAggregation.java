@@ -76,8 +76,6 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 			recorder.update(2*(step/3));
 		}
 		
-		if (target.untouched()) {return null;}
-		
 		return target;
 	}
 	
@@ -88,11 +86,11 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, selector, op, view, viewport, taskSize, recorder, mid, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
+		
 		try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}
-		catch (OutOfMemoryError e) {
-			throw new RuntimeException(e);
-		}
+		catch (OutOfMemoryError e) {throw new RuntimeException(e);}
+
 		return aggs;
 	}
 	
