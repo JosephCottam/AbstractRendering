@@ -1,4 +1,4 @@
-import ar
+import core 
 import numpy as np
 from math import log
 
@@ -9,7 +9,7 @@ except ImportError:
   autojit = lambda f: f
 
 ##### Aggregator ##########
-class CountCategories(ar.Aggregator):
+class CountCategories(core.Aggregator):
   """Count the number of items that fall into a particular grid element."""
   out_type = np.int32
   identity=np.asarray([0])
@@ -23,7 +23,7 @@ class CountCategories(ar.Aggregator):
     entry = np.zeros(self.cats.shape[0])
     idx = np.nonzero(self.cats==val)[0][0]
     entry[idx] = 1
-    update = ar.glyphAggregates(points, shapecode, entry, self.identity)  
+    update = core.glyphAggregates(points, shapecode, entry, self.identity)  
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
@@ -32,7 +32,7 @@ class CountCategories(ar.Aggregator):
 
 
 ##### Transfers ########
-class ToCounts(ar.Transfer):
+class ToCounts(core.Transfer):
   """Convert from count-by-categories to just raw counts.
      Then transfer functions from the count module can be used.
   """
@@ -41,7 +41,7 @@ class ToCounts(ar.Transfer):
     return np.sum(grid._aggregates, axis=2, dtype=dtype)
 
 
-class MinPercent(ar.Transfer):
+class MinPercent(core.Transfer):
   """
   If the item in the specified bin represents more than a certain percent
   of the total number of items, color it as "above" otherwise, color as "below"
@@ -57,9 +57,9 @@ class MinPercent(ar.Transfer):
   def __init__(self, 
                cutoff, 
                cat=0,
-               above=ar.Color(228, 26, 28,255), 
-               below=ar.Color(55, 126, 184,255), 
-               background=ar.Color(255,255,255,0)):
+               above=core.Color(228, 26, 28,255), 
+               below=core.Color(55, 126, 184,255), 
+               background=core.Color(255,255,255,0)):
 
     self.cutoff = cutoff
     self.cat = cat  
@@ -79,9 +79,9 @@ class MinPercent(ar.Transfer):
     outgrid[maskbg] = self.background
     return outgrid
 
-class HDAlpha(ar.Transfer):
+class HDAlpha(core.Transfer):
   def __init__(self, colors, 
-               background=ar.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
+               background=core.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
     """colors -- a list of colors in cateogry-order.
                  TODO: Change to a dictionary of category-to-color mapping
        alphamin -- minimum alpha value when (default is 0)

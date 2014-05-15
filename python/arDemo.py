@@ -9,10 +9,10 @@ Draws a colormapped image plot
    history".
 """
 # Abstract rendering imports
-import ar
-import numeric 
-import categories 
-import infos
+import abstract_rendering.core as core
+import abstract_rendering.numeric as numeric
+import abstract_rendering.categories as categories
+import abstract_rendering.infos as infos
 
 from timer import Timer
 
@@ -28,30 +28,30 @@ from chaco.api import ArrayPlotData, Plot
 # # Create the Chaco plot.
 #===============================================================================
 def _create_plot_component():
-    red = ar.Color(255,0,0,255)
-    green = ar.Color(0,255,0,255)
-    blue = ar.Color(0,0,255,255)
-    white = ar.Color(255,255,255,255)
-    black = ar.Color(0,0,0,255)
+    red = core.Color(255,0,0,255)
+    green = core.Color(0,255,0,255)
+    blue = core.Color(0,0,255,255)
+    white = core.Color(255,255,255,255)
+    black = core.Color(0,0,0,255)
     
-    #glyphs = ar.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
-    glyphs = ar.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
-    #glyphs = ar.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
+    #glyphs = core.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
+    glyphs = core.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
+    #glyphs = core.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
     
-    glyphs.shapecode = ar.ShapeCodes.LINE
-    #glyphs.shapecode = ar.ShapeCodes.RECT
+    glyphs.shapecode = core.ShapeCodes.LINE
+    #glyphs.shapecode = core.ShapeCodes.RECT
     
     screen = (800,800)
-    ivt = ar.zoom_fit(screen,ar.bounds(glyphs))
+    ivt = core.zoom_fit(screen,core.bounds(glyphs))
 
     with Timer("Abstract-Render") as arTimer:   
-      image = ar.render(glyphs, 
+      image = core.render(glyphs, 
                         infos.valAt (4,0),
                         categories.CountCategories(), 
                         categories.HDAlpha([red, blue]),
                         screen,
                         ivt)
-#      image = ar.render(glyphs, 
+#      image = core.render(glyphs, 
 #                        infos.valAt(4,0),
 #                        numeric.Sum(), 
 #                        numeric.Interpolate(blue,red, empty=0),

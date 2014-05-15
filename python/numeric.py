@@ -1,4 +1,4 @@
-import ar
+import core
 import numpy as np
 import math
 
@@ -10,7 +10,7 @@ except ImportError:
 
 
 ######## Aggregators ########
-class Count(ar.Aggregator):
+class Count(core.Aggregator):
   """Count the number of items that fall into a particular grid element."""
   out_type=np.int32
   identity=0
@@ -19,7 +19,7 @@ class Count(ar.Aggregator):
     return np.zeros((width, height), dtype=self.out_type)
 
   def combine(self, existing, points, shapecode, val):
-    update = ar.glyphAggregates(points, shapecode, 1, self.identity)  
+    update = core.glyphAggregates(points, shapecode, 1, self.identity)  
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
@@ -27,7 +27,7 @@ class Count(ar.Aggregator):
 
 
 
-class Sum(ar.Aggregator):
+class Sum(core.Aggregator):
   """Count the number of items that fall into a particular grid element."""
   out_type=np.int32
   identity=0
@@ -36,7 +36,7 @@ class Sum(ar.Aggregator):
     return np.zeros((width, height), dtype=self.out_type)
 
   def combine(self, existing, points, shapecode, val):
-    update = ar.glyphAggregates(points, shapecode, val, self.identity)  
+    update = core.glyphAggregates(points, shapecode, val, self.identity)  
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
@@ -44,7 +44,7 @@ class Sum(ar.Aggregator):
 
 
 ######## Transfers ##########
-class FlattenCategories(ar.Transfer):
+class FlattenCategories(core.Transfer):
   """Convert a set of category-counts into just a set of counts"""
   out_type=(1,np.int32)
   in_type=("A",np.int32) #A is for "any", all cells must be the same size, but the exact size doesn't matter
@@ -53,11 +53,11 @@ class FlattenCategories(ar.Transfer):
     return grid._aggregates.sum(axis=1)
 
 
-class Floor(ar.Transfer):
+class Floor(core.Transfer):
   def transfer(self, grid):
     return np.floor(grid._aggregates)
  
-class Interpolate(ar.Transfer):
+class Interpolate(core.Transfer):
   """Interpolate between two numbers.
      Projects the input values between the low and high values passed.
      Default is 0 to 1
@@ -77,7 +77,7 @@ class Interpolate(ar.Transfer):
     percents = (items-min)/span
     return percents * (self.high-self.low)
 
-class Power(ar.Transfer):
+class Power(core.Transfer):
   """Raise to a power.  Power may be fracional."""
   def __init__(self, pow):
     this.pow = pow
@@ -88,11 +88,11 @@ class Power(ar.Transfer):
 class Cuberoot(Power):
   def __init__(self): super(Power, 1/3.0)
 
-class Sqrt(ar.Transfer):
+class Sqrt(core.Transfer):
   def transfer(self, grid): return np.sqrt(grid._aggregates, self.pow)
 
 
-class AbsSegment(ar.Transfer):
+class AbsSegment(core.Transfer):
   """
   Paint all pixels with aggregate value above divider one color 
   and below the divider another.
@@ -112,7 +112,7 @@ class AbsSegment(ar.Transfer):
     outgrid[~mask] = self.low
     return outgrid
 
-class InterpolateColors(ar.Transfer):
+class InterpolateColors(core.Transfer):
   """
   High-definition interpolation between two colors.
   Zero-values are treated separately from other values.
@@ -126,7 +126,7 @@ class InterpolateColors(ar.Transfer):
   in_type=(1,np.number)
   out_type=(4,np.int32)
 
-  def __init__(self, low, high, log=False, reserve=ar.Color(255,255,255,255), empty=np.nan):
+  def __init__(self, low, high, log=False, reserve=core.Color(255,255,255,255), empty=np.nan):
     self.low=low
     self.high=high
     self.reserve=reserve
