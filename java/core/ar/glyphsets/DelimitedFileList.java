@@ -1,5 +1,6 @@
 package ar.glyphsets;
 
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,9 +12,14 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.concurrent.ForkJoinPool;
 
+import ar.Glyph;
+import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
+import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
@@ -24,7 +30,7 @@ import ar.glyphsets.implicitgeometry.Indexed.Converter;
  * NOT THREAD SAFE!!!!
  * TODO: Implement Glyphset instead of List<Indexed>...
  */
-public class DelimitedFileList implements List<Indexed> {
+public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	public static int DEFAULT_SKIP =0;
 
 	
@@ -40,31 +46,52 @@ public class DelimitedFileList implements List<Indexed> {
 	/**Number of lines to skip at the start of the file.**/
 	private final int skip;
 
-	/**How many entries in this list?  
-	 * 
-	 * Calculated once and then cached.
-	 */
-	private int size = Integer.MIN_VALUE; 
+	protected final Shaper<Indexed,G> shaper;
+	protected final Valuer<Indexed,I> valuer;
 
-	private Iterator internal;
+	///Cached items.
+	private long size;
+	private Rectangle2D bounds;
+
 		
-	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types) {this(source, delimiters, types, DEFAULT_SKIP);}
-	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, int skip) {
+	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiters, types, DEFAULT_SKIP, shaper, valuer);}
+	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {
 		this.source = source;
 		this.delimiters = delimiters;
 		this.types = types;
 		this.skip = skip;
-		internal = iterator();
+		this.shaper = shaper;
+		this.valuer = valuer;
+	}
+
+	
+	@Override
+	public Rectangle2D bounds() {
+		if (bounds == null) {
+			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+			bounds = pool.invoke(new BoundsTask<>(this, 100000));
+		}
+		return bounds;
+	}
+	
+	@Override
+	public long segments() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public Glyphset<G, I> segment(long bottom, long top)
+			throws IllegalArgumentException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	
 	@Override public boolean isEmpty() {return size ==0;}
-	@Override public Iterator iterator() {return new Iterator(0);}
-	@Override public ListIterator<Indexed> listIterator() {return new Iterator(0);}
-	@Override public ListIterator<Indexed> listIterator(int index) {return new Iterator(index);}
+	@Override public Iterator iterator() {return new Iterator();}
 
 	@Override
-	public int size() {
+	public long size() {
 		if (size <0) {
 			try (BufferedReader r = new BufferedReader(new FileReader(source))) {
 				size=0;
@@ -76,40 +103,10 @@ public class DelimitedFileList implements List<Indexed> {
 		size = size-skip;
 		return size;
 	}
-
-	@Override
-	public Indexed get(int index) {
-		if (internal.index > index) {
-			System.out.println("New iterator...");
-			internal = iterator();
-		}
-		while (internal.index < index) {internal.advance();}
-		return internal.next();
-	}
 	
-	
-	private final class Iterator implements ListIterator<Indexed> {
-		final BufferedReader base;
+	private final class Iterator implements java.util.Iterator<Glyph<G,I>> {
 		String cache;
-		int index;
 		
-		public Iterator(int index) {
-			 try {
-				base = new BufferedReader(new FileReader(source));
-			 } catch (FileNotFoundException e) {
-				throw new RuntimeException("Error processing file: " + source.getName());
-			 }
-			 this.index = index;
-			 
-			//advance to requested position
-			 for (int i=0; i<index+skip; i++) {
-				 try {base.readLine();} 
-				 catch (IOException e) {
-					 throw new RuntimeException(String.format("Could not advance to %d, failed at %d.", index, i));
-				 }
-			 }
-		}
-				
 		@Override
 		public boolean hasNext() {
 			if (cache == null) {
@@ -119,10 +116,8 @@ public class DelimitedFileList implements List<Indexed> {
 			return cache != null;
 		}
 
-		public void advance() {cache = null; hasNext(); index++;}
-		
 		@Override
-		public Indexed next() {
+		public Glyph<G,I> next() {
 			if (cache == null && !hasNext()) {throw new NoSuchElementException();}
 
 			StringTokenizer t = new StringTokenizer(cache, delimiters);
@@ -130,45 +125,10 @@ public class DelimitedFileList implements List<Indexed> {
 			while (t.hasMoreTokens()) {parts.add(t.nextToken());}
 			Indexed base = new Indexed.ListWrapper(parts);
 			cache = null;
-			index++;
 
-			return new Converter(base, types);
+			return new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
 		}
 
-		@Override public boolean hasPrevious() {return previousIndex() >= 0;}
-		@Override public int nextIndex() {return index;}
-		@Override public int previousIndex() {return index-1;}
-		
-		//Items that MAY be implementable if we switch to RandomAccess file type 
-		@Override public Indexed previous() {throw new UnsupportedOperationException();}
 		@Override public void remove() {throw new UnsupportedOperationException();}
-		@Override public void set(Indexed e) {throw new UnsupportedOperationException();}
-		@Override public void add(Indexed e) {throw new UnsupportedOperationException();}
 	}
-
-
-
-	//Items that could be supported...but we're in a hurry right now
-	//TODO: Implement the below
-	@Override public Object[] toArray() {throw new UnsupportedOperationException();}
-	@Override public <T> T[] toArray(T[] a) {throw new UnsupportedOperationException();}
-	@Override public boolean contains(Object o) {throw new UnsupportedOperationException();}
-	@Override public List<Indexed> subList(int fromIndex, int toIndex)  {throw new UnsupportedOperationException();}
-	@Override public boolean containsAll(Collection<?> c)  {throw new UnsupportedOperationException();}
-	@Override public int indexOf(Object o)  {throw new UnsupportedOperationException();}
-	@Override public int lastIndexOf(Object o)  {throw new UnsupportedOperationException();}
-
-
-	//Items that WILL NEVER be supported because this is a read-only format
-	@Override public boolean remove(Object o) {throw new UnsupportedOperationException();}
-	@Override public boolean add(Indexed e) {throw new UnsupportedOperationException();}
-	@Override public boolean addAll(Collection<? extends Indexed> c)  {throw new UnsupportedOperationException();}
-	@Override public boolean addAll(int index, Collection<? extends Indexed> c)  {throw new UnsupportedOperationException();}
-	@Override public boolean removeAll(Collection<?> c)  {throw new UnsupportedOperationException();}
-	@Override public boolean retainAll(Collection<?> c)  {throw new UnsupportedOperationException();}
-	@Override public void clear()  {throw new UnsupportedOperationException();}
-	@Override public Indexed set(int index, Indexed element)  {throw new UnsupportedOperationException();}
-	@Override public void add(int index, Indexed element)  {throw new UnsupportedOperationException();}
-	@Override public Indexed remove(int index)  {throw new UnsupportedOperationException();}
-
 }

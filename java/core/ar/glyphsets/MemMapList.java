@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -56,9 +55,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	 * Reducing this number tends to result in faster thread startup times, but slower overall run-times.
 	 * **/
 	public static int BUFFER_BYTES = Integer.MAX_VALUE;
-	
-	/**Thread-pool size for parallel operations.**/
-	private static final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
 	private final MappedFile buffer;
 
@@ -171,46 +167,9 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			bounds = pool.invoke(new BoundsTask(0, this.size()));
+			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+			bounds = pool.invoke(new BoundsTask<>(this, 10000000)); //TODO: Tuning paramter for task-size....
 		}
 		return bounds;
-	}
-
-	private final class BoundsTask extends RecursiveTask<Rectangle2D> {
-		public static final long serialVersionUID = 1L;
-		private static final int TASK_SIZE = 100000;
-		private final long low, high;
-
-		public BoundsTask(long low, long high) {
-			this.low = low;
-			this.high = high;
-		}
-
-		@Override
-		protected Rectangle2D compute() {
-			if (high-low > TASK_SIZE) {return split();}
-			else {return local();}
-		}
-
-		private Rectangle2D split() {
-			long mid = low+((high-low)/2);
-			BoundsTask top = new BoundsTask(low, mid);
-			BoundsTask bottom = new BoundsTask(mid, high);
-			invokeAll(top, bottom);
-			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
-			return bounds;
-		}
-
-		private Rectangle2D local() {
-			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-
-			for (long i=low; i<high; i++) {
-				Rectangle2D bound = Util.boundOne(MemMapList.this.get(i).shape());
-				if (bound != null) {Util.add(bounds, bound);}
-
-			}
-			return bounds;
-		}
-
 	}
 }
