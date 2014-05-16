@@ -137,7 +137,11 @@ public interface Indexed extends Serializable {
 		
 		/**Get the type array associated with this converter.**/
 		public TYPE[] types() {return types;}
+		
+		/**Create a new converter instance using the current types but the passed value source.**/
 		public Converter applyTo(Object[] values) {return new Converter(new ArrayWrapper(values), types);}
+		
+		/**Create a new converter instance using the current types but the passed value source.**/
 		public Converter applyTo(Indexed values) {return new Converter(values, types);}
 	}
 	
