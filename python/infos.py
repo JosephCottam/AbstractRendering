@@ -19,8 +19,3 @@ def attribute(att, default=None):
     except:
       return default
   return f 
-
-def id():
-  def val (glyph): return glyph
-  return val
-
