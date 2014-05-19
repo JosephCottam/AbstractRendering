@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.List;
 
 import ar.util.ColorNames;
@@ -63,16 +62,14 @@ public interface Indexed extends Serializable {
 	/**Wrap an array as an Indexed item.**/
 	public static class ArrayWrapper implements Indexed {
 		private static final long serialVersionUID = -7081805779069559306L;
-		private final Object array;
+		private final Object[] array;
 		
-		@SuppressWarnings("javadoc")
-		public ArrayWrapper(Object parts) {this.array = parts;}
+		public ArrayWrapper(Object[] parts) {this.array = parts;}
 
-		@Override public Object get(int i) {return Array.get(array, i);}
-		@Override public int size() {return Array.getLength(array);}
-		@Override public String toString() {return Util.toString(this);}
+		@Override public Object get(int i) {return array[i];}
+		@Override public int size() {return array.length;}
+		@Override public String toString() {return Util.toString(this);}			
 	}
-	
 	
 	/**Wrap a list as an Indexed item.**/
 	public static class ListWrapper implements Indexed {
@@ -132,7 +129,7 @@ public interface Indexed extends Serializable {
 			throw new IllegalArgumentException("Requested type that does not match encoded type.");
 		}
 
-		@Override public int size() {return values.size();}
+		@Override public int size() {return types.length;}
 		@Override public String toString() {return Util.toString(this);}
 		
 		/**Get the type array associated with this converter.**/

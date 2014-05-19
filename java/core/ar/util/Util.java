@@ -64,7 +64,11 @@ public class Util {
 	
 	/**What bounding box closely contains all of the glyphs covered by the iterator.**/
 	public static <G> Rectangle2D bounds(Iterator<? extends Glyph<G, ?>> glyphs) {
-		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		
+		Glyph<G,?> first = glyphs.hasNext() ? glyphs.next() : null;
+		if (first == null) {return null;}		
+		Rectangle2D bounds = Util.boundOne(first.shape());
+		
 		while (glyphs.hasNext()) {
 			Glyph<G, ?> g = glyphs.next();
 			if (g == null) {continue;}

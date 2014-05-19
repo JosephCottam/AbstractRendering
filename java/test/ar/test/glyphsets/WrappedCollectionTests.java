@@ -58,7 +58,7 @@ public class WrappedCollectionTests {
 	public ArrayList<Indexed> data() {
 		ArrayList<Indexed> values = new ArrayList<Indexed>();
 		for (int i=0; i< 100; i++) {
-			int[] array = new int[]{i,i,i};
+			Integer[] array = new Integer[]{i,i,i};
 			values.add(new Indexed.ArrayWrapper(array));
 		}
 		return values;

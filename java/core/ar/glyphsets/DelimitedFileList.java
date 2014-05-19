@@ -5,8 +5,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.concurrent.ForkJoinPool;
@@ -20,23 +18,21 @@ import ar.glyphsets.implicitgeometry.Valuer;
 
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
- * 
- * @author josephcottam
- *
- *
- * NOT THREAD SAFE!!!!
- * TODO: Implement Glyphset instead of List<Indexed>...
  */
 public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	public static int DEFAULT_SKIP =0;
 
 	
-	/**Segmenting is derived from the number of bytes,
-	 * but since this is not a fixed record-size format this can't be
-	 * exact.  The SEGMENT_FACTOR is used to make segments larger,
+	/**The SEGMENT_FACTOR is used to make segments larger,
 	 * and thus divide work into larger blocks.
+	 * 
+	 * Segmenting is derived from the number of bytes,
+	 * but since this is not a fixed record-size format this can't be
+	 * exact. Additionally, there is a non-trivial setup cost for each segment, so
+	 * fewer larger segments is often advantageous. 
+	 * 
 	 */
-	private static final int SEGMENT_FACTOR = 20;   
+	private static final long SEGMENT_FACTOR = 100000000L;   
 	
 	/**Source file.**/
 	private final File source;
@@ -78,17 +74,20 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	
 	@Override
 	public Rectangle2D bounds() {
+		System.out.println("Bounds start...");
 		if (bounds == null) {
 			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 			bounds = pool.invoke(new BoundsTask<>(this, 100000));
 		}
+		System.out.println("Bounds end...");
 		return bounds;
 	}
 	
 	@Override
 	public long segments() {
 		long size = source.length();
-		long segs = size/(types.length*SEGMENT_FACTOR); 	
+		long segs = size/(types.length*SEGMENT_FACTOR);
+		System.out.println(segs);
 		return segs;
 	}
 	
@@ -114,60 +113,76 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 		return size;
 	}
 	
+	/**Utility for converting a given string (i.e., line of a file) into an 'Indexed' instance.**/
+	public static Indexed asIndexed(String line, String delimiters, Converter conv) {
+		StringTokenizer t = new StringTokenizer(line, delimiters);
+		String[] parts = new String[conv.size()];
+		for (int i=0; i<parts.length; i++) {parts[i] = t.nextToken();}
+		Indexed base = conv.applyTo(new Indexed.ArrayWrapper(parts));
+		return base;
+	}
+	
 	private final class Iterator implements java.util.Iterator<Glyph<G,I>> {
 		private final Converter conv = new Converter(types);
-		private final RandomAccessFile base;
-		private final long stop = segEnd * types.length * SEGMENT_FACTOR;
+		private final BufferedReader reader;
 
-		private long byteOffset;
+		private final long stop = segEnd * types.length * SEGMENT_FACTOR;
+		private long charsRead;
 		private String cache;
 		private boolean closed = false;
 		
 		
 		public Iterator() {
 			try {
-				base = new RandomAccessFile(source,"r");
+				reader = new BufferedReader(new FileReader(source));
 				
-				//Read past header if this iterator is for the first segment
-				for (long i=segStart-skip; i<0; i++) {base.readLine();}
-				
-				//Scan forward to the first full record in the assigned segments
+				//Get to the first record-start in the segment
 				long start = segStart*types.length*SEGMENT_FACTOR;
-				base.seek(start);
-				base.readLine();
+				reader.skip(start);
+
+				if (segStart == 0) {
+					for (long i=skip; i>0; i--) {reader.readLine();}					
+				} else {
+					reader.readLine();
+				}
 			} catch (IOException e) {
 				throw new RuntimeException("Error initializing iterator for " + source.getName(), e);
 			}
 		}
 		
 		@Override
+		protected void finalize() {
+			try {if (!closed) {reader.close();}}
+			catch (IOException e) {e.printStackTrace();}
+		}
+		
+		@Override
 		public boolean hasNext() {
 			if (!closed && cache == null) {
 				try {
-					if (stop > 0 && base.getFilePointer() > stop) {
-						base.close();
+					if (stop > 0 && charsRead > stop) {
+						reader.close();
 						closed = true;
 						return false;
 					}
-					cache = base.readLine();
-					byteOffset = base.getFilePointer();
+					cache = reader.readLine();
+					if (cache == null) {return false;}
+					
+					charsRead += cache.length();
 				} catch (IOException e) {throw new RuntimeException("Error processing file: " + source.getName());}
 			}
 			return cache != null;
 		}
 
+		
 		@Override
 		public Glyph<G,I> next() {
 			if (cache == null && !hasNext()) {throw new NoSuchElementException();}
 			//System.out.printf("Processed %d%n", byteOffset);
 
-			StringTokenizer t = new StringTokenizer(cache, delimiters);
+			String line = cache;
 			cache = null;
-
-			ArrayList<String> parts = new ArrayList<>();
-			while (t.hasMoreTokens()) {parts.add(t.nextToken());}
-			Indexed base = conv.applyTo(new Indexed.ListWrapper(parts));
-
+			Indexed base = asIndexed(line, delimiters, conv);
 			return new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
 		}
 
