@@ -17,7 +17,7 @@ _lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 
 ############################  Core System ####################
 def enum(**enums): return type('Enum', (), enums)
-ShapeCodes = enum(RECT=0, LINE=1)
+ShapeCodes = enum(POINT=0, LINE=1, RECT=2)
 
 
 class Glyphset(list):
@@ -30,7 +30,8 @@ class Glyphset(list):
 def glyphAggregates(points, shapeCode, val, default):
   def scalar(array, val): array.fill(val)
   def nparray(array,val): array[:] = val
-
+  
+ 
   if type(val) == np.ndarray:
     fill = nparray 
     extShape = val.shape
@@ -38,7 +39,10 @@ def glyphAggregates(points, shapeCode, val, default):
     fill = scalar 
     extShape = ()
 
-  array = np.empty((points[2]-points[0], points[3]-points[1])+extShape, dtype=np.int32)
+  #TODO: Handle ShapeCode.POINT here....
+
+
+  array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
 
   if shapeCode == ShapeCodes.RECT:
     fill(array, val)
@@ -54,6 +58,13 @@ def _project(viewxform, glyphset):
   points = glyphset[:,:4]
   out = np.empty_like(points,dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
+  
+  #Ensure visilibity, make sure w/h are always at least one
+  #TODO: There is probably a more numpy-ish way to do this...(and it might not be needed for Shapecode.POINT)
+  for i in xrange(0,out.shape[0]):
+    if out[i,0] == out[i,2]: out[i,2] += 1
+    if out[i,1] == out[i,3]: out[i,3] += 1
+  
   return out
 
 class Grid(object):
@@ -253,8 +264,6 @@ class Glyph(list):
 
 ############################  Support functions ####################
 
-
-#Assumes x,y,w,h exist on glyph
 #Does the glyph contain any part of the pixel?
 def contains(px, glyph):
   return (px.x+px.w > glyph.x   #Really is >= if using "left/top is in, right/bottom is out" convention
