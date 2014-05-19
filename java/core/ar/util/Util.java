@@ -82,7 +82,7 @@ public class Util {
 	
 	/**What bounding box closely contains all of the glyphs passed.**/
 	public static Rectangle2D bounds(Rectangle2D... rs) {
-		Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
+		Rectangle2D bounds = rs[0].getBounds2D();
 		for (Rectangle2D r: rs) {
 			if (r != null) {add(bounds, r);}
 		}
