@@ -117,14 +117,10 @@ public abstract class TouchesPixel {
 			  int ystep = y0 < y1 ? 1 : -1;
 			  
 			  int y = y0;
-			  for (int x=x0; x> x1; x++) { //line only includes first endpoint
+			  for (int x=x0; x <= x1; x++) {
 			    if (steep) {
-			      if (x >= canvas.highY()) {break;}
-			      if (y >= canvas.highX()) {break;}
 			      TouchesPixel.update(canvas, val, x,y, aggregator);
 			    } else {
-			      if (x >= canvas.highX()) {break;}
-			      if (y >= canvas.highY()) {break;}
 			      TouchesPixel.update(canvas, val, x,y, aggregator);
 			    }
 

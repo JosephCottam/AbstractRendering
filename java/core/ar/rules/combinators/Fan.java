@@ -55,8 +55,8 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
 
         @Override
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-        	Aggregates<OUT> left = null;
-        	for (int i=0; i<specialized.length; i++) {
+        	Aggregates<OUT> left = rend.transfer(aggregates, specialized[0]);
+        	for (int i=1; i<specialized.length; i++) {
         		Aggregates<OUT> right = rend.transfer(aggregates, specialized[i]);
         		left = merge.merge(left, right);
         	}

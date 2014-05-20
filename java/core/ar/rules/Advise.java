@@ -7,7 +7,7 @@ import java.util.Comparator;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.rules.combinators.Seq;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.util.Util;
 
 /**Advise methods provide information about where to look in a visualization.
@@ -181,7 +181,7 @@ public class Advise {
 	}
 	
 	/** Mark regions where multiple values are represented in the same way as the minimum or maximum values.*/
-	public static class OverUnder<A> implements Transfer<A, Color> {
+	public static class Clipwarn<A> implements Transfer<A, Color> {
 		private static final long serialVersionUID = 7662347822550778810L;
 		protected final Transfer<A, Color> base;
 		protected final Transfer<A, Boolean> under;
@@ -191,7 +191,7 @@ public class Advise {
 		protected final double lowTolerance; //TODO: use under.tolerance instead....
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
+		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
 			this(overColor, underColor, base, lowTolerance, new Util.ComparableComparator());
 		}
 		
@@ -202,7 +202,7 @@ public class Advise {
 		 * @param lowTolerance How close should be considered too-close in undersaturation
 		 * @param comp Comparator used to determine similarity between items
 		 */
-		public OverUnder(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
+		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
 			this.overColor = overColor;
 			this.underColor = underColor;
 			this.base = base;
@@ -224,7 +224,7 @@ public class Advise {
 			return new Specialized<A>(overColor, underColor, b2,o2,u2, comp, lowTolerance);
 		}
 		
-		protected static final class Specialized<A> extends OverUnder<A> implements Transfer.Specialized<A, Color> {
+		protected static final class Specialized<A> extends Clipwarn<A> implements Transfer.Specialized<A, Color> {
 			private static final long serialVersionUID = 7535365761511428962L;
 			private final Transfer.Specialized<A, Color> base;
 			private final Transfer.Specialized<A, Boolean> under;
@@ -300,106 +300,107 @@ public class Advise {
 
 	
 	
-	/**Highlight aggregates that carry an unusually high amount of value in their neighborhood.
+	/**Scores aggregates according to how uniform the local neighborhood is.
+	 * The score is the current value divided by the average of the neighborhood (excluding self).
 	 * 
-	 * Only pixels with a value will be colored.
+	 * This is the heart of sub-pixel distribution analysis.
 	 * 
-	 * Neighborhood is generally square of size 2*distance+1 and the aggregate set under consideration as its center.
-	 * However, no items beyond the bounding box of the data are considered.  
-	 * This edge effect is factored out by weighting all measures based on the number aggregates
-	 * examined. 
+	 * For non-numbers, first transform values to distance from a reference point, then apply this transfer.  
 	 * 
 	 * **/
-	public static class DrawDark implements Transfer<Number, Color> {
+	public static class NeighborhoodDistribution implements Transfer.ItemWise<Number, Number> {
 		private static final long serialVersionUID = 4417984252053517048L;
 		
-		/**How large is the neighborhood?**/
-		public final int distance;
+		/**Number of divisions to use to create sub-pixels?**/
+		public final int divisions ;
 		
-		/**Transfer function used to determine the colors after the ratios have been determined.**/
-		public final Transfer<Number, Color> inner;
-		
-		/**Construct a draw dark using a linear HD interpolation as the inner function.
+		/**Analyze the neighborhood data distribution.  Give a high score to areas that are different from
+		 * their neighborhood and a low score to areas that are the same.
 		 * 
-		 * @param low Color to represent average or low value in the neighborhood
-		 * @param high Color to represent high value for the neighborhood
-		 * @param distance Distance that defines the neighborhood.
+		 * Can be used for sub-pixel when the input resolution of this is finer than that of the actual screen.
+		 * 
+		 * @param divisions Number of x/y divisions to use to create sub-pixels.
 		 */
-		public DrawDark(Color low, Color high, int distance) {
-			this.distance=distance;
-			inner = new Numbers.Interpolate<>(low,high,high);
+		public NeighborhoodDistribution(int divisions) {
+			this.divisions=divisions;
 		}
 		
-		/**Draw dark using the given transfer for interpolation of the values.**/ 
-		public DrawDark(int distance, Transfer<Number,Color> inner) {
-			this.distance = distance;
-			this.inner = inner;
-		}
-	
 		@Override
-		public Specialized specialize(Aggregates<? extends Number> aggs) {
-			return new Specialized(distance, inner, aggs);
+		public Specialized<Number,Number> specialize(Aggregates<? extends Number> aggs) {return this;}
+
+		@Override public Number emptyValue() {return 0d;}
+
+		@Override
+		public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
 		}
 		
-		
-		private static final class RatioNeighbors implements Transfer.ItemWise<Number, Number> {
-			private final int distance;
-			
-			public RatioNeighbors(int distance) {this.distance = distance;}
-
-			@Override
-			public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-
-			@Override public Double emptyValue() {return 0d;}
-
-			@Override 
-			public ItemWise<Number, Number> specialize(Aggregates<? extends Number> aggregates) {return this;}
-			
-			public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
-				double surroundingSum =0;
-				int cellCount = 0;
-				for (int dx=-distance; dx<=distance; dx++) {
-					for (int dy=-distance; dy<=distance; dy++) {
-						int cx=x+dx;
-						int cy=y+dy;
-						if (cx < aggregates.lowX() || cy < aggregates.lowY() 
-								|| cx>aggregates.highX() || cy> aggregates.highY()) {continue;}
-						cellCount++;
-						double dv = aggregates.get(cx,cy).doubleValue();
-						if (dv != 0) {surroundingSum++;}
-					}
-				}
-				return surroundingSum/cellCount;
-			}
-		}
-
-		public Color emptyValue() {return inner.emptyValue();}
-
-		protected static final class Specialized extends DrawDark implements Transfer.Specialized<Number,Color> {
-			private static final long serialVersionUID = 2548271516304517444L;
-			private final Transfer.Specialized<Number, Color> seq;
-			
-			public Specialized(int distance, Transfer<Number, Color> inner, Aggregates<? extends Number> aggs) {
-				super(distance, inner);
-				this.seq= new Seq<>(new RatioNeighbors(distance), inner).specialize(aggs);
-			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-				return seq.process(aggregates, rend);
-			}
+		@Override
+		public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
+			Aggregates<? extends Number> subset = new SubsetWrapper<>(aggregates, x-divisions, y-divisions, x+divisions, y+divisions);
+			Util.Stats<? extends Number> stats = Util.stats(subset, true,true,true);
+				
+			return stats.stdev;
 		}
 	}
 	
-	/**Implementation of number comparator.  
-	 * Mimics behavior of Java 1.7 Number.compare.
-	 */
-	public static class NumberComp implements Comparator<Number> {
-		public int compare(Number o1, Number o2) {return (int) (o1.doubleValue()-o2.doubleValue());}
-	}
+	
+	/**Highlights places where these is a value next to no value.
+	 * 
+	 * Sometimes the presence of a signal, regardless of size, next to 
+	 * no signal at all is important.  This transfer highlights places
+	 * where it goes from signal to no signal in a given radius.  
+	 * Pixels with values are the only ones that will receive non-zero values.
+	 * The higher the non-zero, the more non-value pixels in the neighborhood.
+	 * The net effect is highlight valued pixels in the midst of non-valued pixels
+	 * and suppress valued pixels surrounded by other valued pixels.
+	 * 
+	 * Always returns a value between 0 and 1.  Zero means either the current cell was 
+	 * the default value OR all neighbors were populated.  1 means the current cell was
+	 * non-default and all neighbors were default value.  In between values are the ratio
+	 * of default to non-default neighbors.  
+	 * 
+	 * **/
+	public static class DataEdgeBoost<A> implements Transfer.ItemWise<A, Number> {
+		private static final long serialVersionUID = 4417984252053517048L;
+		
+		/**Number of divisions to use to create sub-pixels?**/
+		public final int radius;
+		
+		public DataEdgeBoost(int radius) {this.radius=radius;}
+		
+		@Override
+		public Specialized<A,Number> specialize(Aggregates<? extends A> aggs) {return this;}
 
+		@Override public Double emptyValue() {return 0d;}
+
+		@Override
+		public Aggregates<Number> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+		
+		@Override
+		public Double at(int x, int y, Aggregates<? extends A> aggregates) {
+			A defVal = aggregates.defaultValue();
+			int defaultNeighbors = 0;			
+			
+			if (Util.isEqual(aggregates.get(x,y), defVal)) {return emptyValue();} //Only non-default values will be considered.
+			
+			for (int dx=-radius; dx<=radius; dx++) {
+				for (int dy=-radius; dy<=radius; dy++) {
+					if (dx == x && dy==y) {continue;}  //Don't consider 'self'
+					int cx=x+dx;
+					int cy=y+dy;
+					A v = aggregates.get(cx,cy);					
+					if (Util.isEqual(v, defVal)) {defaultNeighbors++;}
+				}
+			}
+			
+			double neighbors = (radius*radius)-1;  //-1 because you never count yourself
+			return (neighbors-defaultNeighbors)/neighbors;
+		}
+	}
+	
 	/**Find the smallest value.  
 	 * 
 	 * @param aggs Set of aggregates to search

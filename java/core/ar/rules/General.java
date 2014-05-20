@@ -236,17 +236,24 @@ public class General {
 			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?,V> op);
 		}
 		
-		/**Spread in a square pattern of a fixed size.  The location is in the center.
-		 * Size is the number of units up/down/left/right of center to go, so total
-		 * length will be 2*size+1.
+		
+		/**Spread in a rectangular pattern from the focus cell.  
+		 * 
+		 * Will go from (x-left, y-down) to (x+right, y+up).
 		 */
-		public static class UnitSquare<V> implements Spreader<V> {
-			private final int size;
-			public UnitSquare(int size) {this.size=Math.abs(size);}
-			
-			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<?,V> op) {
-				for (int xx=-size; xx<=size; xx++) {
-					for (int yy=-size; yy<=size; yy++) {
+		public static class UnitRectangle<V> implements Spreader<V> {
+			final int up,down,left,right;
+
+			public UnitRectangle(int size) {this(size,size,size,size);}
+			public UnitRectangle(int up, int down, int left, int right) {
+				this.up =up; this.down=down; this.left=left; this.right=right;
+			}
+
+			@Override
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?, V> op) {
+				for (int xx=-left; xx<=right; xx++) {
+					for (int yy=-up; yy<=down; yy++) {
+
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
@@ -254,9 +261,9 @@ public class General {
 					}
 				}
 			}
-			
 		}
 		
+		/**Spread in a circular pattern with original value at the center**/
 		public static class UnitCircle<V> implements Spreader<V> {
 			private final int radius;
 			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
@@ -277,6 +284,9 @@ public class General {
 			}
 		}
 		
+		/**Spread in a circular pattern with original value at center, circle size is determined by
+		 * the value found in the cell.
+		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
 			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<?,N> op) {
 				int radius = (int) base.doubleValue();

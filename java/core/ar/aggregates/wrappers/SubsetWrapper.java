@@ -12,7 +12,10 @@ import ar.aggregates.Iterator2D;
  *  
  * This is used to make zero-copy subsets and thus its name.
  * 
- * Setting outside of the ORIGINAL bounds results in no change.
+ * Setting outside of the bounds of the backing aggregates results in no change.
+ * This means setting outside of the bounds of this subset MAY result in a change...
+ * Setting inside of the bounds of the backing aggregates results in a true update.
+ * 
  * **/
 public class SubsetWrapper<A> implements Aggregates<A> {
 	private final Aggregates<A> base;
