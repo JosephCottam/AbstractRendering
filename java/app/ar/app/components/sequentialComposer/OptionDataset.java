@@ -151,7 +151,7 @@ public final class OptionDataset<G,I> {
 	public static OptionDataset<Point2D, Integer> syntheticPoints(int size) {
 		return new OptionDataset<>(
 				String.format("Synthetic Points (%,d points)", size),
-				new SyntheticGlyphset<>(size, 0, new SyntheticGlyphset.SyntheticPoints()),
+				new SyntheticGlyphset<>(size, 0, new SyntheticGlyphset.UniformPoints()),
 				OptionAggregator.COUNT,
 				new OptionTransfer.Interpolate());
 	}
