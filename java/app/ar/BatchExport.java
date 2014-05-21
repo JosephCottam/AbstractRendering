@@ -74,7 +74,7 @@ public class BatchExport {
 					BufferedImage img = AggregateUtils.asImage(colors, width, height, Color.white);
 					Util.writeImage(img, new File(filename));
 				}
-				System.out.printf("\t Done!\n", filename);
+				System.out.printf("\t Done!\n");
 			}
 		} catch (Exception e) {
 			System.out.println("Error testing " + source);

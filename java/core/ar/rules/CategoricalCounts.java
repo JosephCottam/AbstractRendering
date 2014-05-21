@@ -95,7 +95,7 @@ public class CategoricalCounts<T> {
 		return true;
 	}
 
-	@Override public int hashCode() {return counts.hashCode();}
+	@Override public int hashCode() {return Arrays.hashCode(counts);}
 	
 	public int count(int i) {return counts[i];}
 

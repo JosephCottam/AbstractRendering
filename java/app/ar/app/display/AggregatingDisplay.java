@@ -119,7 +119,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 
 	}
 	
-	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s]", dataset, display.transfer(), aggregator);}
+	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s, Aggregator: %3$s]", dataset, display.transfer(), aggregator);}
 	
     /**Use this transform to convert values from the absolute system
      * to the screen system.
@@ -144,7 +144,10 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			
 			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
 			viewTransform(vt, false);
-		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
+		} catch (Exception e) {
+			//Essentially ignores zoom-fit errors...they are usually caused by under-specified state
+			System.out.println("FYI:" + e.getMessage());
+		} 
 	}
 	
 	public Rectangle2D dataBounds() {return dataset.bounds();}

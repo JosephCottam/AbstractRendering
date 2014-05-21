@@ -38,8 +38,6 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	private final SequentialComposer composer = new SequentialComposer(this);
 	
 	public ARComposerApp() {
-		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
-		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());

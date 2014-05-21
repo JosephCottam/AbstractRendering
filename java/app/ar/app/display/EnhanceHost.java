@@ -368,13 +368,10 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			
 			box.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					try {
-						boolean show = ((JCheckBox)e.getSource()).isSelected();
-						host().showOverlay(show);
-						host().repaint();
-					} catch (Exception ex) {/**Ignored**/}
+					boolean show = ((JCheckBox)e.getSource()).isSelected();
+					host().showOverlay(show);
+					host().repaint();
 				}
-				
 			});
 		}
 		

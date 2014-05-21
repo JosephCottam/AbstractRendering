@@ -83,6 +83,10 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	 * **/
 	public void cleanup() {}
 	
+	@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	@Override public final int hashCode() {return this.getClass().hashCode();}
+
+	
 	public static final class ToCount extends OptionTransfer<ControlPanel> {
 
 		@Override
@@ -96,7 +100,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "To Counts (CoC->Int)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class MathTransfer extends OptionTransfer<MathTransfer.Controls> {
@@ -110,7 +113,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static final class Controls extends ControlPanel {
 			private JComboBox<Entry<?>> valuers = new JComboBox<>();
@@ -261,7 +263,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Interpolate (Num->Color)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner low = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
@@ -318,7 +319,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(50, 0, 100,1));
@@ -361,7 +361,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Seam-Carve (int->int)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -436,7 +435,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Contour (Num->Num)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -467,7 +465,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Spread (*->*)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -539,7 +536,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Color Keys (CoC->CoC)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		
@@ -725,7 +721,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		@Override public String toString() {return "Edge Boost (*)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
@@ -765,7 +760,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Sub Pixel (Num)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
@@ -858,7 +852,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Present (*->Int)";}
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class Present extends OptionTransfer<ControlPanel> {
@@ -870,7 +863,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Present (*->Color)";}
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class Gradient extends OptionTransfer<ControlPanel> {
@@ -881,7 +873,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Gradient (color)";}
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
 	
@@ -895,7 +886,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "HD Alpha (CoC<Color>)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -921,6 +911,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public ControlPanel(String id) {actionProvider = new ActionProvider(id);}
 		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public final int hashCode() {return this.getClass().hashCode();}
 	}
 	
 	protected static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {

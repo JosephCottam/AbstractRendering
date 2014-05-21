@@ -105,11 +105,12 @@ public class Cartogram {
 	static {
 		File input = new File("../data/elections.csv");
 		try (BufferedReader r = new BufferedReader(new FileReader(input))) {
-			while (r.ready()) {
-				String line = r.readLine();
+			String line = r.readLine();
+			while (line!=null) {
 				String[] parts = line.split(",");
 				results2012.put(parts[0], parts[1].equals("1") ? PARTY1 : PARTY2);
 				results2008.put(parts[0], parts[2].equals("1") ? PARTY1 : PARTY2);
+				line = r.readLine();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

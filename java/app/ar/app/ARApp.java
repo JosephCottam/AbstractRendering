@@ -26,8 +26,6 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final Status status = new Status();
 
 	public ARApp() {
-		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
-		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());

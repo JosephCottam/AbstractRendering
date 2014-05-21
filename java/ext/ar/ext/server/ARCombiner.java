@@ -126,7 +126,7 @@ public class ARCombiner<A> {
 				} finally {
 					safeClose(finalAccept);
 				}
-			} while (serverSocket != null && !serverSocket.isClosed());
+			} while (!serverSocket.isClosed());
 			running = false;
 		}
 			

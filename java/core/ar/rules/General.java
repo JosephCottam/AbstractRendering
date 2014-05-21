@@ -452,6 +452,7 @@ public class General {
 			String line = bf.readLine();
 			while(line != null) {
 				dict.put(keyer.value(line), valuer.value(line));
+				line = bf.readLine();
 			}
 
 			return new MapWrapper<K,V>(dict,other);
