@@ -19,16 +19,18 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		this.shaper = shaper;
 	}
 	
-	public Iterator<Glyph<G, I>> iterator() {return new GlyphsetIterator<>(this);}
-	public boolean isEmpty() {return size <= 0;}
-	public Rectangle2D bounds() {return new Rectangle2D.Double(0,0,100,100);}
-	public long size() {return size;}
-	public long segments() {return size();}
+	@Override public Iterator<Glyph<G, I>> iterator() {return new GlyphsetIterator<>(this);}
+	@Override public boolean isEmpty() {return size <= 0;}
+	@Override public Rectangle2D bounds() {return new Rectangle2D.Double(0,0,100,100);}
+	@Override public long size() {return size;}
 
 	@Override
-	public Glyphset<G, I> segment(long bottom, long top)
-			throws IllegalArgumentException {
-		return new GlyphSubset.Uncached<>(this, bottom, top);
+	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+		long high = low+stride;
+
+		return new GlyphSubset.Uncached<>(this, low, high);
 	}
 	
 	@Override

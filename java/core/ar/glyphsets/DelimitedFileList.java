@@ -20,24 +20,13 @@ import ar.glyphsets.implicitgeometry.Valuer;
  * provides a list-like (read-only) interface.
  */
 public class DelimitedFileList<G,I> implements Glyphset<G,I> {
+	/**Number of lines to skip by default.  Captured at object creation time.**/
 	public static int DEFAULT_SKIP =0;
-
-	
-	/**The SEGMENT_FACTOR is used to make segments larger,
-	 * and thus divide work into larger blocks.
-	 * 
-	 * Segmenting is derived from the number of bytes,
-	 * but since this is not a fixed record-size format this can't be
-	 * exact. Additionally, there is a non-trivial setup cost for each segment, so
-	 * fewer larger segments is often advantageous. 
-	 * 
-	 */
-	private static final long SEGMENT_FACTOR = 100000000L;   
 	
 	/**Source file.**/
 	private final File source;
 	
-	/**Segment information for subsets.**/
+	/**Segment information for subsets, in terms of file bytes**/
 	private final long segStart;
 	private final long segEnd;
 	
@@ -72,28 +61,31 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	}
 
 	
+
+	
 	@Override
 	public Rectangle2D bounds() {
-		System.out.println("Bounds start...");
 		if (bounds == null) {
-			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-			bounds = pool.invoke(new BoundsTask<>(this, 100000));
+			bounds = bounds(2);
 		}
-		System.out.println("Bounds end...");
 		return bounds;
 	}
 	
-	@Override
-	public long segments() {
-		long size = source.length();
-		long segs = size/(types.length*SEGMENT_FACTOR);
-		System.out.println(segs);
-		return segs;
-	}
 	
+	public Rectangle2D bounds(int m) {
+		int procs = Runtime.getRuntime().availableProcessors();
+		ForkJoinPool pool = new ForkJoinPool(procs);
+		bounds = pool.invoke(new BoundsTask<>(this, m*procs));
+		return bounds;
+	}
+		
 	@Override
-	public Glyphset<G, I> segment(long bottom, long top) throws IllegalArgumentException {
-		return new DelimitedFileList<>(source, delimiters, types, skip, shaper, valuer, bottom, top);
+	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		long stride = (source.length()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+		long high = low+stride;
+
+		return new DelimitedFileList<>(source, delimiters, types, skip, shaper, valuer, low, high);
 	}
 	
 	@Override public boolean isEmpty() {return size ==0;}
@@ -126,7 +118,6 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 		private final Converter conv = new Converter(types);
 		private final BufferedReader reader;
 
-		private final long stop = segEnd * types.length * SEGMENT_FACTOR;
 		private long charsRead;
 		private String cache;
 		private boolean closed = false;
@@ -137,8 +128,7 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 				reader = new BufferedReader(new FileReader(source));
 				
 				//Get to the first record-start in the segment
-				long start = segStart*types.length*SEGMENT_FACTOR;
-				reader.skip(start);
+				reader.skip(segStart);
 
 				if (segStart == 0) {
 					for (long i=skip; i>0; i--) {reader.readLine();}					
@@ -160,7 +150,7 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 		public boolean hasNext() {
 			if (!closed && cache == null) {
 				try {
-					if (stop > 0 && charsRead > stop) {
+					if (segEnd > 0 && charsRead > segEnd) {
 						reader.close();
 						closed = true;
 						return false;

@@ -36,11 +36,8 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 	public long size() {return isEmpty() ? 0 : base.size();}
 
 	@Override
-	public long segments() {return base.segments();}
-
-	@Override
-	public Glyphset<G, I> segment(long bottom, long top) throws IllegalArgumentException {
-		return new BoundingWrapper<>(base.segment(bottom, top), bound);
+	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		return new BoundingWrapper<>(base.segmentAt(count, segId), bound);
 	}
 	
 	public Glyphset<G,I> base() {return base;}

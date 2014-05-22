@@ -143,18 +143,18 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
 
-	public boolean isEmpty() {return buffer == null || buffer.capacity() <= 0;}
-	public long size() {return entryCount;}
-	public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
-
-	public long segments() {return size();}
+	@Override public boolean isEmpty() {return buffer == null || buffer.capacity() <= 0;}
+	@Override public long size() {return entryCount;}
+	@Override public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
 
 	@Override
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {
+	public Glyphset<G,I> segmentAt(int count, int segId)  throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+		long high = low+stride;
 		
-		long offset = recordOffset(bottom)+buffer.filePosition();
-		long end = recordOffset(top)+buffer.filePosition();
+		long offset = recordOffset(low)+buffer.filePosition();
+		long end = Math.min(recordOffset(high)+buffer.filePosition(), source.length());
 		
 		
 		

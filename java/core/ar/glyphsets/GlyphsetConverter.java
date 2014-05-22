@@ -49,15 +49,13 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 		};
 	}
 
-	public boolean isEmpty() {return base.isEmpty();}
-	public Rectangle2D bounds() {return base.bounds();}
-	public long size() {return base.size();}
-	public long segments() {return base.segments();}
+	@Override public boolean isEmpty() {return base.isEmpty();}
+	@Override public Rectangle2D bounds() {return base.bounds();}
+	@Override public long size() {return base.size();}
 
 	@Override
-	public Glyphset<G,V> segment(long bottom, long top)
-			throws IllegalArgumentException {
-		return new GlyphsetConverter<>(base.segment(bottom, top), converter);
+	public Glyphset<G,V> segmentAt(int count, int segId) throws IllegalArgumentException {
+		return new GlyphsetConverter<>(base.segmentAt(count, segId), converter);
 	}
 
 	@Override

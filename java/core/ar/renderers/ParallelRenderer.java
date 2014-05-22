@@ -26,34 +26,33 @@ public class ParallelRenderer implements Renderer {
 	////--------------------  Performance Control Parameters ---------------------------
 	/**Target "parallelism level" in the thread pool.  Roughly corresponds to the number of threads 
 	 * but actual interpretation is left up to the ForJoinPool implementation.**/ 
-	public static int THREAD_POOL_PARALLELISM = Runtime.getRuntime().availableProcessors();
+	public static final int DEFAULT_THREAD_POOL_PARALLELISM = Runtime.getRuntime().availableProcessors();
 	
-	/**How many tasks should be created for each potential parallel worker during aggregation?*/
-	public static int AGGREGATE_TASK_MULTIPLIER = 2;
-
+	/**Default number of tasks used in aggregation.**/ 
+	public static final int DEFAULT_THREAD_LOAD = 2;
+	
 	/**How small can a transfer task get before it won't be subdivided anymore.**/
-	public static final long TRANSFER_TASK_MIN = 100000;
+	public static final long DEFAULT_TRANSFER_TASK_SIZE = 100000;
 	//-------------------------------------------------------------------------------------
 	
 	private final ForkJoinPool pool;
-
 	private final ProgressReporter recorder = RenderUtils.recorder();
+	private final long transferTaskSize;
 	
-	public ParallelRenderer() {this(null);}
+	private final int threadLoad;
+	
+	public ParallelRenderer() {this(null, DEFAULT_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE);}
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
-	public ParallelRenderer(ForkJoinPool pool) {
-		if (pool == null) {pool = new ForkJoinPool(THREAD_POOL_PARALLELISM);}
-		this.pool = pool;
+	public ParallelRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize) {
+		this.pool = pool != null ? pool : new ForkJoinPool(DEFAULT_THREAD_POOL_PARALLELISM);
+		this.threadLoad = threadLoad > 0 ? threadLoad : DEFAULT_THREAD_LOAD;
+		this.transferTaskSize = transferTaskSize > 0 ? transferTaskSize : DEFAULT_TRANSFER_TASK_SIZE;
 	}
 
-	public long taskSize(Glyphset<?,?> glyphs) {
-		return glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER);
-	}
-	
 	@Override
 	public <I,G,A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, 
@@ -62,18 +61,19 @@ public class ParallelRenderer implements Renderer {
 			AffineTransform view, int width, int height) {
 		
 		//long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
-		long taskSize = taskSize(glyphs);
-		recorder.reset(glyphs.size());
+		int taskCount = threadLoad* pool.getParallelism();
+		long ticks = GlyphParallelAggregation.ticks(taskCount);
+		recorder.reset(ticks);
 
 		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(
 				glyphs, 
+				glyphs.bounds(), 
 				selector,
 				op, 
 				view, 
 				new Rectangle(0,0,width,height),
-				taskSize,
 				recorder,
-				0, glyphs.segments());
+				0, taskCount, taskCount);
 		
 		Aggregates<A> a= pool.invoke(t);
 		
@@ -83,7 +83,7 @@ public class ParallelRenderer implements Renderer {
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
-		long taskSize = Math.max(TRANSFER_TASK_MIN, AggregateUtils.size(aggregates)/pool.getParallelism());
+		long taskSize = Math.max(transferTaskSize, AggregateUtils.size(aggregates)/pool.getParallelism());
 		
 		recorder.reset(0);
 		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());

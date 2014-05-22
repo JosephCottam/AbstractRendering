@@ -10,12 +10,12 @@ import ar.Glyphset;
 import ar.util.Util;
 
 /**Single-element glyphset.**/
-public final class GlyphSingleton<G,I> implements Glyphset.RandomAccess<G,I> {
+public final class SingletonGlyphset<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final List<Glyph<G,I>> glyphs;
 	private final Rectangle2D bounds;
 	
 	/**Initialize the glyphset with the item.**/
-	public GlyphSingleton(Glyph<G,I> g) {
+	public SingletonGlyphset(Glyph<G,I> g) {
 		glyphs = Collections.singletonList(g);
 		bounds = Util.boundOne(g.shape());
 	}
@@ -26,7 +26,8 @@ public final class GlyphSingleton<G,I> implements Glyphset.RandomAccess<G,I> {
 	public long size() {return glyphs.size();}
 	public Rectangle2D bounds() {return bounds;}
 
-	public long segments() {return 1;}
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {return this;}
+	public Glyphset<G,I> segmentAt(int count, int segId) {
+		if (segId == 1) {return this;}
+		return new EmptyGlyphset<>();
+	}
 }

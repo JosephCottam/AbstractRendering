@@ -34,9 +34,11 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		this.valuer = valuer;
 	}
 
-	public boolean isEmpty() {return values == null || values.isEmpty();}
-	public long size() {return values==null ? 0 : values.size();}
-	public Rectangle2D bounds() {return Util.bounds(this);}
+	@Override public boolean isEmpty() {return values == null || values.isEmpty();}
+	@Override public long size() {return values==null ? 0 : values.size();}
+	@Override public Rectangle2D bounds() {return Util.bounds(this);}
+	
+	@Override 
 	public Iterator<ar.Glyph<G,I>> iterator() {
 		return new Iterator<ar.Glyph<G,I>>() {
 			Iterator<B> basis = values.iterator();
@@ -49,16 +51,19 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		};
 	}
 	
-	@Override
-	public long segments() {return values.size();}
-
+	/**WARNING: Relies on different iterator instance returning elements in the same order...**/
 	@Override
 	@SuppressWarnings("unchecked")
-	public Glyphset<G,I> segment(long bottom, long top) throws IllegalArgumentException {
-		int size = (int) (top-bottom);
+	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+
+		if (stride > Integer.MAX_VALUE) {throw new IllegalArgumentException("Segment size excceeds maximum allowable.");}
+		
+		int size = (int) (stride);
 		final B[] vals = (B[]) new Object[size];
 		Iterator<B> it = values.iterator();
-		for (long i=0; i<bottom; i++) {it.next();}  //Walk iterator up to the start
+		for (long i=0; i<low; i++) {it.next();}  //Walk iterator up to the start
 		for (int i=0; i<size; i++) {vals[i]=it.next();} //Copy values over...
 		return new WrappedCollection.List<B,G,I>(Arrays.asList(vals), shaper, valuer);
 	}
@@ -76,10 +81,12 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 			this.values=values;
 		}
 		
+		@Override
 		public Iterator<ar.Glyph<G,I>> iterator() {
 			return new GlyphsetIterator<G,I>(this);
 		}
 		
+		@Override
 		public ar.Glyph<G,I> get(long l) {
 			if (l > Integer.MAX_VALUE) {throw new IllegalArgumentException("Can only index through ints in wrapped list.");}
 			if (l < 0) {throw new IllegalArgumentException("Negative index not allowed.");}
@@ -88,11 +95,12 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		}
 
 		@Override
-		public long segments() {return size();}
+		public Glyphset<G,I> segmentAt(int count ,int segId) {
+			long stride = (size()/count)+1; //+1 for the round-down
+			long low = stride*segId;
+			long high = low+stride;
 
-		@Override
-		public Glyphset<G,I> segment(long bottom, long top) {
-			return GlyphSubset.make(this, bottom, top, true);
+			return GlyphSubset.make(this, low, high, true);
 		}
 	}
 	

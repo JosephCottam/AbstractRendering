@@ -53,8 +53,9 @@ public class RenderSpeed {
 		int tasksPerThread = Integer.parseInt(arg(args,"-tasksMult", "-1"));
 		int synPoints = Integer.parseInt(arg(args,"-pc", "-1"));
 
-		ParallelRenderer.THREAD_POOL_PARALLELISM = cores > 0 ? cores : ParallelRenderer.THREAD_POOL_PARALLELISM;
-		ParallelRenderer.AGGREGATE_TASK_MULTIPLIER = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.AGGREGATE_TASK_MULTIPLIER;
+		cores = cores > 0 ? cores : ParallelRenderer.DEFAULT_THREAD_POOL_PARALLELISM;
+		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.DEFAULT_THREAD_LOAD;
+		
 		OptionDataset.SYNTHETIC = synPoints > 0 ? OptionDataset.syntheticPoints(synPoints) : OptionDataset.SYNTHETIC;
 
 		
@@ -82,10 +83,10 @@ public class RenderSpeed {
 		
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), width, height);
 		Selector s = TouchesPixel.make(glyphs);
-		long taskCount = glyphs.size()/render.taskSize(glyphs);
+		long taskCount = cores * tasksPerThread;
 		
 		if (header) {
-			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, tasks");
+			System.out.println("source, elapse/avg agg, elapse/avg trans, iter num, width, height, renderer, cores, tasks (max)");
 		}
 		
 		try {

@@ -11,37 +11,37 @@ import ar.util.Util;
 final class BoundsTask<G> extends RecursiveTask<Rectangle2D> {
 	private final Glyphset<G, ?> glyphs;
 	public static final long serialVersionUID = 1L;
-	private final long low, high;
-	private final long tasksize;
+	private final int lowTask, highTask;
+	private final int totalTasks;
 
-	public BoundsTask(Glyphset<G, ?> glyphs, long tasksize) {
-		this(glyphs, tasksize, 0, glyphs.segments());
+	public BoundsTask(Glyphset<G, ?> glyphs, int totalTasks) {
+		this(glyphs, 0, totalTasks, totalTasks);
 	}
 
-	public BoundsTask(Glyphset<G, ?> glyphs, long tasksize, long low, long high) {
+	public BoundsTask(Glyphset<G, ?> glyphs, int lowTask, int highTask, int totalTasks) {
 		this.glyphs = glyphs;
-		this.tasksize = tasksize;
-		this.low = low;
-		this.high = high;
+		this.totalTasks = totalTasks;
+		this.lowTask = lowTask;
+		this.highTask = highTask;
 	}
 
 	@Override
 	protected Rectangle2D compute() {
-		if (high-low > tasksize) {return split();}
+		if (lowTask != highTask) {return split();}
 		else {return local();}
 	}
 
 	private Rectangle2D split() {
-		long mid = low+((high-low)/2);
-		BoundsTask<G> top = new BoundsTask<G>(glyphs, tasksize, low, mid);
-		BoundsTask<G> bottom = new BoundsTask<G>(glyphs, tasksize, mid, high);
+		int midTask = lowTask+((highTask-lowTask)/2);
+		BoundsTask<G> top = new BoundsTask<G>(glyphs, lowTask, midTask, totalTasks);
+		BoundsTask<G> bottom = new BoundsTask<G>(glyphs, lowTask, midTask, totalTasks);
 		invokeAll(top, bottom);
 		Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
 		return bounds;
 	}
 
 	private Rectangle2D local() {
-		Glyphset<G,?> subset = glyphs.segment(low, high);
+		Glyphset<G,?> subset = glyphs.segmentAt(totalTasks, lowTask);
 		return Util.bounds(subset);
 	}
 

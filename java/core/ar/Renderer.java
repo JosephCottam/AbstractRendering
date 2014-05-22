@@ -56,7 +56,4 @@ public interface Renderer extends Serializable {
 	 * @return The percent of predicted work that has been completed.
 	 */
 	public ProgressReporter progress();
-	
-	/**Given the glyphset, how many items are expected in a given task?**/
-	public long taskSize(Glyphset<?,?> glyphs);
 }

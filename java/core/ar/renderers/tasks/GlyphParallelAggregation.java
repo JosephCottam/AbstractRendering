@@ -19,10 +19,14 @@ import ar.util.Util;
 
 public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>> {
 	private static final long serialVersionUID = 705015978061576950L;
-	protected final long taskSize;
-	protected final long low;
-	protected final long high;
+	protected final int lowTask;
+	protected final int highTask;
+	protected final int totalTasks;
+	
 	protected final Glyphset<? extends G, ? extends I> glyphs;
+	
+	/**To save (potentially costly) multiple calculations of the overall bounds, the full bounds are passed around as a parameter.**/
+	protected final Rectangle2D glyphBounds;
 	protected final AffineTransform view;
 	protected final Rectangle viewport;
 	protected final Aggregator<I,A> op;
@@ -31,31 +35,33 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 
 	public GlyphParallelAggregation(
 		Glyphset<? extends G, ? extends I> glyphs, 
+		Rectangle2D glyphBounds,
 		Selector<G> selector,
 		Aggregator<I,A> op,
 		AffineTransform view,
 		Rectangle viewport,
-		long taskSize,
 		ProgressReporter recorder,
-		long low, long high) {
+		int lowTask, int highTask, int totalTasks) {
 
 		this.glyphs = glyphs;
+		this.glyphBounds = glyphBounds;
 		this.selector = selector;
 		this.op = op;
 		this.view = view;
 		this.viewport =viewport;
-		this.taskSize = taskSize;
 		this.recorder = recorder;
-		this.low = low;
-		this.high = high;
+		this.lowTask = lowTask;
+		this.highTask = highTask;
+		this.totalTasks = totalTasks;
 	}
 	
 	protected Aggregates<A> compute() {
 		if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
 		Aggregates<A> rslt;
-		if ((high-low) > taskSize) {rslt=split();}
+		recorder.update(DOWN_MULT);
+		if (highTask-lowTask != 1) {rslt=split();}
 		else {rslt=local();}
-		recorder.update((high-low)/3);
+		recorder.update(UP_MULT);
 		
 		if (rslt instanceof TouchedBoundsWrapper) {
 			TouchedBoundsWrapper<A> tbr = (TouchedBoundsWrapper<A>) rslt;
@@ -66,24 +72,17 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 	protected final Aggregates<A> local() {
-		long step = recorder.reportStep() <= 0 ? high-low : recorder.reportStep();  //How often should reports be made?
-		TouchedBoundsWrapper<A> target = allocateAggregates(glyphs.bounds());
-		
-		for (long bottom=low; bottom < high; bottom+= step) {
-			long top = Math.min(bottom+step, high);
-			Glyphset<? extends G, ? extends I> subset = glyphs.segment(bottom, top);
-			selector.processSubset(subset, view, target, op);
-			recorder.update(2*(step/3));
-		}
-		
+		TouchedBoundsWrapper<A> target = allocateAggregates(glyphBounds);		
+		Glyphset<? extends G, ? extends I> subset = glyphs.segmentAt(totalTasks, lowTask);
+		selector.processSubset(subset, view, target, op);
 		return target;
 	}
 	
 	protected final Aggregates<A> split() {
-		long mid = Util.mean(low, high);
-
-		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, selector, op, view, viewport, taskSize, recorder, low, mid);
-		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, selector, op, view, viewport, taskSize, recorder, mid, high);
+		int midTask = Util.mean(lowTask, highTask);
+		
+		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, viewport, recorder, lowTask, midTask, totalTasks);
+		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, viewport, recorder, midTask, highTask, totalTasks);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		
@@ -109,5 +108,14 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
 				op.identity());
 		return new TouchedBoundsWrapper<>(aggs, false);
-	}	
+	}
+	
+	private static final int DOWN_MULT = 5;
+	private static final int UP_MULT = 100;
+	public static final long ticks(int taskCount) {
+		int tasks = (taskCount*2)-1;
+		int down = tasks*DOWN_MULT;
+		int up = tasks*UP_MULT;
+		return down+up;
+	}
 }

@@ -51,13 +51,6 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * */
 	public long size();
 	
-	/**One greater than the highest value for "top" in "segment".
-	 * 
-	 * Analogous to "length" or "size" but without the semantic interpretation on what underlies
-	 * this glyphset.  This only controls how many segments can be reliably made. 
-	 **/
-	public long segments();
-
 	/**
 	 * Get a subset of the data.
 	 * 
@@ -78,7 +71,7 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * @param top Upper marker. This is an exclusive bound.
 	 * @return A subset of the data.
 	 */
-	public Glyphset<G,I> segment(long bottom, long top) throws IllegalArgumentException;
+	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException;
 	
 	
 	/**Glyphsets that support random access.
