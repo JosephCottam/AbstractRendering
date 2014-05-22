@@ -57,10 +57,11 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
 		long low = stride*segId;
+		long high = Math.min(low+stride, size());
 
 		if (stride > Integer.MAX_VALUE) {throw new IllegalArgumentException("Segment size excceeds maximum allowable.");}
 		
-		int size = (int) (stride);
+		int size = (int) (high-low);
 		final B[] vals = (B[]) new Object[size];
 		Iterator<B> it = values.iterator();
 		for (long i=0; i<low; i++) {it.next();}  //Walk iterator up to the start
@@ -98,7 +99,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		public Glyphset<G,I> segmentAt(int count ,int segId) {
 			long stride = (size()/count)+1; //+1 for the round-down
 			long low = stride*segId;
-			long high = low+stride;
+			long high = Math.min(low+stride, size());
 
 			return GlyphSubset.make(this, low, high, true);
 		}

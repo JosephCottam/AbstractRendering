@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.concurrent.ForkJoinPool;
 
 import ar.Glyph;
@@ -19,7 +18,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
  */
-public class DelimitedFileList<G,I> implements Glyphset<G,I> {
+public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip by default.  Captured at object creation time.**/
 	public static int DEFAULT_SKIP =0;
 	
@@ -30,8 +29,8 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	private final long segStart;
 	private final long segEnd;
 	
-	/**Pattern used to delimit fields of the rows.**/
-	private final String delimiters;
+	/**Character used to delimit fields of the rows.**/
+	private final char delimiter;
 	
 	/**Types of the fields.**/
 	private final Converter.TYPE[] types;
@@ -43,15 +42,15 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	private final Valuer<Indexed,I> valuer;
 
 	///Cached items.
-	private long size;
+	private long size =-1;
 	private Rectangle2D bounds;
 
 		
-	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiters, types, DEFAULT_SKIP, shaper, valuer);}
-	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiters, types, skip, shaper, valuer, 0, -1);}
-	public DelimitedFileList(File source, String delimiters, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1);}
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
 		this.source = source;
-		this.delimiters = delimiters;
+		this.delimiter = delimiter;
 		this.types = types;
 		this.skip = skip;
 		this.shaper = shaper;
@@ -83,12 +82,12 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		long stride = (source.length()/count)+1; //+1 for the round-down
 		long low = stride*segId;
-		long high = low+stride;
+		long high = Math.min(low+stride, source.length());
 
-		return new DelimitedFileList<>(source, delimiters, types, skip, shaper, valuer, low, high);
+		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high);
 	}
 	
-	@Override public boolean isEmpty() {return size ==0;}
+	@Override public boolean isEmpty() {return size() == 0;}
 	@Override public Iterator iterator() {return new Iterator();}
 
 	@Override
@@ -106,12 +105,17 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 	}
 	
 	/**Utility for converting a given string (i.e., line of a file) into an 'Indexed' instance.**/
-	public static Indexed asIndexed(String line, String delimiters, Converter conv) {
-		StringTokenizer t = new StringTokenizer(line, delimiters);
+	public static Indexed asIndexed(String line, char split, Converter conv) {
 		String[] parts = new String[conv.size()];
-		for (int i=0; i<parts.length; i++) {parts[i] = t.nextToken();}
-		Indexed base = conv.applyTo(new Indexed.ArrayWrapper(parts));
-		return base;
+		int low = 0;
+		int high = line.indexOf(split);
+		int i=0;
+		while (high > 0) {
+			parts[i++] = line.substring(low, high);
+			low = high+1;
+			high = line.indexOf(split, low);
+		}
+		return conv.applyTo(new Indexed.ArrayWrapper(parts));
 	}
 	
 	private final class Iterator implements java.util.Iterator<Glyph<G,I>> {
@@ -172,7 +176,7 @@ public class DelimitedFileList<G,I> implements Glyphset<G,I> {
 
 			String line = cache;
 			cache = null;
-			Indexed base = asIndexed(line, delimiters, conv);
+			Indexed base = asIndexed(line, delimiter, conv);
 			return new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
 		}
 

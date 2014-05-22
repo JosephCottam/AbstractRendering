@@ -29,7 +29,7 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
 		long bottom = stride*segId;
-		long top = low+stride;
+		long top = Math.min(low+stride, high);
 
 		return new Cached<>(glyphs, bottom + this.low, top + this.low);
 	}

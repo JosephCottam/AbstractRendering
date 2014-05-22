@@ -9,7 +9,7 @@ import java.util.List;
 
 import ar.Glyphset;
 import ar.app.util.GlyphsetUtils;
-import ar.glyphsets.DelimitedFileList;
+import ar.glyphsets.DelimitedFile;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
@@ -46,7 +46,13 @@ public final class OptionDataset<G,I> {
 		this.defaultAggregator = defAgg;
 		this.defaultTransfers = Arrays.asList(defTrans);
 	}
-	
+
+	public Glyphset<G,I> dataset() {return glyphs;}
+	public String toString() {return name;}
+	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
+	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
+
+
 
 	public static final OptionDataset<Point2D, Integer> WIKIPEDIA_TXT;
 	static {
@@ -54,22 +60,16 @@ public final class OptionDataset<G,I> {
 		try {
 			temp = new OptionDataset<>(
 				"Wikipedia BFS adjacnecy (txt)",
-				new DelimitedFileList<>(
-						new File("../data/wiki.full.txt"), ",", new Converter.TYPE[]{Converter.TYPE.LONG,Converter.TYPE.LONG, Converter.TYPE.COLOR}, 
+				new DelimitedFile<>(
+						new File("../data/wiki.full.txt"), ',', new Converter.TYPE[]{Converter.TYPE.LONG,Converter.TYPE.LONG, Converter.TYPE.COLOR}, 
 						new Indexed.ToPoint(false, 0,1), new Valuer.Constant<Indexed,Integer>(1)),
 				OptionAggregator.COUNT,
 				new OptionTransfer.MathTransfer(),
-			new OptionTransfer.Interpolate());
+				new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
 		WIKIPEDIA_TXT = temp;
 	}
-
-
-	public Glyphset<G,I> dataset() {return glyphs;}
-	public String toString() {return name;}
-	public OptionAggregator<? super I,?> defaultAggregator() {return defaultAggregator;}
-	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
-
+	
 	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
 	static {
 		OptionDataset<Point2D, String> temp;

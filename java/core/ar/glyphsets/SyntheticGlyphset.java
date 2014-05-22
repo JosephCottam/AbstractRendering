@@ -28,7 +28,7 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
 		long low = stride*segId;
-		long high = low+stride;
+		long high = Math.min(low+stride, size);
 
 		return new GlyphSubset.Uncached<>(this, low, high);
 	}
