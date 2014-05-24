@@ -142,9 +142,13 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			if (segId < glyphs.length) {return glyphs[segId];}
 			return new EmptyGlyphset<>();
 		} else {
-			int stride = (glyphs.length/count)+1;
+			int stride = (glyphs.length/count);
 			int low = stride*segId;
-			int high = Math.min(low+stride, glyphs.length);
+			int high = segId == count-1 ? glyphs.length : Math.min(low+stride, glyphs.length);
+			if (low > high) {
+				System.out.println("XXX");
+			}
+			
 			DynamicQuadTree<G,V>[] subset = Arrays.copyOfRange(glyphs, low, high);
 			return new InnerNode<G,V>(subset);
 		}

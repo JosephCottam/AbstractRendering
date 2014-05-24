@@ -8,7 +8,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
@@ -91,20 +90,17 @@ public class MemoryMappingTests {
 	
 	@Test
 	public void subset() throws Exception {
-		Glyphset<Rectangle2D, Integer> glyphs = mm.segment(0, 10);
-		for (Glyph<Rectangle2D, Integer> g: glyphs) {
-			g.toString();
-		}
+//		Glyphset<Rectangle2D, Integer> glyphs = mm.segmentAt(1000, 2);
+//		for (Glyph<Rectangle2D, Integer> g: glyphs) {
+//			g.toString();
+//		}
 		
-		Glyphset<Rectangle2D, Integer> glyphsA = mm.segment(0, mm.segments());
-		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segment(0, glyphsA.segments());
+		Glyphset<Rectangle2D, Integer> glyphsA = mm.segmentAt(1, 0);
+		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segmentAt(1, 0);
+		assertEquals(mm.size(), glyphsA.size());
+		assertEquals(mm.size(), glyphsB.size());
 		assertEquals(mm.bounds(), glyphsA.bounds());
 		assertEquals(mm.bounds(), glyphsB.bounds());
-
-		
-		Glyphset<Rectangle2D, Integer> glyphs2 = glyphs.segment(0, 5);
-		//assertEquals("Subset-subset segment check", 5, glyphs2.segments());
-		assertEquals("Subset-subset size check", 5, glyphs2.size());
 	}
 	
 }

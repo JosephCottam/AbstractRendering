@@ -27,13 +27,13 @@ final class BoundsTask<G> extends RecursiveTask<Rectangle2D> {
 
 	@Override
 	protected Rectangle2D compute() {
-		if (lowTask != highTask) {return split();}
-		else {return local();}
+		if (lowTask == highTask-1) {return local();}
+		else {return split();}
 	}
 
 	private Rectangle2D split() {
 		int midTask = lowTask+((highTask-lowTask)/2);
-		BoundsTask<G> top = new BoundsTask<G>(glyphs, lowTask, midTask, totalTasks);
+		BoundsTask<G> top = new BoundsTask<G>(glyphs, midTask, highTask, totalTasks);
 		BoundsTask<G> bottom = new BoundsTask<G>(glyphs, lowTask, midTask, totalTasks);
 		invokeAll(top, bottom);
 		Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());

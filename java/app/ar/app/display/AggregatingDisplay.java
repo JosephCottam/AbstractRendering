@@ -146,7 +146,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			viewTransform(vt, false);
 		} catch (Exception e) {
 			//Essentially ignores zoom-fit errors...they are usually caused by under-specified state
-			System.out.println("FYI:" + e.getMessage());
+			System.out.println("FYI---------");
+			e.printStackTrace();
 		} 
 	}
 	

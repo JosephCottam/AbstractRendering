@@ -151,12 +151,10 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Glyphset<G,I> segmentAt(int count, int segId)  throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
 		long low = stride*segId;
-		long high = low+stride;
+		long high = segId == count-1 ? size() : Math.min(low+stride, size());
 		
 		long offset = recordOffset(low)+buffer.filePosition();
 		long end = Math.min(recordOffset(high)+buffer.filePosition(), source.length());
-		
-		
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
@@ -168,7 +166,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Rectangle2D bounds() {
 		if (bounds == null) {
 			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-			bounds = pool.invoke(new BoundsTask<>(this, 10000000)); //TODO: Tuning paramter for task-size....
+			bounds = pool.invoke(new BoundsTask<>(this, Runtime.getRuntime().availableProcessors()*2)); //TODO: Tuning paramter for task-size....
 		}
 		return bounds;
 	}
