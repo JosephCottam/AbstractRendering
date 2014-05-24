@@ -6,6 +6,7 @@ import java.util.Iterator;
 import ar.Aggregates;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.BoundsInversionException;
+import ar.util.ArrayIterator;
 
 /** Aggregates implementation backed by a single array.
  * This class efficiently supports subset regions.
@@ -81,7 +82,7 @@ public class RefFlatAggregates<A> implements Aggregates<A>{
 	public int highY() {return highY;}
 	
 	/**Iterates over the values in the region defined by (lowX,lowY) and (highX, highY).**/
-	public synchronized Iterator<A> iterator() {return Arrays.asList(values).iterator();}
+	public synchronized Iterator<A> iterator() {return new ArrayIterator<>(values);}
 	
 	public String toString() {return String.format("Aggregates from %d,%d to %d,%d.", lowX, lowY, highX,highY);}
 }

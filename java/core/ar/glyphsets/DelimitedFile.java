@@ -87,7 +87,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high);
 	}
 	
-	@Override public boolean isEmpty() {return size() == 0;}
+	@Override public boolean isEmpty() {return source.length() == 0;}
 	@Override public Iterator iterator() {return new Iterator();}
 
 	@Override

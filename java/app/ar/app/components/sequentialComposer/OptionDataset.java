@@ -162,7 +162,9 @@ public final class OptionDataset<G,I> {
 			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
 			OptionAggregator.COUNT,
 			new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			e.printStackTrace();
+			temp = null;}
 		CIRCLE_SCATTER = temp;
 	}
 	

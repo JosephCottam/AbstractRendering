@@ -86,7 +86,17 @@ public class Util {
 	
 	/**What bounding box closely contains all of the glyphs passed.**/
 	public static Rectangle2D bounds(Rectangle2D... rs) {
-		Rectangle2D bounds = rs[0].getBounds2D();
+		if (rs.length == 0) {return null;}
+		Rectangle2D bounds = null;
+		for (Rectangle2D r: rs) {
+			if (r != null) { 
+				bounds = r.getBounds2D();
+				break;
+			}
+		}
+		
+		if (bounds == null) {return null;}
+		
 		for (Rectangle2D r: rs) {
 			if (r != null) {add(bounds, r);}
 		}
