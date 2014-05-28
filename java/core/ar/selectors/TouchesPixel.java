@@ -234,7 +234,7 @@ public abstract class TouchesPixel {
 			if (o != null) {return (Selector<G>) TouchesPixel.make(o.getClass());}
 		}
 		if (glyphs.size() == 0){ throw new IllegalArgumentException("Passed empty glyphset, cannot discern geometry type.");}
-		throw new IllegalArgumentException("Passed glyphset with no non-null shapes.  Cannot discern geometry type.");
+		throw new IllegalArgumentException("Passed glyphset with all null shapes.  Cannot discern geometry type.");
 	}
 
 	@SuppressWarnings("unchecked")

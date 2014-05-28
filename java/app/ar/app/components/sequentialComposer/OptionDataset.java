@@ -10,6 +10,8 @@ import java.util.List;
 import ar.Glyphset;
 import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.DelimitedFile;
+import ar.glyphsets.DelimitedFileCommons;
+import ar.glyphsets.DelimitedFileOpen;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
@@ -17,6 +19,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
+import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.rules.CategoricalCounts;
@@ -166,6 +169,60 @@ public final class OptionDataset<G,I> {
 			e.printStackTrace();
 			temp = null;}
 		CIRCLE_SCATTER = temp;
+	}
+	
+	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER_COMMONS_CSV;
+	static {
+		OptionDataset<Rectangle2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>(
+					"Circle Scatter (Commons CSV)",
+				new DelimitedFileCommons<>(
+						new File("../data/circlepoints.csv"), ',', 
+						new Converter.TYPE[]{TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.INT},
+						1,
+						new Indexed.ToRect(.1, 2, 3), 
+						new Valuer.Constant<Indexed,Integer>(1)),
+				OptionAggregator.COUNT,
+				new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CIRCLE_SCATTER_COMMONS_CSV = temp;
+	}
+	
+	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER_CUSTOM_CSV;
+	static {
+		OptionDataset<Rectangle2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>(
+					"Circle Scatter (Custom CSV)",
+				new DelimitedFile<>(
+						new File("../data/circlepoints.csv"), ',', 
+						new Converter.TYPE[]{TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.INT},
+						1,
+						new Indexed.ToRect(.1, 2, 3), 
+						new Valuer.Constant<Indexed,Integer>(1)),
+				OptionAggregator.COUNT,
+				new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CIRCLE_SCATTER_CUSTOM_CSV = temp;
+	}
+	
+	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER_OPEN_CSV;
+	static {
+		OptionDataset<Rectangle2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>(
+					"Circle Scatter (OpenCSV)",
+				new DelimitedFileOpen<>(
+						new File("../data/circlepoints.csv"), ',', 
+						new Converter.TYPE[]{TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.INT},
+						1,
+						new Indexed.ToRect(.1, 2, 3), 
+						new Valuer.Constant<Indexed,Integer>(1)),
+				OptionAggregator.COUNT,
+				new OptionTransfer.Interpolate());
+		} catch (Exception e) {temp = null;}
+		CIRCLE_SCATTER_OPEN_CSV = temp;
 	}
 	
 	private static int SYNTHETIC_POINT_COUNT = 100_000_000;
