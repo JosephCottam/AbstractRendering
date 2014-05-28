@@ -43,21 +43,21 @@ class Sum(core.Aggregator):
     return reduce(lambda x,y: x+y,  vals)
 
 
-######## Transfers ##########
-class FlattenCategories(core.Transfer):
+######## Shaders ##########
+class FlattenCategories(core.Shader):
   """Convert a set of category-counts into just a set of counts"""
   out_type=(1,np.int32)
   in_type=("A",np.int32) #A is for "any", all cells must be the same size, but the exact size doesn't matter
 
-  def transfer(self, grid):
+  def shade(self, grid):
     return grid.sum(axis=1)
 
 
-class Floor(core.Transfer):
-  def transfer(self, grid):
+class Floor(core.Shader):
+  def shade(self, grid):
     return np.floor(grid)
  
-class Interpolate(core.Transfer):
+class Interpolate(core.Shader):
   """Interpolate between two numbers.
      Projects the input values between the low and high values passed.
      Default is 0 to 1
@@ -68,7 +68,7 @@ class Interpolate(core.Transfer):
     self.high = high
     self.empty = empty
 
-  def transfer(self, grid):
+  def shade(self, grid):
     mask = (grid == self.empty)
     min = grid[~mask].min()
     max = grid[~mask].max()
@@ -76,24 +76,24 @@ class Interpolate(core.Transfer):
     percents = (grid-min)/span
     return percents * (self.high-self.low)
 
-class Power(core.Transfer):
+class Power(core.Shader):
   """Raise to a power.  Power may be fracional."""
   def __init__(self, pow):
     self.pow = pow
 
-  def transfer(self, grid):
+  def shade(self, grid):
     return np.power(grid, self.pow)
 
 
 class Cuberoot(Power):
   def __init__(self): super(Power, 1/3.0)
 
-class Sqrt(core.Transfer):
-  def transfer(self, grid): 
+class Sqrt(core.Shader):
+  def shade(self, grid): 
     return np.sqrt(grid, self.pow)
 
 
-class AbsSegment(core.Transfer):
+class AbsSegment(core.Shader):
   """
   Paint all pixels with aggregate value above divider one color 
   and below the divider another.
@@ -106,7 +106,7 @@ class AbsSegment(core.Transfer):
     self.low = low
     self.divider = float(divider)
 
-  def transfer(self, grid):
+  def shade(self, grid):
     (width, height) = grid.shape[0], grid.shape[1]
     outgrid = np.ndarray((width, height, 4), dtype=np.uint8)
     mask = (grid >= self.divider) 
@@ -114,7 +114,7 @@ class AbsSegment(core.Transfer):
     outgrid[~mask] = self.low
     return outgrid
 
-class InterpolateColors(core.Transfer):
+class InterpolateColors(core.Shader):
   """
   High-definition interpolation between two colors.
   Zero-values are treated separately from other values.
@@ -188,7 +188,7 @@ class InterpolateColors(core.Transfer):
     return outgrid
 
     
-  def transfer(self, grid):
+  def shade(self, grid):
     if (self.log):
       return self._log(grid)
     else :

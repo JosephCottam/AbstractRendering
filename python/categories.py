@@ -31,17 +31,17 @@ class CountCategories(core.Aggregator):
 
 
 
-##### Transfers ########
-class ToCounts(core.Transfer):
+##### Shaders ########
+class ToCounts(core.Shader):
   """Convert from count-by-categories to just raw counts.
-     Then transfer functions from the count module can be used.
+     Then data shader functions from the count module can be used.
   """
   @staticmethod
-  def transfer(grid, dtype=np.int32):
+  def shade(grid, dtype=np.int32):
     return np.sum(grid, axis=2, dtype=dtype)
 
 
-class MinPercent(core.Transfer):
+class MinPercent(core.Shader):
   """
   If the item in the specified bin represents more than a certain percent
   of the total number of items, color it as "above" otherwise, color as "below"
@@ -67,11 +67,11 @@ class MinPercent(core.Transfer):
     self.below = below.asarray()
     self.background = background.asarray()
 
-  def transfer(self, grid):
+  def shade(self, grid):
     (width, height) = grid.shape[0], grid.shape[1]
     outgrid = np.empty((width, height, 4), dtype=np.uint8)
     
-    sums = ToCounts.transfer(grid, dtype=np.float32)
+    sums = ToCounts.shade(grid, dtype=np.float32)
     maskbg = sums == 0 
     mask = (grid[:,:,self.cat]/sums) >= self.cutoff
 
@@ -80,7 +80,7 @@ class MinPercent(core.Transfer):
     outgrid[maskbg] = self.background
     return outgrid
 
-class HDAlpha(core.Transfer):
+class HDAlpha(core.Shader):
   def __init__(self, colors, 
                background=core.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
     """colors -- a list of colors in cateogry-order.
@@ -97,8 +97,8 @@ class HDAlpha(core.Transfer):
     self.log = log
     self.logbase = logbase
 
-  def transfer(self, grid):
-    sums = ToCounts.transfer(grid, dtype=np.float32)
+  def shade(self, grid):
+    sums = ToCounts.shade(grid, dtype=np.float32)
     mask = (sums!=0)
 
     colors = opaqueblend(self.catcolors, grid, sums)

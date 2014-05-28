@@ -126,7 +126,7 @@ def shade(aggregates, shader):
       aggregates -- input aggregaets
       shader -- data shader used in the conversion
    """
-   return shader.transfer(aggregates)
+   return shader.shade(aggregates)
 
 
 class Aggregator(object):
@@ -148,8 +148,8 @@ class Aggregator(object):
     pass
 
 
-#TODO: Add specialization to transfer....
-class Transfer(object):
+#TODO: Add specialization to Shaders....
+class Shader(object):
   def makegrid(self, grid):
     """Create an output grid.  
        Default implementation creates one of the same width/height of the input
@@ -158,19 +158,19 @@ class Transfer(object):
     (width, height) = grid.shape[0], grid.shape[1]
     return np.ndarray((width, height, 4), dtype=np.uint8)
 
-  def transfer(self, grid):
-    """Execute the actual transfer operation."""
+  def shade(self, grid):
+    """Execute the actual data shader operation."""
     raise NotImplementedError
   
   def __add__(self, other): 
-    """Extend this transfer by executing another in sequence."""
-    if (not isinstance(other, Transfer)): 
-        raise TypeError("Can only extend with a transfer.  Received a " + str(type(other)))
+    """Extend this shader by executing another in sequence."""
+    if (not isinstance(other, Shader)): 
+        raise TypeError("Can only extend with a shader.  Received a " + str(type(other)))
     return Seq(self, other) 
 
 
-class Seq(Transfer):
-  """Transfer that does a sequence of other transfers."""
+class Seq(Shader):
+  """Shader that does a sequence of other shaders."""
      
   def __init__(self, *args):
     self._parts = args
@@ -180,15 +180,15 @@ class Seq(Transfer):
       grid = t.makegrid(grid)
     return grid
 
-  def transfer(self, grid):
+  def shade(self, grid):
     for t in self._parts:
-      grid = t.transfer(grid)
+      grid = t.shade(grid)
     return grid
 
   def __add__(self, other):
     if (other is None) : return self
-    if (not isinstance(other, Transfer)): 
-        raise TypeError("Can only extend transfer with another transfer.  Received a " + str(type(other)))
+    if (not isinstance(other, Shader)): 
+        raise TypeError("Can only extend shader with another shader.  Received a " + str(type(other)))
     return Seq(list(self._parts) + other) 
 
 
@@ -202,14 +202,14 @@ class PixelAggregator(Aggregator):
       outgrid.ravel()[:] = map(lambda ids: self.pixelfunc(self._glyphset, ids), self._projected.flat)
 
 
-class PixelTransfer(Transfer):
-  """Transfer function that does non-vectorized per-pixel transfers."""
+class PixelShader(Shader):
+  """Data shader that does non-vectorized per-pixel shading."""
 
   def __init__(self, pixelfunc, prefunc):
     self.pixelfunc = pixelfunc
     self.prefunc = prefunc
 
-  def transfer(self, grid):
+  def shade(self, grid):
     outgrid = self.makegrid(grid)
     self._pre(grid)
     (width,height) = (grid.width, grid.height)
