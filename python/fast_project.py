@@ -9,7 +9,6 @@ integers.
 
 """
 from __future__ import print_function
-from math import floor
 import ctypes
 import numpy as np
 import os

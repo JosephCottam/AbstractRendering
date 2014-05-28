@@ -38,7 +38,7 @@ class ToCounts(core.Transfer):
   """
   @staticmethod
   def transfer(grid, dtype=np.int32):
-    return np.sum(grid._aggregates, axis=2, dtype=dtype)
+    return np.sum(grid, axis=2, dtype=dtype)
 
 
 class MinPercent(core.Transfer):
@@ -68,11 +68,12 @@ class MinPercent(core.Transfer):
     self.background = background.asarray()
 
   def transfer(self, grid):
-    outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
+    (width, height) = grid.shape[0], grid.shape[1]
+    outgrid = np.empty((width, height, 4), dtype=np.uint8)
     
     sums = ToCounts.transfer(grid, dtype=np.float32)
     maskbg = sums == 0 
-    mask = (grid._aggregates[:,:,self.cat]/sums) >= self.cutoff
+    mask = (grid[:,:,self.cat]/sums) >= self.cutoff
 
     outgrid[mask] = self.above
     outgrid[~mask] = self.below
@@ -100,7 +101,7 @@ class HDAlpha(core.Transfer):
     sums = ToCounts.transfer(grid, dtype=np.float32)
     mask = (sums!=0)
 
-    colors = opaqueblend(self.catcolors, grid._aggregates, sums)
+    colors = opaqueblend(self.catcolors, grid, sums)
     colors[~mask] = self.background
     alpha(colors, sums, mask, self.alphamin, self.log, self.logbase)
     return colors

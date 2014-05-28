@@ -2,7 +2,6 @@ import re
 import sys
 import os
 import numpy as np
-from math import floor 
 import ctypes
 from fast_project import _projectRects
 import geometry
@@ -19,12 +18,34 @@ _lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 def enum(**enums): return type('Enum', (), enums)
 ShapeCodes = enum(POINT=0, LINE=1, RECT=2)
 
+class Glyphset():
+  """shapeocde + shape-params + associated data ==> Glyphset
 
-class Glyphset(list):
-  shapecode=ShapeCodes.RECT
+     fields:
+        _points : Points held by this glyphset
+        data : Data associated with the pionts.  _points[x] should associate with data[x]
+        shapecode: Shapecode that tells how to interpret _points
+  """
+  _points = None
+  data = None
+  shapecode = None
 
-  def asarray(self):
-    return np.array(self, order="F")
+  def __init__(self, points, data, shapecode=ShapeCodes.RECT):
+    self._points = points
+    self.data = data
+    self.shapecode = shapecode
+
+  ##TODO: Get rid of the necessity to represent as numpy...else it is an in-core system...currently only used in projection... 
+  def points(self):
+    if type(self._points) is list:
+      return np.array(self._points, order="F")
+    elif type(self._points) is np.ndarray:
+      return self._points
+    else:
+      ValueError("Unhandled points type: %s" % type(self._points))
+   
+  def __getattr__(self, name):
+    return getattr(self._points, name)
 
 ##TODO: change to fill with default value, then insert the glyph value where it actually touches
 def glyphAggregates(points, shapeCode, val, default):
@@ -40,8 +61,6 @@ def glyphAggregates(points, shapeCode, val, default):
     extShape = ()
 
   #TODO: Handle ShapeCode.POINT here....
-
-
   array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
 
   if shapeCode == ShapeCodes.RECT:
@@ -53,10 +72,31 @@ def glyphAggregates(points, shapeCode, val, default):
   return array
 
 
-def _project(viewxform, glyphset):
-  """Project the points found in the glyphset according tot he view transform."""
-  points = glyphset[:,:4]
-  out = np.empty_like(points,dtype=np.int32)
+############ Core process functions #################
+
+def render(glyphs, info, aggregator, shader, screen,ivt):
+  """
+  Render a set of glyphs under the specified condition to the described canvas.
+  glyphs ---- Glyphs t render
+  selector -- Function used to select which glyphs apply to which pixel
+  aggregator  Function to combine a set of glyphs into a single aggregate value
+  trans ----- Function for converting aggregates to colors
+  screen ---- (width,height) of the canvas
+  ivt ------- INVERSE view transform (converts pixels to canvas space)
+  """
+  projected = project(glyphs, ivt.inverse())
+  aggregates = aggregate(projected, info, aggregator, screen)
+  shaded = shade(aggregates, shader)
+  return shaded
+
+
+def project(glyphset, viewxform):
+  """Project the points found in the glyphset according to the view transform.
+     viewxform -- convert canvas space to pixel space
+     glyphset -- set of glyphs (represented as [x,y,w,h,...]
+  """
+  points = glyphset.points()
+  out = np.empty_like(points, dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
   
   #Ensure visilibity, make sure w/h are always at least one
@@ -64,48 +104,31 @@ def _project(viewxform, glyphset):
   for i in xrange(0,out.shape[0]):
     if out[i,0] == out[i,2]: out[i,2] += 1
     if out[i,1] == out[i,3]: out[i,3] += 1
-  
-  return out
 
-class Grid(object):
-    width = 2000
-    height = 2000
-    viewxform = None   # array [tx, ty, sx, sy]
+  return Glyphset(out, glyphset.data, glyphset.shapecode)
 
-    _glyphset = None
-    _projected = None
-    _aggregates = None
-    
-    def __init__(self,w,h,viewxform):
-      self.width=w
-      self.height=h
-      self.viewxform=viewxform
+def aggregate(glyphs, info, aggregator, screen):
+    (width, height) = screen
 
-    def aggregate(self, glyphset, info, aggregator):
-      """ 
-      Returns ndarray of results of applying func to each element in 
-      the grid.  Creates a new ndarray of the given dtype.
+    infos = [info(point, data) for point, data in zip(glyphs.points(), glyphs.data)] #TODO: vectorize
+    aggregates = aggregator.allocate(width, height, glyphs, infos)
+    for idx, points in enumerate(glyphs):
+      aggregator.combine(aggregates, points, glyphs.shapecode, infos[idx])
+    return aggregates
 
-      Stores the results in _aggregates
-      """
 
-      self._glyphset = glyphset.asarray()
-      projected = _project(self.viewxform, self._glyphset)
-      self._projected = projected
-      shapecode = glyphset.shapecode
+#TODO: Add specialization here.  Take a 3rd argument 'specailizer'  if ommited, just use aggregates
+def shade(aggregates, shader):
+   """Convert a set of aggregate into another set of aggregates
+      according to some data shader.  Many common cases, the result
+      aggregates is an image, but it does not need to be.
 
-      infos = map(info, glyphset) #TODO: vectorize
-      aggregates = aggregator.allocate(self.width, self.height, self._glyphset, infos)
-      for idx, points in enumerate(projected):
-        aggregator.combine(aggregates, points, shapecode, infos[idx])
+      aggregates -- input aggregaets
+      shader -- data shader used in the conversion
+   """
+   return shader.transfer(aggregates)
 
-      self._aggregates = aggregates 
 
-    def transfer(self, transferer):
-        """ Returns pixel grid of NxMxRGBA32 (for now) """
-        return transferer.transfer(self)
-
-        
 class Aggregator(object):
   out_type = None
   in_type = None
@@ -125,17 +148,22 @@ class Aggregator(object):
     pass
 
 
+#TODO: Add specialization to transfer....
 class Transfer(object):
-  input_spec = None # tuple of (shape, dtype)
-  # For now assume output is RGBA32
-
   def makegrid(self, grid):
-    return np.ndarray((grid.width, grid.height, 4), dtype=np.uint8)
+    """Create an output grid.  
+       Default implementation creates one of the same width/height of the input
+       suitable for colors (dept 4, unit8).
+    """
+    (width, height) = grid.shape[0], grid.shape[1]
+    return np.ndarray((width, height, 4), dtype=np.uint8)
 
   def transfer(self, grid):
+    """Execute the actual transfer operation."""
     raise NotImplementedError
   
   def __add__(self, other): 
+    """Extend this transfer by executing another in sequence."""
     if (not isinstance(other, Transfer)): 
         raise TypeError("Can only extend with a transfer.  Received a " + str(type(other)))
     return Seq(self, other) 
@@ -148,12 +176,12 @@ class Seq(Transfer):
     self._parts = args
 
   def makegrid(self, grid):
-    for t in parts:
+    for t in self._parts:
       grid = t.makegrid(grid)
     return grid
 
   def transfer(self, grid):
-    for t in _parts:
+    for t in self._parts:
       grid = t.transfer(grid)
     return grid
 
@@ -191,22 +219,6 @@ class PixelTransfer(Transfer):
         outgrid[x,y] = self.pixelfunc(grid, x, y)
 
     return outgrid
-
-
-def render(glyphs, info, aggregator, trans, screen,ivt):
-  """
-  Render a set of glyphs under the specified condition to the described canvas.
-  glyphs ---- Glyphs t render
-  selector -- Function used to select which glyphs apply to which pixel
-  aggregator  Function to combine a set of glyphs into a single aggregate value
-  trans ----- Function for converting aggregates to colors
-  screen ---- (width,height) of the canvas
-  ivt ------- INVERSE view transform (converts pixels to canvas space)
-  """
-
-  grid = Grid(screen[0], screen[1], ivt.inverse())
-  grid.aggregate(glyphs, info, aggregator)
-  return grid.transfer(trans)
 
 
 ###############################  Graphics Components ###############
@@ -307,7 +319,8 @@ def zoom_fit(screen, bounds):
 
 def load_csv(filename, skip, xc,yc,vc,width,height):
   source = open(filename, 'r')
-  glyphs = Glyphset()
+  glyphs = []
+  data = []
   
   for i in range(0, skip):
     source.readline()
@@ -317,16 +330,16 @@ def load_csv(filename, skip, xc,yc,vc,width,height):
     x = float(line[xc].strip())
     y = float(line[yc].strip())
     v = float(line[vc].strip()) if vc >=0 else 1 
-    g = Glyph(x,y,width,height,v)
+    g = Glyph(x,y,width,height)
     glyphs.append(g)
+    data.append(v)
 
   source.close()
-  return glyphs
+  return Glyphset(glyphs,data)
 
 def main():
   ##Abstract rendering function implementation modules (for demo purposes only)
   import numeric
-  import categories
   import infos
 
   source = sys.argv[1]

@@ -50,12 +50,12 @@ class FlattenCategories(core.Transfer):
   in_type=("A",np.int32) #A is for "any", all cells must be the same size, but the exact size doesn't matter
 
   def transfer(self, grid):
-    return grid._aggregates.sum(axis=1)
+    return grid.sum(axis=1)
 
 
 class Floor(core.Transfer):
   def transfer(self, grid):
-    return np.floor(grid._aggregates)
+    return np.floor(grid)
  
 class Interpolate(core.Transfer):
   """Interpolate between two numbers.
@@ -64,32 +64,33 @@ class Interpolate(core.Transfer):
      empty values are preserved (default is np.nan)
   """
   def __init__(self, low=0, high=1, empty=np.nan):
-    this.low = low
-    this.high = high
-    this.empty = empty
+    self.low = low
+    self.high = high
+    self.empty = empty
 
   def transfer(self, grid):
-    items = grid._aggregates
-    mask = (grid._aggregates == self.empty)
-    min = items[~mask].min()
-    max = items[~mask].max()
+    mask = (grid == self.empty)
+    min = grid[~mask].min()
+    max = grid[~mask].max()
     span = float(max-min) 
-    percents = (items-min)/span
+    percents = (grid-min)/span
     return percents * (self.high-self.low)
 
 class Power(core.Transfer):
   """Raise to a power.  Power may be fracional."""
   def __init__(self, pow):
-    this.pow = pow
+    self.pow = pow
 
   def transfer(self, grid):
-    return np.power(grid._aggregates, self.pow)
+    return np.power(grid, self.pow)
+
 
 class Cuberoot(Power):
   def __init__(self): super(Power, 1/3.0)
 
 class Sqrt(core.Transfer):
-  def transfer(self, grid): return np.sqrt(grid._aggregates, self.pow)
+  def transfer(self, grid): 
+    return np.sqrt(grid, self.pow)
 
 
 class AbsSegment(core.Transfer):
@@ -106,8 +107,9 @@ class AbsSegment(core.Transfer):
     self.divider = float(divider)
 
   def transfer(self, grid):
-    outgrid = np.ndarray((grid.width, grid.height, 4), dtype=np.uint8)
-    mask = (grid._aggregates >= self.divider) 
+    (width, height) = grid.shape[0], grid.shape[1]
+    outgrid = np.ndarray((width, height, 4), dtype=np.uint8)
+    mask = (grid >= self.divider) 
     outgrid[mask] = self.high
     outgrid[~mask] = self.low
     return outgrid
@@ -136,35 +138,34 @@ class InterpolateColors(core.Transfer):
   
   ##TODO: there are issues with zeros here....
   def _log(self,  grid):
-    items = grid._aggregates
-    mask = (grid._aggregates == self.empty)
-    min = items[~mask].min()
-    max = items[~mask].max()
+    mask = (grid == self.empty)
+    min = grid[~mask].min()
+    max = grid[~mask].max()
     
-    items[mask] = 1
+    grid[mask] = 1
     if (self.log==10):
       min = math.log10(min)
       max = math.log10(max)
       span = float(max-min)
-      percents = (np.log10(items)-min)/span
+      percents = (np.log10(grid)-min)/span
     elif (self.log == math.e or self.log == True):
       min = math.log(min)
       max = math.log(max)
       span = float(max-min)
-      percents = (np.log(items)-min)/span
+      percents = (np.log(grid)-min)/span
     elif (self.log==2):
       min = math.log(min, self.log)
       max = math.log(max, self.log)
       span = float(max-min)
-      percents = (np.log2(items)-min)/span
+      percents = (np.log2(grid)-min)/span
     else:
       rebase = math.log(self.log)
       min = math.log(min, self.log)
       max = math.log(max, self.log)
       span = float(max-min)
-      percents = ((np.log(items)/rebase)-min)/span
+      percents = ((np.log(grid)/rebase)-min)/span
     
-    items[mask] = 0
+    grid[mask] = 0
     
     colorspan = self.high.asarray().astype(np.int32) - self.low.asarray().astype(np.int32)
 
@@ -175,12 +176,11 @@ class InterpolateColors(core.Transfer):
 
 
   def _linear(self, grid):
-    items = grid._aggregates
-    mask = (grid._aggregates == self.empty)
-    min = items[~mask].min()
-    max = items[~mask].max()
+    mask = (grid == self.empty)
+    min = grid[~mask].min()
+    max = grid[~mask].max()
     span = float(max-min) 
-    percents = (items-min)/span
+    percents = (grid-min)/span
     
     colorspan = self.high.asarray().astype(np.int32) - self.low.asarray().astype(np.int32)
     outgrid = (percents[:,:,np.newaxis] * colorspan[np.newaxis,np.newaxis,:] + self.low.asarray()).astype(np.uint8)
