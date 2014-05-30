@@ -9,9 +9,7 @@ import java.util.List;
 
 import ar.Glyphset;
 import ar.app.util.GlyphsetUtils;
-import ar.glyphsets.DelimitedFile;
-import ar.glyphsets.DelimitedFileCommons;
-import ar.glyphsets.DelimitedFileOpen;
+import ar.ext.textfile.*;
 import ar.glyphsets.DynamicQuadTree;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
@@ -62,8 +60,8 @@ public final class OptionDataset<G,I> {
 		OptionDataset<Point2D, Integer> temp;
 		try {
 			temp = new OptionDataset<>(
-				"Wikipedia BFS adjacnecy (txt)",
-				new DelimitedFile<>(
+				"Wikipedia BFS adjacnecy (Custom txt)",
+				new DelimitedFileCommons<>(
 						new File("../data/wiki.full.txt"), ',', new Converter.TYPE[]{Converter.TYPE.LONG,Converter.TYPE.LONG, Converter.TYPE.COLOR}, 
 						new Indexed.ToPoint(false, 0,1), new Valuer.Constant<Indexed,Integer>(1)),
 				OptionAggregator.COUNT,
@@ -194,8 +192,8 @@ public final class OptionDataset<G,I> {
 		OptionDataset<Rectangle2D, Integer> temp;
 		try {
 			temp = new OptionDataset<>(
-					"Circle Scatter (Custom CSV)",
-				new DelimitedFile<>(
+					"Circle Scatter (Super CSV)",
+				new DelimitedFileSuper<>(
 						new File("../data/circlepoints.csv"), ',', 
 						new Converter.TYPE[]{TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.DOUBLE,TYPE.INT},
 						1,

@@ -1,24 +1,30 @@
-package ar.glyphsets;
+package ar.ext.textfile;
 
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.glyphsets.BoundsTask;
+import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
+import org.supercsv.io.*;
+import org.supercsv.prefs.*;
+
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
  */
-public class DelimitedFile<G,I> implements Glyphset<G,I> {
+public class DelimitedFileSuper<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip by default.  Captured at object creation time.**/
 	public static int DEFAULT_SKIP =0;
 	
@@ -46,9 +52,9 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	private Rectangle2D bounds;
 
 		
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
+	public DelimitedFileSuper(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
+	public DelimitedFileSuper(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1);}
+	public DelimitedFileSuper(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
 		this.source = source;
 		this.delimiter = delimiter;
 		this.types = types;
@@ -84,7 +90,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		long low = stride*segId;
 		long high = Math.min(low+stride, source.length());
 
-		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high);
+		return new DelimitedFileSuper<>(source, delimiter, types, skip, shaper, valuer, low, high);
 	}
 	
 	@Override public boolean isEmpty() {return source.length() == 0;}
@@ -120,24 +126,23 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	
 	private final class Iterator implements java.util.Iterator<Glyph<G,I>> {
 		private final Converter conv = new Converter(types);
-		private final BufferedReader reader;
-
-		private long charsRead;
-		private String cache;
-		private boolean closed = false;
-		
+		private final CsvListReader reader;
+		private List<String> cache;
+		private int charsRead;		
+		private boolean closed;
 		
 		public Iterator() {
 			try {
-				reader = new BufferedReader(new FileReader(source));
-				
+				FileReader core = new FileReader(source);
 				//Get to the first record-start in the segment
-				reader.skip(segStart);
+				core.skip(segStart);
+				reader = new CsvListReader(core, new CsvPreference.Builder('"', delimiter, "\n").build());
+				
 
 				if (segStart == 0) {
-					for (long i=skip; i>0; i--) {reader.readLine();}					
+					for (long i=skip; i>0; i--) {reader.read();}					
 				} else {
-					reader.readLine();
+					reader.read();
 				}
 			} catch (IOException e) {
 				throw new RuntimeException("Error initializing iterator for " + source.getName(), e);
@@ -146,12 +151,11 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		
 		@Override
 		protected void finalize() {
-			try {if (!closed) {reader.close();}}
+			try {if (reader != null) {reader.close();}}
 			catch (IOException e) {e.printStackTrace();}
 		}
 		
-		@Override
-		public boolean hasNext() {
+		@Override public boolean hasNext() {
 			if (!closed && cache == null) {
 				try {
 					if (segEnd > 0 && charsRead > segEnd) {
@@ -159,24 +163,20 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 						closed = true;
 						return false;
 					}
-					cache = reader.readLine();
+					cache = reader.read();
 					if (cache == null) {return false;}
-					
-					charsRead += cache.length();
+					charsRead += reader.getUntokenizedRow().length();
 				} catch (IOException e) {throw new RuntimeException("Error processing file: " + source.getName());}
 			}
 			return cache != null;
 		}
-
 		
 		@Override
 		public Glyph<G,I> next() {
 			if (cache == null && !hasNext()) {throw new NoSuchElementException();}
 			//System.out.printf("Processed %d%n", byteOffset);
-
-			String line = cache;
+			Indexed base = conv.applyTo(new Indexed.ListWrapper(cache));
 			cache = null;
-			Indexed base = asIndexed(line, delimiter, conv);
 			return new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
 		}
 

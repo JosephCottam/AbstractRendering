@@ -8,7 +8,7 @@ import ar.util.Util;
 
 /**Compute the bounds for a glyphset.  
  */
-final class BoundsTask<G> extends RecursiveTask<Rectangle2D> {
+public final class BoundsTask<G> extends RecursiveTask<Rectangle2D> {
 	private final Glyphset<G, ?> glyphs;
 	public static final long serialVersionUID = 1L;
 	private final int lowTask, highTask;
