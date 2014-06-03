@@ -243,6 +243,9 @@ class Glyph(list):
 
 
 ############################  Support functions ####################
+class EmptyList(object):
+  def __getitem__(self, idx): 
+    return None
 
 #Does the glyph contain any part of the pixel?
 def contains(px, glyph):

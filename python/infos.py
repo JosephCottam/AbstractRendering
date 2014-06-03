@@ -7,7 +7,7 @@
 
 def const(v):
   """Return the value passed.""" 
-  def f(glyph):
+  def f(glyph, data):
     return v
   return f
 

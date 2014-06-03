@@ -3,7 +3,6 @@ import numpy as np
 def enum(**enums): return type('Enum', (), enums)
 ShapeCodes = enum(POINT=0, LINE=1, RECT=2)
 
-
 class Glyphset(object):
   """shaper + shape-params + associated data ==> Glyphset
 
@@ -17,10 +16,11 @@ class Glyphset(object):
   _data = None
   shaper = None
 
-  def __init__(self, points, data, shaper):
+  def __init__(self, points, data, shaper, colMajor=False):
     self._points = points
     self._data = data
-    self.shaper = shaper
+    self.shaper = shaper 
+    self.shaper.colMajor = colMajor ##HACK: This modification is bad form...would rather do a copy
 
   ##TODO: Add the ability to get points m...n 
   def points(self):
@@ -44,8 +44,7 @@ class Glyphset(object):
     maxX=float("-inf")
     minY=float("inf")
     maxY=float("-inf")
-    for p in self._points:
-      g = self.shaper(p)
+    for g in self.points():
       x = g[0]
       y = g[1]
       w = g[2]
@@ -63,9 +62,13 @@ class Glyphset(object):
 class Shaper(object):
   fns = None #List of functions to apply 
   code = None
+  colMajor = False 
+  ##TODO: When getting subsets of teh data out of glyphset.points(), remove this colMajor and handle it up in glyphset instead
   def __call__(self, vals):
-    import pdb; pdb.set_trace()
-    return [map(lambda f: f(val,r), self.fns) for val,r in enumerate(vals)]
+    if not self.colMajor:
+      return [map(lambda f: f(val), self.fns) for val in vals]
+    else:
+      return [map(lambda f: f(val), self.fns) for val in zip(*vals)]
 
 class Literals(Shaper):
   """Optimization marker, tested in Glyphset and conversions skipped if present.
@@ -96,12 +99,10 @@ class ToPoint(Shaper):
 
 #### Utilities for shapers....
 def const(v):
-  def f(a,r): return v
+  def f(a): return v
+  return f
 
 def idx(i):
   """Return value at index in the given row"""
-  def f(a,r): return a[r][i]
-
-def colIdx(c):
-  """De-reference a column from a, then gets the row (idx gets row then col)"""
-  def f(a,r): return a[c][r]
+  def f(a): return a[i]
+  return f
