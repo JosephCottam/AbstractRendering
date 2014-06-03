@@ -17,6 +17,7 @@ import core
 import numeric
 import categories
 import infos
+import glyphset
 
 from timer import Timer
 
@@ -42,11 +43,11 @@ def _create_plot_component():
     glyphs = core.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     #glyphs = core.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
     
-    glyphs.shapecode = core.ShapeCodes.LINE
-    #glyphs.shapecode = core.ShapeCodes.RECT
+    glyphs.shaper.code = glyphset.ShapeCodes.LINE
+    #glyphs.shaper.code = glyphset.ShapeCodes.RECT
     
     screen = (800,800)
-    ivt = core.zoom_fit(screen,core.bounds(glyphs))
+    ivt = core.zoom_fit(screen,glyphs.bounds())
 
     with Timer("Abstract-Render") as arTimer:   
       image = core.render(glyphs, 

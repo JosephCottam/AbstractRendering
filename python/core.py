@@ -5,6 +5,7 @@ import numpy as np
 import ctypes
 from fast_project import _projectRects
 import geometry
+import glyphset
 
 try:
   from numba import autojit
@@ -15,39 +16,6 @@ except ImportError:
 _lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 
 ############################  Core System ####################
-def enum(**enums): return type('Enum', (), enums)
-ShapeCodes = enum(POINT=0, LINE=1, RECT=2)
-
-class Glyphset():
-  """shapeocde + shape-params + associated data ==> Glyphset
-
-     fields:
-        _points : Points held by this glyphset
-        data : Data associated with the pionts.  _points[x] should associate with data[x]
-        shapecode: Shapecode that tells how to interpret _points
-  """
-  _points = None
-  data = None
-  shapecode = None
-
-  def __init__(self, points, data, shapecode=ShapeCodes.RECT):
-    self._points = points
-    self.data = data
-    self.shapecode = shapecode
-
-  ##TODO: Get rid of the necessity to represent as numpy...else it is an in-core system...currently only used in projection... 
-  def points(self):
-    if type(self._points) is list:
-      return np.array(self._points, order="F")
-    elif type(self._points) is np.ndarray:
-      return self._points
-    else:
-      ValueError("Unhandled points type: %s" % type(self._points))
-   
-  def __getattr__(self, name):
-    return getattr(self._points, name)
-
-##TODO: change to fill with default value, then insert the glyph value where it actually touches
 def glyphAggregates(points, shapeCode, val, default):
   def scalar(array, val): array.fill(val)
   def nparray(array,val): array[:] = val
@@ -63,9 +31,9 @@ def glyphAggregates(points, shapeCode, val, default):
   #TODO: Handle ShapeCode.POINT here....
   array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
 
-  if shapeCode == ShapeCodes.RECT:
+  if shapeCode == glyphset.ShapeCodes.RECT:
     fill(array, val)
-  elif shapeCode == ShapeCodes.LINE:
+  elif shapeCode == glyphset.ShapeCodes.LINE:
     fill(array, default)
     geometry.bressenham(array, points, val)
 
@@ -90,12 +58,12 @@ def render(glyphs, info, aggregator, shader, screen,ivt):
   return shaded
 
 
-def project(glyphset, viewxform):
+def project(glyphs, viewxform):
   """Project the points found in the glyphset according to the view transform.
      viewxform -- convert canvas space to pixel space
-     glyphset -- set of glyphs (represented as [x,y,w,h,...]
+     glyphs -- set of glyphs (represented as [x,y,w,h,...]
   """
-  points = glyphset.points()
+  points = glyphs.points()
   out = np.empty_like(points, dtype=np.int32)
   _projectRects(viewxform.asarray(), points, out)
   
@@ -105,15 +73,15 @@ def project(glyphset, viewxform):
     if out[i,0] == out[i,2]: out[i,2] += 1
     if out[i,1] == out[i,3]: out[i,3] += 1
 
-  return Glyphset(out, glyphset.data, glyphset.shapecode)
+  return glyphset.Glyphset(out, glyphs.data(), glyphset.Literals(glyphs.shaper.code))
 
 def aggregate(glyphs, info, aggregator, screen):
     (width, height) = screen
 
-    infos = [info(point, data) for point, data in zip(glyphs.points(), glyphs.data)] #TODO: vectorize
+    infos = [info(point, data) for point, data in zip(glyphs.points(), glyphs.data())] #TODO: vectorize
     aggregates = aggregator.allocate(width, height, glyphs, infos)
-    for idx, points in enumerate(glyphs):
-      aggregator.combine(aggregates, points, glyphs.shapecode, infos[idx])
+    for idx, points in enumerate(glyphs.points()):
+      aggregator.combine(aggregates, points, glyphs.shaper.code, infos[idx])
     return aggregates
 
 
@@ -291,20 +259,6 @@ def containing(px, glyphs):
       
   return items
 
-def bounds(glyphs):
-  """Compute bounds of the glyph-set.  Returns (X,Y,W,H)"""
-  minX=float("inf")
-  maxX=float("-inf")
-  minY=float("inf")
-  maxY=float("-inf")
-  for g in glyphs:
-    minX=min(minX, g.x)
-    maxX=max(maxX, g.x+g.width)
-    minY=min(minY, g.y)
-    maxY=max(maxY, g.y+g.height)
-
-  return (minX, minY, maxX-minX, maxY-minY)
-
 def zoom_fit(screen, bounds):
   """What affine transform will zoom-fit the given items?
      screen: (w,h) of the viewing region
@@ -335,7 +289,7 @@ def load_csv(filename, skip, xc,yc,vc,width,height):
     data.append(v)
 
   source.close()
-  return Glyphset(glyphs,data)
+  return glyphset.Glyphset(glyphs,data, glyphset.Literals(glyphset.ShapeCodes.RECT))
 
 def main():
   ##Abstract rendering function implementation modules (for demo purposes only)
@@ -351,7 +305,7 @@ def main():
   glyphs = load_csv(source,skip,xc,yc,vc,size,size)
 
   screen=(10,10)
-  ivt = zoom_fit(screen,bounds(glyphs))
+  ivt = zoom_fit(screen,glyphs.bounds())
 
   image = render(glyphs, 
                  infos.id(),
