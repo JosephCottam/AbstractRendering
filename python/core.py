@@ -216,7 +216,7 @@ class AffineTransform(list):
   def asarray(self): return np.array(self)
 
   def inverse(self):
-    return AffineTransform(-self.tx/self.sx, -self.ty/self.sx, 1/self.sx, 1/self.sy)
+    return AffineTransform(-self.tx/self.sx, -self.ty/self.sy, 1/self.sx, 1/self.sy)
 
 class Color(list):
   def __init__(self,r,g,b,a):
@@ -262,16 +262,21 @@ def containing(px, glyphs):
       
   return items
 
-def zoom_fit(screen, bounds):
+def zoom_fit(screen, bounds, balanced=True):
   """What affine transform will zoom-fit the given items?
      screen: (w,h) of the viewing region
      bounds: (x,y,w,h) of the items to fit
+     balance: Should the x and y scales match?
      returns: AffineTransform object
   """
   (sw,sh) = screen
   (gx,gy,gw,gh) = bounds
-  scale = max(gw/float(sw), gh/float(sh))
-  return AffineTransform(gx,gy,scale,scale)
+  x_scale = gw/float(sw)
+  y_scale = gh/float(sh)
+  if (balanced):
+    x_scale = max(x_scale, y_scale)
+    y_scale = x_scale
+  return AffineTransform(gx,gy,x_scale, y_scale)
 
 
 def load_csv(filename, skip, xc,yc,vc,width,height):
