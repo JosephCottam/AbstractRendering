@@ -43,9 +43,10 @@ def _create_plot_component():
     glyphs = core.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
     #glyphs = core.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
     
-    glyphs.shaper.code = glyphset.ShapeCodes.LINE
+    #glyphs.shaper.code = glyphset.ShapeCodes.LINE
     #glyphs.shaper.code = glyphset.ShapeCodes.RECT
-    
+    glyphs.shaper.code = glyphset.ShapeCodes.POINT
+
     screen = (800,800)
     ivt = core.zoom_fit(screen,glyphs.bounds())
 

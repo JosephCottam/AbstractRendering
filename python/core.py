@@ -28,12 +28,14 @@ def glyphAggregates(points, shapeCode, val, default):
     fill = scalar 
     extShape = ()
 
-  #TODO: Handle ShapeCode.POINT here....
-  array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
-
-  if shapeCode == glyphset.ShapeCodes.RECT:
+  #TODO: These are selectors...rename and move this somewhere else
+  if shapeCode == glyphset.ShapeCodes.POINT:
+    array = np.copy(val) ##TODO: Not sure this is always an array...should verify that
+  elif shapeCode == glyphset.ShapeCodes.RECT:
+    array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
     fill(array, val)
   elif shapeCode == glyphset.ShapeCodes.LINE:
+    array = np.empty((points[2]-points[0],points[3]-points[1])+extShape, dtype=np.int32)
     fill(array, default)
     geometry.bressenham(array, points, val)
 
@@ -45,12 +47,14 @@ def glyphAggregates(points, shapeCode, val, default):
 def render(glyphs, info, aggregator, shader, screen,ivt):
   """
   Render a set of glyphs under the specified condition to the described canvas.
-  glyphs ---- Glyphs t render
-  selector -- Function used to select which glyphs apply to which pixel
-  aggregator  Function to combine a set of glyphs into a single aggregate value
-  trans ----- Function for converting aggregates to colors
-  screen ---- (width,height) of the canvas
-  ivt ------- INVERSE view transform (converts pixels to canvas space)
+
+  glyphs: Glyphs to render
+  info: For each glyph, what is the piece of information that will be aggregated
+  aggregator: Function to combine a set of info values into a single aggregate value
+  selector: Function to determine which glyph affects which bin 
+  shader: Function for converting aggregates to colors
+  screen: (width,height) of the canvas
+  ivt: INVERSE view transform (converts pixels to canvas space)
   """
   projected = project(glyphs, ivt.inverse())
   aggregates = aggregate(projected, info, aggregator, screen)
