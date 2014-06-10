@@ -42,5 +42,5 @@ public class DataInputRecord implements Indexed {
 		return this;
 	}
 
-
+	@Override public int size() {return types.length;}
 }
