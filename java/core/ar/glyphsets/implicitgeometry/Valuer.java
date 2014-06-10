@@ -33,13 +33,19 @@ public interface Valuer<I,V> extends Serializable {
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToInt<V> implements Valuer<V,Integer> {
 		private static final long serialVersionUID = 2540867051146887184L;
-		public Integer value(V from) {return Integer.valueOf(from.toString());}
+		public Integer value(V from) {
+			if (from instanceof Number) {return ((Number) from).intValue();}
+			else {return Integer.valueOf(from.toString());}
+		}
 	}
 
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToDouble<V> implements Valuer<V,Double> {
 		private static final long serialVersionUID = 2540867051146887184L;
-		public Double value(V from) {return Double.valueOf(from.toString());}
+		public Double value(V from) {
+			if (from instanceof Number) {return ((Number) from).doubleValue();}
+			return Double.valueOf(from.toString());
+		}
 	}
 
 	

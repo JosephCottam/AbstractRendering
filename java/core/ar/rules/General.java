@@ -200,9 +200,9 @@ public class General {
 	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer.Specialized<V,V> {
 		final Spreader<V> spreader;
-		final Aggregator<V,V> combiner;
+		final Aggregator<?,V> combiner;
 		
-		public Spread(Spreader<V> spreader, Aggregator<V,V> combiner) {
+		public Spread(Spreader<V> spreader, Aggregator<?,V> combiner) {
 			this.spreader = spreader;
 			this.combiner = combiner;
 		}
@@ -233,20 +233,27 @@ public class General {
 		 * This capability can be used to implement (for example) a map with circles centered-on and proportional to a value. 
 		 */
 		public static interface Spreader<V> {
-			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<V,V> op);
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?,V> op);
 		}
 		
-		/**Spread in a square pattern of a fixed size.  The location is in the center.
-		 * Size is the number of units up/down/left/right of center to go, so total
-		 * length will be 2*size+1.
+		
+		/**Spread in a rectangular pattern from the focus cell.  
+		 * 
+		 * Will go from (x-left, y-down) to (x+right, y+up).
 		 */
-		public static class UnitSquare<V> implements Spreader<V> {
-			private final int size;
-			public UnitSquare(int size) {this.size=Math.abs(size);}
-			
-			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
-				for (int xx=-size; xx<=size; xx++) {
-					for (int yy=-size; yy<=size; yy++) {
+		public static class UnitRectangle<V> implements Spreader<V> {
+			final int up,down,left,right;
+
+			public UnitRectangle(int size) {this(size,size,size,size);}
+			public UnitRectangle(int up, int down, int left, int right) {
+				this.up =up; this.down=down; this.left=left; this.right=right;
+			}
+
+			@Override
+			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?, V> op) {
+				for (int xx=-left; xx<=right; xx++) {
+					for (int yy=-up; yy<=down; yy++) {
+
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
@@ -254,14 +261,14 @@ public class General {
 					}
 				}
 			}
-			
 		}
 		
+		/**Spread in a circular pattern with original value at the center**/
 		public static class UnitCircle<V> implements Spreader<V> {
 			private final int radius;
 			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
 			
-			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<V,V> op) {
+			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<?,V> op) {
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
@@ -277,8 +284,11 @@ public class General {
 			}
 		}
 		
+		/**Spread in a circular pattern with original value at center, circle size is determined by
+		 * the value found in the cell.
+		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
-			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<N,N> op) {
+			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<?,N> op) {
 				int radius = (int) base.doubleValue();
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
@@ -400,7 +410,6 @@ public class General {
 		/**
 		 * @param mappings Backing map
 		 * @param other Value to return if the backing map does not include a requested key
-		 * @param nullIsValue Should 'null' be considered a valid return value from the map, or should it be converted to 'other' instead
 		 */
 		public MapWrapper(Map<IN, OUT> mappings, OUT other) {
 			this.mappings=mappings;
@@ -443,6 +452,7 @@ public class General {
 			String line = bf.readLine();
 			while(line != null) {
 				dict.put(keyer.value(line), valuer.value(line));
+				line = bf.readLine();
 			}
 
 			return new MapWrapper<K,V>(dict,other);

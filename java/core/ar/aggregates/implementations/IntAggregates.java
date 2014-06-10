@@ -5,7 +5,7 @@ import java.util.Iterator;
 import ar.Aggregates;
 import ar.aggregates.Iterator2D;
 
-/**Set of color aggregates backed by a buffered image.**/
+/**Set of Integer values.**/
 public class IntAggregates extends IntegerBackingAggregates implements Aggregates<Integer> {
 	public IntAggregates(int lowX,int lowY, int highX, int highY, int defVal) {
 		super(lowX, lowY, highX, highY, defVal);

@@ -32,14 +32,12 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
 	private final JFrame frame = new JFrame();
 
-	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
+	private final RegionOptions enhanceOptions = new RegionOptions();
 	private final JButton export = new JButton("Save Image");
 	private final Status status = new Status();
 	private final SequentialComposer composer = new SequentialComposer(this);
 	
 	public ARComposerApp() {
-		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
-		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());

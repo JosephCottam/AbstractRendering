@@ -2,6 +2,7 @@ package ar.util.memoryMapping;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 public interface MappedFile {
@@ -29,6 +30,10 @@ public interface MappedFile {
 
 	/**What byte of the backing file does the zero-buffer position correspond to?*/
 	public abstract long filePosition();
+
+	public ByteOrder order();
+	public void order(ByteOrder order);
+
 
 	public static final class Util {
 		public static final MappedFile make(File f, FileChannel.MapMode mode, int bufferSize) throws IOException {

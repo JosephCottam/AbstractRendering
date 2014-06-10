@@ -21,13 +21,11 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
 	private final JFrame frame = new JFrame();
 
-	private final EnhanceOptions enhanceOptions = new EnhanceOptions();
+	private final RegionOptions enhanceOptions = new RegionOptions();
 	private final Presets presets = new Presets(this);
 	private final Status status = new Status();
 
 	public ARApp() {
-		ar.renderers.RenderUtils.RECORD_PROGRESS = true;
-		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());

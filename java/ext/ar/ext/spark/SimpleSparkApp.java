@@ -5,16 +5,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 
-import spark.api.java.JavaRDD;
-import spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+
 import ar.Aggregates;
-import ar.Glyph;
+import ar.Selector;
 import ar.app.display.TransferDisplay;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.*;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.AggregatesToCSV;
 import ar.util.Util;
 
@@ -29,32 +31,35 @@ public class SimpleSparkApp {
 	}
 
 	public static void main(String[] args){
-		if (args.length == 0) {
-			System.err.println("Usage: JavaTC -host <host> -in <data> -out <out> -sh <spark-home> -jars <jars>");
-			System.exit(1);
+		if (args.length >0) {
+			String first = args[0].toLowerCase();
+			if (first.equals("-h") || first.equals("-help") || first.equals("--help")) {
+				System.err.println("Parameters: -host <host> -in <data.csv> -out <out> -sh <spark-home> -jars <jars>");
+				System.err.println("Parameters are order independent and all have reasonable defaults.");
+				System.exit(1);
+			}
 		}
 		
 		int width = Integer.parseInt(arg(args, "-width", "500"));
 		int height = Integer.parseInt(arg(args, "-height", "500"));
-		String host = arg(args, "-host", "localhost");
-		String inFile = arg(args, "-in", null);
+		String host = arg(args, "-host", "local");
+		String inFile = arg(args, "-in", "../data/circlepoints.csv");
 		String outFile= arg(args, "-out", null);
-		String sparkhome = arg(args, "-spark", System.getenv("SPARK_HOME"));
-		String jars[] = arg(args, "-jars", "").split(":");
+		String sparkhome = arg(args,  "-spark", System.getenv("SPARK_HOME"));
+		String jars[] = arg(args, "-jars", "AR.jar:ARApp.jar:ARExt.jar").split(":");
 		
 		JavaSparkContext ctx = new JavaSparkContext(host, "Abstract-Rendering", sparkhome, jars);
 		JavaRDD<String> source = ctx.textFile(inFile);
 		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
-		Shaper<Rectangle2D, Indexed> shaper = new ToRect(.1, .1, false, 2, 3);
+		Shaper<Indexed, Rectangle2D> shaper = new ToRect(.1, .1, false, 2, 3);
 		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
 
-		JavaRDD<Glyph<Rectangle2D, Integer>> glyphs = base.map(new Glypher<>(shaper,valuer)).cache();
- 		Rectangle2D contentBounds = RDDRender.bounds(glyphs);
-		AffineTransform view = Util.zoomFit(contentBounds, width, height);
-
- 		
+		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper, valuer)));
+		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
+		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
+		
  		RDDRender render = new RDDRender();
- 		Aggregates<Integer> aggs = render.aggregate(glyphs, new Numbers.Count<>(), view, width, height);
+ 		Aggregates<Integer> aggs = render.aggregate(glyphs, selector, new Numbers.Count<Integer>(), view, width, height);
 
 		
 		if (outFile == null) {

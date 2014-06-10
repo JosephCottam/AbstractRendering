@@ -59,7 +59,6 @@ public class Renderings {
 	}
 	
 	public <G,V,A> void testWith(String test, Glyphset<G,V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
-		RenderUtils.RECORD_PROGRESS = true;
 		Renderer r = new SerialRenderer();
 		BufferedImage ref_img =image(r, glyphs, agg, t);
 		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));		

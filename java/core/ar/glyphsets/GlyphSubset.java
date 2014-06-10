@@ -20,13 +20,17 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 		}
 	}
 
-	public GlyphsetIterator<G,I> iterator() {return new GlyphsetIterator<G,I>(this, 0, size());}
-	public boolean isEmpty() {return low >= high;}
-	public long size() {return high - low;}
-	public Rectangle2D bounds() {return Util.bounds(this);}
-	public long segments() {return high - low;}
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {
+	@Override public GlyphsetIterator<G,I> iterator() {return new GlyphsetIterator<G,I>(this, 0, size());}
+	@Override public boolean isEmpty() {return low >= high;}
+	@Override public long size() {return high - low;}
+	@Override public Rectangle2D bounds() {return Util.bounds(this);}
+	
+	@Override 
+	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long bottom = stride*segId;
+		long top = Math.min(low+stride, high);
+
 		return new Cached<>(glyphs, bottom + this.low, top + this.low);
 	}
 	

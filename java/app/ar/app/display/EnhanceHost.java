@@ -12,6 +12,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -29,6 +30,7 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.util.LabeledItem;
+import ar.glyphsets.BoundingWrapper;
 import ar.util.Util;
 
 /**Host a panel, add to it a draw-on overlay and enhance-region capability.**/ 
@@ -41,6 +43,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	private SelectionOverlay overlay;
 	private EnhancedOverlay enhanced = new EnhancedOverlay();
 	private boolean enhanceEnabled;
+	private boolean limitEnabled;
 
 	private boolean redoRefAggregates = true;
 	
@@ -107,6 +110,33 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		
 	}
 	
+	///Subset related options ---------------------------------------------------------------------------
+	public void updateLimit() {
+		Glyphset<?,?> replacement;
+		Rectangle2D bounds = limitBounds();
+		if (bounds == null || enableLimit()) {
+			Glyphset<?,?> original = hosted.dataset();
+			if (original instanceof BoundingWrapper) {original = ((BoundingWrapper<?,?>) original).base();}
+			replacement = new BoundingWrapper<>(original, bounds);
+		} else {
+			replacement = hosted.dataset();
+			if (replacement instanceof BoundingWrapper) {replacement = ((BoundingWrapper<?,?>) replacement).base();}
+			
+		}		
+		hosted.dataset(replacement, hosted.aggregator, hosted.transfer(), false);
+		hosted.zoomFit();
+		this.repaint();
+	}
+	
+	public Rectangle2D limitBounds() {
+		Area a = overlay.selected;
+		if (a == null) {return null;}
+		else {return a.getBounds2D();}
+	}
+	
+	public boolean enableLimit() {return limitEnabled;}
+	public void enableLimit(boolean limit) {limitEnabled = limit; updateLimit();}
+	
 	public void paint(Graphics g) {
 		if (redoRefAggregates) {
 			if (enhanceEnabled) {
@@ -137,7 +167,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
-	public Glyphset<?,?> dataset() {return hosted.dataset();}
+	public Glyphset<?,?> dataset() {
+		if (hosted.dataset() instanceof BoundingWrapper) {
+			return ((BoundingWrapper<?,?>) hosted.dataset()).base();
+		} else {return hosted.dataset();}
+	}
+	
 	public void renderAgain() {hosted.renderAgain();}
 	
 	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
@@ -153,8 +188,6 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	public AffineTransform renderTransform() {return hosted.renderTransform();}
 	public void viewTransform(AffineTransform vt, boolean provisional) {hosted.viewTransform(vt, provisional);}
 	public Rectangle2D dataBounds() {return hosted.dataBounds();}
-	
-	
 
 	private static final int borderSize = 5;
 	private static BufferedImage makeImage(int size, Color stripes, Color spaces) {
@@ -242,10 +275,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		 * @param provisional Flag passed bounds as provisional selection
 		 ***/
 		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove) {
+			
 			try	{
-				//Convert from screen-space to canvas space
-				bounds = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();
-			} catch (Exception e) {/*Ignore...should be impossible...should be.*/}
+				if (bounds != null) {
+					bounds = host.viewTransform().createInverse().createTransformedShape(bounds).getBounds2D();
+				}
+			} catch (NoninvertibleTransformException e) {/*Ignore...should be impossible...should be.*/}
 			
 			if (provisional) {
 				this.provisional = bounds;
@@ -296,7 +331,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		public void mouseClicked(MouseEvent e) {target.clear();}
 		public void mouseDragged(MouseEvent e) {
 			if (start != null) {
-				Rectangle2D bounds =bounds(e);
+				Rectangle2D bounds =bounds(e);				
 				if (bounds.isEmpty() || bounds.getWidth()*bounds.getHeight()<1) {bounds = null;}
 				target.modSelection(bounds, true, altPressed(e));
 			}
@@ -333,13 +368,10 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			
 			box.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					try {
-						boolean show = ((JCheckBox)e.getSource()).isSelected();
-						host().showOverlay(show);
-						host().repaint();
-					} catch (Exception ex) {/**Ignored**/}
+					boolean show = ((JCheckBox)e.getSource()).isSelected();
+					host().showOverlay(show);
+					host().repaint();
 				}
-				
 			});
 		}
 		

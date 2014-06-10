@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -56,15 +55,12 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	 * Reducing this number tends to result in faster thread startup times, but slower overall run-times.
 	 * **/
 	public static int BUFFER_BYTES = Integer.MAX_VALUE;
-	
-	/**Thread-pool size for parallel operations.**/
-	private static final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
 	private final MappedFile buffer;
 
 	private final TYPE[] types;
 	private final Valuer<Indexed,I> valuer;
-	private final Shaper<G,Indexed> shaper;
+	private final Shaper<Indexed,G> shaper;
 
 	private final File source; //TODO: Remove, make this a general "ByteBackedList" or something like that..
 	private final int recordLength;
@@ -75,7 +71,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 
 	/**Create a new memory mapped list, types are read from the source.
 	 * @throws IOException **/
-	public MemMapList(File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer) {
+	public MemMapList(File source, Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer) {
 		this.valuer = valuer;
 		this.shaper = shaper;
 		this.source = source;
@@ -113,7 +109,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 	}
 	
-	public MemMapList(MappedFile buffer, File source, Shaper<G,Indexed> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
+	public MemMapList(MappedFile buffer, File source, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
 		this.buffer = buffer;
 		this.shaper = shaper;
 		this.valuer = valuer;
@@ -135,7 +131,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected long recordOffset(long i) {return (i*recordLength)+dataTableOffset;}
 	
 	protected IndexedEncoding entryAt(long recordOffset) {
-		MappedFile buffer = this.buffer;
 		return new IndexedEncoding(types, recordOffset, buffer, offsets);
 	}
 
@@ -143,74 +138,36 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	public Valuer<Indexed,I> valuer() {return valuer;}
 	
 	/**Shaper being used to provide geometry for each entry.**/ 
-	public Shaper<G,Indexed> shaper() {return shaper;}
+	public Shaper<Indexed,G> shaper() {return shaper;}
 	
 	/**Types array used for conversions on read-out.**/
 	public TYPE[] types() {return types;}
 
-	public boolean isEmpty() {return buffer == null || buffer.capacity() <= 0;}
-	public long size() {return entryCount;}
-	public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
-
-	public long segments() {return size();}
+	@Override public boolean isEmpty() {return buffer == null || buffer.capacity() <= 0;}
+	@Override public long size() {return entryCount;}
+	@Override public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
 
 	@Override
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {
+	public Glyphset<G,I> segmentAt(int count, int segId)  throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+		long high = segId == count-1 ? size() : Math.min(low+stride, size());
 		
-		long offset = recordOffset(bottom)+buffer.filePosition();
-		long end = recordOffset(top)+buffer.filePosition();
-		
-		
+		long offset = recordOffset(low)+buffer.filePosition();
+		long end = Math.min(recordOffset(high)+buffer.filePosition(), source.length());
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+			mf.order(buffer.order());
 			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
 		} catch (Exception e) {throw new RuntimeException("Error segmenting glyphset", e);}
 	}
 	
 	public Rectangle2D bounds() {
 		if (bounds == null) {
-			bounds = pool.invoke(new BoundsTask(0, this.size()));
+			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+			bounds = pool.invoke(new BoundsTask<>(this, Runtime.getRuntime().availableProcessors()*2)); //TODO: Tuning paramter for task-size....
 		}
 		return bounds;
-	}
-
-	private final class BoundsTask extends RecursiveTask<Rectangle2D> {
-		public static final long serialVersionUID = 1L;
-		private static final int TASK_SIZE = 100000;
-		private final long low, high;
-
-		public BoundsTask(long low, long high) {
-			this.low = low;
-			this.high = high;
-		}
-
-		@Override
-		protected Rectangle2D compute() {
-			if (high-low > TASK_SIZE) {return split();}
-			else {return local();}
-		}
-
-		private Rectangle2D split() {
-			long mid = low+((high-low)/2);
-			BoundsTask top = new BoundsTask(low, mid);
-			BoundsTask bottom = new BoundsTask(mid, high);
-			invokeAll(top, bottom);
-			Rectangle2D bounds = Util.bounds(top.getRawResult(), bottom.getRawResult());
-			return bounds;
-		}
-
-		private Rectangle2D local() {
-			Rectangle2D bounds = new Rectangle2D.Double(0,0,-1,-1);
-
-			for (long i=low; i<high; i++) {
-				Rectangle2D bound = Util.boundOne(MemMapList.this.get(i).shape());
-				if (bound != null) {Util.add(bounds, bound);}
-
-			}
-			return bounds;
-		}
-
 	}
 }

@@ -55,8 +55,8 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
 
         @Override
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-        	Aggregates<OUT> left = null;
-        	for (int i=0; i<specialized.length; i++) {
+        	Aggregates<OUT> left = rend.transfer(aggregates, specialized[0]);
+        	for (int i=1; i<specialized.length; i++) {
         		Aggregates<OUT> right = rend.transfer(aggregates, specialized[i]);
         		left = merge.merge(left, right);
         	}
@@ -75,9 +75,6 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
      * TODO: Investigate adding the aggregates type as a parameter...probably requires having transfers parameterized by aggregate return type as well...
      * TODO: Should this interface be pushed back into the Aggregator, and item-wise aggregation be a special case?  (Similar to Transfer.Specialized vs Transfer.ItemWise).
      * TODO: Investigate merge into a new type...merge(AGG1 acc, AGG2 new)  
-     *
-     * @param <IN>
-     * @param <OUT>
      */
     public static interface Merge<A>  {
     	public Aggregates<A> merge(Aggregates<A> left, Aggregates<A> right);

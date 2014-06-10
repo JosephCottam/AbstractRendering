@@ -11,6 +11,9 @@
   <property name="results" value="testResults"/>
 
   <property name="extSrc" value="ext"/>
+  <property name="extBin" value="${bin}/extBin" />
+  <property name="extJar" value="ARExt.jar" />
+
   <property name="coreSrc" value="core"/>
   <property name="coreBin" value="${bin}/coreBin" />
   <property name="coreJar" value="AR.jar" />
@@ -20,7 +23,7 @@
 
 
   <!--Will exclude spark extensions if the spark jar is not found-->
-  <available property="spark.absent" file="./lib/spark-core-assembly-0.7.2.jar"  value="false"/>
+  <available property="spark.absent" file="./lib/spark-assembly_2.10-0.9.0-incubating.jar"  value="false"/>
   <property name="spark.absent" value="true"/>
 
   <target name="build" description="Main build target." depends="clean,fetch,core,app,docs" />
@@ -30,6 +33,7 @@
     <delete dir="${docs}"/>
     <delete file="AR.jar"/>
     <delete file="ARApp.jar"/>
+    <delete file="ARExt.jar"/>
   </target>
 
 
@@ -56,48 +60,36 @@
   </target>
 
 
-  <target name="ext" 
+  <target name="ext"
+    depends="core,app" 
     description="Build the extensions libraries with the core system; this is core-plus.">
-    <!--Include extensions with the core library.-->
 
-    <mkdir dir="${coreBin}"/>
-    <javac destdir="${coreBin}" sourcepath="" srcdir="${coreSrc}:${extSrc}" 
+    <echo message="Spark absent flag set to: ${spark.absent}"/>
+    
+    <delete dir="${extBin}"/>
+    <mkdir dir="${extBin}"/>
+    <javac destdir="${extBin}" sourcepath="" srcdir="${extSrc}" 
       includeantruntime="false" debug="true" debuglevel="lines,source">
 
-      <exclude name="**/spark/**" if="spark.absent"/>
+      <exclude name="**/spark/**" if="${spark.absent}"/>
       <classpath>
         <fileset dir="${lib}" includes="*.jar"/>
+        <fileset dir="." includes="*.jar"/>
       </classpath>
     </javac>
 
-    <!--Copy additional resources over...-->
-    <copy todir="${coreBin}">
+    <!--Copy resource files over-->
+    <copy todir="${extBin}">
       <fileset dir="${extSrc}" includes="**/*.avsc"/>
     </copy>
-
-    <javadoc destdir="${docs}" verbose="false">
-      <doclet name="com.visural.doclets.markdown.standard.Standard" 
-        path="${lib}/MarkdownDoclet.jar"/>
-      <fileset dir="${coreSrc}"/>
-      <fileset dir="${appSrc}" />
-      <fileset dir="${extSrc}">
-        <exclude name="**/spark/**" if="spark.absent"/>
-        <exclude name="**/*.md" />
-        <exclude name="**/*.avsc" />
-      </fileset>
-      <classpath>
-        <fileset dir="${lib}" includes="*.jar"/>
-      </classpath>
-    </javadoc>
-
+    
     <antcall target="package">
-      <param name="file" value="${coreJar}"/>
-      <param name="bin" value="${coreBin}"/>
+      <param name="file" value="${extJar}"/>
+      <param name="bin" value="${extBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
     </antcall>
-    
-  </target>
 
+  </target>
 
   <target name="app" depends="core" description="Build the demo app.  Parallel to core (or ext).">
     <mkdir dir="${appBin}"/>
@@ -216,14 +208,33 @@
     <delete dir="${lib}"/>
     <delete dir="${ivy.jar.dir}"/>
   </target>
+  
 
-  <target name="fetch-dev" description="Fetch dependencies need for development.">
+  <target name="fetch" depends="init,markdown" description="Fetch runtime/basic-build dependencies for app and core">
+    <ivy:retrieve conf="core"/>
+  </target>
+
+  <target name="fetch-ext" depends="init,markdown,commons-csv" description="Fetch extension dependencies EXCEPT Spark">
+    <ivy:retrieve conf="ext"/>
+  </target>
+
+  <target name="fetch-spark" depends="init,markdown,commons-csv" description="Fetch Spark runtime dependencies">
+    <ivy:retrieve conf="spark"/>
+  </target>
+
+  <target name="fetch-dev" description="Fetch dependencies useful durring development but not required.">
     <!--Some things are only needed by developers, get those with this task.-->
     <ivy:retrieve conf="dev"/>
   </target>
 
-  <target name="fetch" depends="init,markdown" description="Fetch runtime/basic-build dependencies">
-    <ivy:retrieve conf="deploy"/>
+  <target name="commons-csv">
+    <!--Not **YET** released, but approaching a 1.0 version.  Useing get until I can use Ivy.-->
+    <mkdir dir="${lib}"/>
+    <get src="http://repository.apache.org/content/groups/snapshots/org/apache/commons/commons-csv/1.0-SNAPSHOT/commons-csv-1.0-20140515.172105-277.jar"
+      dest="${lib}/commons-csv.jar"
+      verbose="on"  
+      skipexisting="true"
+      />
   </target>
 
   <target name="markdown">

@@ -21,6 +21,7 @@ public final class SerialRenderer implements Renderer {
 	private final ProgressReporter recorder = RenderUtils.recorder();
 	
 	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
+	@Override 
 	public <I,G,A> Aggregates<A> aggregate(
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
@@ -50,6 +51,7 @@ public final class SerialRenderer implements Renderer {
 		return aggregates;
 	}
 
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		recorder.reset(AggregateUtils.size(aggregates));
 		
@@ -64,6 +66,7 @@ public final class SerialRenderer implements Renderer {
 		return out;
 	}
 
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		if (t instanceof Transfer.ItemWise) {
 			return transfer(aggregates, (Transfer.ItemWise<IN, OUT>) t);
@@ -72,6 +75,5 @@ public final class SerialRenderer implements Renderer {
 		}
 	}
 	
-	public ProgressReporter progress() {return recorder;}
-	public long taskSize(Glyphset<?,?> glyphs) {return glyphs.size();}
+	@Override public ProgressReporter progress() {return recorder;}
 }

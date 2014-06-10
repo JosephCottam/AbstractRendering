@@ -137,9 +137,21 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		return target;
 	}
 
-	private static <G,V> Glyphset<G,V> subset(DynamicQuadTree<G,V>[] glyphs, int bottom, int top) {
-		DynamicQuadTree<G,V>[] subset = Arrays.copyOfRange(glyphs, bottom, top);
-		return new InnerNode<G,V>(subset);
+	private static <G,V> Glyphset<G,V> subset(DynamicQuadTree<G,V>[] glyphs, int count, int segId) {
+		if (count >= glyphs.length) {
+			if (segId < glyphs.length) {return glyphs[segId];}
+			return new EmptyGlyphset<>();
+		} else {
+			int stride = (glyphs.length/count);
+			int low = stride*segId;
+			int high = segId == count-1 ? glyphs.length : Math.min(low+stride, glyphs.length);
+			if (low > high) {
+				System.out.println("XXX");
+			}
+			
+			DynamicQuadTree<G,V>[] subset = Arrays.copyOfRange(glyphs, low, high);
+			return new InnerNode<G,V>(subset);
+		}
 	}
 	
 	@SuppressWarnings({ "unused", "rawtypes" })
@@ -279,15 +291,14 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			}
 		}
 
-		public boolean isEmpty() {return child.isEmpty();}
-		public Rectangle2D concernBounds() {return child.concernBounds();}
-		public Rectangle2D bounds() {return child.bounds();}
-		public void items(Collection<Glyph<G,V>> collector) {child.items(collector);}
-		public void intersects(Rectangle2D pixel, Collection<Glyph<G,V>> collector) {child.intersects(pixel, collector);}
-		public String toString(int indent) {return child.toString(indent);}
-		public long segments() {return child.segments();}
-		public Glyphset<G,V> segment(long bottom, long top) {return child.segment(bottom, top);}
-		public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
+		@Override public boolean isEmpty() {return child.isEmpty();}
+		@Override public Rectangle2D concernBounds() {return child.concernBounds();}
+		@Override public Rectangle2D bounds() {return child.bounds();}
+		@Override public void items(Collection<Glyph<G,V>> collector) {child.items(collector);}
+		@Override public void intersects(Rectangle2D pixel, Collection<Glyph<G,V>> collector) {child.intersects(pixel, collector);}
+		@Override public String toString(int indent) {return child.toString(indent);}
+		@Override public Glyphset<G,V> segmentAt(int count, int segId) {return child.segmentAt(count, segId);}
+		@Override public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
 	}
 
 	private static final class InnerNode<G,V> extends DynamicQuadTree<G,V> {
@@ -336,21 +347,25 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			}
 		}
 
+		@Override 
 		public void intersects(Rectangle2D pixel, Collection<Glyph<G,V>> collector) {
 			for (DynamicQuadTree<G,V> q: quads) {
 				if (q.concernBounds.intersects(pixel)) {q.intersects(pixel, collector);}
 			}
 		}
 
+		@Override 
 		public boolean isEmpty() {
 			for (DynamicQuadTree<G,V> q: quads) {if (!q.isEmpty()) {return false;}}
 			return true;
 		}
 
+		@Override 
 		public void items(Collection<Glyph<G,V>> collector) {
 			for (DynamicQuadTree<G,V> q: quads) {q.items(collector);}
 		}
 
+		@Override 
 		public Rectangle2D bounds() {
 			final Rectangle2D[] bounds = new Rectangle2D[quads.length];
 			for (int i=0; i<bounds.length; i++) {
@@ -359,18 +374,20 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			return Util.bounds(bounds);
 		}
 		
+		@Override 
 		public String toString(int indent) {
 			StringBuilder b = new StringBuilder();
 			for (DynamicQuadTree<G,V> q: quads) {b.append(q.toString(indent+1));}
 			return String.format("%sNode: %d items\n", Util.indent(indent), size()) + b.toString();
 		}
-		public long segments() {return quads.length;}
-		public Glyphset<G,V> segment(long bottom, long top) {
-			return DynamicQuadTree.subset(quads, (int) bottom, (int) top);
+
+		@Override 
+		public Glyphset<G,V> segmentAt(int count, int segId) {
+			return DynamicQuadTree.subset(quads, count, segId);
 		}
-		public Iterator<Glyph<G,V>> iterator() {
-			return items().iterator();
-		}
+		
+		@Override 
+		public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
 	}
 	
 	private static final class LeafNode<G,V> extends DynamicQuadTree<G,V> {
@@ -429,7 +446,9 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		}
 
 		
-		public long size() {return size;}
+		@Override public long size() {return size;}
+		
+		@Override 
 		public String toString(int indent) {
 			return String.format("%sLeafNode: %d items (%s spanning items)\n", Util.indent(indent), size(), spanningItems.size());
 		}	
@@ -443,6 +462,7 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			return false;
 		}
 		
+		@Override 
 		public void intersects(Rectangle2D pixel, Collection<Glyph<G,V>> collector) {
 			for (DynamicQuadTree<G,V> q: quads) {
 				if (q.concernBounds.intersects(pixel)) {q.intersects(pixel, collector); break;}
@@ -450,12 +470,15 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 			for (Glyph<G,V> g:spanningItems) {if (Util.intersects(pixel, g.shape())) {collector.add(g);}}
 		}
 		
+		@Override 
 		public boolean isEmpty() {
 			for (DynamicQuadTree<G,V> q: quads) {if (!q.isEmpty()) {return false;}}
 			return spanningItems.size() == 0;
 		}
 
+		
 		//Copy
+		@Override 
 		public Rectangle2D bounds() {
 			final Rectangle2D[] bounds = new Rectangle2D[quads.length+1];
 			for (int i=0; i<quads.length; i++) {
@@ -466,16 +489,15 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		}
 
 		//Copy
+		@Override 
 		public void items(Collection<Glyph<G,V>> collector) {
 			collector.addAll(spanningItems.items);
 			for (DynamicQuadTree<G,V> q: quads) {q.items(collector);}
 		}
 		
-		public long segments() {return parts.length;}
-		public Glyphset<G,V> segment(long bottom, long top) {
-			return DynamicQuadTree.subset(parts, (int) bottom, (int) top);
-		}
-		public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
+		@Override 
+		public Glyphset<G,V> segmentAt(int count, int segId) {return DynamicQuadTree.subset(parts, count, segId);}	
+		@Override  public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
 
 	}	
 
@@ -492,25 +514,30 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		}
 
 		//Assumes the geometry check was done by the parent
+		@Override 
 		public void add(Glyph<G,V> glyph) {
 			items.add(glyph);
 		}
 
-		public Rectangle2D concernBounds() {return concernBounds;}
-		public boolean isEmpty() {return items.isEmpty();}
-		public List<Glyph<G,V>> items() {return items;}
-		public String toString(int level) {return Util.indent(level) + "LeafQuad: " + items.size() + " items\n";}
-		public Rectangle2D bounds() {return Util.bounds(items);}
-		protected void items(Collection<Glyph<G,V>> collector) {collector.addAll(items);}
+		@Override public Rectangle2D concernBounds() {return concernBounds;}
+		@Override public boolean isEmpty() {return items.isEmpty();}
+		@Override public List<Glyph<G,V>> items() {return items;}
+		@Override public String toString(int level) {return Util.indent(level) + "LeafQuad: " + items.size() + " items\n";}
+		@Override public Rectangle2D bounds() {return Util.bounds(items);}
+		@Override protected void items(Collection<Glyph<G,V>> collector) {collector.addAll(items);}
+		
+		@Override 
 		protected void intersects(Rectangle2D pixel, Collection<Glyph<G,V>> collector) {
 			for (Glyph<G,V> g: items) {if (Util.intersects(pixel, g.shape())) {collector.add(g);}}
 		}
-		public long segments() {return items.size();}
-		public Glyphset<G,V> segment(long bottom, long top) {
-			return new GlyphSubset.Uncached<G,V>(this, bottom, top);
+
+		@Override
+		public Glyphset<G,V> segmentAt(int count, int segId) {
+			if (segId ==0) {return this;}
+			return new EmptyGlyphset<>(); 
 		}
-		public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
-		public Glyph<G,V> get(long l) {return items.get((int) l);}
+		@Override public Iterator<Glyph<G,V>> iterator() {return items().iterator();}
+		@Override public Glyph<G,V> get(long l) {return items.get((int) l);}
 	}
 	
 }

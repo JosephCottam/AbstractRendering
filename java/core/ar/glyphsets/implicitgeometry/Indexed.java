@@ -1,13 +1,14 @@
 package ar.glyphsets.implicitgeometry;
 
+import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
-import java.lang.reflect.Array;
+import java.util.List;
 
 import ar.util.ColorNames;
-import ar.util.Util;
 import ar.util.memoryMapping.MemMapEncoder;
+import ar.util.memoryMapping.MemMapEncoder.TYPE;
 
 /**Interface designating something has an integer-valued "get" function.
  * This interface is the basis for array-based and file-record conversions
@@ -19,16 +20,70 @@ import ar.util.memoryMapping.MemMapEncoder;
 public interface Indexed extends Serializable {
 	/**What value is at index i? */
 	public Object get(int i);
+	public int size();
+	
+
+	public static final class Util {
+		public static String toString(Indexed target) {
+			StringBuilder b = new StringBuilder();
+			b.append(target.getClass().getSimpleName());
+			b.append("[");
+			for (int i=0; i< target.size(); i++) {
+				b.append(target.get(i));
+				b.append(", ");
+			}
+			b.deleteCharAt(b.length()-1);
+			b.deleteCharAt(b.length()-1);
+			b.append("]");
+			return b.toString();
+		}
+		
+		/**Convert from the types understood by the memory mappers to the types understood by the converters system.
+		 * 
+		 * TODO: Figure out a better way to make the two type tag sets play together.  Perhaps the division is too artificial....Color is a bit problematic though...
+		 * **/
+		public static final Converter.TYPE[] transcodeTypes(TYPE... types) {
+			Converter.TYPE[] newTypes = new Converter.TYPE[types.length];
+			for (int i=0; i< types.length; i++) {
+				switch(types[i]) {
+					case X: newTypes[i] = Converter.TYPE.X; break;
+					case INT: newTypes[i] = Converter.TYPE.INT; break;
+					case SHORT: newTypes[i] = Converter.TYPE.SHORT; break;
+					case LONG: newTypes[i] = Converter.TYPE.LONG; break;
+					case DOUBLE: newTypes[i] = Converter.TYPE.DOUBLE; break;
+					case FLOAT: newTypes[i] = Converter.TYPE.FLOAT; break;
+					default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
+				}
+			}
+			return newTypes;
+		}
+	}
 	
 	/**Wrap an array as an Indexed item.**/
 	public static class ArrayWrapper implements Indexed {
 		private static final long serialVersionUID = -7081805779069559306L;
-		private final Object array;
+		private final Object[] array;
+		
+		public ArrayWrapper(Object[] parts) {this.array = parts;}
+
+		@Override public Object get(int i) {return array[i];}
+		@Override public int size() {return array.length;}
+		@Override public String toString() {return Util.toString(this);}			
+	}
+	
+	/**Wrap a list as an Indexed item.**/
+	public static class ListWrapper implements Indexed {
+		private static final long serialVersionUID = -7081805779069559306L;
+		private final List<?> parts;
 		
 		@SuppressWarnings("javadoc")
-		public ArrayWrapper(Object parts) {this.array = parts;}
-		public Object get(int i) {return Array.get(array, i);}
+		public ListWrapper(List<?> parts) {this.parts = parts;}
+		
+		@Override public Object get(int i) {return parts.get(i);}
+		@Override public int size() {return parts.size();}
+		@Override public String toString() {return Util.toString(this);}
 	}
+
 
 	/**Converts the elements of the passed array to the given types.
 	 * Uses toString and primitive parsers.
@@ -38,7 +93,7 @@ public interface Indexed extends Serializable {
 		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR}
 		private static final long serialVersionUID = 9142589107863879237L;
 		private final TYPE[] types;
-		private final Object[] values;
+		private final Indexed values;
 		
 		public Converter(MemMapEncoder.TYPE... types) {this(Util.transcodeTypes(types));}
 		
@@ -48,28 +103,43 @@ public interface Indexed extends Serializable {
 		public Converter(TYPE... types) {this(null, types);}
 		
 		/**Instantiate a converter for a specific set of values.*/
-		public Converter(Object[] values, TYPE... types) {
+		public Converter(Indexed values, TYPE... types) {
 			this.values = values;
 			this.types = types;
 		}
 
 		@Override
 		public Object get(int i) {
-			String s = values[i].toString();
+			Object v = values.get(i);
 			switch (types[i]) {
-				case INT: return Integer.valueOf(s);
-				case SHORT: return Short.valueOf(s);
-				case LONG: return Long.valueOf(s);
-				case FLOAT: return Float.valueOf(s);
-				case DOUBLE: return Double.valueOf(s);
-				case COLOR: return ColorNames.byName(s, null);
+				case INT: return v instanceof Integer ? (Integer) v : Integer.valueOf(v.toString());
+				case SHORT: return v instanceof Short ? (Short) v : Short.valueOf(v.toString());
+				case LONG: return v instanceof Long ? (Long) v : Long.valueOf(v.toString());
+				case FLOAT: return v instanceof Float ? (Float) v : Float.valueOf(v.toString());
+				case DOUBLE: return v instanceof Double ? (Double) v : Double.valueOf(v.toString());
+				case COLOR: return v instanceof Color ? (Color) v : ColorNames.byName(v.toString(), null);
 				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
 			}
 		}
 		
+		@SuppressWarnings("unchecked")
+		public <T> T get(int f, Class<T> type) {
+			Object val = get(f);
+			if (type.isInstance(val)) {return (T) val;}
+			throw new IllegalArgumentException("Requested type that does not match encoded type.");
+		}
+
+		@Override public int size() {return types.length;}
+		@Override public String toString() {return Util.toString(this);}
+		
 		/**Get the type array associated with this converter.**/
 		public TYPE[] types() {return types;}
-		public Converter applyTo(Object[] values) {return new Converter(values, types);}
+		
+		/**Create a new converter instance using the current types but the passed value source.**/
+		public Converter applyTo(Object[] values) {return new Converter(new ArrayWrapper(values), types);}
+		
+		/**Create a new converter instance using the current types but the passed value source.**/
+		public Converter applyTo(Indexed values) {return new Converter(values, types);}
 	}
 	
 	
@@ -103,7 +173,7 @@ public interface Indexed extends Serializable {
 	 * position.  The passed value determines the position, but the size
 	 * is set by the ToRect constructor. 
 	 */
-	public static class ToPoint implements Shaper.SafeApproximate<Point2D, Indexed>, Serializable {
+	public static class ToPoint implements Shaper.SafeApproximate<Indexed, Point2D>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final boolean flipY;
 		private final int xIdx, yIdx;
@@ -114,6 +184,8 @@ public interface Indexed extends Serializable {
 			this.xIdx = xIdx;
 			this.yIdx = yIdx;
 		}
+		
+		@Override 
 		public Point2D shape(Indexed from) {
 			double x=((Number) from.get(xIdx)).doubleValue();
 			double y=((Number) from.get(yIdx)).doubleValue();
@@ -128,7 +200,7 @@ public interface Indexed extends Serializable {
 	 * position.  The passed value determines the position, but the size
 	 * is set by the ToRect constructor. 
 	 */
-	public static class ToRect implements Shaper.SafeApproximate<Rectangle2D, Indexed>, Serializable {
+	public static class ToRect implements Shaper.SafeApproximate<Indexed, Rectangle2D>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final double width,height;
 		private final boolean flipY;
@@ -148,6 +220,8 @@ public interface Indexed extends Serializable {
 			this.xIdx = xIdx;
 			this.yIdx = yIdx;
 		}
+		
+		@Override 
 		public Rectangle2D shape(Indexed from) {
 			double x=((Number) from.get(xIdx)).doubleValue();
 			double y=((Number) from.get(yIdx)).doubleValue();

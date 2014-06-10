@@ -18,7 +18,7 @@ import ar.rules.General;
 public class WrappedCollectionTest {
 
 	/**Demo geometry creator.**/
-	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Rectangle2D, Integer> {
+	public static final class RainbowCheckerboard implements Valuer<Integer, Color>, Shaper<Integer, Rectangle2D> {
 		private static final long serialVersionUID = 2114709599706433845L;
 		
 		private static final Color[] COLORS = new Color[]{Color.RED, Color.BLUE, Color.GREEN,Color.PINK,Color.ORANGE};

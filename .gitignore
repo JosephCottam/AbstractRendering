@@ -1,8 +1,10 @@
 .DS_Store
 .metadata/
+build/
 bin
 data
 wiki
+*.so
 *.dylib
 *.jar
 *.pyc
@@ -12,4 +14,5 @@ java/docs/*
 java/doc/*
 java/lib/*
 java/testResults/*
+java/.classpath
 RemoteSystemsTempFiles

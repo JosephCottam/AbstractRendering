@@ -35,7 +35,7 @@ public class SimpleApp {
 		while (reader.hasNext()) {
 			String[] parts = reader.next();
 			if (parts == null) {continue;}
-			double[] vals = new double[parts.length];
+			Double[] vals = new Double[parts.length];
 			for (int i=0; i<parts.length; i++) {vals[i] = Double.parseDouble(parts[i]);}
 			items.add(new Indexed.ArrayWrapper(vals));
 		}

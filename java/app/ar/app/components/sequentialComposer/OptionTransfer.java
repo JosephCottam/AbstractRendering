@@ -29,6 +29,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
+import ar.aggregates.AggregateUtils;
 import ar.app.util.ActionProvider;
 import ar.app.util.ColorChooser;
 import ar.app.util.GeoJSONTools;
@@ -49,6 +50,7 @@ import ar.rules.SeamCarving.Direction;
 import ar.rules.Shapes;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.rules.combinators.Fan;
 import ar.rules.combinators.NTimes;
 import ar.rules.combinators.Seq;
 import ar.util.HasViewTransform;
@@ -81,6 +83,10 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	 * **/
 	public void cleanup() {}
 	
+	@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+	@Override public final int hashCode() {return this.getClass().hashCode();}
+
+	
 	public static final class ToCount extends OptionTransfer<ControlPanel> {
 
 		@Override
@@ -94,7 +100,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		
 		@Override public String toString() {return "To Counts (CoC->Int)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class MathTransfer extends OptionTransfer<MathTransfer.Controls> {
@@ -108,7 +113,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Math (Num->Num)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static final class Controls extends ControlPanel {
 			private JComboBox<Entry<?>> valuers = new JComboBox<>();
@@ -259,7 +263,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Interpolate (Num->Color)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner low = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,5));
@@ -316,7 +319,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 		@Override public String toString() {return "Split on Percent (CoC)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		
 		private static class Controls extends ControlPanel {
 			public JSpinner spinner = new JSpinner(new SpinnerNumberModel(50, 0, 100,1));
@@ -359,7 +361,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Seam-Carve (int->int)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -434,7 +435,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Contour (Num->Num)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -465,20 +465,32 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Spread (*->*)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
-			private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner up = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner down = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner left = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
+			private final JSpinner right = new JSpinner(new SpinnerNumberModel(1, 0, 50,1));
 			
 			public Controls() {
 				super("spread");				
-				add(new LabeledItem("Radius:", spinner));
-				spinner.addChangeListener(actionProvider.changeDelegate());
+				add(new LabeledItem("Up:", up));
+				add(new LabeledItem("Down:", down));
+				add(new LabeledItem("Left:", left));
+				add(new LabeledItem("Right:", right));
+				
+				up.addChangeListener(actionProvider.changeDelegate());
+				down.addChangeListener(actionProvider.changeDelegate());
+				left.addChangeListener(actionProvider.changeDelegate());
+				right.addChangeListener(actionProvider.changeDelegate());
 			}
 			
-			public Spreader spreader() {return new General.Spread.UnitSquare<Integer>(radius());}
-			public int radius() {return (int) spinner.getValue();}
+			public Spreader spreader() {return new General.Spread.UnitRectangle<Integer>(up(), down(), left(), right());}
+			public int up() {return (int) up.getValue();}
+			public int down() {return (int) down.getValue();}
+			public int left() {return (int) left.getValue();}
+			public int right() {return (int) right.getValue();}
 		}
 		
 		public static class FlexSpread<V> implements Transfer<V,V> {
@@ -524,7 +536,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "Color Keys (CoC->CoC)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		
@@ -601,7 +612,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
 			if (params.underDelta() == 0) {return subsequent;}
-			return new Advise.OverUnder(params.highColor.color(), params.lowColor.color(), subsequent, params.underDelta());
+			return new Advise.Clipwarn(params.highColor.color(), params.lowColor.color(), subsequent, params.underDelta());
 		}
 
 		@Override
@@ -697,34 +708,109 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	}
 	
-	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
+	public static final class DataEdgeBoost extends OptionTransfer<DataEdgeBoost.Controls> {
 		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
-			Transfer t = new Advise.DrawDark(p.lowColor.color(), p.highColor.color(), p.radius());
-			return extend(t, subsequent);
+			Transfer t = new Seq(
+					new Advise.DataEdgeBoost(p.radius()), 
+					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), p.highColor()));
+ 
+			if (subsequent == null) {
+				return t;
+			} else {
+				return new Fan(new BlendLeftOver(), t, subsequent);
+			}
 		}
-		@Override public String toString() {return "Subpixel Dist. (int)";}
+		@Override public String toString() {return "Edge Boost (*)";}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 
 		private static class Controls extends ControlPanel {
 			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
-			public ColorChooser lowColor = new ColorChooser(Color.black, "Low");
-			public ColorChooser highColor = new ColorChooser(Color.white, "High");
+			public ColorChooser highColor = new ColorChooser(Color.white, "Highlight");
+			public ColorChooser lowColor = new ColorChooser(Color.black, "Lowlight");
 			public Controls() {
-				super("DrawDark");
+				super("EdgeBoost");
 				this.setLayout(new GridLayout(1,0));
 				add(new LabeledItem("Radius:", radius));
 				add(lowColor);
 				add(highColor);
 				radius.addChangeListener(actionProvider.changeDelegate());
-				lowColor.addActionListener(actionProvider.actionDelegate());
 				highColor.addActionListener(actionProvider.actionDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
 			}
 			
 			public int radius() {return (int) radius.getValue();}
+			public Color highColor() {return highColor.color();}
+			public Color lowColor() {return lowColor.color();}
+		}
+	}
+	
+	
+
+	public static final class SubPixel extends OptionTransfer<SubPixel.Controls> {
+		@Override public Transfer<Number, Color> transfer(Controls p, Transfer subsequent) {
+			Transfer t = new Seq(
+					new Advise.NeighborhoodDistribution(p.radius()), 
+					new Numbers.Interpolate<>(p.lowColor(), p.highColor(), Util.CLEAR));
+ 
+			if (subsequent == null) {
+				return t;
+			} else {
+				return new Fan(new BlendLeftOver(), t, subsequent);
+			}
+		}
+		
+		@Override public String toString() {return "Sub Pixel (Num)";}
+		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
+
+		private static class Controls extends ControlPanel {
+			public JSpinner radius = new JSpinner(new SpinnerNumberModel(2, 0, 100,1));
+			public ColorChooser highColor = new ColorChooser(Color.black, "Highlight");
+			public ColorChooser lowColor = new ColorChooser(Util.CLEAR, "Lowlight");
+			public Controls() {
+				super("SubPixel");
+				this.setLayout(new GridLayout(1,0));
+				add(new LabeledItem("Radius:", radius));
+				add(lowColor);
+				add(highColor);
+				radius.addChangeListener(actionProvider.changeDelegate());
+				highColor.addActionListener(actionProvider.actionDelegate());
+				lowColor.addActionListener(actionProvider.actionDelegate());
+			}
+			
+			public int radius() {return (int) radius.getValue();}
+			public Color highColor() {return highColor.color();}
+			public Color lowColor() {return lowColor.color();}
+		}
+	}
+	
+	/**Blends two colors per alpha composition 'over' rule with the left on top.**/ 
+	private static final class BlendLeftOver implements Fan.Merge<Color> {
+
+		@Override
+		public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
+			final int lowX = Math.min(left.lowX(), right.lowX());
+			final int lowY = Math.min(left.lowY(), right.lowY());
+			final int highX = Math.max(left.highX(), right.highX());
+			final int highY = Math.max(left.highY(), right.highY());
+			
+			Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
+			for (int x=lowX; x<highX; x++) {
+				for (int y=lowY; y<highY; y++) {
+					Color over = left.get(x,y);
+					if (over == left.defaultValue()) {
+						out.set(x, y, right.get(x, y));
+					} else {
+						Color under = right.get(x, y);
+						out.set(x,y, Util.premultiplyAlpha(over, under));
+					}						
+				}
+			}
+			return out;
 		}
 
+		@Override public Color identity() {return Util.CLEAR;}			
 	}
+	
 	
 	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
 		private static final Collection<Shape> shapes;
@@ -757,15 +843,27 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public String toString() {return "Weave States";}
 	}
 	
+	public static final class Present2 extends OptionTransfer<ControlPanel> {
+		@Override 
+		public Transfer<Integer,Integer> transfer(ControlPanel p, Transfer subsequent) {
+			Transfer t = new General.Present<Integer, Integer>(0,1);
+			return extend(t, subsequent);	
+
+		}
+		
+		@Override public String toString() {return "Present (*->Int)";}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
+	}
+	
 	public static final class Present extends OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<Integer,Color> transfer(ControlPanel p, Transfer subsequent) {
-			return new General.Present<Integer, Color>(Color.red, Color.white);
+			Transfer t = new General.Present<Integer, Color>(Color.red, Color.white);
+			return extend(t, subsequent);
 		}
 		
-		@Override public String toString() {return "Present (*)";}
+		@Override public String toString() {return "Present (*->Color)";}
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	}
 	
 	public static final class Gradient extends OptionTransfer<ControlPanel> {
@@ -776,7 +874,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		
 		@Override public String toString() {return "Gradient (color)";}
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 	} 
 
 	
@@ -790,7 +887,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 
 		@Override public String toString() {return "HD Alpha (CoC<Color>)";}
-		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
 		@Override public Controls control(HasViewTransform transformProvider) {return new Controls();}
 
 		public static final class Controls extends ControlPanel {
@@ -816,6 +912,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		public ControlPanel(String id) {actionProvider = new ActionProvider(id);}
 		public void addActionListener(ActionListener listener) {actionProvider.addActionListener(listener);}
 		@Override public boolean equals(Object other) {return other!=null && this.getClass().equals(other.getClass());}
+		@Override public final int hashCode() {return this.getClass().hashCode();}
 	}
 	
 	protected static <IN,MID,OUT> Transfer extend(Transfer<IN,MID> first, Transfer<MID,OUT> second) {

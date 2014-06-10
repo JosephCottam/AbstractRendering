@@ -66,14 +66,16 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	public Renderer renderer() {return renderer;}
 	
 	public Glyphset<?,?> dataset() {return dataset;}
-	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
+
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {dataset(data,aggregator, transfer, true);}
+	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer, boolean rerender) {
 		this.dataset = data;
 		this.aggregator = aggregator;
 		this.transfer(transfer);
 		aggregates(null, null);
-		fullRender = true;
+		fullRender = rerender;
 		renderError = false;
-		this.repaint();
+		if (rerender) {this.repaint();}
 	}
 	
 	public Transfer<?,?> transfer() {return display.transfer();}
@@ -117,7 +119,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 
 	}
 	
-	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s]", dataset, display.transfer(), aggregator);}
+	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s, Aggregator: %3$s]", dataset, display.transfer(), aggregator);}
 	
     /**Use this transform to convert values from the absolute system
      * to the screen system.
@@ -142,7 +144,11 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			
 			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
 			viewTransform(vt, false);
-		} catch (Exception e) {} //Ignore all zoom-fit errors...they are usually caused by under-specified state
+		} catch (Exception e) {
+			//Essentially ignores zoom-fit errors...they are usually caused by under-specified state
+			System.out.println("FYI---------");
+			e.printStackTrace();
+		} 
 	}
 	
 	public Rectangle2D dataBounds() {return dataset.bounds();}

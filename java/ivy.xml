@@ -1,24 +1,37 @@
 <ivy-module version="2.0">
   <info organisation="edu.indiana" module="AbstractRendering"/>
   <configurations>
-    <conf name="dev" description="binary jars location"/>
-    <conf name="deploy" description="binary jars location"/>
+    <conf name="dev" description="Itemsd required for development only"/>
+    <conf name="core" description="Required for deployment of core and app"/>
+    <conf name="ext" description="Dependeicies for working with extensions except spark"/>
+    <conf name="spark" description="Spark dependencies"/>
   </configurations>    
   <dependencies>
-    <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
-    <dependency org="commons-io" name="commons-io" rev="2.4"/>
-    <dependency org="org.apache.avro" name="avro" rev="1.7.4"/>
     <dependency org="de.grundid.opendatalab" name="geojson-jackson" rev="1.1"/>
     <dependency org="junit" name="junit" rev="4.8" />
     <dependency org="org.hamcrest" name="hamcrest-core" rev="1.3"/>
     <dependency org="org.hamcrest" name="hamcrest-library" rev="1.3"/>
 
-    <exclude type="javadoc" ext="jar" conf="deploy"/>
-    <exclude type="sources" ext="jar" conf="deploy"/>
-    <exclude type="source" ext="jar" conf="deploy"/>
-    <exclude org="org.tukaani" conf="deploy" />
-    <exclude org="com.thoughtworks.paranamer" conf="deploy"/>
-    <exclude org="org.xerial.snappy" conf="deploy"/>
-    <exclude org="org.slf4j" conf="deploy" />
+    <dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
+    <dependency org="commons-io" name="commons-io" rev="2.4"/>
+    <dependency org="org.apache.avro" name="avro" rev="1.7.4"/>
+
+    <dependency org="org.apache.spark" name="spark-assembly_2.10" rev="0.9.0-incubating">
+       <exclude org="org.eclipse.jetty.orbit" conf="*"/> <!--couldn't always be found...doesn't seem to do damage to omit-->
+    </dependency>
+    
+    <exclude type="javadoc" ext="jar" conf="core,ext"/>
+    <exclude type="sources" ext="jar" conf="core,ext"/>
+    <exclude type="source" ext="jar" conf="core,ext"/>
+    <exclude org="org.tukaani" conf="core,ext,spark" />
+    <exclude org="com.thoughtworks.paranamer" conf="core,ext,spark"/>
+    <exclude org="org.xerial.snappy" conf="core,ext,spark"/>
+    <exclude org="org.slf4j" conf="core,ext" />  
+    
+    <exclude org="org.apache.spark" conf="core,dev,ext"/>
+    <exclude org="org.apache.commons" conf="core,dev"/>
+    <exclude org="commons-io" conf="core,dev"/>
+    <exclude org="org.apache.avro" conf="core,dev"/>
+  
   </dependencies>
 </ivy-module>

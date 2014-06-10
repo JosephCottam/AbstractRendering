@@ -52,13 +52,13 @@ public class WrappedCollectionTests {
 		assertFalse("Incorrectly identified list.", g.getClass() == WrappedCollection.List.class);
 	}
 
-	public Shaper<Rectangle2D, Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
+	public Shaper<Indexed, Rectangle2D> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Object> valuer() {return new Indexed.ToValue<Object,Object>(2);}
 	
 	public ArrayList<Indexed> data() {
 		ArrayList<Indexed> values = new ArrayList<Indexed>();
 		for (int i=0; i< 100; i++) {
-			int[] array = new int[]{i,i,i};
+			Integer[] array = new Integer[]{i,i,i};
 			values.add(new Indexed.ArrayWrapper(array));
 		}
 		return values;

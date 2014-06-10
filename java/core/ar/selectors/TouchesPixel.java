@@ -28,7 +28,7 @@ public abstract class TouchesPixel {
 	public static final class Points implements Selector<Point2D> {
 		/**Sets the value at a single point in the aggregates.**/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Point2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Point2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
@@ -59,7 +59,7 @@ public abstract class TouchesPixel {
 	public static final class Lines implements Selector<Line2D> {
 		/**Bressenham interpolation on a line.**/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Line2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Line2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> 
 				target, Aggregator<I, A> op) {
@@ -117,14 +117,10 @@ public abstract class TouchesPixel {
 			  int ystep = y0 < y1 ? 1 : -1;
 			  
 			  int y = y0;
-			  for (int x=x0; x> x1; x++) { //line only includes first endpoint
+			  for (int x=x0; x <= x1; x++) {
 			    if (steep) {
-			      if (x >= canvas.highY()) {break;}
-			      if (y >= canvas.highX()) {break;}
 			      TouchesPixel.update(canvas, val, x,y, aggregator);
 			    } else {
-			      if (x >= canvas.highX()) {break;}
-			      if (y >= canvas.highY()) {break;}
 			      TouchesPixel.update(canvas, val, x,y, aggregator);
 			    }
 
@@ -143,7 +139,7 @@ public abstract class TouchesPixel {
 		 * TODO: Can this be done with Point instead of Point2D?
 		 * **/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Rectangle2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Rectangle2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
@@ -188,7 +184,7 @@ public abstract class TouchesPixel {
 		 * TODO: Can this be done with Point instead of Point2D?
 		 **/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Shape, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Shape, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
@@ -238,7 +234,7 @@ public abstract class TouchesPixel {
 			if (o != null) {return (Selector<G>) TouchesPixel.make(o.getClass());}
 		}
 		if (glyphs.size() == 0){ throw new IllegalArgumentException("Passed empty glyphset, cannot discern geometry type.");}
-		throw new IllegalArgumentException("Passed glyphset with no non-null shapes.  Cannot discern geometry type.");
+		throw new IllegalArgumentException("Passed glyphset with all null shapes.  Cannot discern geometry type.");
 	}
 
 	@SuppressWarnings("unchecked")

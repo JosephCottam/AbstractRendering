@@ -34,7 +34,7 @@ public class GlyphsetConverterTests {
 	}
 
 
-	public Shaper<Rectangle2D, Indexed> shaper() {return new Indexed.ToRect(1, 0, 1);}
+	public Shaper<Indexed, Rectangle2D> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Integer> valuer() {return new Indexed.ToValue<Object,Integer>(2);}
 	public Valuer<Integer, Double> converter() {
 		return new Valuer<Integer,Double>() {
@@ -45,7 +45,7 @@ public class GlyphsetConverterTests {
 	public ArrayList<Indexed> data() {
 		ArrayList<Indexed> values = new ArrayList<Indexed>();
 		for (int i=0; i< 100; i++) {
-			int[] array = new int[]{i,i,i};
+			Integer[] array = new Integer[]{i,i,i};
 			values.add(new Indexed.ArrayWrapper(array));
 		}
 		return values;

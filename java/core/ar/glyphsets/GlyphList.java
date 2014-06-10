@@ -21,30 +21,35 @@ import ar.util.Util;
 public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected final List<Glyph<G,I>> glyphs = new ArrayList<Glyph<G,I>>();
 	protected Rectangle2D bounds;
-	
-	public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
-	public boolean isEmpty() {return glyphs.isEmpty();}
+
 	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
 	public void addAll(Glyphset<G,I> newGlyphs) {
 		for (Glyph<G,I> g: newGlyphs) {glyphs.add(g);}
 		bounds = null;
 	}
 	
-	public long size() {return glyphs.size();}
+	@Override public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
+	@Override public boolean isEmpty() {return glyphs.isEmpty();}
+	@Override public long size() {return glyphs.size();}
+	
+	@Override
 	public Glyph<G,I> get(long i) {
 		if (i>Integer.MAX_VALUE) {throw new IllegalArgumentException("Cannot acces items beyond max int value");}
 		return glyphs.get((int) i);
 	}
 	
+	@Override
 	public Rectangle2D bounds() {
 		if (bounds == null) {bounds = Util.bounds(glyphs);}
 		return bounds;		
 	}
-	
-	public long segments() {return size();}
 
-	public Glyphset<G,I> segment(long bottom, long top)
-			throws IllegalArgumentException {
-		return new GlyphSubset.Uncached<G,I>(this, bottom, top);
+	@Override
+	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+		long stride = (size()/count)+1; //+1 for the round-down
+		long low = stride*segId;
+		long high = Math.min(low+stride, size());
+		
+		return new GlyphSubset.Uncached<G,I>(this, low, high);
 	}
 }
