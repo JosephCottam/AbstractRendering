@@ -56,7 +56,7 @@ public class SimpleSparkApp {
 
 		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper, valuer)));
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
-		Selector selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
+		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
 		
  		RDDRender render = new RDDRender();
  		Aggregates<Integer> aggs = render.aggregate(glyphs, selector, new Numbers.Count<Integer>(), view, width, height);

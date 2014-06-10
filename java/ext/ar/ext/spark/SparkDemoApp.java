@@ -60,7 +60,7 @@ public class SparkDemoApp {
 		} catch (Exception e) {return "Error generating config list: " + e.getMessage();}
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <G,I,A> void main(String[] args) throws IOException{
 		if (args.length >0) {
 			String first = args[0].toLowerCase();
