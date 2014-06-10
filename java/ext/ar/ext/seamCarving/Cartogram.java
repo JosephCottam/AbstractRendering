@@ -42,7 +42,7 @@ public class Cartogram {
 		
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();
-		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.dataset();
+		final Glyphset<Point2D, CategoricalCounts<String>> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_TRACTS.glyphset;
 		System.out.println("Population glyphset loaded.");
 		
 		File statesSource = new File("../data/maps/USStates/");

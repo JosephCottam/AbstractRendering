@@ -9,17 +9,17 @@ import java.util.Map.Entry;
  * 
  * TODO: Reverse G and I parameters.  General convention has been <input, output> and this violates...
  * 
+ * @param <IN> Input value type
  * @param <G> Geometry-type returned;
- * @param <I> Input value type
  * **/
-public interface Shaper<I,G> extends Serializable {
+public interface Shaper<IN,G> extends Serializable {
 	/**Create a shape from the passed item.**/
-	public G shape (I from);
+	public G shape (IN from);
 	
 	/**Tagging interface.  Indicates that the shaper implements a simple enough layout
 	 * that the maximum/minimum values for each field will give a correct bounding box. 
 	 */
-	public static interface SafeApproximate<G,I> extends Shaper<G,I> {}
+	public static interface SafeApproximate<IN,G> extends Shaper<IN,G> {}
 	
 	
 	/**Given a map entry, return the value.  Used for maps where the key determines the shape

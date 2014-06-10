@@ -113,7 +113,30 @@ public class MemMapEncoder {
 			return new Header(version, types, dataTableOffset, infoRecordOffset);
 		}
 		
+		/**Parse a given file, return a Header object.**/
+		public static Header from(DataInputStream stream) throws IOException {
+			int version = stream.readInt();
+			if (version != VERSION_ID) {
+				throw new IllegalArgumentException(String.format("Unexpected version number in file %d; expected %d", version, VERSION_ID));
+			}
+
+			long dataTableOffset = stream.readLong();
+			
+			@SuppressWarnings("unused")
+			long stringTableOffset = stream.readLong(); //Ignored; placed for future expansion
+			
+			int recordEntries = stream.readInt();
+
+			TYPE[] types = new TYPE[recordEntries];
+			for (int i =0; i<recordEntries; i++) {
+				char t = stream.readChar();
+				types[i] = TYPE.typeFor(t);
+			}
+			
+			return new Header(version, types, dataTableOffset, -1);
+		}
 	}
+	
 	
 	
 	/**Utility for append byte arrays together.**/

@@ -23,7 +23,7 @@
 
 
   <!--Will exclude spark extensions if the spark jar is not found-->
-  <available property="spark.absent" file="./lib/spark-core_2.10-0.9.0-incubating.jar"  value="false"/>
+  <available property="spark.absent" file="./lib/spark-assembly_2.10-0.9.0-incubating.jar"  value="false"/>
   <property name="spark.absent" value="true"/>
 
   <target name="build" description="Main build target." depends="clean,fetch,core,app,docs" />
@@ -33,6 +33,7 @@
     <delete dir="${docs}"/>
     <delete file="AR.jar"/>
     <delete file="ARApp.jar"/>
+    <delete file="ARExt.jar"/>
   </target>
 
 
@@ -64,12 +65,13 @@
     description="Build the extensions libraries with the core system; this is core-plus.">
 
     <echo message="Spark absent flag set to: ${spark.absent}"/>
-
+    
+    <delete dir="${extBin}"/>
     <mkdir dir="${extBin}"/>
     <javac destdir="${extBin}" sourcepath="" srcdir="${extSrc}" 
       includeantruntime="false" debug="true" debuglevel="lines,source">
 
-      <exclude name="**/spark/**" if="spark.absent"/>
+      <exclude name="**/spark/**" if="${spark.absent}"/>
       <classpath>
         <fileset dir="${lib}" includes="*.jar"/>
         <fileset dir="." includes="*.jar"/>

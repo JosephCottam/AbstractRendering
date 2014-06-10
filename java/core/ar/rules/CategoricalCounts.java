@@ -1,5 +1,6 @@
 package ar.rules;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -9,7 +10,7 @@ import ar.util.Util;
 /**Tools for working with associations between categories and counts.
  * @param <T> The type of the categories
  */
-public class CategoricalCounts<T> {
+public class CategoricalCounts<T> implements Serializable {
 	private final Comparator<T> comp;
 	private final int[] counts;
 	private final T[] labels;

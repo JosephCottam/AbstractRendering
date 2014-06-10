@@ -28,7 +28,7 @@ public abstract class TouchesPixel {
 	public static final class Points implements Selector<Point2D> {
 		/**Sets the value at a single point in the aggregates.**/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Point2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Point2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
@@ -59,7 +59,7 @@ public abstract class TouchesPixel {
 	public static final class Lines implements Selector<Line2D> {
 		/**Bressenham interpolation on a line.**/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Line2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Line2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> 
 				target, Aggregator<I, A> op) {
@@ -139,7 +139,7 @@ public abstract class TouchesPixel {
 		 * TODO: Can this be done with Point instead of Point2D?
 		 * **/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Rectangle2D, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Rectangle2D, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
@@ -184,7 +184,7 @@ public abstract class TouchesPixel {
 		 * TODO: Can this be done with Point instead of Point2D?
 		 **/
 		public <I,A> Aggregates<A> processSubset(
-				Glyphset<? extends Shape, ? extends I> subset,
+				Iterable<? extends Glyph<? extends Shape, ? extends I>> subset,
 				AffineTransform view, 
 				Aggregates<A> target, 
 				Aggregator<I, A> op) {
