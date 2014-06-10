@@ -18,7 +18,7 @@ inline void transf_single(IT tx, IT ty, IT sx, IT sy,
                           OT& x0, OT& y0, OT& x1, OT& y1)
 {
         x0 = x*sx + tx;
-        y0 = y*sx + ty;
+        y0 = y*sy + ty;
         x1 = (x + w)*sx + tx;
         y1 = (y + h)*sy + ty;
 } 

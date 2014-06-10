@@ -29,6 +29,7 @@ public class IndexedEncoding implements Indexed {
 		this.recordOffset = recordOffset;
 	}
 
+	@Override
 	public Object get(int f) {
 		TYPE t = types[f];
 		long offset= offsets[f]+recordOffset;
@@ -44,4 +45,6 @@ public class IndexedEncoding implements Indexed {
 		}
 		throw new IllegalArgumentException("'Unhandled type at offset " + offset);
 	}
+	
+	@Override public int size() {return offsets.length;} 
 }

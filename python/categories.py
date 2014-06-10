@@ -1,4 +1,4 @@
-import ar
+import core 
 import numpy as np
 from math import log
 
@@ -9,7 +9,7 @@ except ImportError:
   autojit = lambda f: f
 
 ##### Aggregator ##########
-class CountCategories(ar.Aggregator):
+class CountCategories(core.Aggregator):
   """Count the number of items that fall into a particular grid element."""
   out_type = np.int32
   identity=np.asarray([0])
@@ -23,7 +23,7 @@ class CountCategories(ar.Aggregator):
     entry = np.zeros(self.cats.shape[0])
     idx = np.nonzero(self.cats==val)[0][0]
     entry[idx] = 1
-    update = ar.glyphAggregates(points, shapecode, entry, self.identity)  
+    update = core.glyphAggregates(points, shapecode, entry, self.identity)  
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
@@ -31,17 +31,17 @@ class CountCategories(ar.Aggregator):
 
 
 
-##### Transfers ########
-class ToCounts(ar.Transfer):
+##### Shaders ########
+class ToCounts(core.Shader):
   """Convert from count-by-categories to just raw counts.
-     Then transfer functions from the count module can be used.
+     Then data shader functions from the count module can be used.
   """
   @staticmethod
-  def transfer(grid, dtype=np.int32):
-    return np.sum(grid._aggregates, axis=2, dtype=dtype)
+  def shade(grid, dtype=np.int32):
+    return np.sum(grid, axis=2, dtype=dtype)
 
 
-class MinPercent(ar.Transfer):
+class MinPercent(core.Shader):
   """
   If the item in the specified bin represents more than a certain percent
   of the total number of items, color it as "above" otherwise, color as "below"
@@ -57,9 +57,9 @@ class MinPercent(ar.Transfer):
   def __init__(self, 
                cutoff, 
                cat=0,
-               above=ar.Color(228, 26, 28,255), 
-               below=ar.Color(55, 126, 184,255), 
-               background=ar.Color(255,255,255,0)):
+               above=core.Color(228, 26, 28,255), 
+               below=core.Color(55, 126, 184,255), 
+               background=core.Color(255,255,255,0)):
 
     self.cutoff = cutoff
     self.cat = cat  
@@ -67,21 +67,22 @@ class MinPercent(ar.Transfer):
     self.below = below.asarray()
     self.background = background.asarray()
 
-  def transfer(self, grid):
-    outgrid = np.empty((grid.width, grid.height, 4), dtype=np.uint8)
+  def shade(self, grid):
+    (width, height) = grid.shape[0], grid.shape[1]
+    outgrid = np.empty((width, height, 4), dtype=np.uint8)
     
-    sums = ToCounts.transfer(grid, dtype=np.float32)
+    sums = ToCounts.shade(grid, dtype=np.float32)
     maskbg = sums == 0 
-    mask = (grid._aggregates[:,:,self.cat]/sums) >= self.cutoff
+    mask = (grid[:,:,self.cat]/sums) >= self.cutoff
 
     outgrid[mask] = self.above
     outgrid[~mask] = self.below
     outgrid[maskbg] = self.background
     return outgrid
 
-class HDAlpha(ar.Transfer):
+class HDAlpha(core.Shader):
   def __init__(self, colors, 
-               background=ar.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
+               background=core.Color(255,255,255,255), alphamin=0, log=False, logbase=10):
     """colors -- a list of colors in cateogry-order.
                  TODO: Change to a dictionary of category-to-color mapping
        alphamin -- minimum alpha value when (default is 0)
@@ -96,11 +97,11 @@ class HDAlpha(ar.Transfer):
     self.log = log
     self.logbase = logbase
 
-  def transfer(self, grid):
-    sums = ToCounts.transfer(grid, dtype=np.float32)
+  def shade(self, grid):
+    sums = ToCounts.shade(grid, dtype=np.float32)
     mask = (sums!=0)
 
-    colors = opaqueblend(self.catcolors, grid._aggregates, sums)
+    colors = opaqueblend(self.catcolors, grid, sums)
     colors[~mask] = self.background
     alpha(colors, sums, mask, self.alphamin, self.log, self.logbase)
     return colors

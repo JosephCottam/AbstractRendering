@@ -25,7 +25,8 @@ public class GlyphsetTools {
 		private static final long serialVersionUID = -3579436222005581302L;
 		private final GenericRecord r;
 		public IndexedRecord(GenericRecord r) {this.r=r;}
-		public Object get(int f) {return r.get(f);}
+		@Override public Object get(int f) {return r.get(f);}
+		@Override public int size() {return r.getSchema().getFields().size();}
 	}
 	
 	/**Internal utility for seting up an avro reader.**/
