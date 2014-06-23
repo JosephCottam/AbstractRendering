@@ -194,7 +194,7 @@ public class ARServer extends NanoHTTPD {
 	
 
 	/**Get an item from the parameters dictionary. 
-	 * If it is not present, return an execption with the given error message.**/ 
+	 * If it is not present, return an exception with the given error message.**/ 
 	public String errorGet(Map<String,String> params, String key) {
 		String v = params.get(key);
 		if (v != null) {return v;}
@@ -216,8 +216,6 @@ public class ARServer extends NanoHTTPD {
 		server.start();
 		
 		System.out.printf("AR Server started on %s:%d", host, port);
-		Object hold = new Object();
-
-		synchronized(hold) {hold.wait();}
+		while (server.isAlive()) {synchronized(server) {server.wait(10000);;}}
 	}
 }

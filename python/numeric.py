@@ -86,7 +86,8 @@ class Power(core.Shader):
 
 
 class Cuberoot(Power):
-  def __init__(self): super(Power, 1/3.0)
+  def __init__(self): 
+    super(Cuberoot, self).__init__(1/3.0)
 
 class Sqrt(core.Shader):
   def shade(self, grid): 
