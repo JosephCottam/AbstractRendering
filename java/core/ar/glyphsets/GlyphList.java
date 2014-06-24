@@ -5,6 +5,7 @@ import java.util.*;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
 import ar.util.Util;
 
 /**Explicit geometry, sequentially arranged glyphset.
@@ -52,4 +53,7 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 		return new GlyphSubset.Uncached<G,I>(this, low, high);
 	}
+	
+	@Override
+	public Axis.Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
 }

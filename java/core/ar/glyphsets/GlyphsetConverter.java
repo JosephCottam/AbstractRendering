@@ -6,6 +6,7 @@ import java.util.Iterator;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.Axis.Descriptor;
 
 /**Convert the value types from one value to another via the provided converter.
  * Creates a glyph object, so the original glyphset is not modified.
@@ -52,6 +53,7 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 	@Override public boolean isEmpty() {return base.isEmpty();}
 	@Override public Rectangle2D bounds() {return base.bounds();}
 	@Override public long size() {return base.size();}
+	@Override public Descriptor axisDescriptors() {return base.axisDescriptors();}
 
 	@Override
 	public Glyphset<G,V> segmentAt(int count, int segId) throws IllegalArgumentException {

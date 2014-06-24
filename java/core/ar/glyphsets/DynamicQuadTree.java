@@ -10,7 +10,9 @@ import java.util.List;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
 import ar.util.Util;
+import ar.util.Axis.Descriptor;
 
 
 /**Explicit geometry, spatially arranged glyphset with dynamically growing extent.
@@ -129,6 +131,8 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 	/**Convert the tree to a string where indentation indicates depth in tree.**/
 	public abstract String toString(int indent);
 	public String toString() {return toString(0);}
+
+	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
 
 
 	protected static <G,V> DynamicQuadTree<G,V> addTo(DynamicQuadTree<G,V> target, final Glyph<G,V> item) {

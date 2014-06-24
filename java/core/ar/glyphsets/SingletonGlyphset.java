@@ -7,6 +7,8 @@ import java.util.List;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
+import ar.util.Axis.Descriptor;
 import ar.util.Util;
 
 /**Single-element glyphset.**/
@@ -30,4 +32,6 @@ public final class SingletonGlyphset<G,I> implements Glyphset.RandomAccess<G,I> 
 		if (segId == 1) {return this;}
 		return new EmptyGlyphset<>();
 	}
+
+	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
 }

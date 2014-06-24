@@ -11,6 +11,7 @@ import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.selectors.TouchesPixel;
+import ar.util.Axis;
 import ar.util.Util;
 
 /**Render and display exactly what fits on the screen.
@@ -72,7 +73,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		this.dataset = data;
 		this.aggregator = aggregator;
 		this.transfer(transfer);
-		aggregates(null, null);
+		aggregates(null, null, null);
 		fullRender = rerender;
 		renderError = false;
 		if (rerender) {this.repaint();}
@@ -87,8 +88,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	public Aggregates<?> transferAggregates() {return display.transferAggregates();}
 	public Aggregates<?> aggregates() {return aggregates;}
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform) {
-		display.aggregates(aggregates, renderedTransform);
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, Axis.Descriptor<?,?> axes) {
+		display.aggregates(aggregates, renderedTransform, axes);
 		display.refAggregates(null);
 
 		this.renderedTransform=renderedTransform;
@@ -169,7 +170,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				@SuppressWarnings({"unchecked","rawtypes"})
 				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt, databounds.width, databounds.height);
 				
-				AggregatingDisplay.this.aggregates(a, rt);
+				AggregatingDisplay.this.aggregates(a, rt, dataset.axisDescriptors());
 				long end = System.currentTimeMillis();
 				if (PERFORMANCE_REPORTING) {
 					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",

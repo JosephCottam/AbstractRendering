@@ -9,6 +9,7 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Transfer;
+import ar.util.Axis;
 import ar.util.HasViewTransform;
 
 /**Root interactive display interface.**/
@@ -28,7 +29,7 @@ public abstract class ARComponent extends JComponent implements HasViewTransform
 	public abstract Aggregates<?> aggregates();
 
 	/**Set Aggregates before transfer and the transform used to create them.**/
-	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform);
+	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, Axis.Descriptor<?,?> axes);
 	
 	public abstract Aggregates<?> refAggregates();
 	public abstract void refAggregates(Aggregates<?> aggregates);

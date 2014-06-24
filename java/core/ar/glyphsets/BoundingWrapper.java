@@ -6,6 +6,7 @@ import java.util.Iterator;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
+import ar.util.Axis.Descriptor;
 
 /**Wrap a glyphset, only return values that fit within a bounding box.**/
 public class BoundingWrapper<G,I> implements Glyphset<G,I> {
@@ -35,6 +36,11 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 	/** Approximate size!  Returns 0 if empty, otherwise returns the base size.*/
 	public long size() {return isEmpty() ? 0 : base.size();}
 
+
+	/**Approximate!  Returns the descriptor for the base...**/
+	@Override public Descriptor axisDescriptors() {return base.axisDescriptors();}
+
+	
 	@Override
 	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		return new BoundingWrapper<>(base.segmentAt(count, segId), bound);

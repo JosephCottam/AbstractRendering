@@ -16,6 +16,8 @@ import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.memoryMapping.MappedFile;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
+import ar.util.Axis.Descriptor;
+import ar.util.Axis;
 import ar.util.Util;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
@@ -69,6 +71,8 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
+	private Axis.Descriptor descriptor; //TODO: Improve data relationship using shaper...
+
 	/**Create a new memory mapped list, types are read from the source.
 	 * @throws IOException **/
 	public MemMapList(File source, Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer) {
@@ -96,7 +100,9 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 				Rectangle2D maxBounds = Util.boundOne(shaper.shape(max));
 				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
+				descriptor = Axis.coordinantDescriptors(this);
 			} 
+			
 			entryCount = (source.length()-dataTableOffset)/recordLength;
 		} else {
 			this.dataTableOffset = -1;
@@ -169,5 +175,11 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 			bounds = pool.invoke(new BoundsTask<>(this, Runtime.getRuntime().availableProcessors()*2)); //TODO: Tuning paramter for task-size....
 		}
 		return bounds;
+	}
+
+	@Override
+	public Descriptor axisDescriptors() {
+		if (descriptor == null) {descriptor = Axis.coordinantDescriptors(this);}
+		return descriptor;
 	}
 }

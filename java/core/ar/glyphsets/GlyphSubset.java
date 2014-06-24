@@ -4,7 +4,9 @@ import java.awt.geom.Rectangle2D;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
 import ar.util.Util;
+import ar.util.Axis.Descriptor;
 
 /**Subset of a random-access dataset. **/
 public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
@@ -24,7 +26,7 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override public boolean isEmpty() {return low >= high;}
 	@Override public long size() {return high - low;}
 	@Override public Rectangle2D bounds() {return Util.bounds(this);}
-	
+
 	@Override 
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
@@ -33,6 +35,9 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 
 		return new Cached<>(glyphs, bottom + this.low, top + this.low);
 	}
+
+	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
+
 	
 	/**Subset where glyphs are cached in the subset.
 	 *   
