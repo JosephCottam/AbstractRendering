@@ -6,8 +6,10 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import ar.*;
@@ -132,6 +134,7 @@ public class TransferDisplay extends ARComponent {
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
 		
 		if (postTransferAggregates == null 
 				&& transfer !=null && aggregates !=null 
@@ -142,13 +145,23 @@ public class TransferDisplay extends ARComponent {
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
 		if (image != null) {
-			Graphics2D g2 = (Graphics2D) g;
-			
 			g2.drawRenderedImage(image,offsetTransform(viewTransform, renderedTransform));
 		}
 		
 		if (axes != null) {
-			 
+			g2.setColor(Color.black);
+			double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;
+			Line2D l = new Line2D.Double(0,0,0,0);
+			for (Map.Entry<?,Double> e:axes.x.seeds.entrySet()) {
+				Double val = e.getValue();
+				max = Math.max(max, val);
+				min = Math.min(min, val);
+				l.setLine(val, 5, val, -5);
+				g2.draw(viewTransform.createTransformedShape(l));
+			}
+			l.setLine(min, 0, max, 0);
+			g2.draw(viewTransform.createTransformedShape(l));
+
 		}
 	}
 	
