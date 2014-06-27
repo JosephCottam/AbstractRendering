@@ -183,7 +183,7 @@ public class Axis {
 		}
 		
 		drawLine(min, max, 0, g2, viewTransform, isX);		
-		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, isX);
+		drawLabel(axis.label, min, max, (isX ? 1 : -1) * LABEL_OFFSET*5, g2, viewTransform, isX);
 	}
 	
 	/**Draws text at the given position.
@@ -238,7 +238,7 @@ public class Axis {
 	}
 	
 	/**Draws a line between two points.  The line is always drawn in unscaled space, 
-	 * so the width is not afffect by the view transform BUT the points are scaled to match 
+	 * so the width is not affect by the view transform BUT the points are scaled to match 
 	 * the view transform.  Otherwise said, this method achieves Bertin-style 'line' implantation.   
 	 */
 	private static final void drawLine(double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
