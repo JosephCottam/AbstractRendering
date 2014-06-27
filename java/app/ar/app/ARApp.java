@@ -108,6 +108,12 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 		ARComponent.PERFORMANCE_REPORTING = true;
 		RenderUtils.RECORD_PROGRESS = true;
 		RenderUtils.REPORT_STEP=1_000_000;
+		
+		String osName = System.getProperty("os.name");
+	    if (osName.contains("OS X")) {
+	    	System.setProperty("apple.laf.useScreenMenuBar", "true");
+	    }
+		
 		if (args.length >0 && args[0]!=null && args[0].toUpperCase().equals("-EXT")) {
 			ARComposerApp.main(args);
 		} else {
