@@ -2,6 +2,7 @@ package ar.util;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -157,10 +158,19 @@ public class Axis {
 	
 	
 	public static void drawAxes(Axis.Descriptor<?,?> axes, Graphics2D g2, AffineTransform viewTransform) {
+		
+		Object restore_anti_alias = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
 		drawAxis(axes.x, g2, viewTransform, true);
 		drawAxis(axes.y, g2, viewTransform, false);
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, restore_anti_alias);
+
 	}
 	
+	public static final float LABEL_OFFSET = 10;
 	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, boolean isX) {
 		g2.setColor(Color.GRAY);
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
@@ -173,21 +183,27 @@ public class Axis {
 		}
 		
 		drawLine(min, max, 0, g2, viewTransform, isX);		
-		drawLabel(axis.label, min, max, 0, g2, viewTransform, isX);
+		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, isX);
 	}
 	
-	public static final float LABEL_OFFSET = 3;
+	/**Draws text at the given position.
+	 * Text is drawn in unscaled space, but positioning is done with respect to the view transform.
+	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
+	 */
 	public static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+		String labelText;
 		if (label instanceof Integer || label instanceof Long) {
-			label = String.format("%d,", label);
+			labelText = String.format("%d,", label);
 		} if (label instanceof Number) {
-			label = String.format("%.3f", label);
-		} 
+			labelText = String.format("%.3f", label);
+		} else {
+			labelText = label.toString();
+		}
+		double textHeight = (float) g2.getFontMetrics().getStringBounds(labelText, g2).getHeight();
 
 		Point2D p1, p2;
 		AffineTransform t = new AffineTransform(vt);
 		if (isX) {
-			//t.preConcatenate(AffineTransform.getRotateInstance(Math.PI/2));
 			t.scale(1,1/vt.getScaleY());
 			p1 = new Point2D.Double(val1, offset);
 			p2 = new Point2D.Double(val2, offset);
@@ -200,25 +216,28 @@ public class Axis {
 		t.transform(p1, p1);
 		t.transform(p2, p2);
 		
-		float x,y;
-		t = AffineTransform.getTranslateInstance(p1.getX(), p2.getY());
-		if (isX) {t.rotate(-Math.PI/2);}
-			
-//		if (isX) {
-//			x = (float) (p1.getX()+p2.getX()/2);
-//			y = (float) Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
-//		} else {
-//			x =  (float) Math.min(p1.getX(), p2.getX()) + LABEL_OFFSET;
-//			y = (float) (p1.getY()+p2.getY()/2);
-//		}
-//		g2.drawString(label, x, y);
-		
+		double x,y;
+		if (isX) {
+			x = (p1.getX()+p2.getX())/2 - (textHeight/2);
+			y = Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
+			t = AffineTransform.getTranslateInstance(x, y);
+			t.rotate(Math.PI/2);
+		} else {
+			x = Math.min(p1.getX(), p2.getX()) + LABEL_OFFSET;
+			y = (p1.getY()+p2.getY())/2 + (textHeight/2);
+			t = AffineTransform.getTranslateInstance(x, y);
+		}
+
 		AffineTransform restore = g2.getTransform();
 		g2.setTransform(t);
-		g2.drawString(label.toString(), 0,0);
+		g2.drawString(labelText, 0,0);
 		g2.setTransform(restore);
 	}
 	
+	/**Draws a line between two points.  The line is always drawn in unscaled space, 
+	 * so the width is not afffect by the view transform BUT the points are scaled to match 
+	 * the view transform.  Otherwise said, this method achieves Bertin-style 'line' implantation.   
+	 */
 	private static final void drawLine(double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
 		AffineTransform t = new AffineTransform(vt);
 		Point2D p1, p2;
