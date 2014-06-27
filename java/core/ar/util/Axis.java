@@ -170,7 +170,15 @@ public class Axis {
 
 	}
 	
-	public static final float LABEL_OFFSET = 10;
+	/**How far off of the line should labels be placed?**/
+	public static float LABEL_OFFSET = 10;
+	
+	/**How far from the line should the tick go in the direction AWAY from the label?**/
+	public static float TICK_AWAY = 3;
+	
+	/**How far from the line should the tick go in the direction TOWARDS the label?**/
+	public static float TICK_TOWARD = 6;
+	
 	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, boolean isX) {
 		g2.setColor(Color.GRAY);
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
@@ -178,12 +186,12 @@ public class Axis {
 			Double val = e.getValue();
 			max = Math.max(max, val);
 			min = Math.min(min, val);
-			drawLine(val, val, 5, g2, viewTransform, isX);
-			drawLabel(e.getKey(), val, val, 5, g2, viewTransform, isX);
+			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, isX);
+			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, isX);
 		}
 		
-		drawLine(min, max, 0, g2, viewTransform, isX);		
-		drawLabel(axis.label, min, max, (isX ? 1 : -1) * LABEL_OFFSET*5, g2, viewTransform, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
+		drawLine(min, max, 0,0, g2, viewTransform, isX);		
+		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
@@ -223,11 +231,11 @@ public class Axis {
 		double x,y;
 		if (isX) {
 			x = (p1.getX()+p2.getX())/2 - (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
-			y = Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
+			y = Math.min(p1.getY(), p2.getY()) + offset;
 			t = AffineTransform.getTranslateInstance(x, y);
 			t.rotate(Math.PI/2);
 		} else {
-			x = Math.min(p1.getX(), p2.getX()) - (stringBounds.getWidth()+LABEL_OFFSET+LABEL_OFFSET); //HACK: TWICE!!! Not sure why...
+			x = Math.min(p1.getX(), p2.getX()) - (stringBounds.getWidth()+offset+offset); //HACK: TWICE!!! Not sure why...
 			y = (p1.getY()+p2.getY())/2 + (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
 			t = AffineTransform.getTranslateInstance(x, y);
 		}
@@ -241,17 +249,17 @@ public class Axis {
 	 * so the width is not affect by the view transform BUT the points are scaled to match 
 	 * the view transform.  Otherwise said, this method achieves Bertin-style 'line' implantation.   
 	 */
-	private static final void drawLine(double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+	private static final void drawLine(double val1, double val2, double toward, double away, Graphics2D g2, AffineTransform vt, boolean isX) {
 		AffineTransform t = new AffineTransform(vt);
 		Point2D p1, p2;
 		if (isX) {
 			t.scale(1, 1/vt.getScaleY());
-			p1 = new Point2D.Double(val1, offset);
-			p2 = new Point2D.Double(val2, -offset);
+			p1 = new Point2D.Double(val1, toward);
+			p2 = new Point2D.Double(val2, -away);
 		} else {
 			t.scale(1/vt.getScaleX(), 1);
-			p1 = new Point2D.Double(offset, -val1);
-			p2 = new Point2D.Double(-offset, -val2);
+			p1 = new Point2D.Double(away, -val1);
+			p2 = new Point2D.Double(-toward, -val2);
 		}
 		
 		t.transform(p1, p1);
