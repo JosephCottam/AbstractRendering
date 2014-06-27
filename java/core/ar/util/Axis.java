@@ -191,6 +191,9 @@ public class Axis {
 	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
 	 */
 	public static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+		AffineTransform restore = g2.getTransform();
+		g2.setTransform(new AffineTransform());
+		
 		String labelText;
 		if (label instanceof Integer || label instanceof Long) {
 			labelText = String.format("%d,", label);
@@ -199,7 +202,8 @@ public class Axis {
 		} else {
 			labelText = label.toString();
 		}
-		double textHeight = (float) g2.getFontMetrics().getStringBounds(labelText, g2).getHeight();
+		
+		Rectangle2D stringBounds = g2.getFontMetrics().getStringBounds(labelText, g2); 
 
 		Point2D p1, p2;
 		AffineTransform t = new AffineTransform(vt);
@@ -218,17 +222,16 @@ public class Axis {
 		
 		double x,y;
 		if (isX) {
-			x = (p1.getX()+p2.getX())/2 - (textHeight/2);
+			x = (p1.getX()+p2.getX())/2 - (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
 			y = Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
 			t = AffineTransform.getTranslateInstance(x, y);
 			t.rotate(Math.PI/2);
 		} else {
-			x = Math.min(p1.getX(), p2.getX()) + LABEL_OFFSET;
-			y = (p1.getY()+p2.getY())/2 + (textHeight/2);
+			x = Math.min(p1.getX(), p2.getX()) - (stringBounds.getWidth()+LABEL_OFFSET+LABEL_OFFSET); //HACK: TWICE!!! Not sure why...
+			y = (p1.getY()+p2.getY())/2 + (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
 			t = AffineTransform.getTranslateInstance(x, y);
 		}
 
-		AffineTransform restore = g2.getTransform();
 		g2.setTransform(t);
 		g2.drawString(labelText, 0,0);
 		g2.setTransform(restore);
