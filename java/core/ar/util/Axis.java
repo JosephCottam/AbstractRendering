@@ -131,7 +131,7 @@ public class Axis {
 		Map<Double, Double> rslt = continuous ? new TreeMap<Double, Double>() : new HashMap<Double, Double>();
 		Interpolate<Double> interp = continuous ? new LinearSmooth() : new Discrete<Double>();
 		
-		for (int i=0; i<samples; i++) {
+		for (int i=0; i<samples+1; i++) {
 			Double val = ((high-low)/samples)*i;
 			rslt.put(val, val);
 		}
@@ -183,7 +183,7 @@ public class Axis {
 		}
 		
 		drawLine(min, max, 0, g2, viewTransform, isX);		
-		drawLabel(axis.label, min, max, (isX ? 1 : -1) * LABEL_OFFSET*5, g2, viewTransform, isX);
+		drawLabel(axis.label, min, max, (isX ? 1 : -1) * LABEL_OFFSET*5, g2, viewTransform, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
