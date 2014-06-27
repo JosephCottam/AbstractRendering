@@ -173,7 +173,7 @@ public class Axis {
 		}
 		
 		drawLine(min, max, 0, g2, viewTransform, isX);		
-		//drawLabel(axis.label, min, max, 0, g2, viewTransform, isX);
+		drawLabel(axis.label, min, max, 0, g2, viewTransform, isX);
 	}
 	
 	public static final float LABEL_OFFSET = 3;
@@ -201,8 +201,9 @@ public class Axis {
 		t.transform(p2, p2);
 		
 		float x,y;
-				
-		g2.drawString(label.toString(), (float) p1.getX(), (float) p2.getY());
+		t = AffineTransform.getTranslateInstance(p1.getX(), p2.getY());
+		if (isX) {t.rotate(-Math.PI/2);}
+			
 //		if (isX) {
 //			x = (float) (p1.getX()+p2.getX()/2);
 //			y = (float) Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
@@ -212,6 +213,10 @@ public class Axis {
 //		}
 //		g2.drawString(label, x, y);
 		
+		AffineTransform restore = g2.getTransform();
+		g2.setTransform(t);
+		g2.drawString(label.toString(), 0,0);
+		g2.setTransform(restore);
 	}
 	
 	private static final void drawLine(double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
