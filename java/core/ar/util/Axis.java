@@ -1,5 +1,10 @@
 package ar.util;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collections;
 import java.util.HashMap;
@@ -149,4 +154,82 @@ public class Axis {
 		
 		return new AxisDescriptor<>(label, combined, first.interpolate);
 	}
+	
+	
+	public static void drawAxes(Axis.Descriptor<?,?> axes, Graphics2D g2, AffineTransform viewTransform) {
+		drawAxis(axes.x, g2, viewTransform, true);
+		drawAxis(axes.y, g2, viewTransform, false);
+	}
+	
+	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, boolean isX) {
+		g2.setColor(Color.GRAY);
+		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
+		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
+			Double val = e.getValue();
+			max = Math.max(max, val);
+			min = Math.min(min, val);
+			drawLine(val, val, 5, g2, viewTransform, isX);
+			drawLabel(e.getKey(), val, val, 5, g2, viewTransform, isX);
+		}
+		
+		drawLine(min, max, 0, g2, viewTransform, isX);		
+		//drawLabel(axis.label, min, max, 0, g2, viewTransform, isX);
+	}
+	
+	public static final float LABEL_OFFSET = 3;
+	public static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+		if (label instanceof Integer || label instanceof Long) {
+			label = String.format("%d,", label);
+		} if (label instanceof Number) {
+			label = String.format("%.3f", label);
+		} 
+
+		Point2D p1, p2;
+		AffineTransform t = new AffineTransform(vt);
+		if (isX) {
+			//t.preConcatenate(AffineTransform.getRotateInstance(Math.PI/2));
+			t.scale(1,1/vt.getScaleY());
+			p1 = new Point2D.Double(val1, offset);
+			p2 = new Point2D.Double(val2, offset);
+		} else {
+			t.scale(1/vt.getScaleX(), 1);
+			p1 = new Point2D.Double(offset, -val1);
+			p2 = new Point2D.Double(offset, -val2);			
+		}
+		
+		t.transform(p1, p1);
+		t.transform(p2, p2);
+		
+		float x,y;
+				
+		g2.drawString(label.toString(), (float) p1.getX(), (float) p2.getY());
+//		if (isX) {
+//			x = (float) (p1.getX()+p2.getX()/2);
+//			y = (float) Math.min(p1.getY(), p2.getY()) + LABEL_OFFSET;
+//		} else {
+//			x =  (float) Math.min(p1.getX(), p2.getX()) + LABEL_OFFSET;
+//			y = (float) (p1.getY()+p2.getY()/2);
+//		}
+//		g2.drawString(label, x, y);
+		
+	}
+	
+	private static final void drawLine(double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+		AffineTransform t = new AffineTransform(vt);
+		Point2D p1, p2;
+		if (isX) {
+			t.scale(1, 1/vt.getScaleY());
+			p1 = new Point2D.Double(val1, offset);
+			p2 = new Point2D.Double(val2, -offset);
+		} else {
+			t.scale(1/vt.getScaleX(), 1);
+			p1 = new Point2D.Double(offset, -val1);
+			p2 = new Point2D.Double(-offset, -val2);
+		}
+		
+		t.transform(p1, p1);
+		t.transform(p2, p2);
+		Line2D l = new Line2D.Double(p1, p2);
+		g2.draw(l);		
+	}	
 }

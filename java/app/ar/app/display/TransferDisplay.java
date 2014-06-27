@@ -7,6 +7,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Map;
@@ -148,23 +149,8 @@ public class TransferDisplay extends ARComponent {
 			g2.drawRenderedImage(image,offsetTransform(viewTransform, renderedTransform));
 		}
 		
-		if (axes != null) {
-			g2.setColor(Color.black);
-			double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;
-			Line2D l = new Line2D.Double(0,0,0,0);
-			for (Map.Entry<?,Double> e:axes.x.seeds.entrySet()) {
-				Double val = e.getValue();
-				max = Math.max(max, val);
-				min = Math.min(min, val);
-				l.setLine(val, 5, val, -5);
-				g2.draw(viewTransform.createTransformedShape(l));
-			}
-			l.setLine(min, 0, max, 0);
-			g2.draw(viewTransform.createTransformedShape(l));
-
-		}
-	}
-	
+		if (axes != null) {Axis.drawAxes(axes, g2, viewTransform);}
+	}	
 	
 	/**In some cases, some of the view transform is reflected in the rendered transform,
 	 * the display needs a modified view transform to properly position/scale post-transfer results.
