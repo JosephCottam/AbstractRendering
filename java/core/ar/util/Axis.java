@@ -157,14 +157,17 @@ public class Axis {
 	}
 	
 	
-	public static void drawAxes(Axis.Descriptor<?,?> axes, Graphics2D g2, AffineTransform viewTransform) {
+    //---------------------------------------------------- Rendering ----------------------------------------------------
+	
+
+	public static void drawAxes(Axis.Descriptor<?,?> axes, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds) {
 		
 		Object restore_anti_alias = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-		drawAxis(axes.x, g2, viewTransform, true);
-		drawAxis(axes.y, g2, viewTransform, false);
+		drawAxis(axes.x, g2, viewTransform, screenBounds, true);
+		drawAxis(axes.y, g2, viewTransform, screenBounds, false);
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, restore_anti_alias);
 
@@ -179,29 +182,31 @@ public class Axis {
 	/**How far from the line should the tick go in the direction TOWARDS the label?**/
 	public static float TICK_TOWARD = 6;
 	
-	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, boolean isX) {
+	/**How many pixels high should the axes be given?**/
+	public static int AXIS_SPACE = 100;
+	
+	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds, boolean isX) {
 		g2.setColor(Color.GRAY);
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
 		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
 			Double val = e.getValue();
 			
-			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, isX);
-			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, isX);
+			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
+			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX);
 
 			max = Math.max(max, val);
 			min = Math.min(min, val);
 		}
 		
-		System.out.printf("%f,%f\n", min, max);
-		drawLine(min, max, 0,0, g2, viewTransform, isX);		
-		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
+		drawLine(min, max, 0,0, g2, viewTransform, screenBounds, isX);		
+		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, screenBounds, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
 	 * Text is drawn in unscaled space, but positioning is done with respect to the view transform.
 	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
 	 */
-	public static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, boolean isX) {
+	private static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX) {
 		AffineTransform restore = g2.getTransform();
 		g2.setTransform(new AffineTransform());
 		
@@ -220,10 +225,14 @@ public class Axis {
 		AffineTransform t = new AffineTransform(vt);
 		if (isX) {
 			t.scale(1,1/vt.getScaleY());
+			t.translate(0, -vt.getTranslateY()+screenBounds.getHeight()-AXIS_SPACE);
+
 			p1 = new Point2D.Double(val1, offset);
 			p2 = new Point2D.Double(val2, offset);
 		} else {
 			t.scale(1/vt.getScaleX(), 1);
+			t.translate(-vt.getTranslateX()+AXIS_SPACE,0);
+
 			p1 = new Point2D.Double(offset, val1);
 			p2 = new Point2D.Double(offset, val2);			
 		}
@@ -249,25 +258,31 @@ public class Axis {
 	}
 	
 	/**Draws a line between two points.  The line is always drawn in unscaled space, 
-	 * so the width is not affect by the view transform BUT the points are scaled to match 
+	 * so the line thickness is not affect by the view transform BUT the points are scaled to match 
 	 * the view transform.  Otherwise said, this method achieves Bertin-style 'line' implantation.   
 	 */
-	private static final void drawLine(double val1, double val2, double toward, double away, Graphics2D g2, AffineTransform vt, boolean isX) {
+	private static final void drawLine(double val1, double val2, double toward, double away, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX) {
 		AffineTransform t = new AffineTransform(vt);
 		Point2D p1, p2;
 		if (isX) {
 			t.scale(1, 1/vt.getScaleY());
+			t.translate(0, -vt.getTranslateY()+screenBounds.getHeight()-AXIS_SPACE);
 			p1 = new Point2D.Double(val1, toward);
 			p2 = new Point2D.Double(val2, -away);
 		} else {
 			t.scale(1/vt.getScaleX(), 1);
+			t.translate(-vt.getTranslateX()+AXIS_SPACE,0);
 			p1 = new Point2D.Double(away, val1);
 			p2 = new Point2D.Double(-toward, val2);
 		}
 		
 		t.transform(p1, p1);
 		t.transform(p2, p2);
+		
+		AffineTransform restore = g2.getTransform();
+		g2.setTransform(new AffineTransform());
 		Line2D l = new Line2D.Double(p1, p2);
-		g2.draw(l);		
+		g2.draw(l);
+		g2.setTransform(restore);
 	}	
 }

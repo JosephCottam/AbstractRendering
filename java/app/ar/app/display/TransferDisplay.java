@@ -145,7 +145,7 @@ public class TransferDisplay extends ARComponent {
 		AffineTransform offsetTransform = offsetTransform(viewTransform, renderedTransform);
 		if (image != null) {
 			g2.drawRenderedImage(image, offsetTransform);
-			if (axes != null) {Axis.drawAxes(axes, g2, viewTransform);}
+			if (axes != null) {Axis.drawAxes(axes, g2, viewTransform, this.getBounds());}
 		}
 	}	
 	
