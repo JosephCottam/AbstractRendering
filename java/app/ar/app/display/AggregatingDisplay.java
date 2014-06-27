@@ -143,7 +143,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			Rectangle2D content = (dataset == null ? null : dataset().bounds());
 			if (content ==null || content.isEmpty()) {return;}
 			
-			AffineTransform vt = Util.zoomFit(content, getWidth(), getHeight());
+			AffineTransform vt = Util.zoomFit(content, getWidth()-Axis.AXIS_SPACE, getHeight()-Axis.AXIS_SPACE);
 			viewTransform(vt, false);
 		} catch (Exception e) {
 			//Essentially ignores zoom-fit errors...they are usually caused by under-specified state
