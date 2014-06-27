@@ -142,11 +142,11 @@ public class TransferDisplay extends ARComponent {
 
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		AffineTransform offsetTransform = offsetTransform(viewTransform, renderedTransform);
 		if (image != null) {
-			g2.drawRenderedImage(image,offsetTransform(viewTransform, renderedTransform));
+			g2.drawRenderedImage(image, offsetTransform);
+			if (axes != null) {Axis.drawAxes(axes, g2, viewTransform);}
 		}
-		
-		if (axes != null) {Axis.drawAxes(axes, g2, viewTransform);}
 	}	
 	
 	/**In some cases, some of the view transform is reflected in the rendered transform,

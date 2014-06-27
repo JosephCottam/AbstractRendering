@@ -123,8 +123,8 @@ public class Axis {
 	 * **/
 	public static Descriptor<Double, Double> coordinantDescriptors(Glyphset<?,?> glyphs) {
 		Rectangle2D bounds = glyphs.bounds();
-		return new Descriptor<>(linearDescriptor("X", bounds.getMinX(), bounds.getMaxX(), 10, true),
-					    		linearDescriptor("Y", bounds.getMinY(), bounds.getMaxY(), 10, true));
+		return new Descriptor<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), 10, true),
+					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), 10, true));
 	}
 	
 	public static AxisDescriptor<Double> linearDescriptor(String label, double low, double high, int samples, boolean continuous) {
@@ -132,7 +132,7 @@ public class Axis {
 		Interpolate<Double> interp = continuous ? new LinearSmooth() : new Discrete<Double>();
 		
 		for (int i=0; i<samples+1; i++) {
-			Double val = ((high-low)/samples)*i;
+			Double val = low + ((high-low)/samples)*i;
 			rslt.put(val, val);
 		}
 		
@@ -184,12 +184,15 @@ public class Axis {
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
 		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
 			Double val = e.getValue();
-			max = Math.max(max, val);
-			min = Math.min(min, val);
+			
 			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, isX);
 			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, isX);
+
+			max = Math.max(max, val);
+			min = Math.min(min, val);
 		}
 		
+		System.out.printf("%f,%f\n", min, max);
 		drawLine(min, max, 0,0, g2, viewTransform, isX);		
 		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
 	}
@@ -221,8 +224,8 @@ public class Axis {
 			p2 = new Point2D.Double(val2, offset);
 		} else {
 			t.scale(1/vt.getScaleX(), 1);
-			p1 = new Point2D.Double(offset, -val1);
-			p2 = new Point2D.Double(offset, -val2);			
+			p1 = new Point2D.Double(offset, val1);
+			p2 = new Point2D.Double(offset, val2);			
 		}
 		
 		t.transform(p1, p1);
@@ -258,8 +261,8 @@ public class Axis {
 			p2 = new Point2D.Double(val2, -away);
 		} else {
 			t.scale(1/vt.getScaleX(), 1);
-			p1 = new Point2D.Double(away, -val1);
-			p2 = new Point2D.Double(-toward, -val2);
+			p1 = new Point2D.Double(away, val1);
+			p2 = new Point2D.Double(-toward, val2);
 		}
 		
 		t.transform(p1, p1);
