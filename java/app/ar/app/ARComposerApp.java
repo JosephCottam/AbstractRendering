@@ -41,12 +41,15 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	private final JMenu fileMenu = new JMenu("File");
 	private final JMenuItem saveImage = new JMenuItem("Save Image", KeyEvent.VK_S);
 	
+	private final JCheckBox axes = new JCheckBox("Legend");
+	
 	public ARComposerApp() {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());
 		
 		JMenuBar bar = new JMenuBar();
+		frame.setJMenuBar(bar);
 		bar.add(fileMenu);
 		fileMenu.add(saveImage);
 		saveImage.addActionListener(new ActionListener() {
@@ -64,11 +67,6 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 		});
 		
 		saveImage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-
-		
-		frame.setJMenuBar(bar);
-
-		
 		
 		JPanel topRow = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -91,8 +89,12 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.weightx = 1;
-		//TODO: Add 'legend' control here...
-				
+		topRow.add(axes);
+		axes.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				display.includeAxes(axes.isSelected());
+			}
+		});
 
 		JPanel controls = new JPanel();
 		controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));

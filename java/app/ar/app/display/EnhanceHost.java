@@ -166,6 +166,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	@Override public Aggregates<?> aggregates() {return hosted.aggregates();}
 	@Override public Aggregates<?> refAggregates() {return hosted.refAggregates();}
 	@Override public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
+	@Override public void includeAxes(boolean include) {hosted.includeAxes(include);}
 	
 	@Override
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, Axis.Descriptor<?, ?> axes) {

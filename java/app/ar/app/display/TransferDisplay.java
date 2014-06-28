@@ -28,6 +28,7 @@ public class TransferDisplay extends ARComponent {
 	private Aggregates<?> aggregates;
 	
 	private Axis.Descriptor<?,?> axes;
+	private boolean includeAxes;
 
 	/**What transform was used to produce the base aggregates.**/ 
 	private volatile AffineTransform renderedTransform = new AffineTransform();
@@ -49,7 +50,6 @@ public class TransferDisplay extends ARComponent {
 	 * will be drawn.
 	 * **/
 	private volatile AffineTransform viewTransform = new AffineTransform();
-	
 	
 	private final Renderer renderer;
 	private volatile boolean renderError = false;
@@ -145,7 +145,7 @@ public class TransferDisplay extends ARComponent {
 		AffineTransform offsetTransform = offsetTransform(viewTransform, renderedTransform);
 		if (image != null) {
 			g2.drawRenderedImage(image, offsetTransform);
-			if (axes != null) {Axis.drawAxes(axes, g2, viewTransform, this.getBounds());}
+			if (axes != null && includeAxes) {Axis.drawAxes(axes, g2, viewTransform, this.getBounds());}
 		}
 	}	
 	
@@ -210,7 +210,11 @@ public class TransferDisplay extends ARComponent {
 	}
 		
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
-
+	@Override public void includeAxes(boolean axes) {
+		this.includeAxes = axes; 
+		repaint();
+	}
+	
 	@Override 
 	public void viewTransform(AffineTransform vt, boolean provisional) {
 		if (vt == null) {vt = new AffineTransform();}

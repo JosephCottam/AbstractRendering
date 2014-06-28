@@ -34,6 +34,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	protected ExecutorService renderPool = new MostRecentOnlyExecutor(1,"FullDisplay Render Thread");
 		
 	protected final Renderer renderer;
+	
+	protected boolean enableAxes;
 
 	public AggregatingDisplay(Renderer renderer) {
 		super();
@@ -56,17 +58,16 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		ZoomPanHandler.installOn(this);
 	}
 	
-	protected void finalize() {renderPool.shutdown();}
+	@Override protected void finalize() {renderPool.shutdown();}
 	public void addAggregatesChangedListener(ActionListener l) {aggregatesChangedProvider.addActionListener(l);}
 
-	public Aggregates<?> refAggregates() {return display.refAggregates();}
+	@Override public Aggregates<?> refAggregates() {return display.refAggregates();}
 	public void refAggregates(Aggregates<?> aggregates) {
 		display.refAggregates(aggregates);
 	}
 	
-	public Renderer renderer() {return renderer;}
-	
-	public Glyphset<?,?> dataset() {return dataset;}
+	@Override public Renderer renderer() {return renderer;}
+	@Override public Glyphset<?,?> dataset() {return dataset;}
 
 	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {dataset(data,aggregator, transfer, true);}
 	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer, boolean rerender) {
@@ -79,15 +80,13 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		if (rerender) {this.repaint();}
 	}
 	
-	public Transfer<?,?> transfer() {return display.transfer();}
-	public void transfer(Transfer<?,?> t) {
-		display.transfer(t);
-	}
+	@Override public Transfer<?,?> transfer() {return display.transfer();}
+	@Override public void transfer(Transfer<?,?> t) {display.transfer(t);}
+	@Override public Aggregator<?,?> aggregator() {return aggregator;}
+	@Override public Aggregates<?> transferAggregates() {return display.transferAggregates();}
+	@Override public Aggregates<?> aggregates() {return aggregates;}
 	
-	public Aggregator<?,?> aggregator() {return aggregator;}
-	
-	public Aggregates<?> transferAggregates() {return display.transferAggregates();}
-	public Aggregates<?> aggregates() {return aggregates;}
+	@Override 
 	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, Axis.Descriptor<?,?> axes) {
 		display.aggregates(aggregates, renderedTransform, axes);
 		display.refAggregates(null);
@@ -98,12 +97,14 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		aggregatesChangedProvider.fireActionListeners();
 	}
 
+	@Override
 	public void renderAgain() {
 		fullRender=true;
 		renderError=false;
 		repaint();
 	}
 	
+	@Override
 	public void paintComponent(Graphics g) {
 		Runnable action = null;
 		if (renderer == null 
@@ -117,7 +118,13 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			renderPool.execute(action);
 			fullRender = false;
 		} 
-
+	}
+	
+	@Override
+	public void includeAxes(boolean enable) {
+		display.includeAxes (enable);
+		this.enableAxes = enable;
+		repaint();
 	}
 	
 	public String toString() {return String.format("AggregatingDisplay[Dataset: %1$s, Transfer: %2$s, Aggregator: %3$s]", dataset, display.transfer(), aggregator);}
@@ -143,7 +150,8 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			Rectangle2D content = (dataset == null ? null : dataset().bounds());
 			if (content ==null || content.isEmpty()) {return;}
 			
-			AffineTransform vt = Util.zoomFit(content, getWidth()-Axis.AXIS_SPACE, getHeight()-Axis.AXIS_SPACE);
+			int axisMargin = enableAxes ? Axis.AXIS_SPACE : 0;
+			AffineTransform vt = Util.zoomFit(content, getWidth()-axisMargin, getHeight()-axisMargin);
 			viewTransform(vt, false);
 		} catch (Exception e) {
 			//Essentially ignores zoom-fit errors...they are usually caused by under-specified state
