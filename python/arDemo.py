@@ -9,15 +9,16 @@ Draws a colormapped image plot
    history".
 """
 # Abstract rendering imports
-#import abstract_rendering.core as core
-#import abstract_rendering.numeric as numeric
-#import abstract_rendering.categories as categories
-#import abstract_rendering.infos as infos
-import core
-import numeric
-import categories
-import infos
-import glyphset
+import abstract_rendering.core as core
+import abstract_rendering.numeric as numeric
+import abstract_rendering.categories as categories
+import abstract_rendering.infos as infos
+import abstract_rendering.glyphset as glyphset
+#import core
+#import numeric
+#import categories
+#import infos
+#import glyphset
 
 from timer import Timer
 
