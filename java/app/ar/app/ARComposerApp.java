@@ -41,7 +41,7 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	private final JMenu fileMenu = new JMenu("File");
 	private final JMenuItem saveImage = new JMenuItem("Save Image", KeyEvent.VK_S);
 	
-	private final JCheckBox axes = new JCheckBox("Legend");
+	private final JCheckBox axes = new JCheckBox("Axes");
 	
 	public ARComposerApp() {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
