@@ -35,9 +35,9 @@ def _create_plot_component():
     white = core.Color(255,255,255,255)
     black = core.Color(0,0,0,255)
     
-    #glyphs = core.load_csv("../data/checkerboard.csv", 2, 0, 1, 3,1,1)
-    glyphs = core.load_csv("../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
-    #glyphs = core.load_csv("../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
+    #glyphs = core.load_csv("../../data/checkerboard.csv", 2, 0, 1, 3,1,1)
+    glyphs = core.load_csv("../../data/circlepoints.csv", 1, 2, 3, 4,.1,.1)
+    #glyphs = core.load_csv("../../data/sourceforge.csv", 1, 1, 2, -1,.1,.1)
     
     #glyphs.shaper.code = glyphset.ShapeCodes.LINE
     #glyphs.shaper.code = glyphset.ShapeCodes.RECT
