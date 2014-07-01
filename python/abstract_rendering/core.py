@@ -1,3 +1,7 @@
+"""Core abstract rendering abstractions.  This includes the main drivers of execution
+   and the base clases for shared data representations.
+"""
+
 import re
 import sys
 import os
@@ -6,6 +10,8 @@ import ctypes
 from fast_project import _projectRects
 import geometry
 import glyphset
+
+
 
 try:
   from numba import autojit
@@ -17,6 +23,16 @@ _lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'transform.so'))
 
 ############################  Core System ####################
 def glyphAggregates(points, shapeCode, val, default):
+  """Create a set of aggregates fo a single glyph.  The set of aggregates will be
+     tight to the bound box of the shape but may not be completely filled 
+     (thus the need for both 'val' and 'default').
+
+     * points -- Points that define the glyph
+     * shapeCode -- Code that indicates how to interpret the points
+     * val -- Value to place in bins that are hit by the shape
+     * default -- Value to place in bins not hit by the shape
+  """
+
   def scalar(array, val): array.fill(val)
   def nparray(array,val): array[:] = val
   
@@ -48,13 +64,13 @@ def render(glyphs, info, aggregator, shader, screen,ivt):
   """
   Render a set of glyphs under the specified condition to the described canvas.
 
-  glyphs: Glyphs to render
-  info: For each glyph, what is the piece of information that will be aggregated
-  aggregator: Function to combine a set of info values into a single aggregate value
-  selector: Function to determine which glyph affects which bin 
-  shader: Function for converting aggregates to colors
-  screen: (width,height) of the canvas
-  ivt: INVERSE view transform (converts pixels to canvas space)
+  * glyphs -- Glyphs to render
+  * info -- For each glyph, what is the piece of information that will be aggregated
+  * aggregator -- Combines a set of info values into a single aggregate value
+  * shader -- Converts aggregates to other aggregates (often colors)
+  * screen -- (width,height) of the canvas
+  * ivt -- INVERSE view transform (converts pixels to canvas space)
+
   """
   projected = project(glyphs, ivt.inverse())
   aggregates = aggregate(projected, info, aggregator, screen)
@@ -64,8 +80,9 @@ def render(glyphs, info, aggregator, shader, screen,ivt):
 
 def project(glyphs, viewxform):
   """Project the points found in the glyphset according to the view transform.
-     viewxform -- convert canvas space to pixel space
-     glyphs -- set of glyphs (represented as [x,y,w,h,...]
+
+     * viewxform -- convert canvas space to pixel space
+     * glyphs -- set of glyphs (represented as [x,y,w,h,...]
   """
   points = glyphs.points()
   out = np.empty_like(points, dtype=np.int32)
@@ -95,8 +112,11 @@ def shade(aggregates, shader):
       according to some data shader.  Many common cases, the result
       aggregates is an image, but it does not need to be.
 
-      aggregates -- input aggregaets
-      shader -- data shader used in the conversion
+      NOTE:  This is currently a rather simple function.  It is included now
+      as an extension point.
+
+      * aggregates -- input aggregaets
+      * shader -- data shader used in the conversion
    """
    return shader.shade(aggregates)
 
@@ -111,12 +131,19 @@ class Aggregator(object):
 
   def combine(self, existing, points, shapecode, val):
     """
-    existing: outype npy array
-    update: intype np array
+    * existing - out_type numpy array, aggregate values for all glyphs seen thus far
+    * points - points that define a shape
+    * shapecode - Code that determines how points are interpreted
+    * val -- Info value associated with the current set of points
     """
     pass
 
   def rollup(*vals):
+    """
+    Combine multiple sets of aggregates.
+
+    * *vals - list of numpy arrays with type out_type
+    """
     pass
 
 

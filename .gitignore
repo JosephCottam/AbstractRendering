@@ -1,6 +1,7 @@
 .DS_Store
 .metadata/
 build/
+_build/
 bin
 data
 wiki

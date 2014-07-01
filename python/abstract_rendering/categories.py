@@ -1,3 +1,10 @@
+""" 
+Tools for working with counts from multiple categories of data at once.
+
+Categories are modeled as stakced 2D arrays.  Each category is in its
+own slice of the stack.
+"""
+
 import core 
 import numpy as np
 from math import log
@@ -10,7 +17,8 @@ except ImportError:
 
 ##### Aggregator ##########
 class CountCategories(core.Aggregator):
-  """Count the number of items that fall into a particular grid element."""
+  """Count the number of items that fall into a particular grid element.
+  """
   out_type = np.int32
   identity=np.asarray([0])
   cats=None
@@ -40,18 +48,35 @@ class ToCounts(core.Shader):
   def shade(grid, dtype=np.int32):
     return np.sum(grid, axis=2, dtype=dtype)
 
+class Select(core.Shader):
+  """Get the counts from just one category.
+
+     Operates by taking a single plane of the count of categories.
+
+     TODO: Consider changing shade to take a wrapper 'grid' that can carry info
+           like a category-label-to-grid-slice mapping....
+  """
+  
+  def __init__(self, slice):
+    """slice -- Which slice of the aggregates grid should be returned"""
+    self.slice = slice
+
+  def shade(aggregates, dtype=np.int32):
+    return aggregates[:,:,slice]
+
+
 
 class MinPercent(core.Shader):
-  """
-  If the item in the specified bin represents more than a certain percent
-  of the total number of items, color it as "above" otherwise, color as "below"
+  """If the item in the specified bin represents more than a certain percent
+     of the total number of items, color it as "above" otherwise, color as "below"
+       
+     TODO: Change from idx to category label, lookup idx for 'cat' parameter
   
-     cutoff -- percent value to split above and below coloring
-     cat -- integer indicating which category number to use  
-            TODO: Change from idx to category label, lookup idx
-     above  -- color to paint above (default a red)
-     below  -- color to paint below (default a blue)
-     background -- color to paint when there are no values (default is clear)
+     * cutoff -- percent value to split above and below coloring
+     * cat -- integer indicating which category number to use  
+     * above  -- color to paint above (default a red)
+     * below  -- color to paint below (default a blue)
+     * background -- color to paint when there are no values (default is clear)
   """
      
   def __init__(self, 
