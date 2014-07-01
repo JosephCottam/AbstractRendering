@@ -60,8 +60,8 @@ class Floor(core.Shader):
 class Interpolate(core.Shader):
   """Interpolate between two numbers.
      Projects the input values between the low and high values passed.
-     Default is 0 to 1
-     empty values are preserved (default is np.nan)
+     The Default is 0 to 1.
+     Empty values are preserved (default is np.nan).
   """
   def __init__(self, low=0, high=1, empty=np.nan):
     self.low = low
@@ -119,11 +119,11 @@ class InterpolateColors(core.Shader):
   High-definition interpolation between two colors.
   Zero-values are treated separately from other values.
  
-  low -- Color ot use for lowest value
-  high -- Color to use for highest values 
-  log -- Set to desired log base to use log-based interpolation 
-         (use True or "e" for base-e; default is False)
-  reserve -- color to use for empty cells
+  * low -- Color ot use for lowest value
+  * high -- Color to use for highest values 
+  * log -- Set to desired log base to use log-based interpolation 
+           (use True or "e" for base-e; default is False)
+  * reserve -- color to use for empty cells
   """
   in_type=(1,np.number)
   out_type=(4,np.int32)

@@ -7,6 +7,7 @@ Categories
 .. automodule:: abstract_rendering.categories
    :members:
    :show-inheritance:
+
 Core
 -----------
 .. automodule:: abstract_rendering.core

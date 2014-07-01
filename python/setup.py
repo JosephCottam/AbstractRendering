@@ -90,13 +90,18 @@ def getsitepackages():
 
 
 site_packages = getsitepackages()[0]
+old_dir = join(site_packages, "abstract_rendering")
 path_file = join(site_packages, "abstract_rendering.pth")
-path = dirname(abspath(dirname(__file__)))
+path = abspath(dirname(__file__))
 
 if 'develop' in sys.argv:
+    print("Develop mode.")
+    if os.path.isdir(old_dir):
+      print("  - Removing package %s." % old_dir)
+      import shutil
+      shutil.rmtree(old_dir)
     with open(path_file, "w+") as f:
         f.write(path)
-    print("Develop mode.")
     print("  - writing path '%s' to %s" % (path, path_file))
     print()
     sys.exit()
@@ -107,7 +112,7 @@ setup(name='abstract_rendering',
       author='Joseph Cottam',
       author_email='jcottam@indiana.edu',
       url='https://github.com/JosephCottam/AbstractRendering',
-      package_dir = {'abstract_rendering' : 'src'},
+      package_dir = {'abstract_rendering' : 'abstract_rendering'},
       py_modules=['abstract_rendering.core', 
                   'abstract_rendering.general', 
                   'abstract_rendering.categories',
@@ -117,10 +122,10 @@ setup(name='abstract_rendering',
                   'abstract_rendering.infos',
                   'abstract_rendering.numeric'],
       ext_modules=[Extension('abstract_rendering.transform',
-                             ['transform.cpp'],
+                             ['abstract_rendering/transform.cpp'],
                              extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++']),
                    Extension('abstract_rendering.transform_libdispatch',
-                             ['transform_libdispatch.cpp'], 
+                             ['abstract_rendering/transform_libdispatch.cpp'], 
                              extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])]
      )
      
