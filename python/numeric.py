@@ -93,6 +93,29 @@ class Sqrt(core.Shader):
   def shade(self, grid): 
     return np.sqrt(grid, self.pow)
 
+class Spread(core.PixelShader):
+  """Spreads the values out in a regular pattern.
+  
+     TODO: Currently only does square spread.  Extend to other shapes.
+     TODO: Restricted to numbers right now...implement corresponding thing for categories...might be 'generic'
+  """
+
+  def __init__(self, size):
+    self.size = size
+
+  def makegrid(self, grid):
+    return np.zeros_like(grid)
+
+  def pixelfunc(self, grid, x, y):
+    minx = max(0, x-math.floor(self.size/2.0))
+    maxx = x+math.ceil(self.size/2.0)
+    miny = max(0,y-math.floor(self.size/2.0))
+    maxy = y+math.ceil(self.size/2.0)
+
+    parts = grid[minx:maxx, miny:maxy]
+    return parts.sum()
+
+
 
 class AbsSegment(core.Shader):
   """

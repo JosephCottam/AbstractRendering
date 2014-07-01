@@ -180,18 +180,24 @@ class PixelShader(Shader):
   def __init__(self, pixelfunc, prefunc):
     self.pixelfunc = pixelfunc
     self.prefunc = prefunc
+  
+  def _pre(self, grid):
+    """Executed exactly once before pixelfunc is called on any cell."""
+    pass
+
+  def pixelfunc(grid, x, y):
+    """Override this method.  It will be called for each pixel in the grid."""
+    raise NotImplementedError
 
   def shade(self, grid):
     outgrid = self.makegrid(grid)
     self._pre(grid)
-    (width,height) = (grid.width, grid.height)
-
+    (width,height) = grid.shape
     for x in xrange(0, width):
       for y in xrange(0, height):
         outgrid[x,y] = self.pixelfunc(grid, x, y)
 
     return outgrid
-
 
 ###############################  Graphics Components ###############
 
