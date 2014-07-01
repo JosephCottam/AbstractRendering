@@ -1,10 +1,10 @@
 import unittest
-import abstract_rendering.general as general
+import abstract_rendering.numeric as numeric
 import numpy as np
 
 class SpreadTests(unittest.TestCase):
   def run_spread(self, spread, in_vals, expected):
-    spread = general.Spread(spread)
+    spread = numeric.Spread(spread)
     out = spread.shade(in_vals)
     
     self.assertTrue(np.array_equal(out, expected), 'incorrect value spreading')
