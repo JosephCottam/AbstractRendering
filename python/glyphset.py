@@ -1,14 +1,14 @@
 import numpy as np
 
 def enum(**enums): return type('Enum', (), enums)
-ShapeCodes = enum(POINT=0, LINE=1, RECT=2)
+ShapeCodes = enum(POINT=0, LINE=1, RECT=2)  ##TODO: Add shapecodes: CIRCLE, POINT_RECT, POINT_CIRCLE, etc
 
 class Glyphset(object):
   """shaper + shape-params + associated data ==> Glyphset
 
      fields:
         _points : Points held by this glyphset
-        data : Data associated with the pionts.  _points[x] should associate with data[x]
+        _ data : Data associated with the pionts.  _points[x] should associate with data[x]
         shapecode: Shapecode that tells how to interpret _points
 
   """
@@ -63,7 +63,8 @@ class Shaper(object):
   fns = None #List of functions to apply 
   code = None
   colMajor = False 
-  ##TODO: When getting subsets of teh data out of glyphset.points(), remove this colMajor and handle it up in glyphset instead
+  
+  ##TODO: When getting subsets of the data out of glyphset.points(), remove this colMajor and handle it up in glyphset instead
   def __call__(self, vals):
     if not self.colMajor:
       return [map(lambda f: f(val), self.fns) for val in vals]
@@ -83,19 +84,16 @@ class Literals(Shaper):
     return vals
 
 class ToRect(Shaper):
-  code = ShapeCodes.RECT
   def __init__(self, tox, toy, tow, toh):
     self.fns = [tox,toy,tow,toh]
 
 class ToLine(Shaper):
-  code = ShapeCodes.LINE
   def __init__(self, tox1, toy1, tox2, toy2):
     self.fns = [tox1, toy1, tox2, toy2]
 
 class ToPoint(Shaper):
-  code = ShapeCodes.POINT
   def __init__(self, tox, toy, tow, toh):
-    self.fns = [tox, toy,0,0]
+    self.fns = [tox, toy,lambda(x): 0,lambda(x): 0]
 
 #### Utilities for shapers....
 def const(v):
