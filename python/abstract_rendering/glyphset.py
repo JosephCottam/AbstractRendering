@@ -84,14 +84,17 @@ class Literals(Shaper):
     return vals
 
 class ToRect(Shaper):
+  code = ShapeCodes.RECT
   def __init__(self, tox, toy, tow, toh):
     self.fns = [tox,toy,tow,toh]
 
 class ToLine(Shaper):
+  code = ShapeCodes.LINE
   def __init__(self, tox1, toy1, tox2, toy2):
     self.fns = [tox1, toy1, tox2, toy2]
 
 class ToPoint(Shaper):
+  code = ShapeCodes.POINT
   def __init__(self, tox, toy, tow, toh):
     self.fns = [tox, toy,lambda(x): 0,lambda(x): 0]
 
