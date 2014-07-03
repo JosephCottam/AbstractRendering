@@ -121,7 +121,7 @@ if 'develop' in sys.argv:
     sys.exit()
 
 setup(name='abstract_rendering', 
-      version='0.0.1',
+      version='0.0.3',
       description='Rendering as a binning process',
       author='Joseph Cottam',
       author_email='jcottam@indiana.edu',
