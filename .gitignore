@@ -2,6 +2,8 @@
 .metadata/
 build/
 _build/
+dist/
+MANIFEST
 bin
 data
 wiki
