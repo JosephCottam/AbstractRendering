@@ -23,7 +23,7 @@ class Count(core.Aggregator):
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
-    return reduce(lambda x,y: x+y,  vals)
+    return reduce(lambda a,b: a+b,  vals)
 
 
 
@@ -40,7 +40,7 @@ class Sum(core.Aggregator):
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
-    return reduce(lambda x,y: x+y,  vals)
+    return reduce(lambda a,b: a+b,  vals)
 
 
 ######## Shaders ##########
