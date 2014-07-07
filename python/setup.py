@@ -10,14 +10,14 @@ DISPATCH_FLAG = "--dispatch"
 
 if DISPATCH_FLAG in sys.argv:
   transform = Extension('abstract_rendering.transform_libdispatch',
-                          ['transform_libdispatch.cpp'], 
-                           extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])
+                        ['abstract_rendering/transform_libdispatch.cpp'], 
+                        extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])
   del sys.argv[sys.argv.index(DISPATCH_FLAG)]
 
 else:
   transform = Extension('abstract_rendering.transform',
-                             ['transform.cpp'],
-                             extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])
+                        ['abstract_rendering/transform.cpp'],
+                        extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])
 def getsitepackages():
     """Returns a list containing all global site-packages directories
     (and possibly site-python)."""
@@ -135,10 +135,5 @@ setup(name='abstract_rendering',
                   'abstract_rendering.glyphset', 
                   'abstract_rendering.infos',
                   'abstract_rendering.numeric'],
-      ext_modules=[Extension('abstract_rendering.transform',
-                             ['abstract_rendering/transform.cpp'],
-                             extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++']),
-                   Extension('abstract_rendering.transform_libdispatch',
-                             ['abstract_rendering/transform_libdispatch.cpp'], 
-                             extra_compile_args=['-std=c++11','-O3', '-Wall', '-march=native', '-fno-rtti', '-fno-exceptions', '-fPIC', '-lstdc++'])]
+      ext_modules=[transform]
      )
