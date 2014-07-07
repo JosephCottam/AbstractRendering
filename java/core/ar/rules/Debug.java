@@ -81,6 +81,27 @@ public class Debug {
 		}
 	}
 	
+
+	/**Print out statistics on an aggregate set.**/
+	public static final class Stats<IN extends Number, OUT> implements Transfer<IN,OUT> {
+		private final Transfer<IN,OUT> inner;
+		
+		/**
+		 * @param inner Transfer function to actually perform.
+		 */
+		public Stats(Transfer<IN,OUT> inner) {this.inner = inner;}
+
+		public OUT emptyValue() {return inner.emptyValue();}
+
+		@Override
+		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
+			Util.Stats<?> s= Util.stats(aggregates, false, false, false);
+			System.out.println(s.toString());
+			return inner.specialize(aggregates);
+		}
+	}
+	
+	
 	/**Will print a message on specialization.**/
 	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;
