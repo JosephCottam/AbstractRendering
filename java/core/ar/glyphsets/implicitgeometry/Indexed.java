@@ -90,7 +90,7 @@ public interface Indexed extends Serializable {
 	 */
 	public static class Converter implements Indexed {
 		/**Types the converter understands. "X" means skip.**/
-		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR}
+		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR, STRING}
 		private static final long serialVersionUID = 9142589107863879237L;
 		private final TYPE[] types;
 		private final Indexed values;

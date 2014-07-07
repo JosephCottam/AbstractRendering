@@ -49,7 +49,6 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	/**What are the overall bounds of the items in this glyphset?**/
 	public Rectangle2D bounds();
 
-	
 	public Axis.Descriptor axisDescriptors();
 	
 	/**How many items in this glyphset?

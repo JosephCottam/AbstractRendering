@@ -15,6 +15,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.Axis.Descriptor;
 
 import org.apache.commons.csv.*;
 
@@ -159,5 +160,11 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		public RecordWrapper(CSVRecord r) {this.r = r;}
 		@Override public Object get(int i) {return r.get(i);}
 		@Override public int size() {return r.size();}
+	}
+
+	@Override
+	public Descriptor axisDescriptors() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
