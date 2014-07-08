@@ -145,7 +145,9 @@ public class TransferDisplay extends ARComponent {
 		AffineTransform offsetTransform = offsetTransform(viewTransform, renderedTransform);
 		if (image != null) {
 			g2.drawRenderedImage(image, offsetTransform);
-			if (axes != null && includeAxes) {Axis.drawAxes(axes, g2, viewTransform, this.getBounds());}
+			if (axes != null && includeAxes) {
+				Axis.drawAxes(axes, g2, viewTransform, this.getBounds());
+			}
 		}
 	}	
 	
@@ -210,6 +212,8 @@ public class TransferDisplay extends ARComponent {
 	}
 		
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
+	
+	public boolean includeAxes() {return includeAxes;}
 	@Override public void includeAxes(boolean axes) {
 		this.includeAxes = axes; 
 		repaint();

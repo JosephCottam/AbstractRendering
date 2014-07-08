@@ -35,8 +35,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 		
 	protected final Renderer renderer;
 	
-	protected boolean enableAxes;
-
 	public AggregatingDisplay(Renderer renderer) {
 		super();
 		this.renderer = renderer;
@@ -122,8 +120,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	
 	@Override
 	public void includeAxes(boolean enable) {
-		display.includeAxes (enable);
-		this.enableAxes = enable;
+		display.includeAxes(enable);
 		repaint();
 	}
 	
@@ -150,7 +147,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 			Rectangle2D content = (dataset == null ? null : dataset().bounds());
 			if (content ==null || content.isEmpty()) {return;}
 			
-			int axisMargin = enableAxes ? Axis.AXIS_SPACE : 0;
+			int axisMargin = display.includeAxes() ? Axis.AXIS_SPACE : 0;
 			AffineTransform vt = Util.zoomFit(content, getWidth()-axisMargin, getHeight()-axisMargin);
 			viewTransform(vt, false);
 		} catch (Exception e) {
