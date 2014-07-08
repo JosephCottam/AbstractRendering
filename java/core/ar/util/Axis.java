@@ -46,11 +46,11 @@ public class Axis {
 	
 	public static final <T> AxisDescriptor<T> empty() {return new AxisDescriptor<T>("", Collections.<T,Double>emptyMap(), new Discrete<T>());}
 	
+	/**Given a set of seeds, produce a new set of seeds of the requested target size.**/
 	public static interface Interpolate<T> {
-		/**Given a set of seeds, produce a new set of seeds of the requested target size.**/
 		public Map<T, Double> interpolate(Map<T,Double> seeds, int targetSize);
 	}
-
+	
 	/**If seeds is not a SortedMap, returns the input value unchanged. 
 	 * If seeds is a SortedMap, returns a strided selection of the seeds.
 	 * If forceLast is true, will return a set of targetSize+1 to ensure the last item is present.
@@ -121,22 +121,37 @@ public class Axis {
 	/**Produce descriptors indicating literal positions.
 	 * DOES NOT reflect backing data, just the bounding box of the projection.
 	 * **/
-	public static Descriptor<Double, Double> coordinantDescriptors(Glyphset<?,?> glyphs) {
+	public static Descriptor<?, ?> coordinantDescriptors(Glyphset<?,?> glyphs) {
 		Rectangle2D bounds = glyphs.bounds();
 		return new Descriptor<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), 10, true),
 					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), 10, true));
 	}
 	
-	public static AxisDescriptor<Double> linearDescriptor(String label, double low, double high, int samples, boolean continuous) {
-		Map<Double, Double> rslt = continuous ? new TreeMap<Double, Double>() : new HashMap<Double, Double>();
-		Interpolate<Double> interp = continuous ? new LinearSmooth() : new Discrete<Double>();
+	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double low, double high, int samples, boolean continuous) {
+		Map<Number, Double> rslt = continuous ? new TreeMap<Number, Double>() : new HashMap<Number, Double>();
+		Interpolate<?> interp = continuous ? new LinearSmooth() : new Discrete<Long>();
 		
 		for (int i=0; i<samples+1; i++) {
-			Double val = low + ((high-low)/samples)*i;
-			rslt.put(val, val);
+			Number val;
+			if (continuous) {val = new Double(low + ((high-low)/samples)*i);}
+			else {val = Math.round(low + ((high-low)/samples)*i);}
+			rslt.put(val, val.doubleValue());
 		}
 		
-		return new AxisDescriptor<>(label, rslt, interp);
+		return new AxisDescriptor<>(label, (Map<T, Double>) rslt, (Interpolate<T>) interp);
+	}
+	
+	/**Create an evenly-spaced categorical axis.**/
+	public static AxisDescriptor<String> categoricalDescriptor(String label, double low, double high, String... labels) {
+		int positions = labels.length;
+		Map<String, Double> rslt = new HashMap<String, Double>();
+		
+		double gap = low + ((high-low)/(positions*2));
+		for (int i=0; i<positions; i++) {
+			Double val = gap + gap*i*2;
+			rslt.put(labels[i], val);
+		}
+		return new AxisDescriptor<>(label, rslt, new Discrete<String>());
 	}
 	
 	
@@ -212,8 +227,8 @@ public class Axis {
 		
 		String labelText;
 		if (label instanceof Integer || label instanceof Long) {
-			labelText = String.format("%d,", label);
-		} if (label instanceof Number) {
+			labelText = String.format("%,d", label);
+		} else if (label instanceof Number) {
 			labelText = String.format("%.3f", label);
 		} else {
 			labelText = label.toString();
