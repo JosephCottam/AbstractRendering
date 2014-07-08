@@ -18,4 +18,6 @@ public final class EmptyGlyphset<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override public Rectangle2D bounds() {return new Rectangle2D.Double(Double.NaN, Double.NaN, Double.NaN, Double.NaN);}
 	@Override public Glyphset<G,I> segmentAt(int count, int segId) {return this;}
 	@Override public Descriptor axisDescriptors() {return new Axis.Descriptor<>(Axis.empty(), Axis.empty());}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {return;}
+
 }

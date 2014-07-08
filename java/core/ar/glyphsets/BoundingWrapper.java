@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
 import ar.util.Util;
 import ar.util.Axis.Descriptor;
 
@@ -39,6 +40,7 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 
 	/**Approximate!  Returns the descriptor for the base...**/
 	@Override public Descriptor axisDescriptors() {return base.axisDescriptors();}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {base.axisDescriptors(descriptor);}
 
 	
 	@Override

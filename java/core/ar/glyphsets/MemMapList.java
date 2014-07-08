@@ -71,8 +71,6 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final long entryCount;
 	private Rectangle2D bounds;
 
-	private Axis.Descriptor descriptor; //TODO: Improve data relationship using shaper...
-
 	/**Create a new memory mapped list, types are read from the source.
 	 * @throws IOException **/
 	public MemMapList(File source, Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer) {
@@ -100,7 +98,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 				Rectangle2D maxBounds = Util.boundOne(shaper.shape(max));
 				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
-				descriptor = Axis.coordinantDescriptors(this);
+				axisDescriptor = Axis.coordinantDescriptors(this);
 			} 
 			
 			entryCount = (source.length()-dataTableOffset)/recordLength;
@@ -177,9 +175,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		return bounds;
 	}
 
-	@Override
-	public Descriptor axisDescriptors() {
-		if (descriptor == null) {descriptor = Axis.coordinantDescriptors(this);}
-		return descriptor;
-	}
+	private Axis.Descriptor axisDescriptor;
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
 }

@@ -14,7 +14,8 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	private final I val;
 	private final long size;
 	private final Generator<G> shaper;
-	
+	private Axis.Descriptor axisDescriptor;
+
 	public SyntheticGlyphset(long size, I val, Generator<G> shaper) {
 		this.val = val;
 		this.size = size;
@@ -58,8 +59,8 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		public Point2D shape(Long from) {return new Point2D.Double(Math.random()*maxX, Math.random()*maxY);}
 	}
 
-	@Override
-	public Descriptor<Double, Double> axisDescriptors() {return Axis.coordinantDescriptors(this);}
-	
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+
 	
 }
