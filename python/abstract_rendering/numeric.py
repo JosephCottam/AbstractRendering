@@ -23,7 +23,7 @@ class Count(core.Aggregator):
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
-    return reduce(lambda x,y: x+y,  vals)
+    return reduce(lambda a,b: a+b,  vals)
 
 
 
@@ -40,7 +40,7 @@ class Sum(core.Aggregator):
     existing[points[0]:points[2],points[1]:points[3]] += update
 
   def rollup(*vals):
-    return reduce(lambda x,y: x+y,  vals)
+    return reduce(lambda a,b: a+b,  vals)
 
 
 ######## Shaders ##########
@@ -60,8 +60,8 @@ class Floor(core.Shader):
 class Interpolate(core.Shader):
   """Interpolate between two numbers.
      Projects the input values between the low and high values passed.
-     Default is 0 to 1
-     empty values are preserved (default is np.nan)
+     The Default is 0 to 1.
+     Empty values are preserved (default is np.nan).
   """
   def __init__(self, low=0, high=1, empty=np.nan):
     self.low = low
@@ -93,6 +93,29 @@ class Sqrt(core.Shader):
   def shade(self, grid): 
     return np.sqrt(grid, self.pow)
 
+class Spread(core.PixelShader):
+  """Spreads the values out in a regular pattern.
+  
+     TODO: Currently only does square spread.  Extend to other shapes.
+     TODO: Restricted to numbers right now...implement corresponding thing for categories...might be 'generic'
+  """
+
+  def __init__(self, size):
+    self.size = size
+
+  def makegrid(self, grid):
+    return np.zeros_like(grid)
+
+  def pixelfunc(self, grid, x, y):
+    minx = max(0, x-math.floor(self.size/2.0))
+    maxx = x+math.ceil(self.size/2.0)
+    miny = max(0,y-math.floor(self.size/2.0))
+    maxy = y+math.ceil(self.size/2.0)
+
+    parts = grid[minx:maxx, miny:maxy]
+    return parts.sum()
+
+
 
 class AbsSegment(core.Shader):
   """
@@ -120,11 +143,11 @@ class InterpolateColors(core.Shader):
   High-definition interpolation between two colors.
   Zero-values are treated separately from other values.
  
-  low -- Color ot use for lowest value
-  high -- Color to use for highest values 
-  log -- Set to desired log base to use log-based interpolation 
-         (use True or "e" for base-e; default is False)
-  reserve -- color to use for empty cells
+  * low -- Color ot use for lowest value
+  * high -- Color to use for highest values 
+  * log -- Set to desired log base to use log-based interpolation 
+           (use True or "e" for base-e; default is False)
+  * reserve -- color to use for empty cells
   """
   in_type=(1,np.number)
   out_type=(4,np.int32)

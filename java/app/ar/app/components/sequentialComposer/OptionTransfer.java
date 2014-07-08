@@ -876,8 +876,14 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 	} 
 
-	
-	
+	public static final class PrintStats extends OptionTransfer<ControlPanel> {
+		@Override public Transfer<Object, Color> transfer(ControlPanel p, Transfer subsequent) {
+			return new Debug.Stats(subsequent);
+		}
+		
+		@Override public String toString() {return "Print Statistics";}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
+	} 
 
 	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
 	public static final class ColorCatInterpolate extends OptionTransfer<ColorCatInterpolate.Controls> {
@@ -932,5 +938,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		return subsequent;
 	}
+	
 
 }

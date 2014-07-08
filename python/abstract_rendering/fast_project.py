@@ -3,10 +3,9 @@ This module provides alternative methods of performing the 2d
 projection needed, they will use the same interface and should be
 interchangeable.
 
-all functions will take as inputs a transform and an array of AABB
+All functions will take as inputs a transform and an array of AABB
 using floating point numbers. The result will be quantized into
 integers.
-
 """
 from __future__ import print_function
 import ctypes
