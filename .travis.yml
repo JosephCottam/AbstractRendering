@@ -3,4 +3,3 @@ install: ant -f ./java/build.xml fetch-ext
 script: ant -f ./java/build.xml ext test
 jdk:
   - oraclejdk7
-  - openjdk7
