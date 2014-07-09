@@ -8,13 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import ar.Glyphset;
-import ar.ext.textfile.*;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Indexed.ToValue;
 import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.rules.CategoricalCounts;
@@ -66,22 +64,21 @@ public final class OptionDataset<G,I> {
 	public List<OptionTransfer<?>> defaultTransfers() {return defaultTransfers;}
 
 
-
-	public static final OptionDataset<Point2D, Integer> WIKIPEDIA_TXT;
-	static {
-		OptionDataset<Point2D, Integer> temp;
-		try {
-			temp = new OptionDataset<>(
-				"Wikipedia BFS adjacnecy (Commons txt)",
-				new DelimitedFile<>(
-						new File("../data/wiki.full.txt"), ',', new Converter.TYPE[]{Converter.TYPE.LONG,Converter.TYPE.LONG, Converter.TYPE.COLOR}, 
-						new Indexed.ToPoint(false, 0,1), new Valuer.Constant<Indexed,Integer>(1)),
-				OptionAggregator.COUNT,
-				new OptionTransfer.MathTransfer(),
-				new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
-		WIKIPEDIA_TXT = temp;
-	}
+//	public static final OptionDataset<Point2D, Integer> WIKIPEDIA_TXT;
+//	static {
+//		OptionDataset<Point2D, Integer> temp;
+//		try {
+//			temp = new OptionDataset<>(
+//				"Wikipedia BFS adjacnecy (Commons txt)",
+//				new DelimitedFile<>(
+//						new File("../data/wiki.full.txt"), ',', new Converter.TYPE[]{Converter.TYPE.LONG,Converter.TYPE.LONG, Converter.TYPE.COLOR}, 
+//						new Indexed.ToPoint(false, 0,1), new Valuer.Constant<Indexed,Integer>(1)),
+//				OptionAggregator.COUNT,
+//				new OptionTransfer.MathTransfer(),
+//				new OptionTransfer.Interpolate());
+//		} catch (Exception e) {temp = null;}
+//		WIKIPEDIA_TXT = temp;
+//	}
 	
 	public static final OptionDataset<Point2D, String> BOOST_MEMORY;
 	static {
