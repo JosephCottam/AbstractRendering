@@ -1,6 +1,9 @@
 Abstract Rendering
 ======
 
+Status: [![Build Status](https://travis-ci.org/JosephCottam/AbstractRendering.svg?branch=master)](https://travis-ci.org/JosephCottam/AbstractRendering)
+
+
 Information visualization rests on the idea that a meaningful relationship
 can be drawn between pixels and data.  This is most often mediated by
 geometric entities (such as circles, squares and text) but always involves
