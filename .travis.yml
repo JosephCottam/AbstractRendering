@@ -1,5 +1,6 @@
 language: java
+install: ant -f ./java/build.xml fetch fetch-ext
+test: ant -f ./java/build.xml ext test
 jdk:
   - oraclejdk7
   - openjdk7
-  - openjdk6
