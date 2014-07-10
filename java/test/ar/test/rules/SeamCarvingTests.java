@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.renderers.ParallelRenderer;
@@ -216,7 +215,7 @@ public class SeamCarvingTests {
 			}
 			
 			Transfer<Double, Double> t = new SeamCarving.CumulativeEnergy();
-			Aggregates<Double> cumEng = TestResources.RENDERER.transfer(energy, t.specialize(energy));
+			Aggregates<Double> cumEng = new ParallelRenderer().transfer(energy, t.specialize(energy));
 			
 			double val =0;
 			for (int y=energy.lowY(); y<energy.highY(); y++) {

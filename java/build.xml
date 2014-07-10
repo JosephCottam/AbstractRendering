@@ -145,7 +145,7 @@
       </classpath>
     </javac>
 
-    <junit haltonfailure="no" fork="true" showoutput="true">
+    <junit haltonfailure="no" fork="true" showoutput="true" failureproperty="TestsFailed">
       <classpath>
         <pathelement location="${testBin}"/>
         <fileset dir="${lib}" includes="**/*.jar"/>
@@ -161,6 +161,7 @@
         </fileset>
       </batchtest>
     </junit>
+    <fail if="TestsFailed" message="Some test(s) failed" status="1"/>
   </target>
 
   <target name="clean-deep" depends="clean, deep-clean" description="Clean up all items (builds, dependencies and uninstall ivy)."/>

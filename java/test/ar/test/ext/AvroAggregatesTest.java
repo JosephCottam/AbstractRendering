@@ -159,18 +159,5 @@ public class AvroAggregatesTest {
 			}
 		}
 	}
-	
-	@Test
-	public void readOcculusTile() throws Exception {
-		String filename = "../data/avroTiles/0/0/0.avro";
-		assertTrue("Input file not found.", new File(filename).exists());
-		
-		Aggregates<Integer> res = AggregateSerializer.deserializeTile(filename, new Converters.ToCount(),0,0,255,255);
-		
-		assertEquals(0, res.lowX());
-		assertEquals(0, res.lowY());
-		assertEquals(255, res.highX());
-		assertEquals(255, res.highY());
-	}
 }
 

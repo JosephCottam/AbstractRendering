@@ -12,10 +12,10 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.ParallelRenderer;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.combinators.*;
-import ar.test.TestResources;
 
 public class Combinators {
 	@Test
@@ -63,7 +63,7 @@ public class Combinators {
 		}
 		
 		Transfer.Specialized<Boolean,Color> t = new If<>(new Valuer.Constant<Boolean, Boolean>(true), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
-		Aggregates<Color> rslt = TestResources.RENDERER.transfer(a, t);
+		Aggregates<Color> rslt = new ParallelRenderer().transfer(a, t);
 		
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
@@ -81,7 +81,7 @@ public class Combinators {
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10d));
 		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
-		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		assertTrue("Bluk test", p.value(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
@@ -103,7 +103,7 @@ public class Combinators {
 		
 				
 		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
-		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
 		assertTrue("Bluk test", p.value(rslt));
@@ -117,7 +117,7 @@ public class Combinators {
 		Transfer<Integer,Integer> t2 = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(2),0);
 		Transfer.Specialized<Integer, Integer> t = new Seq<>(t1,t2).specialize(a);
 		
-		Aggregates<Integer> rslt = TestResources.RENDERER.transfer(a, t);
+		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
 		assertTrue("Bluk test", p.value(rslt));
