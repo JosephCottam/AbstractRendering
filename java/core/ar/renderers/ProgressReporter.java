@@ -33,15 +33,22 @@ public interface ProgressReporter {
 	 * **/
 	public long reportStep();
 	
+	/**Get a status message.  
+	 * null is preferred for signaling "no message".**/
+	public String message();
+	public void message(String message);
+	
 	
 	/**Dummy progress recorder.  Always returns -1 for status inquiries.**/
 	public static final class NOP implements ProgressReporter {
 		public NOP() {}
 
-		public void update(long delta) {}
-		public void reset(long expected) {}
-		public double percent() {return -1;}
-		public long reportStep() {return -1;}
+		@Override public void update(long delta) {}
+		@Override public void reset(long expected) {}
+		@Override public double percent() {return -1;}
+		@Override public long reportStep() {return -1;}
+		@Override public String message() {return "";}
+		@Override public void message(String message) {}		
 	}
 	
 	/**Thread-safe progress reporter for.**/
@@ -49,16 +56,20 @@ public interface ProgressReporter {
 		private final AtomicLong counter = new AtomicLong();
 		private long expected=1;
 		private final long reportStep;
+		private String message;
 		
 		public Counter(long reportStep) {this.reportStep = reportStep;}
 
-		public void update(long delta) {counter.addAndGet(delta);}
-		public void reset(long expected) {this.expected = expected; counter.set(0);}
+		@Override public void update(long delta) {counter.addAndGet(delta);}
+		@Override public void reset(long expected) {this.expected = expected; counter.set(0); message = null;}
+		@Override public long reportStep() {return reportStep;}
+		@Override public String message() {return message;}
+		@Override public void message(String message) {this.message = message;}
+		
 		public double percent() {
 			if (expected ==0) {return Double.NaN;}
 			if (expected <0) {return -1;}
 			return counter.intValue()/((double) expected);
 		}
-		public long reportStep() {return reportStep;}
 	}
 }

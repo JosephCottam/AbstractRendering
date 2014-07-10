@@ -52,30 +52,37 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		this.recorder = recorder;
 		this.lowTask = lowTask;
 		this.highTask = highTask;
-		this.totalTasks = totalTasks;
+		this.totalTasks = totalTasks;		
 	}
 	
 	protected Aggregates<A> compute() {
-		if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
-		Aggregates<A> rslt;
-		recorder.update(DOWN_MULT);
-		if (highTask-lowTask != 1) {rslt=split();}
-		else {rslt=local();}
-		recorder.update(UP_MULT);
-		
-		if (rslt instanceof TouchedBoundsWrapper) {
-			TouchedBoundsWrapper<A> tbr = (TouchedBoundsWrapper<A>) rslt;
-			if (AggregateUtils.bounds(tbr).equals(AggregateUtils.bounds(tbr.base()))) {return tbr.base();}
-		} 
-
-		return rslt;
+		try {
+			if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
+			Aggregates<A> rslt;
+			if (highTask-lowTask != 1) {rslt=split();}
+			else {rslt=local();}
+			recorder.update(UP_MULT);
+			
+			if (rslt instanceof TouchedBoundsWrapper) {
+				TouchedBoundsWrapper<A> tbr = (TouchedBoundsWrapper<A>) rslt;
+				if (AggregateUtils.bounds(tbr).equals(AggregateUtils.bounds(tbr.base()))) {return tbr.base();}
+			} 
+	
+			return rslt;
+		} catch (Throwable t) {
+			recorder.message("Error");
+			throw t;
+		}
 	}
 	
 	protected final Aggregates<A> local() {
 		TouchedBoundsWrapper<A> target = allocateAggregates(glyphBounds);		
+		recorder.update(DOWN_MULT);
 		Glyphset<? extends G, ? extends I> subset = glyphs.segmentAt(totalTasks, lowTask);
 		selector.processSubset(subset, view, target, op);
-		return target;
+		
+		if (target.untouched()) {return null;}
+		else {return target;}
 	}
 	
 	protected final Aggregates<A> split() {
