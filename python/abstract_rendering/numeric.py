@@ -117,22 +117,25 @@ class Spread(core.PixelShader):
 
 
 
-class AbsSegment(core.Shader):
+class BinarySegment(core.Shader):
   """
-  Paint all pixels with aggregate value above divider one color 
-  and below the divider another.
+  Divide bins into two categories:  Those above and those below a divider.
+  The divider is considered in the upper category.
   """
   in_type=(1,np.number)
-  out_type=(4,np.int32)
+  out_type=(1,np.number)
 
   def __init__(self, low, high, divider):
     self.high = high
     self.low = low
-    self.divider = float(divider)
+    self.divider = divider
+    if not type(self.low) == type(self.high):
+      ValueError("Low and high must be of the same type.  Received %s and %s." % (type(self.low), type(self.high)))
+    out_type=(1,np.dtype(type(self.low)))
 
   def shade(self, grid):
-    (width, height) = grid.shape[0], grid.shape[1]
-    outgrid = np.ndarray((width, height, 4), dtype=np.uint8)
+    (width, height) = (grid.shape[0], grid.shape[1])
+    outgrid = np.empty((width, height), dtype=np.dtype(type(self.low)))
     mask = (grid >= self.divider) 
     outgrid[mask] = self.high
     outgrid[~mask] = self.low
