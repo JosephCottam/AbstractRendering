@@ -31,7 +31,7 @@ public class MemoryMappingTests {
 		File csv = new File(csvName);
 		File hbin = new File(hbinName);
 		
-		assertTrue("Source file not found: " + csvName, csv.exists());
+		assertTrue(String.format("Source file not found: %s\n Referred to as %s", csv.getCanonicalPath(), csvName), csv.exists());
 		if (hbin.exists()) {hbin.delete();}
 		MemMapEncoder.write(csv, 1, hbin, "xxddi".toCharArray());
 		assertTrue("hbin not found after encode.", hbin.exists());
