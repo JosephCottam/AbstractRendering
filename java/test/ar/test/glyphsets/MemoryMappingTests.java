@@ -27,10 +27,15 @@ public class MemoryMappingTests {
 	private static Glyphset.RandomAccess<Rectangle2D, Integer> ref = null;
 	
 	private static void list(File folder) {
+		System.out.println("Examining " + folder);
 		File[] listOfFiles = folder.listFiles();
-
+		if (listOfFiles == null) {
+			System.out.println("EMPTY!");
+		}
 	    for (int i = 0; i < listOfFiles.length; i++) {
-	      if (listOfFiles[i].isFile()) {
+	      if (listOfFiles[i] == null) {
+	    	  System.out.println("null");
+	      } else if (listOfFiles[i].isFile()) {
 	        System.out.println("File " + listOfFiles[i].getName());
 	      } else if (listOfFiles[i].isDirectory()) {
 	        System.out.println("Directory " + listOfFiles[i].getName());
@@ -43,13 +48,11 @@ public class MemoryMappingTests {
 		File csv = new File(csvName);
 		File hbin = new File(hbinName);
 		
-		System.out.println("---------------------------------------");
-		System.out.println("---------------------------------------");
+		System.out.println("#######################################");
 		list(csv.getParentFile().getParentFile());
 		System.out.println("---------------------------------------");
 		list(csv.getParentFile());
-		System.out.println("---------------------------------------");
-		System.out.println("---------------------------------------");
+		System.out.println("#######################################");
 				
 		assertTrue(String.format("Source file not found: %s\n Referred to as %s", csv.getCanonicalPath(), csvName), csv.exists());
 		if (hbin.exists()) {hbin.delete();}
