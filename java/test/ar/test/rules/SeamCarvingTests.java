@@ -2,8 +2,11 @@ package ar.test.rules;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import junit.framework.TestSuite;
 
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
 
 import ar.Aggregates;
 import ar.Renderer;
@@ -14,7 +17,8 @@ import ar.rules.SeamCarving;
 import static ar.rules.SeamCarving.*;
 import ar.rules.combinators.Predicates;
 
-public class SeamCarvingTests {
+@RunWith(Enclosed.class)
+public class SeamCarvingTests extends TestSuite {
 	
 	public static class CarveSweepTests {
 		@Test
