@@ -146,9 +146,6 @@
     </javac>
 
     <junit haltonfailure="no" fork="true" showoutput="true" failureproperty="TestsFailed">
-      <!--ensures the JVM thinks its run from the same dir as the ant file, regardless of where 'ant' was invoked-->
-      <jvmarg value="-Duser.dir=${basedir}"/>
-      
       <classpath>
         <pathelement location="${testBin}"/>
         <fileset dir="${lib}" includes="**/*.jar"/>
@@ -158,7 +155,7 @@
       <formatter type="brief" usefile="false"/>
       <formatter type="plain"/>
       
-      <batchtest todir="${results}" fork="yes">
+      <batchtest todir="${results}" fork="true">
         <fileset dir="${testSrc}">
           <include name="**/*Test*"/>
         </fileset>
