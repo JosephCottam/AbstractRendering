@@ -144,8 +144,11 @@
         <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javac>
+    
+    <echo message="---------------------------------------" />
+    <echo message="${basedir}"/>
 
-    <junit haltonfailure="no" fork="true" showoutput="true" failureproperty="TestsFailed">
+    <junit haltonfailure="no" fork="yes" showoutput="true" failureproperty="TestsFailed">
       <!--ensures the JVM thinks its run from the same dir as the ant file, regardless of where 'ant' was invoked-->
       <jvmarg value="-Duser.dir=${basedir}"/>
       
