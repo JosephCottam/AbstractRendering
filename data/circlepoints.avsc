@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "entry",
+  "fields" : [
+    {"name": "r", "type": "double"},
+    {"name": "theta", "type": "double"},
+    {"name": "x", "type": "double"},
+    {"name": "y", "type": "double"},
+    {"name": "series", "type": "int"}
+  ]
+}
