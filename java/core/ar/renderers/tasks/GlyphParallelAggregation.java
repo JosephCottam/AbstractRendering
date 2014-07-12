@@ -69,9 +69,11 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 			} 
 	
 			return rslt;
+		} catch (AggregationException e) {
+			throw e;
 		} catch (Throwable t) {
 			recorder.message("Error");
-			throw t;
+			throw new AggregationException(t, "Error processign segments %d-%d of %d",  lowTask, highTask, totalTasks);
 		}
 	}
 	
@@ -124,5 +126,11 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		int down = tasks*DOWN_MULT;
 		int up = tasks*UP_MULT;
 		return down+up;
+	}
+	
+	public static final class AggregationException extends RuntimeException {
+		public AggregationException(Throwable cause, String format, Object... args) {
+			super(String.format(format, args), cause);
+		}
 	}
 }
