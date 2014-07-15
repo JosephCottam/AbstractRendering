@@ -44,11 +44,24 @@ public interface MappedFile {
 			}
 		}
 
+		/**Create a new mapped file for a segment of a file.  
+		 * Will return null if the file segment requested is of an illegal size.
+		 * 
+		 * @param f
+		 * @param mode
+		 * @param bufferSize
+		 * @param offset
+		 * @param end
+		 * @return
+		 * @throws IOException
+		 */
 		public static final MappedFile make(
 				File f, 
 				FileChannel.MapMode mode, 
 				int bufferSize, 
 				long offset, long end) throws IOException {
+			
+			if (end-offset <=0) {return null;}
 			
 			if (mode == FileChannel.MapMode.READ_ONLY 
 					&& (end > 0 && (end-offset) < Integer.MAX_VALUE)) {
