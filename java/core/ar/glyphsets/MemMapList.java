@@ -160,7 +160,9 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
 			mf.order(buffer.order());
 			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
-		} catch (Exception e) {throw new RuntimeException(String.format("Error segmenting glyphset (parameters %d, %d)", count, segId), e);}
+		} catch (Exception e) {
+			throw new RuntimeException(String.format("Error segmenting glyphset (parameters %d, %d)", count, segId), e);
+		}
 	}
 	
 	public Rectangle2D bounds() {

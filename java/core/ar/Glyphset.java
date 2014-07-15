@@ -51,25 +51,18 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * */
 	public long size();
 	
-	/**
-	 * Get a subset of the data.
+	/**Get subset of the data.
 	 * 
-	 * The precise meaning of "bottom" and "top" is left up to the
-	 * implementation. To simplify requests, bottom is considered inclusive
-	 * and top as non-inclusive. This enables array-subset conventions to
-	 * be followed. (Old top becomes new bottom.) Similarly, the highest
-	 * valid value from top is returned by the "segments" method.
+	 * Notes:
+	 *  * Each item in the glyphset must uniquely map to some segID.
+	 *  * Segments may have size zero.
+	 *  * A client will call segmentAt with segId of at most count-1.
+	 *  * By the time all segId's [0..count-1] have been called, all glyphs must have been returned
+	 *  * Segments do not need to be the same size (though it is helpful) 
 	 * 
-	 * Bottom must be lower than top. A value equal to or above "segments" should be an
-	 * exception.
+	 * @param count How many times will segmentAt be called for a glyphset
+	 * @param segId Which segment is desired at this time
 	 * 
-	 * Equally spaced bottom/top pairs **do not** need to return subsets of
-	 * the same size.  Similarly, if s1=segment(a,b) and s2=segment(b,c)
-	 * then s1 and s2 do not need to contain contiguous chunks.  
-	 * 
-	 * @param bottom  Lower marker. This is an inclusive bound.
-	 * @param top Upper marker. This is an exclusive bound.
-	 * @return A subset of the data.
 	 */
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException;
 	

@@ -62,6 +62,7 @@ public class ParallelRenderer implements Renderer {
 		
 		//long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
 		int taskCount = threadLoad* pool.getParallelism();
+		System.out.printf("Threads: %d;   Load: %d\n", pool.getParallelism(), threadLoad);
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
 		recorder.reset(ticks);
 
