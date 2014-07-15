@@ -24,8 +24,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.glyphsets.implicitgeometry.Indexed.ToValue;
-import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.renderers.ParallelRenderer;
 import ar.rules.Categories;
 import ar.rules.Debug;
@@ -45,22 +43,22 @@ public class ARServer extends NanoHTTPD {
 	public static Map<String, Glyphset<?,?>> DATASETS = new HashMap<String, Glyphset<?,?>>();
 	
 	static {
-		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@SuppressWarnings({"rawtypes" })
 		Glyphset circlepoints = Util.load(
 				DynamicQuadTree.<Rectangle2D, Integer>make(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3),
-				new Indexed.ToValue(4, new Valuer.ToInt<Object>()));
+				new Indexed.ToValue<>(4, new Valuer.ToInt<Object>()));
 		
-		@SuppressWarnings({"unchecked", "rawtypes"})
-		Glyphset boost = new MemMapList<>(
-				new File("../data/MemVisScaled.hbin"),
-				new Indexed.ToRect(.001, .001, true, 0, 1), 
-				new ToValue(2, new Binary<Integer,Color>(0, Color.BLUE, Color.RED)));
+		@SuppressWarnings({"rawtypes"})
+		Glyphset census = new MemMapList<>(
+				new File("../data/2010Census_RaceTract.hbin"),
+				new Indexed.ToPoint(true, 0, 1),
+				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2));
 		
 		DATASETS.put("CIRCLEPOINTS", circlepoints);
-		DATASETS.put("BOOST", boost);
+		DATASETS.put("CENSUS", census);
 		
 		
 		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red));
