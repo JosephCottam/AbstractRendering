@@ -26,6 +26,10 @@ and concisely captured.
 
 Sample images can be found in [the wiki](https://github.com/JosephCottam/AbstractRendering/wiki).
 
+NOTE: The python version of abstract rendering has moved to 
+[its own repository](https://github.com/ContinuumIO/abstract_rendering).
+
+
 Pixel-Level Effects (an example)
 -----------
 
@@ -109,5 +113,6 @@ the transfer function.  It is a proof-of-concept for one form of distributed
 rendering supported by the Abstract Rendering system.  The readme in that directory
 also describes how to use this demonstration application.
 
-The "python" directory contains an implementation of Abstract Rendering using numpy.  
-README.md in that directory provides details on the python implementation.
+The python version of abstract rendering has moved to 
+[its own repository](https://github.com/ContinuumIO/abstract_rendering).
+
