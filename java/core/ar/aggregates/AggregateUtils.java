@@ -22,9 +22,15 @@ public class AggregateUtils {
 	}
 
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs) {
-		return asImage(aggs, bounds(aggs).width, bounds(aggs).height, Color.white);
+		return asImage(aggs, Color.white);
 	}
 
+	public static BufferedImage asImage(Aggregates<? extends Color> aggs, Color background) {
+		Rectangle bounds = bounds(aggs);
+		return asImage(aggs, bounds.width, bounds.height, background);
+	}
+
+	
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs, int width, int height, Color background) {
 		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}

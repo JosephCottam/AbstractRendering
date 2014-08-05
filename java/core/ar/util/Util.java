@@ -312,26 +312,31 @@ public class Util {
 		return t;
 	}
 	
+
+	public static void writeImage(final BufferedImage src, File f) {writeImage(src, f, true);}
+
 	/**Write a buffered image to a file.**/
-	public static void writeImage(final BufferedImage src, File f) {
+	public static void writeImage(BufferedImage src, File f, boolean removeAlpha) {
 		try {
 			if (f.getParentFile() != null && !f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
 			}
 			
-			//Remove alpha component because it was causing problems on some machines.
-			BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
-			Color bgColor = Color.white;
-			for (int x=0; x<src.getWidth(); x++) {
-				for (int y=0; y<src.getHeight();y++) {
-					Color fgColor = new Color(src.getRGB(x,y), true);
-					noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
+			if (removeAlpha) {
+				//Remove alpha component because it was causing problems on some machines.
+				BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
+				Color bgColor = Color.white;
+				for (int x=0; x<src.getWidth(); x++) {
+					for (int y=0; y<src.getHeight();y++) {
+						Color fgColor = new Color(src.getRGB(x,y), true);
+						noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
+					}
+					
 				}
-				
-			}
-			
+				src = noAlpha;
+			}			
 			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
-			if (!ImageIO.write(noAlpha, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
+			if (!ImageIO.write(src, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
 		}catch (Exception e) {
 			throw new RuntimeException(e);
 		}

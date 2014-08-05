@@ -51,6 +51,13 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	private Rectangle2D bounds;
 
 		
+	/**
+	 * @param source File to pull from 
+	 * @param delimiter Field delimiter
+	 * @param types List of field types
+	 * @param shaper 
+	 * @param valuer
+	 */
 	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
 	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1);}
 	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
@@ -114,8 +121,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	private final class Iterator implements java.util.Iterator<Glyph<G,I>> {
 		private final Converter conv = new Converter(types);
 		private final CsvListReader base;
-
-		private int charsRead;		
+		private int charsRead;
+		private Glyph<G,I> cached;
 		
 		public Iterator() {
 			try {
@@ -143,17 +150,32 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		
 		@Override 
 		public boolean hasNext() {
-			return (segEnd < 0 || charsRead < segEnd - segStart) && base.length()>0;
+			cacheNext();
+			return cached != null;
 		}
 		
 		@Override
 		public Glyph<G,I> next() {
+			cacheNext();
+			Glyph<G,I> next = this.cached;
+			cached = null;
+			return next;
+		}
+		
+		private void cacheNext() {
+			if (cached != null) {return;}
+			if (segEnd > 0 && charsRead > segEnd) {return;}
+			
 			List<String> next;
 			try {next = base.read();}
 			catch (IOException e) {throw new RuntimeException(String.format("Error reading around character %d of %s.", charsRead, source.getName()), e);}
-			for (String s: next) {charsRead += s.length();} //TODO: Probably not the fastest way to do this...
-			Indexed base = conv.applyTo(new Indexed.ListWrapper(next));
-			return new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
+			if (next == null) {return;}
+			
+			try {
+				for (String s: next) {charsRead += s.length();} //TODO: Probably not the fastest way to do this...
+				Indexed base = conv.applyTo(new Indexed.ListWrapper(next));
+				cached = new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
+			} catch (Exception e) {throw new RuntimeException(String.format("Error constructing glyph around character %d of %s", charsRead, source.getName()), e);}
 		}
 
 		@Override public void remove() {throw new UnsupportedOperationException();}

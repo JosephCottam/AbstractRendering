@@ -1,6 +1,7 @@
 package ar.glyphsets.implicitgeometry;
 
 import java.awt.Color;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
@@ -169,10 +170,7 @@ public interface Indexed extends Serializable {
 	
 
 
-	/**Convert an item to a fixed-sized rectangle at a variable
-	 * position.  The passed value determines the position, but the size
-	 * is set by the ToRect constructor. 
-	 */
+	/**Convert an item to a single point.*/
 	public static class ToPoint implements Shaper.SafeApproximate<Indexed, Point2D>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
 		private final boolean flipY;
@@ -198,7 +196,7 @@ public interface Indexed extends Serializable {
 	
 	/**Convert an item to a fixed-sized rectangle at a variable
 	 * position.  The passed value determines the position, but the size
-	 * is set by the ToRect constructor. 
+	 * is set by the constructor. 
 	 */
 	public static class ToRect implements Shaper.SafeApproximate<Indexed, Rectangle2D>, Serializable {
 		private static final long serialVersionUID = 2509334944102906705L;
@@ -227,7 +225,42 @@ public interface Indexed extends Serializable {
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
 			y = flipY ? -y : y; 
-			return new Rectangle2D.Double(x, y, width, height);
+			return new Rectangle2D.Double(x-width/2, y-width/2, width, height);
+		}	
+	}
+	
+	/**Convert an item to a fixed-sized circle at a variable
+	 * position.  The passed value determines the position, but the size
+	 * is set by the constructor. 
+	 */
+	public static class ToCircle implements Shaper.SafeApproximate<Indexed, Ellipse2D>, Serializable {
+		private static final long serialVersionUID = 2509334944102906705L;
+		private final double width,height;
+		private final boolean flipY;
+		private final int xIdx, yIdx;
+		
+		/**Square construction using the indexed values directly for x/y**/
+		public ToCircle(double size, int xIdx, int yIdx) {this(size,size,false,xIdx,yIdx);}
+		
+		/**Full control constructor for creating rectangles.
+		 * 
+		 * @param flipY Multiply Y-values by -1 (essentially flip up and down directions)
+		 * **/
+		public ToCircle(double width, double height, boolean flipY, int xIdx, int yIdx) {
+			this.width=width;
+			this.height=height;
+			this.flipY=flipY;
+			this.xIdx = xIdx;
+			this.yIdx = yIdx;
+		}
+		
+		@Override 
+		public Ellipse2D shape(Indexed from) {
+			double x=((Number) from.get(xIdx)).doubleValue();
+			double y=((Number) from.get(yIdx)).doubleValue();
+			
+			y = flipY ? -y : y; 
+			return new Ellipse2D.Double(x-width/2, y-width/2, width, height);
 		}	
 	}
 }

@@ -27,6 +27,44 @@ public final class Numbers {
 		public boolean equals(Object other) {return other instanceof Count;}
 		public int hashCode() {return Count.class.hashCode();}
 	}
+
+	/**Total value of items present**/
+	public static final class Sum<N extends Number> implements Aggregator<N, N> {
+		Class<N> type;
+		public Sum(Class<N> type) {
+			if (type != Double.class
+					&& type != Float.class
+					&& type != Integer.class
+					&& type != Long.class) {
+				throw new IllegalArgumentException("Must supply a numerical primitive wrapper type");
+			}
+			this.type = type;
+		}
+		
+		
+		@SuppressWarnings("unchecked")
+		@Override
+		public N combine(N current, N update) {
+			if (type == Double.class) {return (N) Double.valueOf(current.doubleValue() + update.doubleValue());}
+			if (type == Float.class) {return (N) Float.valueOf(current.floatValue() + update.floatValue());}
+			if (type == Integer.class) {return (N) Integer.valueOf(current.intValue() + update.intValue());}
+			if (type == Long.class) {return (N) Long.valueOf(current.longValue() + update.longValue());}
+			throw new IllegalArgumentException("Unsupported type " + type.getName());
+		}
+
+		@Override public N rollup(N left, N right) {return combine(left, right);}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public N identity() {
+			if (type == Double.class) {return (N) Double.valueOf(0);}
+			if (type == Float.class) {return (N) Float.valueOf(0);}
+			if (type == Integer.class) {return (N) Integer.valueOf(0);}
+			if (type == Long.class) {return (N) Long.valueOf(0);}
+			throw new IllegalArgumentException("Unsupported type " + type.getName());
+		} 
+		
+	}
 	
 	
 	/**Retain the largest value seen.*/
