@@ -3,6 +3,8 @@ Abstract Rendering
 
 Status: [![Build Status](https://travis-ci.org/JosephCottam/AbstractRendering.svg?branch=master)](https://travis-ci.org/JosephCottam/AbstractRendering)
 
+NOTE: The python version of abstract rendering has moved to 
+[its own repository](https://github.com/ContinuumIO/abstract_rendering).
 
 Information visualization rests on the idea that a meaningful relationship
 can be drawn between pixels and data.  This is most often mediated by
@@ -26,8 +28,6 @@ and concisely captured.
 
 Sample images can be found in [the wiki](https://github.com/JosephCottam/AbstractRendering/wiki).
 
-NOTE: The python version of abstract rendering has moved to 
-[its own repository](https://github.com/ContinuumIO/abstract_rendering).
 
 
 Pixel-Level Effects (an example)
