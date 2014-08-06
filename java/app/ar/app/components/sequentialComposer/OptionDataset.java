@@ -131,6 +131,23 @@ public final class OptionDataset<G,I> {
 		CENSUS_SYN_PEOPLE = temp;
 	}
 	
+
+	public static final OptionDataset<Point2D, Character> CENSUS_NY_SYN_PEOPLE;
+	static {
+		OptionDataset<Point2D, Character> temp;
+		try {
+			temp = new OptionDataset<>(
+				"US Census Synthetic People (NY)", 
+				new File("../data/2010Census_RacePersonPoints_NY.hbin"), 
+				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToValue<Indexed,Character>(2),
+				OptionAggregator.COC_COMP,
+				new OptionTransfer.ColorKey(),
+				new OptionTransfer.ColorCatInterpolate());
+		} catch (Exception e) {temp = null;}
+		CENSUS_NY_SYN_PEOPLE = temp;
+	}
+	
 	public static final OptionDataset<Point2D, Color> WIKIPEDIA;
 	static {
 		OptionDataset<Point2D, Color> temp;
