@@ -38,7 +38,7 @@ import ar.ext.avro.SchemaComposer;
 
 public class AvroAggregatesTest {
 	public static Aggregates<Integer> count;
-	public static Aggregates<CategoricalCounts<Color>> rles;
+	public static Aggregates<CategoricalCounts<Color>> cocs;
 	
 	@BeforeClass
 	public static void load() throws Exception {
@@ -52,7 +52,7 @@ public class AvroAggregatesTest {
 				236.13546883394775);
 		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
 		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt, 500,500);
-		rles = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(Util.COLOR_SORTER), vt, 500,500);
+		cocs = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(Util.COLOR_SORTER), vt, 500,500);
 	}
 	
 	@Test
@@ -117,21 +117,25 @@ public class AvroAggregatesTest {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode n = mapper.readTree(p);
 			
+			int xOffset = n.get("xOffset").getIntValue();
+			int yOffset = n.get("yOffset").getIntValue();
+			int highX = n.get("xBinCount").getIntValue() + xOffset;
+			int highY = n.get("yBinCount").getIntValue() + yOffset;
 			
-			assertEquals(ref.lowX(), n.get("xOffset").getIntValue());
-			assertEquals(ref.lowY(), n.get("yOffset").getIntValue());
-			assertEquals(ref.highX(), n.get("xBinCount").getIntValue());
-			assertEquals(ref.highY(), n.get("yBinCount").getIntValue());
+			assertEquals(ref.lowX(), xOffset);
+			assertEquals(ref.lowY(), yOffset);
+			assertEquals(ref.highX(), highX);
+			assertEquals(ref.highY(), highY);
 		}
 	}
 	
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void RLERoundTrip() throws Exception {
-		Aggregates<CategoricalCounts<Color>> ref = rles;
+	public void CoCRoundTrip() throws Exception {
+		Aggregates<CategoricalCounts<Color>> ref = cocs;
 		
-		File file =  new File("./testResults/rle.avro");
+		File file =  new File("./testResults/coc.avro");
 		try (OutputStream out = new FileOutputStream(file)) {
 			Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCoC(s));

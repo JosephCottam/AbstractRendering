@@ -59,7 +59,7 @@ public class AggregateSerializer {
 		aggregates.put("xOffset", aggs.lowX());
 		aggregates.put("yOffset", aggs.lowY());
 		aggregates.put("xBinCount", aggs.highX()-aggs.lowX());
-		aggregates.put("yBinCount", aggs.highY()-aggs.lowX());
+		aggregates.put("yBinCount", aggs.highY()-aggs.lowY());
 		aggregates.put("values", values);
 		aggregates.put("default", defaultVal);
 		aggregates.put("level", 0);
