@@ -19,6 +19,8 @@ import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;
 
+import static ar.test.RectNear.rectNear;
+
 public class MemoryMappingTests {
 	private static String csvName = "../data/circlepoints.csv";
 	private static String hbinName = "../data/circlepointsTests.hbin";
@@ -30,8 +32,8 @@ public class MemoryMappingTests {
 	public static void makeHbin() throws Exception {
 		File csv = new File(csvName);
 		File hbin = new File(hbinName);
-		
-		assertTrue("Source file not found: " + csvName, csv.exists());
+						
+		assertTrue(String.format("Source file not found: %s\n Referred to as %s", csv.getCanonicalPath(), csvName), csv.exists());
 		if (hbin.exists()) {hbin.delete();}
 		MemMapEncoder.write(csv, 1, hbin, "xxddi".toCharArray());
 		assertTrue("hbin not found after encode.", hbin.exists());
@@ -99,8 +101,8 @@ public class MemoryMappingTests {
 		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segmentAt(1, 0);
 		assertEquals(mm.size(), glyphsA.size());
 		assertEquals(mm.size(), glyphsB.size());
-		assertEquals(mm.bounds(), glyphsA.bounds());
-		assertEquals(mm.bounds(), glyphsB.bounds());
+		assertThat(glyphsA.bounds(), rectNear(mm.bounds(), 0.1));
+		assertThat(glyphsB.bounds(), rectNear(glyphsA.bounds(), 0.1));
 	}
 	
 }

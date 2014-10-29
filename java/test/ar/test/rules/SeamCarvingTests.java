@@ -2,12 +2,14 @@ package ar.test.rules;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import junit.framework.TestSuite;
 
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
 
 import ar.Aggregates;
 import ar.Renderer;
-import ar.test.TestResources;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.renderers.ParallelRenderer;
@@ -15,7 +17,8 @@ import ar.rules.SeamCarving;
 import static ar.rules.SeamCarving.*;
 import ar.rules.combinators.Predicates;
 
-public class SeamCarvingTests {
+@RunWith(Enclosed.class)
+public class SeamCarvingTests extends TestSuite {
 	
 	public static class CarveSweepTests {
 		@Test
@@ -216,7 +219,7 @@ public class SeamCarvingTests {
 			}
 			
 			Transfer<Double, Double> t = new SeamCarving.CumulativeEnergy();
-			Aggregates<Double> cumEng = TestResources.RENDERER.transfer(energy, t.specialize(energy));
+			Aggregates<Double> cumEng = new ParallelRenderer().transfer(energy, t.specialize(energy));
 			
 			double val =0;
 			for (int y=energy.lowY(); y<energy.highY(); y++) {

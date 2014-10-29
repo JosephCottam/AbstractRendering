@@ -812,36 +812,36 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	
-	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
-		private static final Collection<Shape> shapes;
-		
-		static {
-			try {
-				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false)).values();
-				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
-			} catch (Exception e) {throw new RuntimeException(e);}
-		}
-		
-		@Override
-		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			return extend(
-					Seq.start(new Shapes.ShapeGather(shapes, params.tp))
-						.then(new Categories.RandomWeave()),
-					subsequent);
-		}
-
-		@Override
-		public Controls control(final HasViewTransform transformProvider) {
-			return new Controls(transformProvider);
-		}
-		
-		public static final class Controls extends ControlPanel {
-			final HasViewTransform tp;
-			public Controls(HasViewTransform tp) {this.tp=tp;}
-		}
-		
-		@Override public String toString() {return "Weave States";}
-	}
+//	public static final class WeaveStates extends OptionTransfer<WeaveStates.Controls> {
+//		private static final Collection<Shape> shapes;
+//		
+//		static {
+//			try {
+//				shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USStates"), false)).values();
+//				//shapes = GeoJSONTools.flipY(GeoJSONTools.loadShapesJSON(new File("../data/maps/USCounties"), true));
+//			} catch (Exception e) {throw new RuntimeException(e);}
+//		}
+//		
+//		@Override
+//		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
+//			return extend(
+//					Seq.start(new Shapes.ShapeGather(shapes, params.tp))
+//						.then(new Categories.RandomWeave()),
+//					subsequent);
+//		}
+//
+//		@Override
+//		public Controls control(final HasViewTransform transformProvider) {
+//			return new Controls(transformProvider);
+//		}
+//		
+//		public static final class Controls extends ControlPanel {
+//			final HasViewTransform tp;
+//			public Controls(HasViewTransform tp) {this.tp=tp;}
+//		}
+//		
+//		@Override public String toString() {return "Weave States";}
+//	}
 	
 	public static final class Present2 extends OptionTransfer<ControlPanel> {
 		@Override 
@@ -876,8 +876,14 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 	} 
 
-	
-	
+	public static final class PrintStats extends OptionTransfer<ControlPanel> {
+		@Override public Transfer<Object, Color> transfer(ControlPanel p, Transfer subsequent) {
+			return new Debug.Stats(subsequent);
+		}
+		
+		@Override public String toString() {return "Print Statistics";}
+		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
+	} 
 
 	//TODO: REMOVE the log option from Categories.HighAlpha by providing a category-map-with-valuer transfer
 	public static final class ColorCatInterpolate extends OptionTransfer<ColorCatInterpolate.Controls> {
@@ -932,5 +938,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		}
 		return subsequent;
 	}
+	
 
 }

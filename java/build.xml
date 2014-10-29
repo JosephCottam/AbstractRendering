@@ -144,8 +144,11 @@
         <fileset dir="${lib}" includes="*.jar"/>
       </classpath>
     </javac>
+    
+    <echo message="---------------------------------------" />
+    <echo message="${basedir}"/>
 
-    <junit haltonfailure="no" fork="true" showoutput="true">
+    <junit haltonfailure="no" fork="true" showoutput="true" failureproperty="TestsFailed">
       <classpath>
         <pathelement location="${testBin}"/>
         <fileset dir="${lib}" includes="**/*.jar"/>
@@ -155,12 +158,13 @@
       <formatter type="brief" usefile="false"/>
       <formatter type="plain"/>
       
-      <batchtest todir="${results}">
+      <batchtest todir="${results}" fork="true">
         <fileset dir="${testSrc}">
           <include name="**/*Test*"/>
         </fileset>
       </batchtest>
     </junit>
+    <fail if="TestsFailed" message="Some test(s) failed" status="1"/>
   </target>
 
   <target name="clean-deep" depends="clean, deep-clean" description="Clean up all items (builds, dependencies and uninstall ivy)."/>
@@ -214,27 +218,17 @@
     <ivy:retrieve conf="core"/>
   </target>
 
-  <target name="fetch-ext" depends="init,markdown,commons-csv" description="Fetch extension dependencies EXCEPT Spark">
+  <target name="fetch-ext" depends="init,markdown" description="Fetch extension dependencies EXCEPT Spark">
     <ivy:retrieve conf="ext"/>
   </target>
 
-  <target name="fetch-spark" depends="init,markdown,commons-csv" description="Fetch Spark runtime dependencies">
+  <target name="fetch-spark" depends="init,markdown" description="Fetch Spark runtime dependencies">
     <ivy:retrieve conf="spark"/>
   </target>
 
   <target name="fetch-dev" description="Fetch dependencies useful durring development but not required.">
     <!--Some things are only needed by developers, get those with this task.-->
     <ivy:retrieve conf="dev"/>
-  </target>
-
-  <target name="commons-csv">
-    <!--Not **YET** released, but approaching a 1.0 version.  Useing get until I can use Ivy.-->
-    <mkdir dir="${lib}"/>
-    <get src="http://repository.apache.org/content/groups/snapshots/org/apache/commons/commons-csv/1.0-SNAPSHOT/commons-csv-1.0-20140515.172105-277.jar"
-      dest="${lib}/commons-csv.jar"
-      verbose="on"  
-      skipexisting="true"
-      />
   </target>
 
   <target name="markdown">

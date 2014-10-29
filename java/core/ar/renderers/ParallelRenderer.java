@@ -25,11 +25,34 @@ public class ParallelRenderer implements Renderer {
 
 	////--------------------  Performance Control Parameters ---------------------------
 	/**Target "parallelism level" in the thread pool.  Roughly corresponds to the number of threads 
-	 * but actual interpretation is left up to the ForJoinPool implementation.**/ 
-	public static final int DEFAULT_THREAD_POOL_PARALLELISM = Runtime.getRuntime().availableProcessors();
+	 * but actual interpretation is left up to the ForJoinPool implementation.*
+	 * 
+	 * May be set as a system parameter (-DRENDER_POOL_SIZE=x) but will default to the number of cores if
+	 * any values less than 1 is given.
+	 * */ 
+	public static final int RENDER_POOL_SIZE;
+	static{
+		int size = -1;
+		if (System.getProperties().containsKey("RENDER_POOL_SIZE")) {
+			size = Integer.parseInt(System.getProperty("RENDER_POOL_SIZE"));
+		}
+		if (size < 1) {size = Runtime.getRuntime().availableProcessors();}
+		RENDER_POOL_SIZE = size;	
+	}
 	
-	/**Default number of tasks used in aggregation.**/ 
-	public static final int DEFAULT_THREAD_LOAD = 2;
+	
+	/**Default number of tasks used in aggregation.
+	 * May be set as a system parameter (-DRENDER_THREAD_LOAD=x) but will default to 2 if any value less than 1 is given.**/ 
+	public static final int RENDER_THREAD_LOAD;
+	static{
+		int size = -1;
+		if (System.getProperties().containsKey("RENDER_THREAD_LOAD")) {
+			size = Integer.parseInt(System.getProperty("RENDER_THREAD_LOAD"));
+		}
+		if (size < 1) {size = 2;}
+		RENDER_THREAD_LOAD = size;	
+	}
+
 	
 	/**How small can a transfer task get before it won't be subdivided anymore.**/
 	public static final long DEFAULT_TRANSFER_TASK_SIZE = 100000;
@@ -41,15 +64,15 @@ public class ParallelRenderer implements Renderer {
 	
 	private final int threadLoad;
 	
-	public ParallelRenderer() {this(null, DEFAULT_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE);}
+	public ParallelRenderer() {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE);}
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
 	public ParallelRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize) {
-		this.pool = pool != null ? pool : new ForkJoinPool(DEFAULT_THREAD_POOL_PARALLELISM);
-		this.threadLoad = threadLoad > 0 ? threadLoad : DEFAULT_THREAD_LOAD;
+		this.pool = pool != null ? pool : new ForkJoinPool(RENDER_POOL_SIZE);
+		this.threadLoad = threadLoad > 0 ? threadLoad : RENDER_THREAD_LOAD;
 		this.transferTaskSize = transferTaskSize > 0 ? transferTaskSize : DEFAULT_TRANSFER_TASK_SIZE;
 	}
 
@@ -60,7 +83,6 @@ public class ParallelRenderer implements Renderer {
 			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
 		
-		//long taskSize = Math.min(AGGREGATE_TASK_MAX, glyphs.size()/(pool.getParallelism()*AGGREGATE_TASK_MULTIPLIER));
 		int taskCount = threadLoad* pool.getParallelism();
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
 		recorder.reset(ticks);

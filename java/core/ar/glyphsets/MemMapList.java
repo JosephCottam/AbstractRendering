@@ -13,6 +13,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.ParallelRenderer;
 import ar.util.memoryMapping.MappedFile;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
@@ -164,15 +165,24 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 		try {
 			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+			if (mf == null) {return new GlyphList<>();}
+			
 			mf.order(buffer.order());
 			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
-		} catch (Exception e) {throw new RuntimeException("Error segmenting glyphset", e);}
+		} catch (Exception e) {
+			throw new RuntimeException(String.format("Error segmenting glyphset (parameters %d, %d)", count, segId), e);
+		}
 	}
 	
+	/**Bounds calculation.  Is run in parallel using the tuning parameters of ParallelRenderer.**/
 	public Rectangle2D bounds() {
 		if (bounds == null) {
 			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-			bounds = pool.invoke(new BoundsTask<>(this, Runtime.getRuntime().availableProcessors()*2)); //TODO: Tuning paramter for task-size....
+			bounds = pool.invoke(
+					new BoundsTask<>(
+							this, 
+							ParallelRenderer.RENDER_POOL_SIZE
+							  * ParallelRenderer.RENDER_THREAD_LOAD));
 		}
 		return bounds;
 	}

@@ -1,6 +1,11 @@
 Abstract Rendering
 ======
 
+Status: [![Build Status](https://travis-ci.org/JosephCottam/AbstractRendering.svg?branch=master)](https://travis-ci.org/JosephCottam/AbstractRendering)
+
+NOTE: The python version of abstract rendering has moved to 
+[its own repository](https://github.com/ContinuumIO/abstract_rendering).
+
 Information visualization rests on the idea that a meaningful relationship
 can be drawn between pixels and data.  This is most often mediated by
 geometric entities (such as circles, squares and text) but always involves
@@ -22,6 +27,8 @@ the way to colors.  This enables many pixel-level concerns to be efficiently
 and concisely captured.
 
 Sample images can be found in [the wiki](https://github.com/JosephCottam/AbstractRendering/wiki).
+
+
 
 Pixel-Level Effects (an example)
 -----------
@@ -106,5 +113,6 @@ the transfer function.  It is a proof-of-concept for one form of distributed
 rendering supported by the Abstract Rendering system.  The readme in that directory
 also describes how to use this demonstration application.
 
-The "python" directory contains an implementation of Abstract Rendering using numpy.  
-README.md in that directory provides details on the python implementation.
+The python version of abstract rendering has moved to 
+[its own repository](https://github.com/ContinuumIO/abstract_rendering).
+

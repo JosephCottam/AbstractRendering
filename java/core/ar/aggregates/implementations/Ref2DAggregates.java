@@ -56,8 +56,12 @@ public class Ref2DAggregates<A> implements Aggregates<A>{
 			throw new IllegalArgumentException(String.format("Aggregates of size %dx%d exceeds the implementation capacity.", (highX-lowX), (highY-lowY)));
 		}
 		
-		values = (A[][]) new Object[(int) width][(int) height];
-		for (A[] row : values) {Arrays.fill(row, defaultVal);}
+		try {
+			values = (A[][]) new Object[(int) width][(int) height];
+			for (A[] row : values) {Arrays.fill(row, defaultVal);}
+		} catch (OutOfMemoryError e) {
+			throw new RuntimeException(String.format("Error allocating space for %d x %d aggregates.", width, height),e);
+		}
 	}
 
 	/**Set the value at the given (x,y).**/

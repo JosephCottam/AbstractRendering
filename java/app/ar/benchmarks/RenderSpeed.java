@@ -53,8 +53,8 @@ public class RenderSpeed {
 		int tasksPerThread = Integer.parseInt(arg(args,"-tasksMult", "-1"));
 		int synPoints = Integer.parseInt(arg(args,"-pc", "-1"));
 
-		cores = cores > 0 ? cores : ParallelRenderer.DEFAULT_THREAD_POOL_PARALLELISM;
-		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.DEFAULT_THREAD_LOAD;
+		cores = cores > 0 ? cores : ParallelRenderer.RENDER_POOL_SIZE;
+		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.RENDER_THREAD_LOAD;
 		
 		OptionDataset.SYNTHETIC = synPoints > 0 ? OptionDataset.syntheticPoints(synPoints) : OptionDataset.SYNTHETIC;
 
