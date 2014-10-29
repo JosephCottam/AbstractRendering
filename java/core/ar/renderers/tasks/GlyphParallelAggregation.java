@@ -95,9 +95,13 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		
-		try {aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);}
+		try {
+			aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);
+			//System.out.printf("%s\n%s\n%s\n------------------\n", AggregateUtils.bounds(top.get()),AggregateUtils.bounds(bottom.get()),AggregateUtils.bounds(aggs));
+		}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}
 		catch (OutOfMemoryError e) {throw new RuntimeException(e);}
+		
 
 		return aggs;
 	}
@@ -114,7 +118,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	protected TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds) {
 		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
 		Aggregates<A> aggs = AggregateUtils.make(fullBounds.x, fullBounds.y,
-				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height, 
+				fullBounds.x+fullBounds.width+1, fullBounds.y+fullBounds.height+1, 
 				op.identity());
 		return new TouchedBoundsWrapper<>(aggs, false);
 	}

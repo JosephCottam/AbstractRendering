@@ -25,7 +25,7 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
 import ar.rules.SeamCarving.Direction;
-import ar.rules.combinators.Seq;
+import static ar.rules.combinators.Combinators.*;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
@@ -91,12 +91,12 @@ public class CarveApp {
 			}
 		} else {
 			final Transfer<Integer, Color> rest = 
-					Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
-					.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
-					.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
+					seq().then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
+						 .then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
+						 .then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 
 			for (Map.Entry<String, Transfer<Integer,Integer>> e: carvers.entrySet()) {
-				carvers2.put(e.getKey(), new Seq<>(e.getValue(), rest));
+				carvers2.put(e.getKey(), seq().then(e.getValue()).then(rest));
 			}
 		}
 		
@@ -104,7 +104,7 @@ public class CarveApp {
 		for (String carver:carvers2.keySet()) {
 			ARComponent.PERFORMANCE_REPORTING = true;
 			final Transfer<Integer, Color> transfer = 
-					Seq.start(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(spread), new Numbers.Count<Integer>()))
+					seq().then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(spread), new Numbers.Count<Integer>()))
 					.then(carvers2.get(carver));
 					
 			JFrame frame = new JFrame(String.format("Seam Carving -- Removed %d seams (%s method)", seams, carver));

@@ -60,5 +60,5 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	@Override public int highX() {return Math.min(highX, base.highX());}
 	@Override public int highY() {return Math.min(highY, base.highY());}
 
-	@Override public String toString() {return String.format("Touched Bounds (Wrapped) Aggregates from %d,%d to %d,%d.", lowX, lowY, highX,highY);}
+	@Override public String toString() {return String.format("Touched Bounds (Wrapped) Aggregates from (%d, %d) to (%d, %d).", lowX, lowY, highX,highY);}
 }

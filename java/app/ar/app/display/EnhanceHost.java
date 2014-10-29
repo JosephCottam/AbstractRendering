@@ -308,12 +308,12 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	
 	/**Interface indicating a thing has a selection region associated with it.**/
-	private interface Selectable {
+	public interface Selectable {
 		public void clear();
 		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove);
 	}
 
-	private final static class AdjustRange implements MouseListener, MouseMotionListener {
+	public final static class AdjustRange implements MouseListener, MouseMotionListener {
 		Point2D start;
 		final Selectable target;
 		public AdjustRange(Selectable target) {this.target = target;}

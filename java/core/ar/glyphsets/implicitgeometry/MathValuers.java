@@ -63,6 +63,9 @@ public class MathValuers {
 		final double base;
 		final boolean add1;
 		
+		public Log(Integer base) {this((double) base.intValue(), true);}
+		public Log(Integer base, boolean add1) {this((double) base.intValue(), add1);}
+		
 		public Log(Double base) {this(base, true);}
 		public Log(Double base, boolean add1) {
 			this.base = base; 

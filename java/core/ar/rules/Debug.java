@@ -5,6 +5,7 @@ import java.awt.Color;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
+import static ar.rules.combinators.Combinators.*;
 import ar.util.Util;
 
 /**Classes used largely for debugging.
@@ -86,10 +87,17 @@ public class Debug {
 	public static final class Stats<IN extends Number, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;
 		
-		/**
-		 * @param inner Transfer function to actually perform.
-		 */
-		public Stats(Transfer<IN,OUT> inner) {this.inner = inner;}
+		private Stats(Transfer<IN,OUT> inner) {this.inner = inner;}
+		
+		/**Print out statistics before the passed function's specialization occurs.**/
+		public static <IN extends Number, OUT> Stats<IN, OUT> before(Transfer<IN,OUT> inner) {
+			return new Stats<>(inner);
+		}
+		
+		/**Print out statistics before after passed function has executed.**/
+		public static <IN, OUT extends Number> Transfer<IN, OUT> after(Transfer<IN,OUT> inner, OUT val) {
+			return seq().then(inner).then(new Stats<>(new General.Echo<>(val)));
+		}
 
 		public OUT emptyValue() {return inner.emptyValue();}
 

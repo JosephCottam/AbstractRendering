@@ -15,9 +15,11 @@ import ar.aggregates.implementations.*;
 public class AggregateUtils {
 
 	/**Return a rectangle representing the bounds of this aggregate set.
-	 * Bounds are based on the bounds of concern (low/high X/Y) not values set. 
+	 * Bounds are based on the bounds of concern (low/high X/Y) not values set.
+	 * Null aggs have null bounds. 
 	 * **/
 	public static Rectangle bounds(Aggregates<?> aggs) {
+		if (aggs == null) {return null;}
 		return new Rectangle(aggs.lowX(), aggs.lowY(), aggs.highX()-aggs.lowX(), aggs.highY()-aggs.lowY());
 	}
 

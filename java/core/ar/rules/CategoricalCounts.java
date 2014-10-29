@@ -95,11 +95,13 @@ public class CategoricalCounts<T> implements Serializable {
 		}
 		return true;
 	}
-
+	
 	@Override public int hashCode() {return Arrays.hashCode(counts);}
 	
 	public int count(int i) {return counts[i];}
 
+	public Comparator<T> comparator() {return comp;}
+	
 	/**Create an empty version of the current thing.
 	 * Does not remove any values,  but creates a new counter with the same construction parameters as the current one.
 	 */
@@ -122,8 +124,8 @@ public class CategoricalCounts<T> implements Serializable {
 		}
 	}
 	
-	public static <T> CategoricalCounts<T> make(final Iterable<T> labels, final Iterable<Integer> counts) {
-		CategoricalCounts<T> cc = new CategoricalCounts<T>();
+	public static <T> CategoricalCounts<T> make(final Iterable<T> labels, final Iterable<Integer> counts, Comparator<T> comp) {
+		CategoricalCounts<T> cc = new CategoricalCounts<T>(comp);
 		Iterator<T> labs = labels.iterator();
 		Iterator<Integer> cnts = counts.iterator();
 		

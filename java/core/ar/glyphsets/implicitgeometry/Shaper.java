@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 /**Convert a value into a piece of geometry.
  * Geometry can be points, lines, rectangles, shapes, etc.
  * 
- * TODO: Reverse G and I parameters.  General convention has been <input, output> and this violates...
- * 
  * @param <IN> Input value type
  * @param <G> Geometry-type returned;
  * **/

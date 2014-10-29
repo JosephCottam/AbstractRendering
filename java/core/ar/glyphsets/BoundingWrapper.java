@@ -7,7 +7,7 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
 
-/**Wrap a glyphset, only return values that fit within a bounding box.**/
+/**Wrap a glyphset, only return values that are contained within the given bounding box.**/
 public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 
 	protected final Glyphset<G,I> base;

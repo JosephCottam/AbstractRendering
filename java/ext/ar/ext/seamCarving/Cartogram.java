@@ -30,7 +30,7 @@ import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
 import ar.rules.SeamCarving.Direction;
-import ar.rules.combinators.Seq;
+import static ar.rules.combinators.Combinators.*;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
 
@@ -66,9 +66,9 @@ public class Cartogram {
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
 
 		final Transfer<Integer, Color> colorPopulation = 
-				Seq.start(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
-				.then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
-				.then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
+				seq().then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
+					 .then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
+					 .then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 
 		final General.MapWrapper<String, Color> color2012= new General.MapWrapper<>(results2012, Color.gray);  
 		final General.MapWrapper<String, Color> color2008= new General.MapWrapper<>(results2008, Color.gray);  
