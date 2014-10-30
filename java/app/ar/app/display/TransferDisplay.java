@@ -14,6 +14,7 @@ import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.renderers.ParallelRenderer;
+import ar.util.Axis;
 import ar.util.Util;
 
 /**Panel that will draw a set of aggregates on the screen with a given transfer function.**/
@@ -25,6 +26,9 @@ public class TransferDisplay extends ARComponent {
 	
 	/**Aggregates to render*/
 	private Aggregates<?> aggregates;
+	
+	private Axis.Descriptor<?,?> axes;
+	private boolean includeAxes;
 
 	/**What transform was used to produce the base aggregates.**/ 
 	private volatile AffineTransform renderedTransform = new AffineTransform();
@@ -46,7 +50,6 @@ public class TransferDisplay extends ARComponent {
 	 * will be drawn.
 	 * **/
 	private volatile AffineTransform viewTransform = new AffineTransform();
-	
 	
 	private final Renderer renderer;
 	private volatile boolean renderError = false;
@@ -82,9 +85,10 @@ public class TransferDisplay extends ARComponent {
 	/**Set the aggregates set in transfer.  
 	 * Used as default set of aggregates if refAggregates is null.
 	 */
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, Axis.Descriptor<?,?> axes) {
 		this.aggregates = aggregates;
 		this.renderedTransform = renderedTransform;
+		this.axes = axes;
 		renderError = false;
 		postTransferAggregates = null;
 		//viewTransform(new AffineTransform());
@@ -128,6 +132,7 @@ public class TransferDisplay extends ARComponent {
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
 		
 		if (postTransferAggregates == null 
 				&& transfer !=null && aggregates !=null 
@@ -137,13 +142,14 @@ public class TransferDisplay extends ARComponent {
 
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		AffineTransform offsetTransform = offsetTransform(viewTransform, renderedTransform);
 		if (image != null) {
-			Graphics2D g2 = (Graphics2D) g;
-			
-			g2.drawRenderedImage(image,offsetTransform(viewTransform, renderedTransform));
+			g2.drawRenderedImage(image, offsetTransform);
+			if (axes != null && includeAxes) {
+				Axis.drawAxes(axes, g2, viewTransform, this.getBounds());
+			}
 		}
-	}
-	
+	}	
 	
 	/**In some cases, some of the view transform is reflected in the rendered transform,
 	 * the display needs a modified view transform to properly position/scale post-transfer results.
@@ -206,7 +212,13 @@ public class TransferDisplay extends ARComponent {
 	}
 		
 	@Override public AffineTransform viewTransform() {return new AffineTransform(viewTransform);}
-
+	
+	public boolean includeAxes() {return includeAxes;}
+	@Override public void includeAxes(boolean axes) {
+		this.includeAxes = axes; 
+		repaint();
+	}
+	
 	@Override 
 	public void viewTransform(AffineTransform vt, boolean provisional) {
 		if (vt == null) {vt = new AffineTransform();}

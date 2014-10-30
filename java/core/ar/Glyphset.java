@@ -2,6 +2,8 @@ package ar;
 
 import java.awt.geom.Rectangle2D;
 
+import ar.util.Axis;
+
 /**
  * A collection of glyphs for rendering. 
  * A glyph is a geometric description and accompanying data values.
@@ -47,6 +49,12 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	/**What are the overall bounds of the items in this glyphset?**/
 	public Rectangle2D bounds();
 
+	/**Get the axis descriptor.**/
+	public Axis.Descriptor axisDescriptors();
+	
+	/**Set the axis descriptor (optional operation)**/
+	public void axisDescriptors(Axis.Descriptor descriptor);
+	
 	/**How many items in this glyphset?
 	 * */
 	public long size();
@@ -77,5 +85,4 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 		/**Return the item at the specified index.**/
 		public Glyph<G,I> get(long l);
 	}
-
 }

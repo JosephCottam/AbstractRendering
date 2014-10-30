@@ -16,12 +16,18 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.Axis;
+import ar.util.Axis.Descriptor;
 
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
+ * 
+ * 
+ * TODO: Replace 'Indexed' and 'Converter' to a RecordCreator of some sort.  The default one is essentially Converter, but sometimes that cost does not need to paid  
+ * 
  */
 public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip by default.  Captured at object creation time.**/
@@ -49,7 +55,6 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	///Cached items.
 	private long size =-1;
 	private Rectangle2D bounds;
-
 		
 	/**
 	 * @param source File to pull from 
@@ -72,13 +77,9 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	}
 
 	
-
-	
 	@Override
 	public Rectangle2D bounds() {
-		if (bounds == null) {
-			bounds = bounds(2);
-		}
+		if (bounds == null) {bounds = bounds(2);}
 		return bounds;
 	}
 	
@@ -111,7 +112,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 				size=0;
 				while(r.readLine() != null) {size++;}
 			} catch (IOException e) {
-				throw new RuntimeException("Error processing file: " + source.getName());
+				throw new RuntimeException("Error processing file: " + source.getName(), e);
 			}
 		}
 		size = size-skip;
@@ -181,4 +182,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		@Override public void remove() {throw new UnsupportedOperationException();}
 	}
 	
+	private Axis.Descriptor axisDescriptor;
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
 }
