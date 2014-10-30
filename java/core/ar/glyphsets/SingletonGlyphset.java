@@ -15,7 +15,8 @@ import ar.util.Util;
 public final class SingletonGlyphset<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final List<Glyph<G,I>> glyphs;
 	private final Rectangle2D bounds;
-	
+	private Axis.Descriptor axisDescriptor;
+
 	/**Initialize the glyphset with the item.**/
 	public SingletonGlyphset(Glyph<G,I> g) {
 		glyphs = Collections.singletonList(g);
@@ -33,5 +34,6 @@ public final class SingletonGlyphset<G,I> implements Glyphset.RandomAccess<G,I> 
 		return new EmptyGlyphset<>();
 	}
 
-	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 	
 }

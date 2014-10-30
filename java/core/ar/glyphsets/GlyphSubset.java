@@ -10,10 +10,10 @@ import ar.util.Axis.Descriptor;
 
 /**Subset of a random-access dataset. **/
 public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
-	protected final Glyphset.RandomAccess<G,I> glyphs;
+	protected final Glyphset.RandomAccess<G,I> base;
 	protected final long low, high;
-	protected GlyphSubset(Glyphset.RandomAccess<G,I> glyphs, long low, long high) {
-		this.glyphs=glyphs;
+	protected GlyphSubset(Glyphset.RandomAccess<G,I> base, long low, long high) {
+		this.base=base;
 		this.low =low;
 		this.high=high;
 		if (high - low > Integer.MAX_VALUE) {
@@ -33,10 +33,11 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 		long bottom = stride*segId;
 		long top = Math.min(low+stride, high);
 
-		return new Cached<>(glyphs, bottom + this.low, top + this.low);
+		return new Cached<>(base, bottom + this.low, top + this.low);
 	}
 
 	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {base.axisDescriptors(descriptor);}
 
 	
 	/**Subset where glyphs are cached in the subset.
@@ -78,7 +79,7 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 	public static final class Uncached<G,I> extends GlyphSubset<G,I> {
 		@SuppressWarnings({"javadoc"})
 		public Uncached(Glyphset.RandomAccess<G,I> glyphs, long low, long high) {super(glyphs, low,high);}
-		public Glyph<G,I> get(long l) {return glyphs.get(low+l);}
+		public Glyph<G,I> get(long l) {return base.get(low+l);}
 	}
 
 	/**Subset a random-access glyphset; caching optional.*/

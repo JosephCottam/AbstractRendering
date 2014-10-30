@@ -36,7 +36,7 @@ public abstract class ARComponent extends JComponent implements HasViewTransform
 	
 	public abstract Renderer renderer();
 
-
+	public abstract void includeAxes(boolean include);
 	
 	/**Force a full re-render.**/
 	public abstract void renderAgain();

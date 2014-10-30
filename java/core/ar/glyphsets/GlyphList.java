@@ -7,6 +7,7 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Axis;
 import ar.util.Util;
+import ar.util.Axis.Descriptor;
 
 /**Explicit geometry, sequentially arranged glyphset.
  *   
@@ -22,6 +23,7 @@ import ar.util.Util;
 public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected final List<Glyph<G,I>> glyphs = new ArrayList<Glyph<G,I>>();
 	protected Rectangle2D bounds;
+	private Axis.Descriptor axisDescriptor;
 
 	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
 	public void addAll(Glyphset<G,I> newGlyphs) {
@@ -54,6 +56,6 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 		return new GlyphSubset.Uncached<G,I>(this, low, high);
 	}
 	
-	@Override
-	public Axis.Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
 }

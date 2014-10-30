@@ -15,7 +15,9 @@ import com.google.common.collect.Lists;
 
 import ar.Glyph;
 import ar.Glyphset;
+import ar.util.Axis;
 import ar.util.Util;
+import ar.util.Axis.Descriptor;
 
 public class GlyphsetRDD<G,I> implements Glyphset<G,I>, Serializable {
 	public static boolean MAP_PARTITIONS = false;
@@ -71,4 +73,8 @@ public class GlyphsetRDD<G,I> implements Glyphset<G,I>, Serializable {
 		throw new UnsupportedOperationException("Segmentation not supported.  Use Spark segmentation routines on RDD directly or convert to local glyphset (via iterator)");
 	}
 
+	private Axis.Descriptor axisDescriptor;
+	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	
 }
