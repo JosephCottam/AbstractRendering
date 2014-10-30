@@ -123,19 +123,29 @@ public class Axis {
 	 * **/
 	public static Descriptor<?, ?> coordinantDescriptors(Glyphset<?,?> glyphs) {
 		Rectangle2D bounds = glyphs.bounds();
-		return new Descriptor<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), 10, true),
-					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), 10, true));
+		
+		return new Descriptor<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), bounds.getMinX(), bounds.getMaxX(), 10, true),
+					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), bounds.getMinY(), bounds.getMaxY(), 10, true));
 	}
 	
-	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double low, double high, int samples, boolean continuous) {
+
+	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double lowIn, double highIn, double lowOut, double highOut, int samples, boolean continuous) {
 		Map<Number, Double> rslt = continuous ? new TreeMap<Number, Double>() : new HashMap<Number, Double>();
 		Interpolate<?> interp = continuous ? new LinearSmooth() : new Discrete<Long>();
 		
 		for (int i=0; i<samples+1; i++) {
-			Number val;
-			if (continuous) {val = new Double(low + ((high-low)/samples)*i);}
-			else {val = Math.round(low + ((high-low)/samples)*i);}
-			rslt.put(val, val.doubleValue());
+			Number in;
+			Number out;
+			
+			if (continuous) {
+				in = new Double(lowIn + ((highIn-lowIn)/samples)*i);
+				out = new Double(lowOut + ((highOut-lowOut)/samples)*i);
+			} else {
+				in = Math.round(lowIn + ((highIn-lowIn)/samples)*i);
+				out = Math.round(lowOut + ((highOut-lowOut)/samples)*i);
+			}
+			
+			rslt.put(in, out.doubleValue());
 		}
 		
 		return new AxisDescriptor<>(label, (Map<T, Double>) rslt, (Interpolate<T>) interp);
@@ -200,28 +210,28 @@ public class Axis {
 	/**How many pixels high should the axes be given?**/
 	public static int AXIS_SPACE = 100;
 	
-	private static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds, boolean isX) {
+	public static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds, boolean isX) {
 		g2.setColor(Color.GRAY);
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
 		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
 			Double val = e.getValue();
 			
 			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
-			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX);
+			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX);
 
 			max = Math.max(max, val);
 			min = Math.min(min, val);
 		}
 		
 		drawLine(min, max, 0,0, g2, viewTransform, screenBounds, isX);		
-		drawLabel(axis.label, min, max, LABEL_OFFSET*5, g2, viewTransform, screenBounds, isX); //TODO: The '5' is a magic number...remove it by doing some whole-axis analysis
+		drawLabel(axis.label, min, max, LABEL_OFFSET*4.5, g2, viewTransform, screenBounds, isX, !isX); //TODO: The '4.5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
 	 * Text is drawn in unscaled space, but positioning is done with respect to the view transform.
 	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
 	 */
-	private static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX) {
+	private static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX, boolean rotate) {
 		AffineTransform restore = g2.getTransform();
 		g2.setTransform(new AffineTransform());
 		
@@ -259,14 +269,16 @@ public class Axis {
 		if (isX) {
 			x = (p1.getX()+p2.getX())/2 - (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
 			y = Math.min(p1.getY(), p2.getY()) + offset;
-			t = AffineTransform.getTranslateInstance(x, y);
-			t.rotate(Math.PI/2);
+			t = AffineTransform.getTranslateInstance(x+screenBounds.getMinX(), y+screenBounds.getMinY());
 		} else {
 			x = Math.min(p1.getX(), p2.getX()) - (stringBounds.getWidth()+offset+offset); //HACK: TWICE!!! Not sure why...
 			y = (p1.getY()+p2.getY())/2 + (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
-			t = AffineTransform.getTranslateInstance(x, y);
+			t = AffineTransform.getTranslateInstance(x+screenBounds.getMinX(), y+screenBounds.getMinY());
 		}
 
+		if (rotate) {t.rotate(Math.PI/2);}
+
+		
 		g2.setTransform(t);
 		g2.drawString(labelText, 0,0);
 		g2.setTransform(restore);
@@ -295,7 +307,8 @@ public class Axis {
 		t.transform(p2, p2);
 		
 		AffineTransform restore = g2.getTransform();
-		g2.setTransform(new AffineTransform());
+		g2.setTransform(AffineTransform.getTranslateInstance(screenBounds.getMinX(), screenBounds.getMinY()));
+		
 		Line2D l = new Line2D.Double(p1, p2);
 		g2.draw(l);
 		g2.setTransform(restore);
