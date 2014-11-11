@@ -72,4 +72,33 @@ public interface ProgressReporter {
 			return counter.intValue()/((double) expected);
 		}
 	}
+	
+	/**Wrap another reporter and show reports on standard out.**/
+	public static final class StdOut implements ProgressReporter {
+		private final ProgressReporter inner;
+		public StdOut(ProgressReporter reporter) {
+			this.inner = reporter;
+		}
+
+		@Override public void update(long delta) {
+			inner.update(delta);
+			System.out.printf("%.2f%%%n", percent()*100);
+		}
+
+		@Override public double percent() {return inner.percent();}
+
+		@Override public void reset(long expected) {
+			System.out.println("--------------- Reporter Reset ------------");
+			inner.reset(expected);
+		}
+
+		@Override public long reportStep() {return inner.reportStep();}
+
+		@Override public String message() {return inner.message();}
+
+		@Override public void message(String message) {
+			System.out.printf("Message set: %s%n", message);
+			inner.message(message);
+		}
+	}
 }
