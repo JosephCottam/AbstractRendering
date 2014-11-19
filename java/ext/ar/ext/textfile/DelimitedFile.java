@@ -172,7 +172,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 			if (next == null) {return;}
 			
 			try {
-				for (String s: next) {charsRead += s.length();} //TODO: Probably not the fastest way to do this...
+				for (String s: next) {charsRead += s==null ? 0 : s.length();} //TODO: Probably not the fastest way to do this...
 				Indexed base = conv.applyTo(new Indexed.ListWrapper(next));
 				cached = new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
 			} catch (Exception e) {throw new RuntimeException(String.format("Error constructing glyph around character %d of %s", charsRead, source.getName()), e);}
