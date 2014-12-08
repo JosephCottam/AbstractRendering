@@ -17,7 +17,10 @@ import ar.Glyphset;
 
 public class Axis {
 
-	/**Describes a pair of axes.**/
+	/**Describes a pair of axes.
+	 * @param <X> The type of the X-axis descriptor
+	 * @param <Y> The type of the Y-axis descriptor	
+	 */
 	public static class Descriptor<X,Y> {
 		public final AxisDescriptor<X> x;
 		public final AxisDescriptor<Y> y;
@@ -129,6 +132,21 @@ public class Axis {
 	}
 	
 
+	@SuppressWarnings("unchecked")
+	/**Construct a linear descriptor.
+	 * 
+	 *  The generic type T is determined by continuous flag. 
+	 *  If continuous, T is type Long.  Otherwise it is type Double 
+	 * 
+	 * @param label Axis label 
+	 * @param lowIn Low value in the input space
+	 * @param highIn High value in the input space
+	 * @param lowOut Low value in the output space
+	 * @param highOut High value in the output space
+	 * @param samples How many samples to make
+	 * @param continuous Should the samples be from a continuous or discrete number representation
+	 * @return
+	 */
 	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double lowIn, double highIn, double lowOut, double highOut, int samples, boolean continuous) {
 		Map<Number, Double> rslt = continuous ? new TreeMap<Number, Double>() : new HashMap<Number, Double>();
 		Interpolate<?> interp = continuous ? new LinearSmooth() : new Discrete<Long>();

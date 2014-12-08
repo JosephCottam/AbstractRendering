@@ -82,7 +82,6 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		recorder.update(DOWN_MULT);
 		Glyphset<? extends G, ? extends I> subset = glyphs.segmentAt(totalTasks, lowTask);
 		selector.processSubset(subset, view, target, op);
-		Runtime rt = Runtime.getRuntime();
 		
 		if (target.untouched()) {return null;}
 		else {return target;}
@@ -118,8 +117,9 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 
 	protected TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds) {
 		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
-		Aggregates<A> aggs = AggregateUtils.make(fullBounds.x, fullBounds.y,
-				fullBounds.x+fullBounds.width+1, fullBounds.y+fullBounds.height+1, 
+		Aggregates<A> aggs = AggregateUtils.make(
+				fullBounds.x, fullBounds.y,
+				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height,
 				op.identity());
 		return new TouchedBoundsWrapper<>(aggs, false);
 	}
