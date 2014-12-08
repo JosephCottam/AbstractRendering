@@ -2,7 +2,7 @@ package ar;
 
 import java.awt.geom.Rectangle2D;
 
-import ar.util.Axis;
+import ar.util.axis.DescriptorPair;
 
 /**
  * A collection of glyphs for rendering. 
@@ -50,10 +50,10 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	public Rectangle2D bounds();
 
 	/**Get the axis descriptor.**/
-	public Axis.Descriptor axisDescriptors();
+	public DescriptorPair axisDescriptors();
 	
 	/**Set the axis descriptor (optional operation)**/
-	public void axisDescriptors(Axis.Descriptor descriptor);
+	public void axisDescriptors(DescriptorPair descriptor);
 	
 	/**How many items in this glyphset?
 	 * */

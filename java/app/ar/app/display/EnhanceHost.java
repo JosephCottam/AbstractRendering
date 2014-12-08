@@ -31,8 +31,8 @@ import ar.Transfer;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.util.LabeledItem;
 import ar.glyphsets.BoundingWrapper;
-import ar.util.Axis;
 import ar.util.Util;
+import ar.util.axis.DescriptorPair;
 
 /**Host a panel, add to it a draw-on overlay and enhance-region capability.**/ 
 public class EnhanceHost extends ARComponent.Aggregating {
@@ -169,7 +169,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	@Override public void includeAxes(boolean include) {hosted.includeAxes(include);}
 	
 	@Override
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, Axis.Descriptor<?, ?> axes) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair axes) {
 		hosted.aggregates(aggregates, renderTransform, axes);
 	}
 	

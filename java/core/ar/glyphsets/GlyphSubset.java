@@ -4,9 +4,9 @@ import java.awt.geom.Rectangle2D;
 
 import ar.Glyph;
 import ar.Glyphset;
-import ar.util.Axis;
 import ar.util.Util;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 /**Subset of a random-access dataset. **/
 public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
@@ -36,8 +36,8 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 		return new Cached<>(base, bottom + this.low, top + this.low);
 	}
 
-	@Override public Descriptor axisDescriptors() {return Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair axisDescriptors() {return Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
 
 	
 	/**Subset where glyphs are cached in the subset.

@@ -9,9 +9,9 @@ import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.Axis;
 import ar.util.Util;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 
 /**Wrap an existing collection as glyphs.
@@ -40,9 +40,9 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 	@Override public long size() {return values==null ? 0 : values.size();}
 	@Override public Rectangle2D bounds() {return Util.bounds(this);}
 
-	private Axis.Descriptor axisDescriptor;
-	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 
 	
 	@Override 

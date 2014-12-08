@@ -11,8 +11,9 @@ import ar.app.util.ActionProvider;
 import ar.app.util.MostRecentOnlyExecutor;
 import ar.app.util.ZoomPanHandler;
 import ar.selectors.TouchesPixel;
-import ar.util.Axis;
 import ar.util.Util;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 /**Render and display exactly what fits on the screen.
  */
@@ -85,7 +86,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	@Override public Aggregates<?> aggregates() {return aggregates;}
 	
 	@Override 
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, Axis.Descriptor<?,?> axes) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, DescriptorPair axes) {
 		display.aggregates(aggregates, renderedTransform, axes);
 		display.refAggregates(null);
 

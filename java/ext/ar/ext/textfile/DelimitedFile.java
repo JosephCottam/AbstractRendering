@@ -16,8 +16,8 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.Axis;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
@@ -182,7 +182,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		@Override public void remove() {throw new UnsupportedOperationException();}
 	}
 	
-	private Axis.Descriptor axisDescriptor;
-	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 }

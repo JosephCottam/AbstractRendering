@@ -1,4 +1,4 @@
-package ar.util;
+package ar.util.axis;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -10,124 +10,49 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ar.Glyphset;
 
+
+/**Utilities for creating and displaying axes in abstract rendering.
+ * 
+ * WARNING: This is an ongoing experiment.  
+ * 
+ * Axes are fun because they show the relationship between the input data 
+ * and the layout.  However, they are tricky because many things can mediate 
+ * that relationship.  Axes are currently attached to the glyphset because
+ * it represents the root input to abstract rendering and the axes is
+ * trying to show a relationship that stretches further back.
+ * 
+ * However, axes are a tricky because transfers can modify the spatial relationship.
+ * Stretch is an easy examples because it multiplies the spatial distribution in one
+ * direction. Smear and Spread are trickier because they do not change the distribution
+ * uniformly.  Selectors can similarly modify spatial arrangements.
+ * 
+ * This package is NOT generalized to cover all cases.  It currently handles simple
+ * cases well enough, but non-uniformity (either discontinuities in mapping or non-uniform
+ * changes in transfer) are not fully covered.  Suggestions are VERY welcome.
+ * 
+ * IDEAS:
+ *    * Augment Transfer and Selector to handle guide transforms as well (default is pass-through)
+ *    * Have no general automatic system, but have an expressive descriptive system
+ *    * Have a simple automatic system that defaults to errors and warnings and no rendering
+ *      when it detects violation
+ *    * AR is designed to work with other visualization systems.  Maybe guides are really 
+ *      the host system's problem
+ */
 public class Axis {
 
-	/**Describes a pair of axes.
-	 * @param <X> The type of the X-axis descriptor
-	 * @param <Y> The type of the Y-axis descriptor	
-	 */
-	public static class Descriptor<X,Y> {
-		public final AxisDescriptor<X> x;
-		public final AxisDescriptor<Y> y;
-		public Descriptor(AxisDescriptor<X> x, AxisDescriptor<Y> y) {
-			this.x = x;
-			this.y = y;
-		}
-	}
-	
-	/**Describes an axis.
-	 * 
-	 * The 'seeds' are value/location pairs along the axis.
-	 * The 'interpolate' function is used to modify the list of seeds to fill in the axis. 
-	 * **/
-	public static final class AxisDescriptor<T> {
-		public final Map<T, Double> seeds;
-		public final Interpolate<T> interpolate;
-		public final String label;
-		
-		public AxisDescriptor(final String label, final Map<T, Double> seeds, final Interpolate<T> interpolate) {
-			this.label = label;
-			this.seeds = seeds;
-			this.interpolate = interpolate;
-		}
-	}
-	
-	public static final <T> AxisDescriptor<T> empty() {return new AxisDescriptor<T>("", Collections.<T,Double>emptyMap(), new Discrete<T>());}
-	
-	/**Given a set of seeds, produce a new set of seeds of the requested target size.**/
-	public static interface Interpolate<T> {
-		public Map<T, Double> interpolate(Map<T,Double> seeds, int targetSize);
-	}
-	
-	/**If seeds is not a SortedMap, returns the input value unchanged. 
-	 * If seeds is a SortedMap, returns a strided selection of the seeds.
-	 * If forceLast is true, will return a set of targetSize+1 to ensure the last item is present.
-	 * **/
-	public static class Discrete<T> implements Interpolate<T> {
-		public final boolean forceLast;
-		
-		public Discrete() {this(false);}
-		public Discrete(boolean forceLast) {this.forceLast = forceLast;}
- 		
-		@Override
-		public Map<T, Double> interpolate(Map<T, Double> seeds, int targetSize) {
-			if (!(seeds instanceof SortedMap)) {return seeds;}
-			
-			SortedMap<T, Double> rslt = new TreeMap<T, Double>();
-			int tick =0;
-			Map.Entry<T,Double> last = null;
-			for (Map.Entry<T,Double> e: seeds.entrySet()) {
-				last = e;
-				if (tick ==0) {rslt.put(e.getKey(), e.getValue());}
-				tick = (tick+1)%targetSize;
-			}
-			
-			if (forceLast && last != null) {rslt.put(last.getKey(), last.getValue());}
-			
-			return rslt;
-		}		
-	}
-		
-	//TODO: Add switch for log 
-	//TODO: Add the 'nice' ticks logic 
-	//TODO: Add logic for non-double keys
-	public static class LinearSmooth implements Interpolate<Double> {
-
-		@Override
-		public Map<Double, Double> interpolate(Map<Double, Double> seeds, int targetSize) {
-			double min, max;
-			double high, low;
-
-			SortedMap<Double, Double> m;
-			if (seeds instanceof SortedMap) {
-				m = (SortedMap<Double,Double>) seeds;
-			} else {
-				m = new TreeMap<>();
-				m.putAll(seeds);								
-			}
-			
-			min = m.firstKey();
-			low = m.get(min);
-			max = m.lastKey();
-			high = m.get(max);
-			
-			double keySpan = max-min; //HACK!!
-			double keyStride = keySpan/(targetSize-1);
-			double valSpan = high-low;
-			double valStride = valSpan/(targetSize-1);
-			
-			Map<Double, Double> rslt = new TreeMap<>();
-			for (int i=0; i<targetSize; i++) {
-				rslt.put(min+(keyStride*i), low+(valStride*i));
-			}
-			rslt.put(max, high);
-			return rslt;
-		}
-		
-	}
+	public static final <T> AxisDescriptor<T> empty() {return new AxisDescriptor<T>("", Collections.<T,Double>emptyMap(), new Interpolate.Discrete<T>());}
 	
 	/**Produce descriptors indicating literal positions.
 	 * DOES NOT reflect backing data, just the bounding box of the projection.
 	 * **/
-	public static Descriptor<?, ?> coordinantDescriptors(Glyphset<?,?> glyphs) {
+	public static DescriptorPair coordinantDescriptors(Glyphset<?,?> glyphs) {
 		Rectangle2D bounds = glyphs.bounds();
 		
-		return new Descriptor<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), bounds.getMinX(), bounds.getMaxX(), 10, true),
+		return new DescriptorPair(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), bounds.getMinX(), bounds.getMaxX(), 10, true),
 					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), bounds.getMinY(), bounds.getMaxY(), 10, true));
 	}
 	
@@ -149,7 +74,7 @@ public class Axis {
 	 */
 	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double lowIn, double highIn, double lowOut, double highOut, int samples, boolean continuous) {
 		Map<Number, Double> rslt = continuous ? new TreeMap<Number, Double>() : new HashMap<Number, Double>();
-		Interpolate<?> interp = continuous ? new LinearSmooth() : new Discrete<Long>();
+		Interpolate<?> interp = continuous ? new Interpolate.LinearSmooth() : new Interpolate.Discrete<Long>();
 		
 		for (int i=0; i<samples+1; i++) {
 			Number in;
@@ -179,7 +104,7 @@ public class Axis {
 			Double val = gap + gap*i*2;
 			rslt.put(labels[i], val);
 		}
-		return new AxisDescriptor<>(label, rslt, new Discrete<String>());
+		return new AxisDescriptor<>(label, rslt, new Interpolate.Discrete<String>());
 	}
 	
 	
@@ -203,7 +128,7 @@ public class Axis {
     //---------------------------------------------------- Rendering ----------------------------------------------------
 	
 
-	public static void drawAxes(Axis.Descriptor<?,?> axes, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds) {
+	public static void drawAxes(DescriptorPair axes, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds) {
 		
 		Object restore_anti_alias = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,

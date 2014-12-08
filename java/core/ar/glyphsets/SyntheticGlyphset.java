@@ -7,8 +7,8 @@ import java.util.Iterator;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Shaper;
-import ar.util.Axis;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 /**Glyphset derived from a Generator.
  * 
@@ -18,7 +18,7 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	private final I val;
 	private final long size;
 	private final Generator<G> shaper;
-	private Axis.Descriptor axisDescriptor;
+	private DescriptorPair axisDescriptor;
 
 	public SyntheticGlyphset(long size, I val, Generator<G> shaper) {
 		this.val = val;
@@ -77,8 +77,8 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		public Point2D shape(Long from) {return new Point2D.Double(Math.random()*maxX, Math.random()*maxY);}
 	}
 
-	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 
 	
 }

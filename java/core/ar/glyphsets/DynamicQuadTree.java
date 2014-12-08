@@ -10,9 +10,9 @@ import java.util.List;
 
 import ar.Glyph;
 import ar.Glyphset;
-import ar.util.Axis;
 import ar.util.Util;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 
 /**Explicit geometry, spatially arranged glyphset with dynamically growing extent.
@@ -174,9 +174,9 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		return "Not a know type: " + t.getClass().getName();
 	}
 	
-	private Axis.Descriptor axisDescriptor;
-	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 
 
 	/**The root node does not actually hold an items, it is to facilitate the "up" direction splits.

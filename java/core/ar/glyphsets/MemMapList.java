@@ -14,11 +14,11 @@ import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 import ar.util.memoryMapping.MappedFile;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
-import ar.util.Axis.Descriptor;
-import ar.util.Axis;
 import ar.util.Util;
 
 /**Implicit geometry, sequentially arranged glyphset backed by a memory-mapped file.
@@ -185,7 +185,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		return bounds;
 	}
 
-	private Axis.Descriptor axisDescriptor;
-	@Override public Descriptor axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 }

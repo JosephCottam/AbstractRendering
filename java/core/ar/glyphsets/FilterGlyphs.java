@@ -7,8 +7,7 @@ import java.util.NoSuchElementException;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.util.Axis;
-import ar.util.Axis.Descriptor;
+import ar.util.axis.DescriptorPair;
 import ar.util.Util;
 
 /***Reduce a glyphset by only returning values that pass a given filter.**/
@@ -47,8 +46,8 @@ public final class FilterGlyphs<G, I> implements Glyphset<G,I> {
 		return new FilterGlyphs<>(base.segmentAt(count, segId), predicate);
 	}
 
-	@Override public Descriptor axisDescriptors() {return base.axisDescriptors();}
-	@Override public void axisDescriptors(Axis.Descriptor descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair axisDescriptors() {return base.axisDescriptors();}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
 
 	public static final class FilterIterator<G, I> implements Iterator<Glyph<G,I>> {
 		private final Iterator<Glyph<G,I>> base;
