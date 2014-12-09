@@ -15,6 +15,8 @@ import ar.util.DelimitedReader;
 import ar.util.Util;
 import ar.util.memoryMapping.MemMapEncoder;
 
+
+//TODO: Is this really needed now?  What uses it?
 public class GlyphsetUtils {
 	private static boolean isNumber(String s) {
 		try {Double.parseDouble(s); return true;}
@@ -76,7 +78,7 @@ public class GlyphsetUtils {
 				else {valuer = new Valuer.Constant<>(Color.red);}
 				
 				
-				return Util.load(
+				return (Glyphset<G, T>) Util.load(
 						(Glyphset<Rectangle2D,T>) glyphs, 
 						new DelimitedReader(source, skip, DelimitedReader.CSV), 
 						new Converter(types),
