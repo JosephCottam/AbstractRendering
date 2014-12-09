@@ -14,6 +14,8 @@ import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 import ar.util.memoryMapping.MappedFile;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
@@ -97,7 +99,9 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 				Rectangle2D maxBounds = Util.boundOne(shaper.shape(max));
 				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
 				bounds = Util.bounds(maxBounds, minBounds);
+				axisDescriptor = Axis.coordinantDescriptors(this);
 			} 
+			
 			entryCount = (source.length()-dataTableOffset)/recordLength;
 		} else {
 			this.dataTableOffset = -1;
@@ -180,4 +184,8 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		}
 		return bounds;
 	}
+
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 }

@@ -37,7 +37,7 @@ public class Categories {
 	}
 
 	
-	/**Convert a set of categorical counts to its total.**/ 
+	/**Convert a set of categorical counts to the number a categories present.**/ 
 	public static final class NumCategories<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private static final long serialVersionUID = -8842454931082209229L;
 
@@ -80,7 +80,33 @@ public class Categories {
 		}
 	}
 	
-	/**Replace categories with other categories.
+	/**Orders a set of categories according to a function.**/
+	public static final class Sort<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, CategoricalCounts<IN>> {
+		private final Comparator<IN> comp;
+		
+		public Sort(Comparator<IN> comp) {this.comp = comp;}
+
+		@Override 
+		public Sort<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
+		
+		@Override public CategoricalCounts<IN> emptyValue() {return new CategoricalCounts<>(comp);}
+
+		@Override
+		public Aggregates<CategoricalCounts<IN>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+
+		@Override
+		public CategoricalCounts<IN> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> input) {
+			CategoricalCounts<IN> in = input.get(x, y);
+			CategoricalCounts<IN> out = emptyValue();
+			for (int i=0; i< in.size(); i++) {out.extend(in.key(i), in.count(i));}
+			return out;
+		} 
+
+	}
+	
+	/**Replace category labels with other category labels.
 	 * 
 	 * Useful for (for example) assigning categories to colors.
 	 * **/ 
@@ -101,6 +127,16 @@ public class Categories {
 			this.rekey = rekey;
 			this.missing= missing;
 		}
+
+		/**
+		 * @param like Used as the default value
+		 * @param rekey Mapping from key in the input to new key in the output
+		 * @param missing Key to use if the input key is not found in the rekey
+		 */
+		public Rekey(Comparator<OUT> comp, Map<IN,OUT> rekey, OUT missing) {
+			this(new CategoricalCounts<>(comp), rekey, missing);
+		}
+
 		
 		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
 		
@@ -333,7 +369,7 @@ public class Categories {
 	}
 	
 	/**Pull the nth-item from a set of categories.**/
-	public static final class NthItem<T> implements Transfer.ItemWise<CategoricalCounts<T>, Integer> {
+	public static final class NthCount<T> implements Transfer.ItemWise<CategoricalCounts<T>, Integer> {
 		private static final long serialVersionUID = -7261917422124936899L;
 		private final Integer background;
 		private final int n;
@@ -342,7 +378,7 @@ public class Categories {
 		 * @param background Value to use if the nth category does not exist
 		 * @param n Category to select
 		 */
-		public NthItem(Integer background, int n) {
+		public NthCount(int n, Integer background) {
 			this.background = background;
 			this.n = n;
 		}
@@ -357,13 +393,84 @@ public class Categories {
 		@Override public Integer emptyValue() {return background;}
 		
 		@Override  
-		public NthItem<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+		public NthCount<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 
 		@Override
 		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
 			return rend.transfer(aggregates, this);
 		}
 	}
+	
+	/**Pull the nth entry from a set of categories.  Retains the key and the value.**/
+	public static final class NthEntry<T> implements Transfer.ItemWise<CategoricalCounts<T>, CategoricalCounts<T>> {
+		private static final long serialVersionUID = -7261917422124936899L;
+		private final int n;
+		private final CategoricalCounts<T> empty;
+
+		/**
+		 * @param comp Comparator to use in build entries (may be null)
+		 * @param n Category to select
+		 */
+		public NthEntry(int n) {this(n, null);}
+
+		public NthEntry(int n, CategoricalCounts<T> empty) {
+			this.n = n;
+			this.empty = empty == null ? new CategoricalCounts<T>() : empty;
+		}
+		
+		@Override
+		public CategoricalCounts<T> at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
+			CategoricalCounts<T> cats = aggregates.get(x,y);
+			if (cats.size() <= n) {return emptyValue();}
+			else {
+				return cats.empty().extend(cats.key(n), cats.count(n));
+			}
+		}
+		
+		@Override public CategoricalCounts<T> emptyValue() {return empty.empty();}
+		
+		@Override  
+		public NthEntry<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return new NthEntry<>(n, aggregates.defaultValue());}
+
+		@Override
+		public Aggregates<CategoricalCounts<T>> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+	}
+	
+	/**Pull the nth-item key from a set of categories.**/
+	public static final class NthKey<T> implements Transfer.ItemWise<CategoricalCounts<T>, T> {
+		private static final long serialVersionUID = -7261917422124936899L;
+		private final T background;
+		private final int n;
+		
+		/**
+		 * @param background Value to use if the nth category does not exist
+		 * @param n Category to select
+		 */
+		public NthKey(int n, T background) {
+			this.background = background;
+			this.n = n;
+		}
+		
+		@Override
+		public T at(int x, int y, Aggregates<? extends CategoricalCounts<T>> aggregates) {
+			CategoricalCounts<T> cats = aggregates.get(x,y);
+			if (cats.size() <= n) {return background;}
+			else {return cats.key(n);}
+		}
+		
+		@Override public T emptyValue() {return background;}
+		
+		@Override  
+		public NthKey<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
+
+		@Override
+		public Aggregates<T> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
+	}
+
 
 	/**Switch between two colors depending on the percent contribution of
 	 * a specified category.
@@ -557,6 +664,7 @@ public class Categories {
 			return rend.transfer(aggregates, this);
 		}		
 	}
+	
 //
 //	/**Applies a valuer to each category's COUNT value.
 //	 * 

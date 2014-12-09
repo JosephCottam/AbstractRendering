@@ -151,7 +151,7 @@ public final class Numbers {
 		}
 		
 		@Override 
-		public Transfer.Specialized<A,Color> specialize(Aggregates<? extends A> aggregates) {
+		public Transfer.ItemWise<A,Color> specialize(Aggregates<? extends A> aggregates) {
 			return new Specialized<>(aggregates, low, high, empty);
 		}
 		

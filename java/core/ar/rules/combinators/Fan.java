@@ -12,7 +12,7 @@ import ar.renderers.AggregationStrategies;
  * **/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
-    protected final Merge<OUT> merge; 
+    protected final Merge<OUT> merge;
 
     @SafeVarargs
     public Fan(Merge<OUT> merge, Transfer<IN, OUT>... transfers) {
@@ -63,7 +63,6 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
         	return left;
         }
     }
-
     
     /**Extension of the Aggregator merging concept to work at the aggregates level,
      * not the individual aggregate value level.  This is may be used to preserve metadata.

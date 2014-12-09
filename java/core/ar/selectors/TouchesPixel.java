@@ -67,13 +67,13 @@ public abstract class TouchesPixel {
 			Point2D p1 = new Point2D.Double();
 			Point2D p2 = new Point2D.Double();
 			for (Glyph<? extends Line2D, ? extends I> g: subset) {
-				Line2D p = g.shape();	//A point has no bounding box...so life is easy
-				view.transform(p.getP1(), p1);
-				view.transform(p.getP2(), p2);
+				Line2D l = g.shape();	
+				view.transform(l.getP1(), p1);
+				view.transform(l.getP2(), p2);
 
 				bressenham(target, op, p1,p2, g.info());
 			}
-
+			
 			return target;
 		}	
 		

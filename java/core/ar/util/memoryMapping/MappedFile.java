@@ -21,7 +21,7 @@ public interface MappedFile {
 	public abstract float getFloat();
 	public abstract double getDouble();
 	public abstract void get(byte[] target, long offset, int length);
-	
+	 
 	/**How many bytes ended up in this buffer?**/
 	public abstract long capacity();
 

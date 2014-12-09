@@ -11,6 +11,8 @@ import java.util.List;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.util.Util;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 
 /**Explicit geometry, spatially arranged glyphset with dynamically growing extent.
@@ -130,7 +132,6 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 	public abstract String toString(int indent);
 	public String toString() {return toString(0);}
 
-
 	protected static <G,V> DynamicQuadTree<G,V> addTo(DynamicQuadTree<G,V> target, final Glyph<G,V> item) {
 		if (target.doSplit()) {target = new InnerNode<>((LeafNode<G,V>) target);}
  		target.add(item);
@@ -172,6 +173,11 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		}
 		return "Not a know type: " + t.getClass().getName();
 	}
+	
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+
 
 	/**The root node does not actually hold an items, it is to facilitate the "up" direction splits.
 	 * A node of this type is always the initial node of the tree.  Most operations are passed

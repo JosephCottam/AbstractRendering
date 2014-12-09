@@ -20,6 +20,8 @@ public class RenderUtils {
 	 */
 	public static long REPORT_STEP = -1;
 	
+	public static ProgressReporter reporter = null;
+	
 	/**Instantiate a progress recorder according to the RECORD_PROGRESS setting.**/
 	public static ProgressReporter recorder() {
 		return RECORD_PROGRESS ? new ProgressReporter.Counter(REPORT_STEP) : new ProgressReporter.NOP();

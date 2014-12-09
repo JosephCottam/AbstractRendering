@@ -35,32 +35,33 @@ import ar.util.Util;
  *
  */
 public class Renderings {
-	private final int width = 100;
-	private final int height = 100;
 
 	/**Check image equality**/ 
-	public static void assertImageEquals(String msg, BufferedImage ref, BufferedImage res) {
-		for (int x = 0; x<res.getWidth(); x++) {
-			for (int y=0; y<res.getHeight(); y++) {
+	public static void assertImageEquals(String msg, BufferedImage ref, BufferedImage res) {		
+		for (int x = 0; x<res.getWidth() && x < ref.getWidth(); x++) {
+			for (int y=0; y<res.getHeight() && y < ref.getWidth(); y++) {
 				assertThat(String.format(msg + " (%d,%d)", x, y), new Color(res.getRGB(x, y),true), is(new Color(ref.getRGB(x, y) ,true)));
 			}
 		}
 	}
-	
 
+	/**Create an image.**/
 	public <G,V,A> BufferedImage image(Renderer r, Glyphset<G,V> g, Aggregator<V,A> agg, Transfer<? super A,Color> t) throws Exception {
-		AffineTransform vt = Util.zoomFit(g.bounds(), width, height);
+		final int WIDTH = 100;
+		final int HEIGHT = 100;
+		
+		AffineTransform vt = Util.zoomFit(g.bounds(), WIDTH, HEIGHT);
 		Selector<G> selector = TouchesPixel.make(g);
-		Aggregates<A> aggs = r.aggregate(g, selector, agg, vt, width, height);
+		Aggregates<A> aggs = r.aggregate(g, selector, agg, vt, WIDTH, HEIGHT);
 		Transfer.Specialized<? super A,Color> t2 = t.specialize(aggs);
 		Aggregates<Color> imgAggs = r.transfer(aggs, t2);
-		BufferedImage img = AggregateUtils.asImage(imgAggs, width, height, Color.white);
+		BufferedImage img = AggregateUtils.asImage(imgAggs, WIDTH, HEIGHT, Color.white);
 		return img;
 	}
 	
 	public <G,V,A> void testWith(String test, Glyphset<G,V> glyphs, Aggregator<V,A> agg, Transfer<? super A,Color> t)  throws Exception {
 		Renderer r = new SerialRenderer();
-		BufferedImage ref_img =image(r, glyphs, agg, t);
+		BufferedImage ref_img = image(r, glyphs, agg, t);
 		Util.writeImage(ref_img, new File(String.format("./testResults/%s/ref.png", test)));		
 		
 		r = new SerialRenderer();

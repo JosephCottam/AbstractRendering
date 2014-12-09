@@ -6,8 +6,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -33,14 +35,38 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	private final JFrame frame = new JFrame();
 
 	private final RegionOptions enhanceOptions = new RegionOptions();
-	private final JButton export = new JButton("Save Image");
 	private final Status status = new Status();
 	private final SequentialComposer composer = new SequentialComposer(this);
+	
+	private final JMenu fileMenu = new JMenu("File");
+	private final JMenuItem saveImage = new JMenuItem("Save Image", KeyEvent.VK_S);
+	
+	private final JCheckBox axes = new JCheckBox("Axes");
 	
 	public ARComposerApp() {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("Abstract Rendering (Demo App)");
 		frame.setLayout(new BorderLayout());
+		
+		JMenuBar bar = new JMenuBar();
+		frame.setJMenuBar(bar);
+		bar.add(fileMenu);
+		fileMenu.add(saveImage);
+		saveImage.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser chooser = new JFileChooser();
+				ARComponent arc = ARComposerApp.this.getARComponent();
+				int rv = chooser.showSaveDialog(arc);
+				if (rv != JFileChooser.APPROVE_OPTION) {return;}
+				File file = chooser.getSelectedFile();
+	
+				@SuppressWarnings("unchecked") //Will fail if the transfer didn't end up with colors
+				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) arc.transferAggregates(), arc.getWidth(), arc.getHeight(), Color.white);
+				Util.writeImage(img, file);
+			}
+		});
+		
+		saveImage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		
 		JPanel topRow = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -63,22 +89,12 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.weightx = 1;
-		topRow.add(export, c);
-		export.addActionListener(new ActionListener() {
+		topRow.add(axes);
+		axes.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser();
-				ARComponent arc = ARComposerApp.this.getARComponent();
-				int rv = chooser.showSaveDialog(arc);
-				if (rv != JFileChooser.APPROVE_OPTION) {return;}
-				File file = chooser.getSelectedFile();
-	
-				@SuppressWarnings("unchecked") //Will fail if the transfer didn't end up with colors
-				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) arc.transferAggregates(), arc.getWidth(), arc.getHeight(), Color.white);
-				Util.writeImage(img, file);
+				display.includeAxes(axes.isSelected());
 			}
 		});
-		
-				
 
 		JPanel controls = new JPanel();
 		controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
@@ -168,6 +184,11 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
+		String osName = System.getProperty("os.name");
+	    if (osName.contains("OS X")) {
+	    	System.setProperty("apple.laf.useScreenMenuBar", "true");
+	    }
+
 		ARComponent.PERFORMANCE_REPORTING = true;
 		RenderUtils.RECORD_PROGRESS = true;
 		RenderUtils.REPORT_STEP=1_000_000;
