@@ -39,7 +39,7 @@
 
   <target name="core" description="Build core system.">
     <mkdir dir="${coreBin}"/>
-    <javac destdir="${coreBin}" target="1.7"
+    <javac destdir="${coreBin}" 
       includeantruntime="false" debug="true" debuglevel="lines,source"
       sourcepath="" srcdir="${coreSrc}">
     </javac>
