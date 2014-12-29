@@ -24,7 +24,7 @@ public interface Valuer<I,V> extends Serializable {
 	public V value(I from);
 	
 	/**Pass-through valuer.  Value-in=value-out.*/
-	public static class IdentityValuer<I> implements Valuer<I,I> {
+	public static class Identity<I> implements Valuer<I,I> {
 		private static final long serialVersionUID = 6961888682185387204L;
 
 		public I value(I v) {return v;}

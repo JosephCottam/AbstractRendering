@@ -7,12 +7,19 @@ import java.util.Iterator;
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Shaper;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
+/**Glyphset derived from a Generator.
+ * 
+ * TODO: Add info generator as well.
+ * **/
 public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	private final I val;
 	private final long size;
 	private final Generator<G> shaper;
-	
+	private DescriptorPair axisDescriptor;
+
 	public SyntheticGlyphset(long size, I val, Generator<G> shaper) {
 		this.val = val;
 		this.size = size;
@@ -38,9 +45,23 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		return new SimpleGlyph<>(shaper.shape(l), val);
 	}
 		
+	/**Generators create elements in the glyphset.
+	 * 
+	 * Generators do not need to be repeatable BUT the glyphs
+	 * produced by generators all need to be contained inside
+	 * of the result of the bounds function.
+	 * 
+	 * The bounds function is required because under normal circumstances
+	 * bounds is determined by observing the contents of the glyphset.
+	 * However, since the generator is not required to be repeatable,
+	 * that no longer works.  The bounds function returns a bound on what will
+	 * be returned. 
+	 * 
+	 * @param <G> Type of glyph elements returned.
+	 */
 	public static interface Generator<G> extends Shaper<Long, G> {public Rectangle2D bounds();}
 
-	/**Randomly generates points.**/
+	/**Points generated from a uniform distribution points.**/
 	public static class UniformPoints implements Generator<Point2D> {
 		final int maxX, maxY;
 		
@@ -55,6 +76,9 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		@Override
 		public Point2D shape(Long from) {return new Point2D.Double(Math.random()*maxX, Math.random()*maxY);}
 	}
-	
+
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+
 	
 }

@@ -1,11 +1,11 @@
 package ar.rules;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.awt.BorderLayout;
@@ -56,7 +56,7 @@ public class Legend<A> implements Transfer<A, Color> {
 	
 	public static final class Specialized<A> extends Legend<A> implements Transfer.Specialized<A, Color> {
 		final Transfer.Specialized<A,Color> basis;
-		final Map<A, Set<Color>> mapping;
+		final Map<A, Color> mapping;
  		
 		public Specialized(Transfer<A, Color> rootBasis, Formatter<A> formatter, Aggregates<? extends A> inAggs) {
 			super(rootBasis, formatter);	
@@ -64,11 +64,12 @@ public class Legend<A> implements Transfer<A, Color> {
 			
 			Aggregates<Color> outAggs = Seq.SHARED_RENDERER.transfer(inAggs, basis);
 			mapping = formatter.select(inAggs, outAggs);
-
 		}
 		
 		@Override
-		public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {return basis.process(aggregates, rend);}
+		public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
+			return basis.process(aggregates, rend);
+		}
 		
 		public JPanel legend() {
 			return formatter.display(mapping);
@@ -119,50 +120,168 @@ public class Legend<A> implements Transfer<A, Color> {
 	
 	public static interface Formatter<A> {
 		/**Select a subset of mappings to actually show in the display.**/
-		public Map<A, Set<Color>> select(Aggregates<? extends A> inAggs, Aggregates<Color> outAggs);
+		public Map<A, Color> select(Aggregates<? extends A> inAggs, Aggregates<Color> outAggs);
 		
 		/**Generate a panel to show the selected mappings.**/
-		public JPanel display(Map<A,Set<Color>> exemplars);
+		public JPanel display(Map<A,Color> exemplars);
 	}
 	
 	
+	
 	/**Shows a selection of categorical counts, selected based on the OUTPUT (e.g., color) distribution.**/
-	public static final class FormatCategoriesByOutput<T> implements Formatter<CategoricalCounts<T>> {
+	public static final class FormatCategoriesByOutputDistribution<T> implements Formatter<T> {
 		/**How many parts should each category be divided into?
 		 * The number of exemplars is approximately dimensions*divisions.*/
 		private final int examples;
 		
-		public FormatCategoriesByOutput() {this(10);}
-		public FormatCategoriesByOutput(int examples) {this.examples = examples;}
+		public FormatCategoriesByOutputDistribution() {this(10);}
+		public FormatCategoriesByOutputDistribution(int examples) {this.examples = examples;}
 		
 		@Override
-		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
-			Map<Color, CategoricalCounts<T>> rawList = new TreeMap<>(Util.COLOR_SORTER);
+		public Map<T, Color> select(Aggregates<? extends T> inAggs, Aggregates<Color> outAggs) {
+			FormatCategoriesByOutputStream.Binner binner = new FormatCategoriesByOutputStream.Binner(examples, outAggs);
+
+			//Create binned mappings with three level of counts
+			@SuppressWarnings("unchecked") 
+			Map<Color, Map<T,Integer>>[] detailCounts = new Map[binner.binCount()];
+			for (int i=0; i<detailCounts.length; i++) {detailCounts[i] = new HashMap<>();}						
+
+			@SuppressWarnings("unchecked") 
+			Map<Color, Integer>[] colorCounts = new Map[binner.binCount()];
+			for (int i=0; i<colorCounts.length; i++) {colorCounts[i] = new HashMap<>();}
+			
+			int [] fullCount = new int[binner.binCount()];
+			Arrays.fill(fullCount, 0);
 
 			for (int x=outAggs.lowX(); x<outAggs.highX(); x++) {
 				for (int y=outAggs.lowY(); y<outAggs.highY(); y++) {
-					CategoricalCounts<T> in = inAggs.get(x, y);
-					Color c = outAggs.get(x,y);
-					rawList.put(c, in);
+					Color c = outAggs.get(x, y);
+					T in = inAggs.get(x,y);
+					int bin = binner.bin(c);
+					
+					Map<T, Integer> counts = detailCounts[bin].get(c);
+					if (counts == null) {counts = new HashMap<>(); detailCounts[bin].put(c, counts);}
+					if (!counts.containsKey(in)) {counts.put(in, 0);}
+					int count = counts.get(in);
+					counts.put(in, count+1);
+					
+					if (!colorCounts[bin].containsKey(c)) {colorCounts[bin].put(c, 0);}
+					int colorCount = colorCounts[bin].get(c);
+					colorCounts[bin].put(c, colorCount+1);
+					
+					fullCount[bin]++;
 				}
 			}
-						
-			//Map out the used color space
-			int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
-			int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
-			for (Color c: outAggs) {
-				Color display = Util.premultiplyAlpha(c, Color.white);
-				rMax = Math.max(rMax, display.getRed());
-				gMax = Math.max(gMax, display.getBlue());
-				bMax = Math.max(bMax, display.getGreen());
-				rMin = Math.min(rMin, display.getRed());
-				gMin = Math.min(gMin, display.getBlue());
-				bMin = Math.min(bMin, display.getGreen());
+			
+			
+			//Reduce colorCounts to just the maximum counted color
+			Color[] exampleColors = new Color[binner.binCount()];
+			for (int i=0; i<colorCounts.length; i++) {
+				Map.Entry<Color, Integer> e = maxEntry(colorCounts[i]);
+				if (e !=null) {exampleColors[i] = e.getKey();}
+			}
+			
+			//Reduce detailCounts to just the maximum item for the maximum color
+			@SuppressWarnings("unchecked")
+			Entry<T>[] subBins = new Entry[binner.binCount()];
+			
+			for (int i=0; i<detailCounts.length; i++) {
+				Color color = exampleColors[i];
+				if (color != null) {
+					Map<T,Integer> detail = detailCounts[i].get(color);
+					Map.Entry<T, Integer> item = maxEntry(detail);
+					subBins[i] = new Entry<>(item.getKey(), color, item.getValue());
+				}
+			}
+			
+			//Collapse the over-sampled bins into actual lists of possible values for actual bins
+			@SuppressWarnings("unchecked")
+			SortedSet<Entry<T>>[] bins = new SortedSet[binner.binCount()];
+
+			for (int i=0; i<bins.length; i++) {bins[i] = new TreeSet<>();}
+			for (int i=0; i <subBins.length; i++) {
+				int bin = i/binner.searchStride();
+				Entry<T> sub = subBins[i];
+				if (sub != null) {bins[bin].add(sub);}
+			}
+			
+			Map<T, Color> selected = new HashMap<>();
+			for (int i=examples; i>0; i--) {
+				for (int search=0; search<bins.length; search++) {
+					if (bins[search].size()>0) {
+						Entry<T> entry = bins[search].first();
+						bins[search].remove(entry);
+						selected.put(entry.in, entry.out);
+						break;
+					}
+				}
+			}
+			
+			return selected;
+		}
+
+		private static <T> Map.Entry<T,Integer> maxEntry(Map<T,Integer> counts) {
+			int max= Integer.MIN_VALUE;
+			Map.Entry<T,Integer> maxVal = null;
+			for (Map.Entry<T, Integer> e: counts.entrySet()) {
+				if (e.getValue() > max) {
+					max = e.getValue();
+					maxVal = e;
+				}
+			}
+			return maxVal;
+		}
+		
+		@Override
+		public JPanel display(Map<T, Color> exemplars) {
+			JPanel labels = new JPanel(new GridLayout(0,1));
+			JPanel examples = new JPanel(new GridLayout(0,1));			
+
+			for (Map.Entry<T, Color> entry: exemplars.entrySet()) {
+				labels.add(new JLabel(entry.getKey().toString()));
+				JPanel exampleSet = new JPanel(new GridLayout(1,0));
+				exampleSet.add(new ColorSwatch(entry.getValue()));
+				examples.add(exampleSet);
+			}
+			JPanel legend = new JPanel(new BorderLayout());
+			legend.add(labels, BorderLayout.EAST);
+			legend.add(examples, BorderLayout.WEST);			
+			return legend;
+		}
+		
+		
+		private static final class Entry<T> implements Comparable<Entry<T>> {
+			final int count;
+			final Color out;
+			final T in;
+			
+			public Entry(T in, Color out, int count) {
+				super();
+				this.count = count;
+				this.out = out;
+				this.in = in;
 			}
 
+			@Override public int compareTo(Entry<T> o) {return Integer.compare(count, o.count);}
+		}
+	}
+
+	
+	/**Shows a selection of categorical counts, selected based on the OUTPUT (e.g., color) distribution.**/
+	public static final class FormatCategoriesByOutputStream<T> implements Formatter<CategoricalCounts<T>> {
+		/**How many parts should each category be divided into?
+		 * The number of exemplars is approximately dimensions*divisions.*/
+		private final int examples;
+		
+		public FormatCategoriesByOutputStream() {this(10);}
+		public FormatCategoriesByOutputStream(int examples) {this.examples = examples;}
+		
+		@Override
+		public Map<CategoricalCounts<T>, Color> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
 			//Create a partition scheme in each dimension and a storage location			
 			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
-			Binner binner = new Binner(examples, rMax, gMax, bMax, rMin, gMin, bMin);
+			Binner binner = new Binner(examples, outAggs);
+			
 			
 			@SuppressWarnings("unchecked")
 			CategoricalCounts<T>[] pickedInputs = new CategoricalCounts[binner.binCount()];
@@ -182,29 +301,27 @@ public class Legend<A> implements Transfer<A, Color> {
 			}
 			
 			//Select from the grouped examples values down to the requested number of exemplars
-			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
+			Map<CategoricalCounts<T>,Color> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
 			
 			for (int offset=0; offset<examples && exemplars.size() < examples; offset++) {
 				for (int i=0; i<pickedColors.length; i+=binner.searchStride()) {
 					int idx = offset+i;
 					if (pickedInputs[idx] == null) {continue;}
-					exemplars.put(pickedInputs[idx], Collections.singleton(pickedColors[idx]));
+					exemplars.put(pickedInputs[idx], pickedColors[idx]);
 				}
 			}
 			return exemplars;
 		}
 
 		@Override
-		public JPanel display(Map<CategoricalCounts<T>, Set<Color>> exemplars) {
+		public JPanel display(Map<CategoricalCounts<T>, Color> exemplars) {
 			JPanel labels = new JPanel(new GridLayout(0,1));
 			JPanel examples = new JPanel(new GridLayout(0,1));			
 
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> entry: exemplars.entrySet()) {
+			for (Map.Entry<CategoricalCounts<T>, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				for (Color c: entry.getValue()) {
-					exampleSet.add(new ColorSwatch(c));
-				}
+				exampleSet.add(new ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
@@ -214,12 +331,26 @@ public class Legend<A> implements Transfer<A, Color> {
 		}
 		
 		/**Converts a set of categorical counts into a specific bin based on its result color.**/
-		private static final class Binner {
+		public static final class Binner {
 			final int examples;
 			final int divisions;
 			final int rMax, gMax, bMax, rMin, gMin,  bMin;			
 			
-			public Binner(int examples, int rMax, int gMax, int bMax, int rMin, int gMin,  int bMin) {
+			public Binner(int examples, Aggregates<Color> outAggs) {
+				//Map out the used color space
+				int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
+				int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
+				for (Color c: outAggs) {
+					Color display = Util.premultiplyAlpha(c, Color.white);
+					rMax = Math.max(rMax, display.getRed());
+					gMax = Math.max(gMax, display.getBlue());
+					bMax = Math.max(bMax, display.getGreen());
+					rMin = Math.min(rMin, display.getRed());
+					gMin = Math.min(gMin, display.getBlue());
+					bMin = Math.min(bMin, display.getGreen());
+				}
+
+				
 				this.examples = examples;
 				this.divisions = examples*10; //Over-dividing the space to helps get to the target number of examples
 				this.rMax = rMax+1;
@@ -260,22 +391,20 @@ public class Legend<A> implements Transfer<A, Color> {
 		public FormatCategoriesByInput(int divisions) {this.divisions = divisions;}
 		
 		@Override
-		public Map<CategoricalCounts<T>, Set<Color>> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
-			Map<CategoricalCounts<T>,Set<Color>> rawList = new HashMap<>();
+		public Map<CategoricalCounts<T>, Color> select(Aggregates<? extends CategoricalCounts<T>> inAggs, Aggregates<Color> outAggs) {
+			Map<CategoricalCounts<T>, Color> rawList = new HashMap<>();
 
 			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
 				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
-					CategoricalCounts<T> in = inAggs.get(x, y);					
-					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
-					Set<Color> outs = rawList.get(in);
-					outs.add(outAggs.get(x,y));
+					CategoricalCounts<T> in = inAggs.get(x, y);
+					rawList.put(in, outAggs.get(x,y));
 				}
 			}
 			
 			//Get max/min (and possibly count) for each category
 			SortedMap<T,Integer> catMaxs = new TreeMap<>();
 			SortedMap<T,Integer> catMins = new TreeMap<>();
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: rawList.entrySet()) {
+			for (Map.Entry<CategoricalCounts<T>, Color> e: rawList.entrySet()) {
 				CategoricalCounts<T> cats = e.getKey();
 				for (int i=0; i<cats.size(); i++) {
 					T cat = cats.key(i);
@@ -297,8 +426,8 @@ public class Legend<A> implements Transfer<A, Color> {
 			//Iterate the input again, keep/replace values in the bins (Reservoir sampling for a single item; select nth-item with probability 1/n) 
 			Binner<T> binner = new Binner<>(divisions, catMaxs, catMins);			
 			int[] binSize = new int[binner.binCount()]; //How many items have landed in each bin?
-			Map<CategoricalCounts<T>,Set<Color>> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> e: rawList.entrySet()) {
+			Map<CategoricalCounts<T>,Color> exemplars = new TreeMap<>(new CategoricalCounts.MangitudeComparator<T>());
+			for (Map.Entry<CategoricalCounts<T>, Color> e: rawList.entrySet()) {
 				int bin = binner.bin(e.getKey());
 				binSize[bin] = binSize[bin]+1;
 				double replaceTest = Math.random();
@@ -310,16 +439,14 @@ public class Legend<A> implements Transfer<A, Color> {
 		}
 
 		@Override
-		public JPanel display(Map<CategoricalCounts<T>, Set<Color>> exemplars) {
+		public JPanel display(Map<CategoricalCounts<T>, Color> exemplars) {
 			JPanel labels = new JPanel(new GridLayout(0,1));
 			JPanel examples = new JPanel(new GridLayout(0,1));			
 
-			for (Map.Entry<CategoricalCounts<T>, Set<Color>> entry: exemplars.entrySet()) {
+			for (Map.Entry<CategoricalCounts<T>, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				for (Color c: entry.getValue()) {
-					exampleSet.add(new ColorSwatch(c));
-				}
+				exampleSet.add(new ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
@@ -378,28 +505,26 @@ public class Legend<A> implements Transfer<A, Color> {
 		}
 		
 		@Override
-		public Map<A,Set<Color>> select(final Aggregates<? extends A> inAggs, final Aggregates<Color> outAggs) { 
-			Map<A,Set<Color>> rawList = new TreeMap<>();
+		public Map<A,Color> select(final Aggregates<? extends A> inAggs, final Aggregates<Color> outAggs) { 
+			Map<A,Color> rawList = new TreeMap<>();
 
 			for (int x=inAggs.lowX(); x<inAggs.highX(); x++) {
 				for (int y=inAggs.lowY(); y<inAggs.highY(); y++) {
 					A in = inAggs.get(x, y);					
-					if (!rawList.containsKey(in)) {rawList.put(in, new TreeSet<>(Util.COLOR_SORTER));}
-					Set<Color> outs = rawList.get(in);
-					outs.add(outAggs.get(x,y));
+					rawList.put(in, outAggs.get(x, y));
 				}
 			}
 			
 			int size = rawList.size();
 			if (size > examples) {
 				@SuppressWarnings("unchecked")
-				Map.Entry<A,Set<Color>>[] entries = rawList.entrySet().toArray(new Map.Entry[size]);
-				Map<A,Set<Color>> output = new TreeMap<>();
+				Map.Entry<A,Color>[] entries = rawList.entrySet().toArray(new Map.Entry[size]);
+				Map<A,Color> output = new TreeMap<>();
 				for (int i=0; i<entries.length; i=i+(size/examples-1)) {
-					Map.Entry<A, Set<Color>> entry = entries[i];
+					Map.Entry<A, Color> entry = entries[i];
 					output.put(entry.getKey(), entry.getValue()); 
 				}
-				Map.Entry<A,Set<Color>> last = entries[entries.length-1];
+				Map.Entry<A,Color> last = entries[entries.length-1];
 				output.put(last.getKey(), last.getValue());
 				return output;
 			} else {
@@ -408,16 +533,14 @@ public class Legend<A> implements Transfer<A, Color> {
 		}
 
 		@Override
-		public JPanel display(Map<A,Set<Color>> exemplars) {
+		public JPanel display(Map<A,Color> exemplars) {
 			JPanel labels = new JPanel(new GridLayout(0,1));
 			JPanel examples = new JPanel(new GridLayout(0,1));			
 
-			for (Map.Entry<A, Set<Color>> entry: exemplars.entrySet()) {
+			for (Map.Entry<A, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				for (Color c: entry.getValue()) {
-					exampleSet.add(new ColorSwatch(c));
-				}
+				exampleSet.add(new ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());

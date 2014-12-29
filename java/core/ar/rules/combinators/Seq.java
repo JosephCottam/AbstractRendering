@@ -4,6 +4,7 @@ import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.renderers.ParallelRenderer;
+import ar.rules.General;
 
 /**Do one transfer, then pipe its results into another.
  * The first transfer finishes before the second one starts.
@@ -59,29 +60,37 @@ public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
     /**Extend the sequence of transfers with a new step.**/ 
     public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(this, next);}
     
-    /**Create a new sequence with the given transfer and renderer.**/
-    public static <IN, OUT> SeqStart<IN,OUT> start(Renderer rend, Transfer<IN,OUT> start) {return new SeqStart<>(rend, start);}
+    /**Full empty start.  Behaves like echo if applied.**/
+    @SuppressWarnings({"rawtypes", "unchecked"})
+	public static class SeqEmpty implements Transfer {
+    	private final Renderer rend;
+		public SeqEmpty(Renderer rend) {this.rend = rend;}
+		public <IN, OUT> SeqStub<IN,OUT> then(Transfer<IN,OUT> next) {return new SeqStub<>(rend, next);}
+		@Override public Object emptyValue() {return null;}
+		@Override public Specialized specialize(Aggregates aggregates) {return new General.Echo(aggregates.defaultValue());}
+    }
     
-    /**Create a new sequence with the given transfer and default renderer.**/
-    public static <IN, OUT> SeqStart<IN,OUT> start(Transfer<IN,OUT> start) {return new SeqStart<>(null, start);}
-
-    
-    /**Initiates a sequence with a single transfer function.
-     * Behaves just like the provided transfer, but can be extended with another transfer with the 'then' method.
+    /** Initiates a sequence with a single transfer function.
+     *  Behaves just like the provided transfer, but can be extended with another transfer with the 'then' method.
      * **/
-    public static class SeqStart<IN,OUT> extends Seq<IN, OUT, OUT> {
-    	public SeqStart(Renderer rend, Transfer<IN, OUT> base) {
-    		super(rend, base,null);
+    public static class SeqStub<IN,OUT> implements Transfer<IN, OUT> {
+    	private final Renderer rend;
+    	private final Transfer<IN,OUT> base;
+    	
+    	public SeqStub(Renderer rend, Transfer<IN, OUT> base) {
+    		this.rend = rend;
+    		this.base = base; 
     	}
 
-		@Override public OUT emptyValue() {return first.emptyValue();}
+    	public <OUT2> Seq<IN,OUT,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, base, next);}
+
+		@Override public OUT emptyValue() {return base.emptyValue();}
 
 		@Override
 		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-			return first.specialize(aggregates);
+			return base.specialize(aggregates);
 		}
 		
-	    @Override public <OUT2> Seq<IN,?,OUT2> then(Transfer<OUT,OUT2> next) {return new Seq<>(rend, first, next);}
     }
 
 }

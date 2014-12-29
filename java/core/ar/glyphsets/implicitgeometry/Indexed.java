@@ -89,9 +89,9 @@ public interface Indexed extends Serializable {
 	/**Converts the elements of the passed array to the given types.
 	 * Uses toString and primitive parsers.
 	 */
-	public static class Converter implements Indexed {
+	public static class Converter implements Indexed, Valuer<Indexed,Indexed> {
 		/**Types the converter understands. "X" means skip.**/
-		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR}
+		public enum TYPE{INT, DOUBLE, LONG, SHORT, BYTE, CHAR, FLOAT, X, COLOR, STRING}
 		private static final long serialVersionUID = 9142589107863879237L;
 		private final TYPE[] types;
 		private final Indexed values;
@@ -113,12 +113,13 @@ public interface Indexed extends Serializable {
 		public Object get(int i) {
 			Object v = values.get(i);
 			switch (types[i]) {
-				case INT: return v instanceof Integer ? (Integer) v : Integer.valueOf(v.toString());
-				case SHORT: return v instanceof Short ? (Short) v : Short.valueOf(v.toString());
-				case LONG: return v instanceof Long ? (Long) v : Long.valueOf(v.toString());
-				case FLOAT: return v instanceof Float ? (Float) v : Float.valueOf(v.toString());
-				case DOUBLE: return v instanceof Double ? (Double) v : Double.valueOf(v.toString());
+				case INT: return v instanceof Integer ? (Integer) v : Integer.valueOf(v.toString().trim());
+				case SHORT: return v instanceof Short ? (Short) v : Short.valueOf(v.toString().trim());
+				case LONG: return v instanceof Long ? (Long) v : Long.valueOf(v.toString().trim());
+				case FLOAT: return v instanceof Float ? (Float) v : Float.valueOf(v.toString().trim());
+				case DOUBLE: return v instanceof Double ? (Double) v : Double.valueOf(v.toString().trim());
 				case COLOR: return v instanceof Color ? (Color) v : ColorNames.byName(v.toString(), null);
+				case STRING: return v instanceof String ? (String) v : v.toString();  
 				default: throw new UnsupportedOperationException("Cannot perform conversion to " + types[i]);
 			}
 		}
@@ -141,6 +142,10 @@ public interface Indexed extends Serializable {
 		
 		/**Create a new converter instance using the current types but the passed value source.**/
 		public Converter applyTo(Indexed values) {return new Converter(values, types);}
+
+		@Override
+		//TODO: Remove 'applyTo' just use 'value' from here on out...
+		public Indexed value(Indexed from) {return new Converter(values, types);}
 	}
 	
 	
@@ -154,7 +159,7 @@ public interface Indexed extends Serializable {
 		
 		/**Extract a value from an indexed item without conversion.**/
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public ToValue(int vIdx) {this(vIdx, new IdentityValuer());}
+		public ToValue(int vIdx) {this(vIdx, new Identity());}
 		
 		/**Extract a value from an indexed item, but do conversion using the valuer.**/
 		public ToValue(int vIdx, Valuer<I, V> basis) {

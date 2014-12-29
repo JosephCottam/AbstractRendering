@@ -32,6 +32,7 @@ import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.util.LabeledItem;
 import ar.glyphsets.BoundingWrapper;
 import ar.util.Util;
+import ar.util.axis.DescriptorPair;
 
 /**Host a panel, add to it a draw-on overlay and enhance-region capability.**/ 
 public class EnhanceHost extends ARComponent.Aggregating {
@@ -63,6 +64,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		});
 	}
 	
+	@Override
 	public void layout() {
 		Rectangle b = this.getBounds();
 		hosted.setBounds(b);
@@ -158,36 +160,42 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		}
 	}
 
-	public Transfer<?, ?> transfer() {return hosted.transfer();}
-	public void transfer(Transfer<?, ?> t) {hosted.transfer(t);}
-	public Aggregates<?> transferAggregates() {return hosted.transferAggregates();}
-	public Aggregates<?> aggregates() {return hosted.aggregates();}
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform) {
-		hosted.aggregates(aggregates, renderTransform);
+	@Override public Transfer<?, ?> transfer() {return hosted.transfer();}
+	@Override public void transfer(Transfer<?, ?> t) {hosted.transfer(t);}
+	@Override public Aggregates<?> transferAggregates() {return hosted.transferAggregates();}
+	@Override public Aggregates<?> aggregates() {return hosted.aggregates();}
+	@Override public Aggregates<?> refAggregates() {return hosted.refAggregates();}
+	@Override public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
+	@Override public void includeAxes(boolean include) {hosted.includeAxes(include);}
+	
+	@Override
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair axes) {
+		hosted.aggregates(aggregates, renderTransform, axes);
 	}
-	public Aggregates<?> refAggregates() {return hosted.refAggregates();}
-	public void refAggregates(Aggregates<?> aggregates) {hosted.refAggregates(aggregates);}
+	
+	@Override 
 	public Glyphset<?,?> dataset() {
 		if (hosted.dataset() instanceof BoundingWrapper) {
 			return ((BoundingWrapper<?,?>) hosted.dataset()).base();
 		} else {return hosted.dataset();}
 	}
 	
-	public void renderAgain() {hosted.renderAgain();}
+	@Override public void renderAgain() {hosted.renderAgain();}
 	
+	@Override
 	public void dataset(Glyphset<?,?> data, Aggregator<?,?> aggregator, Transfer<?,?> transfer) {
 		hosted.dataset(data, aggregator, transfer);
 		overlay.clear();
 	}
 	
-	public Aggregator<?, ?> aggregator() {return hosted.aggregator();}
-	public Renderer renderer() {return hosted.renderer();}
+	@Override public Aggregator<?, ?> aggregator() {return hosted.aggregator();}
+	@Override public Renderer renderer() {return hosted.renderer();}
 
-	public void zoomFit() {hosted.zoomFit();}
-	public AffineTransform viewTransform() {return hosted.viewTransform();}
-	public AffineTransform renderTransform() {return hosted.renderTransform();}
-	public void viewTransform(AffineTransform vt, boolean provisional) {hosted.viewTransform(vt, provisional);}
-	public Rectangle2D dataBounds() {return hosted.dataBounds();}
+	@Override public void zoomFit() {hosted.zoomFit();}
+	@Override public AffineTransform viewTransform() {return hosted.viewTransform();}
+	@Override public AffineTransform renderTransform() {return hosted.renderTransform();}
+	@Override public void viewTransform(AffineTransform vt, boolean provisional) {hosted.viewTransform(vt, provisional);}
+	@Override public Rectangle2D dataBounds() {return hosted.dataBounds();}
 
 	private static final int borderSize = 5;
 	private static BufferedImage makeImage(int size, Color stripes, Color spaces) {
@@ -250,6 +258,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 							new ImageIcon(makeImage(borderSize+2, new Color(255,140,0), Util.CLEAR))));
 		}
 		
+		@Override
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2= (Graphics2D) g;
@@ -263,6 +272,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			if (provisional != null) {g2.draw(vt.createTransformedShape(provisional));}
 		}
 
+		@Override
 		public void clear() {
 			this.selected = null;
 			this.provisional = null;
@@ -274,6 +284,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 		 * @param bounds Selection bounds in screen-space
 		 * @param provisional Flag passed bounds as provisional selection
 		 ***/
+		@Override
 		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove) {
 			
 			try	{
@@ -308,17 +319,20 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	}
 	
 	/**Interface indicating a thing has a selection region associated with it.**/
-	private interface Selectable {
+	public interface Selectable {
 		public void clear();
 		public void modSelection(Rectangle2D bounds, boolean provisional, boolean remove);
 	}
 
-	private final static class AdjustRange implements MouseListener, MouseMotionListener {
+	public final static class AdjustRange implements MouseListener, MouseMotionListener {
 		Point2D start;
 		final Selectable target;
 		public AdjustRange(Selectable target) {this.target = target;}
 
-		public void mousePressed(MouseEvent e) {start = e.getPoint();}
+		@Override public void mousePressed(MouseEvent e) {start = e.getPoint();}
+		@Override public void mouseClicked(MouseEvent e) {target.clear();}
+	
+		@Override 
 		public void mouseReleased(MouseEvent e) {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);
@@ -328,7 +342,8 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			start = null;
 		}
 		
-		public void mouseClicked(MouseEvent e) {target.clear();}
+		
+		@Override 
 		public void mouseDragged(MouseEvent e) {
 			if (start != null) {
 				Rectangle2D bounds =bounds(e);				
@@ -350,9 +365,9 @@ public class EnhanceHost extends ARComponent.Aggregating {
 			return new Rectangle2D.Double(x,y,w,h);
 		}
 		
-		public void mouseMoved(MouseEvent e) {}
-		public void mouseEntered(MouseEvent e) {}
-		public void mouseExited(MouseEvent e) {}
+		@Override public void mouseMoved(MouseEvent e) {}
+		@Override public void mouseEntered(MouseEvent e) {}
+		@Override public void mouseExited(MouseEvent e) {}
 	}
 	
 	/**Toggle control for the given overlay.**/

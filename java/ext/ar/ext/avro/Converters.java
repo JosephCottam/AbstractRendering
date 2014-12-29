@@ -3,6 +3,7 @@ package ar.ext.avro;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -11,6 +12,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
+import ar.util.Util;
 
 public class Converters {
 	public static class ToCount implements Valuer<GenericRecord, Integer> {
@@ -38,6 +40,8 @@ public class Converters {
 	 */	
 	public static class ToCoC implements Valuer<GenericRecord, CategoricalCounts<String>> {
 		private static final long serialVersionUID = 2979290290172689482L;
+		private static final Comparator<String> COMP = new Util.ComparableComparator<>();
+		
 
 		public CategoricalCounts<String> value(GenericRecord from) {
 			List<?> ks = (List<?>) from.get("keys");
@@ -48,7 +52,7 @@ public class Converters {
 				keys.add(ks.get(i).toString());
 			}
 			
-			return CategoricalCounts.make(keys, vs);			
+			return CategoricalCounts.make(keys, vs, COMP);			
 		}
 	}
 	

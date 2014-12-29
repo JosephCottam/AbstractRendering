@@ -131,7 +131,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 		@Override public ContourAggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {
 			Aggregates<? extends N> padAggs = new PadAggregates<>(aggregates, null);  
 
-			Aggregates<Boolean> isoDivided = rend.transfer(padAggs, new ISOBelow<>(threshold));
+			Aggregates<Boolean> isoDivided = rend.transfer(padAggs, new ISOBelow<N>(threshold));
 			Aggregates<MC_TYPE> classified = rend.transfer(isoDivided, new MCClassifier());
 			Shape s = Assembler.assembleContours(classified, isoDivided);
 			GlyphList<Shape, N> contours = new GlyphList<>();

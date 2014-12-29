@@ -16,12 +16,18 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.axis.Axis;
+import ar.util.axis.DescriptorPair;
 
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
+ * 
+ * 
+ * TODO: Replace 'Indexed' and 'Converter' to a RecordCreator of some sort.  The default one is essentially Converter, but sometimes that cost does not need to paid  
+ * 
  */
 public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip by default.  Captured at object creation time.**/
@@ -50,6 +56,11 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	private long size =-1;
 	private Rectangle2D bounds;
 
+	/**When true, only reports errors to standard error.
+	 * When false (default), throws exceptions.  
+	 */
+	private final boolean report_only; 
+	
 		
 	/**
 	 * @param source File to pull from 
@@ -59,8 +70,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	 * @param valuer
 	 */
 	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd) {
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1, false);}
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd, boolean report_only) {
 		this.source = source;
 		this.delimiter = delimiter;
 		this.types = types;
@@ -69,16 +80,18 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		this.valuer = valuer;
 		this.segStart = segStart;
 		this.segEnd = segEnd;
+		this.report_only = report_only;
 	}
 
-	
+	/**Get an instance with a (potentially) different error response style.**/
+	public DelimitedFile<G,I> reportOnly(boolean report) {
+		if (report_only == report) {return this;}
+		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, segStart, segEnd, report);
+	}
 
-	
 	@Override
 	public Rectangle2D bounds() {
-		if (bounds == null) {
-			bounds = bounds(2);
-		}
+		if (bounds == null) {bounds = bounds(2);}
 		return bounds;
 	}
 	
@@ -96,7 +109,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		long low = stride*segId;
 		long high = Math.min(low+stride, source.length());
 
-		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high);
+		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high, report_only);
 	}
 	
 	@Override public boolean isEmpty() {return source.length() == 0;}
@@ -111,7 +124,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 				size=0;
 				while(r.readLine() != null) {size++;}
 			} catch (IOException e) {
-				throw new RuntimeException("Error processing file: " + source.getName());
+				throw new RuntimeException("Error processing file: " + source.getName(), e);
 			}
 		}
 		size = size-skip;
@@ -166,19 +179,30 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 			if (cached != null) {return;}
 			if (segEnd > 0 && charsRead > segEnd) {return;}
 			
-			List<String> next;
+			List<String> next = null;
 			try {next = base.read();}
-			catch (IOException e) {throw new RuntimeException(String.format("Error reading around character %d of %s.", charsRead, source.getName()), e);}
+			catch (IOException e) {
+				String msg = String.format("Error reading around character %d of %s.", charsRead, source.getName());
+				if (report_only) {System.err.println(msg);}
+				else {throw new RuntimeException(msg, e);}
+			}
 			if (next == null) {return;}
 			
 			try {
 				for (String s: next) {charsRead += s==null ? 0 : s.length();} //TODO: Probably not the fastest way to do this...
 				Indexed base = conv.applyTo(new Indexed.ListWrapper(next));
 				cached = new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
-			} catch (Exception e) {throw new RuntimeException(String.format("Error constructing glyph around character %d of %s", charsRead, source.getName()), e);}
+			} catch (Exception e) {
+				String msg = String.format("Error constructing glyph around character %d of %s", charsRead, source.getName());
+				if (report_only) {System.err.println(msg);}
+				else {throw new RuntimeException(msg, e);}
+			}
 		}
 
 		@Override public void remove() {throw new UnsupportedOperationException();}
 	}
 	
+	private DescriptorPair axisDescriptor;
+	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
 }
