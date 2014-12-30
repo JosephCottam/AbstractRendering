@@ -8,6 +8,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
+import ar.rules.combinators.Split.Merge;
 import ar.util.Util;
 
 
@@ -15,19 +16,59 @@ import ar.util.Util;
  * These are used internally by various renderers and probably only
  * need to be used if you are implementing a renderer.*/
 public class AggregationStrategies {
-	/**Combine two aggregate sets according to the passed reducer.
+	
+	/**Take a set of aggreagtes on the left and on the right, combine them with the merge.
+	 * 
+	 * This method differs from HorizontalRollup in that horizontal rollup in to significant ways.
+	 * First, rollup assumes that left, right and end result are all of the same type, enabling certain optimizations.
+	 * Second, rollup may destructively **modify** one of the passed aggregates. 
+	 * 
+	 * @param left
+	 * @param right
+	 * @param merge
+	 * @return
+	 */
+	public static <L,R,OUT> Aggregates<OUT> horizontalMerge(Aggregates<L> left, Aggregates<R> right, Merge<L,R,OUT> merge) {
+		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
+		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+		Rectangle bounds = rb.union(lb);
+
+		Aggregates<OUT> target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 
+													(int) bounds.getMaxX(), (int) bounds.getMaxY(),
+													merge.identity());
+
+		OUT identity = merge.identity();
+		for (int x=Math.max(0, target.lowX()); x<target.highX(); x++) {
+			for (int y=Math.max(0, target.lowY()); y<target.highY(); y++) {
+				L l = left.get(x,y);
+				R r = right.get(x,y);
+				OUT v = merge.merge(l, r);
+				if (Util.isEqual(identity, v)) {continue;}
+				target.set(x,y, v); 
+			}
+		}
+		return target;
+	}
+	
+	
+	/**Combine two aggregate sets according to the passed reducer. 
+	 * Aligns coordinates between the two sets. 
 	 * 
 	 * The resulting aggregate set will have a realized subset region sufficient to
 	 * cover the realized subset region of both source aggregate sets (regardless of 
 	 * the values found in those sources).  If one of the two aggregate sets provided
 	 * is already of sufficient size, it will be used as both a source and a target.
+	 * Therefore, this may involve a **DESTRUCTIVE** update of one of the sets of aggregates.
 	 * 
+	 * 
+	 * TODO: Move to GlyphParallelAggregation task with Java8 and hide.  Replace current other uses with horizontalMerge   
 	 * 
 	 * @param left Aggregate set to use for left-hand arguments
 	 * @param right Aggregate set to use for right-hand arguments
 	 * @param red Reduction operation
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
+	@Deprecated
 	public static <T> Aggregates<T> horizontalRollup(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}

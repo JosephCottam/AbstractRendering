@@ -69,7 +69,16 @@ public class Split<IN,L,R,OUT> implements Transfer<IN,OUT> {
     }
     
 
-    /**Operator to merge the left and right sides.**/
+    /**Operator to merge a single value from a left-side aggregate and
+     * a single value from a right-side aggregate.
+     * 
+     * TODO: Investigate this WRT the merge in Fan.  
+     *       Maybe make into merge(Aggregates<L> and Aggregates<R>) with a
+     *       default implementation that iterates the space and calls mergeOne on each L/R.
+     *       But that might cause problems with vectorization by loop-in-loop issues.
+     * TODO: Can an aligned flattening be expressed in java?  That might allow vectorization or at least reduce loop issues....  
+     * 
+     * **/
     public static interface Merge<L,R,OUT>  {
     	public OUT merge(L left, R right);
     	public OUT identity();
