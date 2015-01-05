@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import ar.Aggregates;
 import ar.Glyphset;
@@ -18,6 +19,7 @@ import ar.glyphsets.GlyphList;
 import ar.glyphsets.SimpleGlyph;
 import ar.rules.combinators.Fan;
 import ar.util.Util;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.Iterator2D;
 
 //Base algorithm: http://en.wikipedia.org/wiki/Marching_squares 
@@ -64,6 +66,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			@Override public ContourAggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {
 				Single<N>[] ts = LocalUtils.stepTransfers(contourLevels, fill);				
 				Transfer.Specialized<N,N> t = new Fan.Specialized<>(
+						aggregates.defaultValue(),
 						new MergeContours<N>(aggregates.defaultValue()), 
 						ts,
 						aggregates);
@@ -104,6 +107,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			@Override public ContourAggregates<N> process(Aggregates<? extends N> aggregates, Renderer rend) {
 				Single<N>[] ts = LocalUtils.stepTransfers(contourLevels, fill);				
 				Transfer.Specialized<N,N> t = new Fan.Specialized<>(
+						aggregates.defaultValue(),
 						new MergeContours<N>(aggregates.defaultValue()), 
 						ts,
 						aggregates);
@@ -492,23 +496,24 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 	 * 
 	 * TODO: Verify or enforce contour sorting...
 	 * **/
-	public static final class MergeContours<A> implements Fan.Merge<A> {
-		private final Fan.Merge<A> base;
-		public MergeContours(A defaultValue) {
-			this.base = new Fan.AggregatorMerge<>(new General.Last<A>(defaultValue));
+	public static final class MergeContours<A> implements BiFunction<Aggregates<A>,Aggregates<A>,Aggregates<A>> {
+		private final BiFunction<A,A,A> base;
+		private final A empty;
+		
+		public MergeContours(A empty) {
+			this.base = (left, right) -> right;
+			this.empty = empty;
 		}
 		
 		@Override
-		public Aggregates<A> merge(Aggregates<A> left, Aggregates<A> right) {
-			Aggregates<A> raw = base.merge(left, right);
+		public Aggregates<A> apply(Aggregates<A> left, Aggregates<A> right) {
+			Aggregates<A> raw = AggregateUtils.alignedMerge(left, right, empty, base);
 			GlyphList<Shape, A>  contours = new GlyphList<>();
 			
 			if (left instanceof ContourAggregates) {contours.addAll(((ContourAggregates<A>) left).contours);}
 			if (right instanceof ContourAggregates) {contours.addAll(((ContourAggregates<A>) right).contours);}
 			return new ContourAggregates<>(raw, contours);
-		}
-
-		@Override public A identity() {return base.identity();}		
+		}	
 	}
 	
 	public static final class ContourAggregates<A> implements Aggregates<A> {

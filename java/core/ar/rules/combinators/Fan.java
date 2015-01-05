@@ -1,37 +1,42 @@
 package ar.rules.combinators;
 
+import java.util.function.BiFunction;
+
 import ar.Aggregates;
-import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.renderers.AggregationStrategies;
+import ar.aggregates.AggregateUtils;
 
-/**Split (arbitrary width), then merge...
+/**Split (arbitrary width), apply transfer and merge results.
  * 
- * All branches have to produce the same type...
+ * The aggregates are passed to each transfer function in the list
+ * Order of execution and merge is unspecified.
+ * 
+ * All branches have to produce the same type of aggregates.
  * **/
 public class Fan<IN,OUT> implements Transfer<IN,OUT> {
     protected final Transfer<IN,OUT>[] transfers;
-    protected final Merge<OUT> merge;
+    protected final BiFunction<Aggregates<OUT>,Aggregates<OUT>,Aggregates<OUT>> merge;
+    protected final OUT empty;
 
+    /**@param empty The empty value on the transfer
+     * @param merge Operation to merge two sets of aggregates
+     * @param transfers Transfers to apply.
+     */
     @SafeVarargs
-    public Fan(Merge<OUT> merge, Transfer<IN, OUT>... transfers) {
+    public Fan(OUT empty, BiFunction<Aggregates<OUT>,Aggregates<OUT>,Aggregates<OUT>> merge, Transfer<IN, OUT>... transfers) {
         this.transfers = transfers;
         this.merge = merge;
+        this.empty = empty;
     }
-    
-    @SafeVarargs
-    public Fan(Aggregator<?, OUT> aggregator, Transfer<IN, OUT>... transfers) {
-        this.transfers = transfers;
-        this.merge = new AggregatorMerge<>(aggregator);
-    }
+
     
     @Override
-    public OUT emptyValue() {return merge.identity();}
+    public OUT emptyValue() {return empty;}
 
     @Override
     public Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized<>(merge, transfers, aggregates);
+        return new Specialized<>(empty, merge, transfers, aggregates);
     }
     
 
@@ -42,10 +47,11 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
 
         @SuppressWarnings("unchecked")
 		public Specialized(
-                Merge<OUT> merge,
+				OUT empty, 
+                BiFunction<Aggregates<OUT>,Aggregates<OUT>,Aggregates<OUT>> merge,
                 Transfer<IN, OUT>[] transfers,
                 Aggregates<? extends IN> aggs) {
-            super(merge, transfers);
+            super(empty, merge, transfers);
             
             specialized = new Transfer.Specialized[transfers.length]; 
             for (int i=0; i< transfers.length; i++) {
@@ -58,39 +64,27 @@ public class Fan<IN,OUT> implements Transfer<IN,OUT> {
         	Aggregates<OUT> left = rend.transfer(aggregates, specialized[0]);
         	for (int i=1; i<specialized.length; i++) {
         		Aggregates<OUT> right = rend.transfer(aggregates, specialized[i]);
-        		left = merge.merge(left, right);
+        		left = merge.apply(left, right);
         	}
         	return left;
         }
     }
     
-    /**Extension of the Aggregator merging concept to work at the aggregates level,
-     * not the individual aggregate value level.  This is may be used to preserve metadata.
+    /**Utility to convert an element-wise function into a merge of a full set of aggregates.
      * 
-     * WARNING: The existing types system does not guarantee a specific aggregates-set type at any time.
-     * Therefore, if merging is aggregates-type specific, tests MUST be made and unexpected aggregates-set
-     * types should not result in an exception. 
+     * NOTE: Default value is pulled from left argument, so the left argument must be built
+     * with the default value from the transfer.  
      * 
-     * TODO: Investigate adding the aggregates type as a parameter...probably requires having transfers parameterized by aggregate return type as well...
-     * TODO: Should this interface be pushed back into the Aggregator, and item-wise aggregation be a special case?  (Similar to Transfer.Specialized vs Transfer.ItemWise).
-     * TODO: Investigate merge into a new type...merge(AGG1 acc, AGG2 new)
-     * TODO: Investigate this WRT the merge in Split  
-     */
-    public static interface Merge<A>  {
-    	public Aggregates<A> merge(Aggregates<A> left, Aggregates<A> right);
-    	public A identity();
-    }
-
-    /**Simple wrapper for an aggregator's 'rollup' to be used as the merge strategy.**/
-    public static class AggregatorMerge<A> implements Merge<A> {
-    	protected final Aggregator<?, A> aggregator;    	
-    	public AggregatorMerge(Aggregator<?, A> aggregator) {this.aggregator = aggregator;}
-		@Override public A identity() {return aggregator.identity();}
+     * TODO: Should this live in aggregateUtils instead?
+     * **/
+    public static final class AlignedMerge<A> implements BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> {
+    	private final BiFunction<A,A,A> base;
+    	
+    	public AlignedMerge(BiFunction<A,A,A> base) {this.base = base;}
 		
-		@Override
-		public Aggregates<A> merge(Aggregates<A> left, Aggregates<A> right) {
-    		return AggregationStrategies.horizontalRollup(left, right, aggregator);
+    	@Override
+		public Aggregates<A> apply(Aggregates<A> l, Aggregates<A> r) {
+    		return AggregateUtils.alignedMerge(l,r, l.defaultValue(), base);
 		}
     }
-
 }

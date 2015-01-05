@@ -18,7 +18,6 @@ import ar.Transfer.ItemWise;
 import ar.Transfer.Specialized;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SingletonGlyphset;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
 import ar.renderers.SerialRenderer;
 import ar.util.Util;
@@ -95,7 +94,7 @@ public class RDDRender implements Serializable, Renderer {
 
 		public Aggregates<V> call(Aggregates<V> left, Aggregates<V> right)
 				throws Exception {
-			return AggregationStrategies.horizontalRollup(left, right, aggregator);
+			return AggregateUtils.__unsafeMerge(left, right, aggregator);
 		}
 	}
 	

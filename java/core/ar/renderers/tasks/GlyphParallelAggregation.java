@@ -13,7 +13,6 @@ import ar.Selector;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.TouchedBoundsWrapper;
-import ar.renderers.AggregationStrategies;
 import ar.renderers.ProgressReporter;
 import ar.util.Util;
 
@@ -96,7 +95,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregates<A> aggs;
 		
 		try {
-			aggs = AggregationStrategies.horizontalRollup(top.get(), bottom.get(), op);
+			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op);
 			//System.out.printf("%s\n%s\n%s\n------------------\n", AggregateUtils.bounds(top.get()),AggregateUtils.bounds(bottom.get()),AggregateUtils.bounds(aggs));
 		}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}

@@ -16,8 +16,8 @@ import java.io.Serializable;
 public interface Aggregator<IN,OUT> extends Serializable {
 	
 	/**
-	 * Compute an aggregate value from an existing aggregate values and a 
-	 * new input values.  If the return value is not equal-to "current,"
+	 * Compute an aggregate value from an existing aggregate value and 
+	 * an input values.  If the return value is not equal-to "current,"
 	 * the return value must be a distinct object from "current" to ensure correct behavior
 	 * (i.e., don't mutate current, even if its possible).
 	 * 
@@ -48,7 +48,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * This method is used to initialize the aggregate set in many circumstances.
 	 * Because of aggregate reducers, this initial value needs to 
 	 * be an identity (thus the name).  However, not all renderers rely on this
-	 * property (for example, pixel-serial rendering just uses it for the background).
+	 * property (for example, pixel-serial rendering just uses it for the ag).
 	 **/
 	public OUT identity();
 }

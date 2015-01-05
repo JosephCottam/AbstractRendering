@@ -1,5 +1,7 @@
 package ar.rules.combinators;
 
+import java.util.function.BiFunction;
+
 import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -26,8 +28,11 @@ public class Combinators {
 
 	
 	/**Create a split**/
-	public static <IN,L,R,OUT> Transfer<IN,OUT> split(Transfer<IN,L> l, Transfer<IN,R> r, ar.rules.combinators.Split.Merge<L,R,OUT> merge) {
-		return new Split<>(l, r, merge);
+	public static <IN,L,R,OUT> Transfer<IN,OUT> split(
+			Transfer<IN,L> l, Transfer<IN,R> r, 
+			OUT defVal, 
+			BiFunction<L,R,OUT> merge) {
+		return new Split<>(l, r, defVal, merge);
 	}
 	
 	public static <IN,OUT> If<IN,OUT> choose(Valuer<IN, Boolean> p, Transfer<IN,OUT> consq, Transfer<IN,OUT> alt) {

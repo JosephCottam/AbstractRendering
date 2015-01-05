@@ -11,10 +11,10 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.AggregationStrategies;
 import ar.rules.General;
 
 public class TileUtils {
@@ -79,7 +79,7 @@ public class TileUtils {
 		for (int level=levels-1; level>=0; level--) {
 			File levelRoot = extend(outputRoot, Integer.toString(level), "");
 			makeTiles(running, levelRoot, tileWidth, tileHeight);
-			running = AggregationStrategies.verticalRollup(running, red,2);
+			running = AggregateUtils.coarsen(running, red,2);
 		}
 	}
 	
@@ -91,7 +91,7 @@ public class TileUtils {
 		Aggregator<A,A> red = new General.Echo<A>(null);
 		for (File file: files) {
 			Aggregates<A> aggs = AggregateSerializer.deserialize(file, converter);
-			acc = AggregationStrategies.horizontalRollup(acc, aggs, red);
+			acc = AggregateUtils.__unsafeMerge(acc, aggs, red);
 		}
 		return acc;
 	}

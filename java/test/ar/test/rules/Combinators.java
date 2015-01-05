@@ -14,7 +14,6 @@ import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ParallelRenderer;
 import ar.rules.General;
-import ar.rules.Numbers;
 import ar.rules.combinators.*;
 
 public class Combinators {
@@ -102,10 +101,27 @@ public class Combinators {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
 		
 				
-		Transfer.Specialized<Integer, Integer> t = new Fan<>(new Numbers.Count<>(), ts).specialize(a);
+		Transfer.Specialized<Integer, Integer> t = new Fan<>(0, new Fan.AlignedMerge<>((l,r) -> (l+r)), ts).specialize(a);
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
+		assertTrue("Bluk test", p.value(rslt));
+	}
+	
+	@Test
+	public void Split() {
+		Transfer<Integer, Integer> left = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(1), 0);
+		Transfer<Integer, Integer> right = new General.ValuerTransfer<>(new MathValuers.AddInt<Integer>(2), 0);
+		
+		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
+				
+		Transfer.Specialized<Integer, Integer> t = 
+				new Split<Integer, Integer, Integer, Integer>(left, right, 0, (l,r) -> (l+r))
+				.specialize(a);
+		
+		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
+		
+		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
 		assertTrue("Bluk test", p.value(rslt));
 	}
 

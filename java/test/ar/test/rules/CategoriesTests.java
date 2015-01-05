@@ -7,8 +7,8 @@ import org.junit.Test;
 import java.awt.Color;
 
 import ar.Aggregates;
+import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.RefFlatAggregates;
-import ar.renderers.AggregationStrategies;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.util.Util;
@@ -24,7 +24,7 @@ public class CategoriesTests {
 		coc = coc.extend(Color.RED, 2);
 		Aggregates<CategoricalCounts<Color>> aggs = new RefFlatAggregates<CategoricalCounts<Color>>(10,10,coc);
 		
-		aggs = AggregationStrategies.horizontalRollup(aggs, aggs, counter);
+		aggs = AggregateUtils.__unsafeMerge(aggs, aggs, counter);
 		
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 			for (int y=aggs.lowY(); y<aggs.highY(); y++) {

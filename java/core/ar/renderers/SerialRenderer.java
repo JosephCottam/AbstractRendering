@@ -14,7 +14,7 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 
 /**Simple renderer that implements the basic abstract rendering algorithm.
- * This class is largely for reference.  In most cases, a parallel renderer is better.
+ * This class is largely for reference.  In almost all cases, a parallel renderer is better.
  * **/
 public final class SerialRenderer implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;

@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -717,7 +718,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			if (subsequent == null) {
 				return t;
 			} else {
-				return new Fan(new BlendLeftOver(), t, subsequent);
+				return new Fan(Util.CLEAR, new BlendLeftOver(), t, subsequent);
 			}
 		}
 		@Override public String toString() {return "Edge Boost (*)";}
@@ -755,7 +756,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			if (subsequent == null) {
 				return t;
 			} else {
-				return new Fan(new BlendLeftOver(), t, subsequent);
+				return new Fan(Util.CLEAR, new BlendLeftOver(), t, subsequent);
 			}
 		}
 		
@@ -784,16 +785,16 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	}
 	
 	/**Blends two colors per alpha composition 'over' rule with the left on top.**/ 
-	private static final class BlendLeftOver implements Fan.Merge<Color> {
+	private static final class BlendLeftOver implements BiFunction<Aggregates<Color>, Aggregates<Color>, Aggregates<Color>> {
 
 		@Override
-		public Aggregates<Color> merge(Aggregates<Color> left, Aggregates<Color> right) {
+		public Aggregates<Color> apply(Aggregates<Color> left, Aggregates<Color> right) {
 			final int lowX = Math.min(left.lowX(), right.lowX());
 			final int lowY = Math.min(left.lowY(), right.lowY());
 			final int highX = Math.max(left.highX(), right.highX());
 			final int highY = Math.max(left.highY(), right.highY());
 			
-			Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, identity());
+			Aggregates<Color> out = AggregateUtils.make(lowX, lowY, highX, highY, Util.CLEAR);
 			for (int x=lowX; x<highX; x++) {
 				for (int y=lowY; y<highY; y++) {
 					Color over = left.get(x,y);
@@ -807,8 +808,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			}
 			return out;
 		}
-
-		@Override public Color identity() {return Util.CLEAR;}			
 	}
 	
 	

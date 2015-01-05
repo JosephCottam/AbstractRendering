@@ -4,9 +4,14 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
 
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.aggregates.implementations.*;
+import ar.util.Util;
 
 /**Utilities for working with aggregates.
  * 
@@ -49,6 +54,133 @@ public class AggregateUtils {
 			}			
 		}
 		return i;
+	}
+	
+
+	/**Merge two sets of aggregates according to some function. 
+	 * The results in position (x,y) is derived from position (x,y) in both 
+	 * input aggregates.  Therefore, the result with have bounds sufficient to
+	 * enclose both input sets. 
+	 *   
+	 * @param left Set of aggregates to use as the first argument to the merge operator.
+	 * @param right Set of aggregates to use as the second argument to the merge operator
+	 * @param op Merge operator
+	 * @param defVal Default value for results aggregates.
+	 * @return Results of the merge.
+	 */
+	public static <L,R,OUT> Aggregates<OUT> alignedMerge(
+								Aggregates<L> left, 
+								Aggregates<R> right,
+								OUT defVal,
+								BiFunction<L,R,OUT> op) {
+		
+		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
+		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+		Rectangle bounds = rb.union(lb);
+
+		Aggregates<OUT> target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 
+													(int) bounds.getMaxX(), (int) bounds.getMaxY(),
+													defVal);
+
+		for (int x=Math.max(0, target.lowX()); x<target.highX(); x++) {
+			for (int y=Math.max(0, target.lowY()); y<target.highY(); y++) {
+				L l = left.get(x,y);
+				R r = right.get(x,y);
+				OUT v = op.apply(l, r);
+				if (Util.isEqual(defVal, v)) {continue;}
+				target.set(x,y, v); 
+			}
+		}
+		return target;
+	}
+	
+	/**FOR INTERNAL USE ONLY.  Aligned merge two sets of aggregaets...possibly modifying one of them.
+	 * Can only be used if BOTH sets of aggregates are only held in the current scope AND
+	 * going out of scope immediately after the merge.  
+	 * 
+	 * Combine two aggregate sets according to the passed reducer. 
+	 * Aligns coordinates between the two sets. 
+	 * 
+	 * The resulting aggregate set will have a realized subset region sufficient to
+	 * cover the realized subset region of both source aggregate sets (regardless of 
+	 * the values found in those sources).  If one of the two aggregate sets provided
+	 * is already of sufficient size, it will be used as both a source and a target.
+	 * Therefore, this may involve a **DESTRUCTIVE** update of one of the sets of aggregates.
+	 * 
+	 * @param left Aggregate set to use for left-hand arguments
+	 * @param right Aggregate set to use for right-hand arguments
+	 * @param red Reduction operation
+	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
+	 */
+	public static <T> Aggregates<T> __unsafeMerge(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
+		if (left == null) {return right;}
+		if (right == null) {return left;}
+
+		T identity = red.identity();
+
+		if ((left instanceof ConstantAggregates) && Util.isEqual(identity, left.defaultValue())) {return right;}
+		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return left;}
+
+		List<Aggregates<T> >sources = new ArrayList<Aggregates<T>>();
+		Aggregates<T> target;
+		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
+		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+		Rectangle bounds = rb.union(lb);
+
+		if (lb.contains(bounds)) {
+			target = left;
+			sources.add(right);
+		} else if (rb.contains(bounds)) {
+			target = right;
+			sources.add(left);
+		} else {
+			sources.add(left);
+			sources.add(right);
+			target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 
+					(int) bounds.getMaxX(), (int) bounds.getMaxY(), red.identity());
+		}
+	
+		for (Aggregates<T> source: sources) {
+			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
+				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
+					T newVal = source.get(x,y);
+					if (Util.isEqual(identity, newVal)) {continue;}
+					T comb = red.rollup(target.get(x,y), source.get(x,y));
+					target.set(x,y, comb); 
+				}
+			}
+		}
+		return target;
+	}
+	
+	/**Create a new set of aggregates with smaller bounds
+	 * by making each cell in the new aggregates cover multiple cells
+	 * in the old aggregates. 
+	 * 
+	 * TODO: Add fractional value support via a fractioner function
+	 * TODO: Provide selector-like functionality
+	 * 
+	 * @param factor Requested roll-up factor (each output cell is a factorxfactor region of the input) 
+	 * **/
+	public static <T> Aggregates<T> coarsen(Aggregates<T> start, Aggregator<?,T> red, double factor) {
+		int size = (int) Math.round(factor);
+		if (size < 1) {return start;}
+		Aggregates<T> end = AggregateUtils.make(start.lowX()/size, start.lowY()/size, start.highX()/size, start.highY()/size, red.identity());
+
+		for (int x = start.lowX(); x < start.highX(); x=x+size) {
+			for (int y=start.lowY(); y < start.highY(); y=y+size) {
+				
+				T acc = red.identity();
+				for (int xx=0; xx<size; xx++) {
+					for (int yy=0; yy<size; yy++) {
+						acc = red.rollup(acc, start.get(x+xx,y+yy));
+					}
+				}
+
+				end.set(x/size, y/size, acc);
+			}
+		}
+		return end;
 	}
 	
 	/**Make a new set of aggregates with the same values in the same positions as the old one.

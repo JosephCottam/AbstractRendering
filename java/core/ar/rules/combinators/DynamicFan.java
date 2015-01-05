@@ -1,53 +1,63 @@
 package ar.rules.combinators;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import ar.Aggregates;
-import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
-import ar.rules.combinators.Fan.Merge;
-import ar.rules.combinators.Fan.AggregatorMerge;
+import ar.aggregates.AggregateUtils;
 
 /**Split into a number paths based on a function then merge...
  * All branches will have the same transfer applied to them.
+ * 
+ * This is a data-driven fan.  
+ * For comparison, the vanilla Fan width is determined by the number of transfers passed.
+ * 
+ * @param IN Aggregates at input
+ * @param BRANCH Aggregates type in each branch of the fan
+ * @param MID Aggregates type post transfer application in each branch 
+ * @param OUT Aggregates type of the (merged) result 
  * **/
-public class DynamicFan<IN,SPLIT,OUT> implements Transfer<IN,OUT> {
-    protected final Transfer<SPLIT,OUT> transfer;
-    protected final Merge<OUT> merge;
-    protected final Split<IN, SPLIT> split;
+public class DynamicFan<IN,BRANCH,MID,OUT> implements Transfer<IN,OUT> {
+    protected final Transfer<BRANCH, MID> transfer;
+    protected final Function<Aggregates<? extends IN>, Aggregates<BRANCH>[]> splitter;
+    protected final BiFunction<OUT, MID, OUT> merge;
+    protected final OUT empty;
 
-    public DynamicFan(Split<IN, SPLIT> split, Transfer<SPLIT, OUT> transfer, Merge<OUT> merge) {
+    public DynamicFan(Transfer<BRANCH, MID> transfer,
+    				  Function<Aggregates<? extends IN>, Aggregates<BRANCH>[]> splitter,
+    				  OUT empty,
+    				  BiFunction<OUT, MID, OUT> merge) {
         this.transfer = transfer;
         this.merge = merge;
-        this.split = split;
+        this.splitter = splitter;
+        this.empty = empty;
     }
-    
-    public DynamicFan(Split<IN, SPLIT> split,  Transfer<SPLIT,OUT> transfer, Aggregator<?, OUT> aggregator) {
-    	this(split, transfer, new AggregatorMerge<>(aggregator));
-    }
-    
+        
     @Override
-    public OUT emptyValue() {return merge.identity();}
+    public OUT emptyValue() {return empty;}
 
     @Override
-    public Specialized<IN,SPLIT,OUT> specialize(Aggregates<? extends IN> aggregates) {
-        return new Specialized<>(split, transfer, merge, aggregates);
+    public Specialized<IN,BRANCH, MID, OUT> specialize(Aggregates<? extends IN> aggregates) {
+        return new Specialized<>(transfer, splitter, empty, merge, aggregates);
     }
     
 
-    public static class Specialized<IN,SPLIT,OUT> 
-    	extends DynamicFan<IN,SPLIT,OUT> implements Transfer.Specialized<IN,OUT> {
+    public static class Specialized<IN, BRANCH, MID, OUT> 
+    	extends DynamicFan<IN,BRANCH, MID, OUT> implements Transfer.Specialized<IN,OUT> {
     	
-        protected final Transfer.Specialized<SPLIT,OUT>[] specialized;
+        protected final Transfer.Specialized<BRANCH,MID>[] specialized;
 
         @SuppressWarnings("unchecked")
-		public Specialized(
-                Split<IN, SPLIT> split,
-                Transfer<SPLIT, OUT> transfer,
-                Merge<OUT> merge,
-                Aggregates<? extends IN> aggs) {
-            super(split, transfer, merge);
+		public Specialized(Transfer<BRANCH, MID> transfer,
+				  			Function<Aggregates<? extends IN>, Aggregates<BRANCH>[]> splitter,
+				  			OUT empty,
+				  			BiFunction<OUT, MID, OUT> merge,
+				  			Aggregates<? extends IN> aggs) {
+            super(transfer,  splitter, empty, merge);
             
-            Aggregates<SPLIT>[] splitAggs = split.split(aggs);
+            Aggregates<BRANCH>[] splitAggs = splitter.apply(aggs);
             
             specialized = new Transfer.Specialized[splitAggs.length]; 
             for (int i=0; i< splitAggs.length; i++) {
@@ -57,14 +67,14 @@ public class DynamicFan<IN,SPLIT,OUT> implements Transfer<IN,OUT> {
 
         @Override
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-            Aggregates<SPLIT>[] splitAggs = split.split(aggregates); 
+            Aggregates<BRANCH>[] splitAggs = splitter.apply(aggregates); 
 
-        	Aggregates<OUT> left = rend.transfer(splitAggs[0], specialized[0]);
-        	for (int i=1; i<specialized.length; i++) {
-        		Aggregates<OUT> right = rend.transfer(splitAggs[i], specialized[i]);
-        		left = merge.merge(left, right);
+            Aggregates<OUT> acc = AggregateUtils.make(1, 1, empty);
+        	for (int i=0; i<specialized.length; i++) {
+        		Aggregates<MID> right = rend.transfer(splitAggs[i], specialized[i]);
+        		acc = AggregateUtils.alignedMerge(acc, right, empty, merge);
         	}
-        	return left;
+        	return acc;
         }
     }
     

@@ -15,9 +15,9 @@ import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.aggregates.AggregateUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.AggregationStrategies;
 
 /**Receives Avro-encoded aggregates from a remote and combines them.
  *
@@ -77,7 +77,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = AggregationStrategies.horizontalRollup(aggs, item, reducer);
+				aggs = AggregateUtils.__unsafeMerge(aggs, item, reducer);
 			}
 		}
 		return aggs;
