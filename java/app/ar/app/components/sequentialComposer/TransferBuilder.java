@@ -68,7 +68,7 @@ public class TransferBuilder extends JPanel {
 	}
 	
 	public Transfer<?,?> transfer() {
-		List<OptionTransfer> transfers = new ArrayList<>();
+		List<OptionTransfer<?>> transfers = new ArrayList<>();
 		List<OptionTransfer.ControlPanel> panels = new ArrayList<>(); 
 		for (TransferRow tr: transferRows) {
 			if (!tr.enabled()) {continue;}

@@ -928,7 +928,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
     }
     
 	/**Convert a list of OptionTransfer items into a transfer.**/
-	public static Transfer<?,?> toTransfer(List<OptionTransfer> transferList, List<? extends ControlPanel> optionPanels) {
+	public static Transfer<?,?> toTransfer(List<OptionTransfer<?>> transferList, List<? extends ControlPanel> optionPanels) {
 		Transfer subsequent = null; 
 		for (int i=transferList.size()-1; i>=0; i--) {
 			OptionTransfer ot = transferList.get(i);

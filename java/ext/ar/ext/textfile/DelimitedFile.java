@@ -142,7 +142,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 				FileReader core = new FileReader(source);
 				//Get to the first record-start in the segment
 				core.skip(segStart);
-				base = new CsvListReader(core, CsvPreference.STANDARD_PREFERENCE);
+				CsvPreference pref = new CsvPreference.Builder('"', delimiter, CsvPreference.STANDARD_PREFERENCE.getEndOfLineSymbols()).build();
+				base = new CsvListReader(core, pref);
 
 				//Get to the first full record in the segment
 				if (segStart == 0) {

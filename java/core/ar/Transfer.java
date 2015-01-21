@@ -84,6 +84,11 @@ public interface Transfer<IN,OUT> extends Serializable {
 		 * @return Value that results in translating the input value at position x/y 
 		 */
 		public OUT at(int x, int y, Aggregates<? extends IN> input);
+		
+		@Override
+		public default Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			return rend.transfer(aggregates, this);
+		}
 	}
 	
 

@@ -12,24 +12,43 @@ import ar.util.axis.DescriptorPair;
 public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 
 	protected final Glyphset<G,I> base;
-	protected final Rectangle2D bound;
+	protected final Rectangle2D limitBound;
+	protected final boolean lazy;
+	protected Rectangle2D bounds;
 	
-	public BoundingWrapper(Glyphset<G,I> base, Rectangle2D bound) {
+
+	/**
+	 * Return only values from base that are within bound.
+	 * If lazy is set to false, the return from bounds() will be the maximum bound
+	 *   of data within the bounds of the the limitbound. Otherwise, bounds()
+	 *   is computed as the intersection of the limitbound and base.bounds(). 
+	 */
+	public BoundingWrapper(Glyphset<G,I> base, Rectangle2D limitBound, boolean lazy) {
 		this.base = base;
-		this.bound = bound;
+		this.limitBound = limitBound;
+		this.lazy = lazy;
 	}
+
+	public BoundingWrapper(Glyphset<G,I> base, Rectangle2D bound) {this(base, bound, true);}
 	
 	@Override
-	public Iterator<Glyph<G, I>> iterator() {return new BoundedIterator<>(base.iterator(), bound);}
+	public Iterator<Glyph<G, I>> iterator() {return new BoundedIterator<>(base.iterator(), limitBound);}
 
 	@Override
-	public boolean isEmpty() {return base.isEmpty() || !base.bounds().intersects(bound);}
+	public boolean isEmpty() {return base.isEmpty() || !base.bounds().intersects(limitBound);}
 
 	@Override
 	public Rectangle2D bounds() {
-		Rectangle2D r = new Rectangle2D.Double();
-		Rectangle2D.intersect(base.bounds(), bound, r);
-		return r;
+		if (bounds != null) {return bounds;}
+		Rectangle2D r;
+		if (lazy) { 
+			r = new Rectangle2D.Double();
+			Rectangle2D.intersect(base.bounds(), limitBound, r);
+		} else {
+			r = Util.bounds(this); 
+		}
+		this.bounds = r;
+		return bounds;
 	}
 
 	@Override
@@ -44,7 +63,7 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 	
 	@Override
 	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
-		return new BoundingWrapper<>(base.segmentAt(count, segId), bound);
+		return new BoundingWrapper<>(base.segmentAt(count, segId), limitBound);
 	}
 	
 	public Glyphset<G,I> base() {return base;}
