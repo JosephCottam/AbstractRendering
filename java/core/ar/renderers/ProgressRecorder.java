@@ -18,7 +18,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * If the task size is not known, then percent will return NaN.
  * Return of a negative number indicates tracking is not in progress.
  * **/
-public interface ProgressReporter {
+public interface ProgressRecorder {
+	/**Default reporting step.  Used as a default at construction time for classes defined in this interface.**/
+	public static final long DEFAULT_REPORT_STEP = 1_000_000;
+	
 	/**Indicate a certain number of expected steps have been taken.**/
 	public void update(long delta);
 	
@@ -40,7 +43,7 @@ public interface ProgressReporter {
 	
 	
 	/**Dummy progress recorder.  Always returns -1 for status inquiries.**/
-	public static final class NOP implements ProgressReporter {
+	public static final class NOP implements ProgressRecorder {
 		public NOP() {}
 
 		@Override public void update(long delta) {}
@@ -52,12 +55,13 @@ public interface ProgressReporter {
 	}
 	
 	/**Thread-safe progress reporter for.**/
-	public static final class Counter implements ProgressReporter {
+	public static final class Counter implements ProgressRecorder {
 		private final AtomicLong counter = new AtomicLong();
 		private long expected=1;
 		private final long reportStep;
 		private String message;
 		
+		public Counter() {this(DEFAULT_REPORT_STEP);}
 		public Counter(long reportStep) {this.reportStep = reportStep;}
 
 		@Override public void update(long delta) {counter.addAndGet(delta);}
@@ -74,9 +78,11 @@ public interface ProgressReporter {
 	}
 	
 	/**Wrap another reporter and show reports on standard out.**/
-	public static final class StdOut implements ProgressReporter {
-		private final ProgressReporter inner;
-		public StdOut(ProgressReporter reporter) {
+	public static final class StdOut implements ProgressRecorder {
+		private final ProgressRecorder inner;
+		
+		public StdOut() {this(new Counter());}
+		public StdOut(ProgressRecorder reporter) {
 			this.inner = reporter;
 		}
 

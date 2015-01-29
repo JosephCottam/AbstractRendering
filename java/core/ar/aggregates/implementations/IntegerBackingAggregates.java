@@ -5,7 +5,10 @@ import java.util.Arrays;
 
 import ar.aggregates.AggregateUtils;
 
-/**Set of color aggregates backed by a buffered image.**/
+/**Set of aggregates backed by ints.  Used for things
+ * that have a storage type of int, though a representation type
+ * might be different.  This includes colors and actual ints.
+ **/
 abstract class IntegerBackingAggregates implements Serializable {
 	protected final int[] values;
 	protected final Integer defVal;
@@ -23,14 +26,16 @@ abstract class IntegerBackingAggregates implements Serializable {
 		Arrays.fill(values, defVal);
 	}
 
-	public Integer getInt(int x, int y) {
+	public Integer getInteger(int x, int y) {return getInt(x,y);}
+	public int getInt(int x, int y) {
 		if (x<lowX || x >=highX || y<lowY || y>=highY) {return defVal;}
 		return values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)];
 	}
 
+	
 	public void set(int x, int y, Integer val) {
 		if (x<lowX || x >=highX || y<lowY || y>=highY) {return;}
-		values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)] = val;
+		values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)] = val.intValue();
 	}
 
 	public Integer defaultInt() {return defVal;}

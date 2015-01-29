@@ -3,7 +3,7 @@ package ar;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 
-import ar.renderers.ProgressReporter;
+import ar.renderers.ProgressRecorder;
 import ar.Selector;
 
 /**A renderer implements a strategy for converting glyphs (geometry+data) into images.
@@ -55,5 +55,5 @@ public interface Renderer extends Serializable {
 	 * 
 	 * @return The percent of predicted work that has been completed.
 	 */
-	public ProgressReporter progress();
+	public ProgressRecorder progress();
 }
