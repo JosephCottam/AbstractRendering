@@ -75,5 +75,5 @@ public final class SerialRenderer implements Renderer {
 		}
 	}
 	
-	@Override public ProgressRecorder progress() {return recorder;}
+	@Override public ProgressRecorder recorder() {return recorder;}
 }

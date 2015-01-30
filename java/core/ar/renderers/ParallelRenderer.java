@@ -127,5 +127,5 @@ public class ParallelRenderer implements Renderer {
 		}
 	}	
 	
-	public ProgressRecorder progress() {return recorder;}
+	public ProgressRecorder recorder() {return recorder;}
 }

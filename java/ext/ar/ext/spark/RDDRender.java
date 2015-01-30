@@ -79,7 +79,7 @@ public class RDDRender implements Serializable, Renderer {
 		return new SerialRenderer().transfer(aggregates, t);
 	}
 
-	@Override public ProgressRecorder progress() {return new ProgressRecorder.NOP();}
+	@Override public ProgressRecorder recorder() {return new ProgressRecorder.NOP();}
 
 	
 	

@@ -181,9 +181,7 @@ public class TransferDisplay extends ARComponent {
 			try {
 				Aggregates<?> aggs = aggregates;
 				if (aggs == null) {return;}
-				
-				long start = System.currentTimeMillis();
-				
+								
 				Transfer.Specialized ts = transfer.specialize((Aggregates) refAggregates());
 				postTransferAggregates = renderer.transfer(aggs, ts);
 				
@@ -195,11 +193,10 @@ public class TransferDisplay extends ARComponent {
 					image = null;
 				}
 				
-				long end = System.currentTimeMillis();
 				if (PERFORMANCE_REPORTING) {
 					Rectangle r = AggregateUtils.bounds(postTransferAggregates);
 					System.out.printf("%d ms (transfer on %d x %d grid)\n", 
-							(end-start), 
+							renderer.recorder().elapse(), 
 							Math.max(r.width, TransferDisplay.this.getWidth()), 
 							Math.max(r.height, TransferDisplay.this.getHeight()));
 				}

@@ -55,5 +55,5 @@ public interface Renderer extends Serializable {
 	 * 
 	 * @return The percent of predicted work that has been completed.
 	 */
-	public ProgressRecorder progress();
+	public ProgressRecorder recorder();
 }
