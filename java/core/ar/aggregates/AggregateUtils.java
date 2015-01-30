@@ -62,6 +62,8 @@ public class AggregateUtils {
 	 * input aggregates.  Therefore, the result with have bounds sufficient to
 	 * enclose both input sets. 
 	 *   
+	 * NOTE: Aligned merge is also the basis of aggregates differencing (aka, subtractive rendering)
+	 *   
 	 * @param left Set of aggregates to use as the first argument to the merge operator.
 	 * @param right Set of aggregates to use as the second argument to the merge operator
 	 * @param op Merge operator

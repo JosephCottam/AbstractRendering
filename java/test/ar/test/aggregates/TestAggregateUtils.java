@@ -16,7 +16,7 @@ import ar.test.AllEqual;
 
 public class TestAggregateUtils {
 	@Test
-	public void merge() {
+	public void alignedMerge() {
 		int width = 10;
 		int height = 10;
 		Aggregates<Integer> ten = new ConstantAggregates<Integer>(0,0,width,height, 10);
