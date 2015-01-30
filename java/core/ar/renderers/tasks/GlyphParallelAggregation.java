@@ -13,7 +13,7 @@ import ar.Selector;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.TouchedBoundsWrapper;
-import ar.renderers.ProgressReporter;
+import ar.renderers.ProgressRecorder;
 import ar.util.Util;
 
 public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>> {
@@ -29,7 +29,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	protected final AffineTransform view;
 	protected final Rectangle viewport;
 	protected final Aggregator<I,A> op;
-	protected final ProgressReporter recorder;
+	protected final ProgressRecorder recorder;
 	protected final Selector<G> selector;
 
 	public GlyphParallelAggregation(
@@ -39,7 +39,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregator<I,A> op,
 		AffineTransform view,
 		Rectangle viewport,
-		ProgressReporter recorder,
+		ProgressRecorder recorder,
 		int lowTask, int highTask, int totalTasks) {
 
 		this.glyphs = glyphs;

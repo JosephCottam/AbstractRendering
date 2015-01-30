@@ -120,6 +120,10 @@
         <fileset dir="${jars}" includes="*.jar"/>
       </classpath>
     </javadoc>
+
+
+    <zip destfile="ARSources.zip" basedir="${coreSrc}" />
+    <zip destfile="ARDocs.zip" basedir="${docs}" />
   </target>
 
   <target name="package" >

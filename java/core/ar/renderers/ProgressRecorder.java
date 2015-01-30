@@ -18,7 +18,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * If the task size is not known, then percent will return NaN.
  * Return of a negative number indicates tracking is not in progress.
  * **/
-public interface ProgressReporter {
+public interface ProgressRecorder {
+	/**Default reporting step.  Used as a default at construction time for classes defined in this interface.**/
+	public static final long DEFAULT_REPORT_STEP = 1_000_000;
+	
 	/**Indicate a certain number of expected steps have been taken.**/
 	public void update(long delta);
 	
@@ -27,6 +30,11 @@ public interface ProgressReporter {
 	
 	/**Set how many steps are expected; also clears the count.**/
 	public void reset(long expected);
+	
+	/**How much time has elapsed since the last reset (in ms)?
+	 * If reset has not been called, returns -1.
+	 * **/
+	public long elapse();
 	
 	/**At a best-effort, how often should reports be made?
 	 * If set to zero or less, then any unit will do.
@@ -39,12 +47,15 @@ public interface ProgressReporter {
 	public void message(String message);
 	
 	
+	
+	
 	/**Dummy progress recorder.  Always returns -1 for status inquiries.**/
-	public static final class NOP implements ProgressReporter {
+	public static final class NOP implements ProgressRecorder {
 		public NOP() {}
 
 		@Override public void update(long delta) {}
 		@Override public void reset(long expected) {}
+		@Override public long elapse() {return 0l;}
 		@Override public double percent() {return -1;}
 		@Override public long reportStep() {return -1;}
 		@Override public String message() {return "";}
@@ -52,16 +63,25 @@ public interface ProgressReporter {
 	}
 	
 	/**Thread-safe progress reporter for.**/
-	public static final class Counter implements ProgressReporter {
+	public static final class Counter implements ProgressRecorder {
 		private final AtomicLong counter = new AtomicLong();
 		private long expected=1;
+		private long start = -1;
 		private final long reportStep;
 		private String message;
 		
+		public Counter() {this(DEFAULT_REPORT_STEP);}
 		public Counter(long reportStep) {this.reportStep = reportStep;}
 
 		@Override public void update(long delta) {counter.addAndGet(delta);}
-		@Override public void reset(long expected) {this.expected = expected; counter.set(0); message = null;}
+		@Override public void reset(long expected) {
+			this.expected = expected; 
+			counter.set(0); 
+			message = null;
+			start = System.currentTimeMillis();
+		}
+		
+		@Override public long elapse() {return start > 0 ? System.currentTimeMillis()-start : -1;}
 		@Override public long reportStep() {return reportStep;}
 		@Override public String message() {return message;}
 		@Override public void message(String message) {this.message = message;}
@@ -74,9 +94,11 @@ public interface ProgressReporter {
 	}
 	
 	/**Wrap another reporter and show reports on standard out.**/
-	public static final class StdOut implements ProgressReporter {
-		private final ProgressReporter inner;
-		public StdOut(ProgressReporter reporter) {
+	public static final class StdOut implements ProgressRecorder {
+		private final ProgressRecorder inner;
+		
+		public StdOut() {this(new Counter());}
+		public StdOut(ProgressRecorder reporter) {
 			this.inner = reporter;
 		}
 
@@ -91,6 +113,13 @@ public interface ProgressReporter {
 			System.out.println("--------------- Reporter Reset ------------");
 			inner.reset(expected);
 		}
+		
+		@Override public long elapse() {
+			long elapse = inner.elapse();
+			System.out.printf("Elapse time: %,d%n ms", elapse);
+			return elapse;
+		}
+
 
 		@Override public long reportStep() {return inner.reportStep();}
 

@@ -163,7 +163,6 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	private final class AggregateRender implements Runnable {
 		
 		public void run() {
-			long start = System.currentTimeMillis();
 			try {
 				AffineTransform vt = viewTransform();
 				Rectangle databounds = vt.createTransformedShape(dataset.bounds()).getBounds();
@@ -177,10 +176,11 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt, databounds.width, databounds.height);
 				
 				AggregatingDisplay.this.aggregates(a, rt, dataset.axisDescriptors());
-				long end = System.currentTimeMillis();
 				if (PERFORMANCE_REPORTING) {
 					System.out.printf("%d ms (Base aggregates render on %d x %d grid)\n",
-							(end-start), aggregates.highX()-aggregates.lowX(), aggregates.highY()-aggregates.lowY());
+							renderer.recorder().elapse(), 
+							aggregates.highX()-aggregates.lowX(), 
+							aggregates.highY()-aggregates.lowY());
 				}
 				
 			} catch (Exception e) {

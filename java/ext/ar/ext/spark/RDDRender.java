@@ -18,7 +18,7 @@ import ar.Transfer.ItemWise;
 import ar.Transfer.Specialized;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SingletonGlyphset;
-import ar.renderers.ProgressReporter;
+import ar.renderers.ProgressRecorder;
 import ar.renderers.SerialRenderer;
 import ar.util.Util;
 
@@ -78,7 +78,7 @@ public class RDDRender implements Serializable, Renderer {
 		return new SerialRenderer().transfer(aggregates, t);
 	}
 
-	@Override public ProgressReporter progress() {return new ProgressReporter.NOP();}
+	@Override public ProgressRecorder recorder() {return new ProgressRecorder.NOP();}
 
 	
 	

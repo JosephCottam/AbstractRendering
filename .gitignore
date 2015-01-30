@@ -13,6 +13,7 @@ wiki
 *.pyc
 *.hbin
 *.swp
+*.zip
 java/docs/*
 java/doc/*
 java/lib/*

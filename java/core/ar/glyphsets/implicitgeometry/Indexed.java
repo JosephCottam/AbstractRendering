@@ -230,7 +230,7 @@ public interface Indexed extends Serializable {
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
 			y = flipY ? -y : y; 
-			return new Rectangle2D.Double(x-width/2, y-height/2, width, height);
+			return new Rectangle2D.Double(x-width/2d, y-height/2d, width, height);
 		}	
 	}
 	
@@ -265,7 +265,7 @@ public interface Indexed extends Serializable {
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
 			y = flipY ? -y : y; 
-			return new Ellipse2D.Double(x-width/2, y-width/2, width, height);
+			return new Ellipse2D.Double(x-width/2d, y-width/2d, width, height);
 		}	
 	}
 }

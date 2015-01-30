@@ -24,7 +24,6 @@ import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
 import ar.renderers.ParallelRenderer;
-import ar.renderers.RenderUtils;
 import ar.util.Util;
 
 
@@ -190,8 +189,6 @@ public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransfo
 	    }
 
 		ARComponent.PERFORMANCE_REPORTING = true;
-		RenderUtils.RECORD_PROGRESS = true;
-		RenderUtils.REPORT_STEP=1_000_000;
 		new ARComposerApp();
 	} 
 }

@@ -59,7 +59,7 @@ public class ParallelRenderer implements Renderer {
 	//-------------------------------------------------------------------------------------
 	
 	private final ForkJoinPool pool;
-	private final ProgressReporter recorder;
+	private final ProgressRecorder recorder;
 	private final long transferTaskSize;
 	
 	private final int threadLoad;
@@ -67,17 +67,17 @@ public class ParallelRenderer implements Renderer {
 
 	public ParallelRenderer() {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, null);}
 
-	public ParallelRenderer(ProgressReporter recorder) {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, recorder);}
+	public ParallelRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, recorder);}
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
-	public ParallelRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize, ProgressReporter recorder) {
+	public ParallelRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize, ProgressRecorder recorder) {
 		this.pool = pool != null ? pool : new ForkJoinPool(RENDER_POOL_SIZE);
 		this.threadLoad = threadLoad > 0 ? threadLoad : RENDER_THREAD_LOAD;
 		this.transferTaskSize = transferTaskSize > 0 ? transferTaskSize : DEFAULT_TRANSFER_TASK_SIZE;
-		this.recorder = recorder == null ? RenderUtils.recorder() : recorder;
+		this.recorder = recorder == null ? new ProgressRecorder.Counter() : recorder;
 	}
 
 	@Override
@@ -127,5 +127,5 @@ public class ParallelRenderer implements Renderer {
 		}
 	}	
 	
-	public ProgressReporter progress() {return recorder;}
+	public ProgressRecorder recorder() {return recorder;}
 }

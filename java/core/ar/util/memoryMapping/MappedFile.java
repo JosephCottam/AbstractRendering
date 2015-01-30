@@ -46,14 +46,6 @@ public interface MappedFile {
 
 		/**Create a new mapped file for a segment of a file.  
 		 * Will return null if the file segment requested is of an illegal size.
-		 * 
-		 * @param f
-		 * @param mode
-		 * @param bufferSize
-		 * @param offset
-		 * @param end
-		 * @return
-		 * @throws IOException
 		 */
 		public static final MappedFile make(
 				File f, 

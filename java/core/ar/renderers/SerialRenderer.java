@@ -18,7 +18,7 @@ import ar.aggregates.AggregateUtils;
  * **/
 public final class SerialRenderer implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
-	private final ProgressReporter recorder = RenderUtils.recorder();
+	private final ProgressRecorder recorder = new ProgressRecorder.Counter();
 	
 	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
 	@Override 
@@ -75,5 +75,5 @@ public final class SerialRenderer implements Renderer {
 		}
 	}
 	
-	@Override public ProgressReporter progress() {return recorder;}
+	@Override public ProgressRecorder recorder() {return recorder;}
 }

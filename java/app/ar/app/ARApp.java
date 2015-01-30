@@ -15,7 +15,6 @@ import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
 import ar.renderers.ParallelRenderer;
-import ar.renderers.RenderUtils;
 
 public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
@@ -106,8 +105,6 @@ public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception {
 		ARComponent.PERFORMANCE_REPORTING = true;
-		RenderUtils.RECORD_PROGRESS = true;
-		RenderUtils.REPORT_STEP=1_000_000;
 		
 		String osName = System.getProperty("os.name");
 	    if (osName.contains("OS X")) {

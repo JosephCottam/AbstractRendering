@@ -129,7 +129,7 @@ public class Categories {
 		}
 
 		/**
-		 * @param like Used as the default value
+		 * @param comp Comparitor used to construct the categorical counts mappings
 		 * @param rekey Mapping from key in the input to new key in the output
 		 * @param missing Key to use if the input key is not found in the rekey
 		 */
@@ -407,12 +407,11 @@ public class Categories {
 		private final int n;
 		private final CategoricalCounts<T> empty;
 
-		/**
-		 * @param comp Comparator to use in build entries (may be null)
-		 * @param n Category to select
-		 */
+		 /** @param n Category to select**/
 		public NthEntry(int n) {this(n, null);}
 
+		/** @param n Category to select
+		 *  @param empty An empty set of counts; if null, a default is constructed**/
 		public NthEntry(int n, CategoricalCounts<T> empty) {
 			this.n = n;
 			this.empty = empty == null ? new CategoricalCounts<T>() : empty;
