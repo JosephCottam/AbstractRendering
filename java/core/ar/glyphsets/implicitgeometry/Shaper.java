@@ -17,7 +17,6 @@ public interface Shaper<IN,G> extends Serializable, Function<IN,G> {
 	 */
 	public static interface SafeApproximate<IN,G> extends Shaper<IN,G> {}
 	
-	
 	/**Given a map entry, return the value.  Used for maps where the key determines the shape
 	 * and the value determines the info.
 	 * @author jcottam

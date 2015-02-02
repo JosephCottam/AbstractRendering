@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -119,44 +120,59 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			private JComboBox<Entry<?>> valuers = new JComboBox<>();
 			public JSpinner value = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,1));
 			
-			public Controls() {
-				valuers.addItem(new Entry<>(MathValuers.Log.class, 10d));
-				valuers.addItem(new Entry<>(MathValuers.CubeRoot.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Sqrt.class, Double.NaN));
-
-				valuers.addItem(new Entry<>("Abs", MathValuers.AbsDouble.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.AbsFloat.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.AbsInt.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.AbsLong.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Sin.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Cos.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Tan.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Exp.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Exponent.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Floor.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.RInt.class, Double.NaN));
-				valuers.addItem(new Entry<>("Round", MathValuers.RoundDouble.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.RoundFloat.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.Signum.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.ToDegrees.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.ToDouble.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.ToInteger.class, Double.NaN));
-//				valuers.addItem(new Entry<>(MathValuers.ToLong.class, Double.NaN));
-				valuers.addItem(new Entry<>(MathValuers.ToRadians.class, Double.NaN));
+			private static final class Entry<A extends Valuer<?,?>> {
+				public final Function<Double, A> valuerFactory;
+				public final Number refVal;
+				public final String label;
 				
-				valuers.addItem(new Entry<>("Add", MathValuers.AddDouble.class, 1d));
-				valuers.addItem(new Entry<>("Sub", MathValuers.SubtractDouble.class, 1d));
-				valuers.addItem(new Entry<>("Mult", MathValuers.MultiplyDouble.class, 10d));
-				valuers.addItem(new Entry<>("Divide", MathValuers.DivideDouble.class, 10d));
-//				valuers.addItem(new Entry<>(MathValuers.AddInt.class, 1));
-//				valuers.addItem(new Entry<>(MathValuers.DivideInt.class, 10));
-				valuers.addItem(new Entry<>(MathValuers.EQ.class, 0d));
-				valuers.addItem(new Entry<>(MathValuers.GT.class, 0d));
-				valuers.addItem(new Entry<>(MathValuers.LT.class, 10d));
-//				valuers.addItem(new Entry<>(MathValuers.GTE.class, 0d));
-//				valuers.addItem(new Entry<>(MathValuers.LTE.class, 10d));
-//				valuers.addItem(new Entry<>(MathValuers.MultiplyInt.class, 10));
-//				valuers.addItem(new Entry<>(MathValuers.SubtractInt.class, 1));
+				public Entry(String label, Double defVal, Function<Double, A> valuerFactory) {
+					this.label = label;
+					this.valuerFactory = valuerFactory;
+					this.refVal = defVal;
+				}
+
+				public String toString() {return label;}
+				
+				@Override public int hashCode() {return valuerFactory.hashCode();}
+				@Override public boolean equals(Object other) { 
+					return other != null 
+							&& other instanceof Entry 
+							&& valuerFactory.equals(((Entry) other).valuerFactory);
+				}
+			}
+			
+
+			public Controls() {
+				valuers.addItem(new Entry<>("Log", 10d, n -> new MathValuers.Log(n)));
+
+				valuers.addItem(new Entry<>("Cube root", Double.NaN, (n) -> (Number m) -> Math.cbrt(m.doubleValue())));
+				valuers.addItem(new Entry<>("Sqr root", Double.NaN, (n) -> (Number m) -> Math.sqrt(m.doubleValue())));
+				
+				valuers.addItem(new Entry<>("Sin", Double.NaN, (n) -> (Number m) -> Math.sin(m.doubleValue())));
+				valuers.addItem(new Entry<>("Cos", Double.NaN, (n) -> (Number m) -> Math.cos(m.doubleValue())));
+				valuers.addItem(new Entry<>("Tan", Double.NaN, (n) -> (Number m) -> Math.tan(m.doubleValue())));
+				
+				valuers.addItem(new Entry<>("Exp", Double.NaN, (n) -> (Number m) -> Math.exp(m.doubleValue())));
+				
+				valuers.addItem(new Entry<>("Ceiling", Double.NaN, (n) -> (Number m) -> Math.ceil(m.doubleValue())));
+				valuers.addItem(new Entry<>("Floor", Double.NaN, (n) -> (Number m) -> Math.floor(m.doubleValue())));
+				valuers.addItem(new Entry<>("Round", Double.NaN, (n) -> (Number m) -> Math.round(m.doubleValue())));
+				valuers.addItem(new Entry<>("Sign", Double.NaN, (n) -> (Number m) -> Math.signum(m.doubleValue())));
+				valuers.addItem(new Entry<>("Abs", Double.NaN, (n) -> (Number m) -> Math.abs(m.doubleValue())));
+
+				valuers.addItem(new Entry<>("To Degrees", Double.NaN, (n) -> (Number m) -> Math.toDegrees(m.doubleValue())));
+				valuers.addItem(new Entry<>("To Radians", Double.NaN, (n) -> (Number m) -> Math.toRadians(m.doubleValue())));
+
+				valuers.addItem(new Entry<>("Add n", 1d, (n) -> (Number m) -> (m.doubleValue() + n.doubleValue())));
+				valuers.addItem(new Entry<>("Subtract n", 1d, (n) -> (Number m) -> (m.doubleValue() - n.doubleValue())));
+				valuers.addItem(new Entry<>("Mult by n", 2d, (n) -> (Number m) -> (m.doubleValue() * n.doubleValue())));
+				valuers.addItem(new Entry<>("Divide by n", 2d, (n) -> (Number m) -> (m.doubleValue() / n.doubleValue())));
+				valuers.addItem(new Entry<>("Divide n", 1d, (n) -> (Number m) -> (n.doubleValue() / m.doubleValue())));
+
+
+				valuers.addItem(new Entry<>("EQ", 0d, n -> new MathValuers.EQ(n)));
+				valuers.addItem(new Entry<>("GT", 0d, n -> new MathValuers.GT(n)));
+				valuers.addItem(new Entry<>("LT", 0d, n -> new MathValuers.LT(n)));
 				
 				
 				this.setLayout(new GridLayout(1,0));
@@ -186,27 +202,19 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Valuer<?,?> valuer() {
 				Entry<?> e = valuers.getItemAt(valuers.getSelectedIndex());
 				try {
-					if (Double.isNaN(e.refVal.doubleValue())) {
-						  Constructor<?> c = e.valuerClass.getConstructor();
-                          Valuer<?,?> v = (Valuer<?,?>) c.newInstance();
-                          return v;
-
-					} else {
-						  Constructor<?> c = e.valuerClass.getConstructor(e.refVal.getClass());
-                          Valuer<?,?> v = (Valuer<?,?>) c.newInstance(convert((Number) value.getValue(), e.refVal.getClass()));
-                          return v;
-					}
-				} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
-					throw new IllegalArgumentException("Error constructing valuer " + e.valuerClass.getSimpleName(), e1);
+					return e.valuerFactory.apply(e.refVal.doubleValue());
+				} catch (Exception e1) {
+					throw new IllegalArgumentException("Error constructing valuer " + e.label, e1);
 				}
 			}
 
-			public Class<?> returnType() {
+			private Class<?> returnType() {
 				Class<?> t;
 				try {
 					t = valuer().getClass().getMethod("apply", Number.class).getReturnType();
 				} catch (NoSuchMethodException | SecurityException e) {
-					throw new UnsupportedOperationException("Error construct zero for selected operation: " + valuer(),e);
+					return Double.class;
+					//throw new UnsupportedOperationException("Error constructing zero for selected operation: " + valuer(),e);
 				}
 				return t;
 			}
@@ -225,29 +233,6 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				public void itemStateChanged(ItemEvent e) {transfer();}
 				public void actionPerformed(ActionEvent e) {transfer();}
 				public void transfer() {Controls.this.value.setValue(valuers.getItemAt(valuers.getSelectedIndex()).refVal);}
-			}
-			
-			private static final class Entry<A extends Valuer<?,?>> {
-				public final Class<A> valuerClass;
-				public final Number refVal;
-				public final String label;
-				
-				public Entry(Class<A> valuerClass, Number defVal) {this(valuerClass.getSimpleName(), valuerClass, defVal);}
-				public Entry(String label, Class<A> valuerClass, Number defVal) {
-					this.label = label;
-					this.valuerClass = valuerClass;
-					this.refVal = defVal;
-				}
-
-				public String toString() {return label;}
-				
-				@Override public int hashCode() {return valuerClass.hashCode();}
-				@Override public boolean equals(Object other) { 
-					return other != null 
-							&& other instanceof Entry 
-							&& valuerClass.equals(((Entry) other).valuerClass);
-				}
-				
 			}
 		}		
 	}
