@@ -66,14 +66,7 @@ public class General {
 			return valuer.apply(aggregates.get(x,y));
 		}
 
-		@Override public OUT emptyValue() {return empty;}
-		
-		@Override 
-		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
-		@Override public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
+		@Override public OUT emptyValue() {return empty;}		
 	}
 	
 	/**Performs a type-preserving replacement.  
@@ -91,13 +84,6 @@ public class General {
 		}
 		
 		@Override public T emptyValue() {return empty;}
-		@Override 
-		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
-
-		@Override
-		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 		
 		@Override 
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {
@@ -130,13 +116,6 @@ public class General {
 		}
 		
 		@Override public V emptyValue() {return empty;}
-		@Override 
-		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
-		
-		@Override
-		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	/**Fill in empty values based on a function of nearby values.
@@ -151,8 +130,6 @@ public class General {
 		public Smear(V empty) {this.empty = empty;}
 
 		@Override public V emptyValue() {return empty;}
-		@Override 
-		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override
 		public V at(int x, int y, Aggregates<? extends V> aggregates) {
@@ -165,11 +142,6 @@ public class General {
 			throw new RuntimeException("Reached illegal state...");
 		}
 		
-		@Override
-		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
-
 		public Point spiralFrom(int X, int Y, int n, Point into) {
 			int x=0,y=0;
 			int dx = 0;
@@ -208,9 +180,6 @@ public class General {
 		}
 
 		@Override public V emptyValue() {return combiner.identity();}
-		
-		@Override 
-		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override 
 		//TODO: Parallelize...
@@ -321,17 +290,12 @@ public class General {
 		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
+		
 		@Override public OUT combine(OUT left, A update) {return val;}
 		@Override public OUT rollup(OUT left, OUT right) {return val;}
 		@Override public OUT identity() {return val;}
 		@Override public OUT emptyValue() {return val;}
-		@Override public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
 		@Override public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
-
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 
 
@@ -347,7 +311,6 @@ public class General {
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
 		@Override public T identity() {return emptyValue();}
-		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
 		@Override public T combine(T left, T update) {return update;}
 		
 		@Override public T rollup(T left, T right) {
@@ -376,7 +339,6 @@ public class General {
 			this.absent=absent;
 		}
 		
-		@Override  public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		@Override public OUT emptyValue() {return absent;}
 
 		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -385,10 +347,6 @@ public class General {
 			return absent;
 		}
 		
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	/**Transfer function that wraps a java.util.map.
@@ -424,13 +382,7 @@ public class General {
 		}
 
 		@Override public OUT emptyValue() {return other;}
-		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
-
 		/**From a reader, make a map wrapper.  
 		 * 
 		 * This is stream-based, line-oriented conversion.

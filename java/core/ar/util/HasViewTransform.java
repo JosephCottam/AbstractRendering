@@ -12,9 +12,11 @@ public interface HasViewTransform {
 	 * 
 	 * @param vt -- New view transform
 	 * @param provisional -- Is this a provisional change?  If so, some work may be skipped.  Final transform will be passed with 'true' ALWAYS.
-	 * TODO: Java8 -- Split out into viewTransform(AT) and (AT, boolean);  Default on the 2nd is just a pass through to the first. 
 	 * **/
 	public void viewTransform(AffineTransform vt, boolean provisional);
+	
+	/**Non-provisional call to viewTransform.**/
+	public default void viewTransform(AffineTransform vt) {viewTransform(vt, false);}
 	
 	/**Fit the contained data onto the screen.  
 	 * 

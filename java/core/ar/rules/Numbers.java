@@ -4,7 +4,6 @@ import java.awt.Color;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
@@ -118,14 +117,8 @@ public final class Numbers {
 		public Color at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
-
-		@Override
-		public Aggregates<Color> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates,this);
-		}
 		
 		@Override public Color emptyValue() {return background;}
-		@Override public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/
@@ -171,11 +164,6 @@ public final class Numbers {
 				Number v = aggregates.get(x,y);
 				if (Util.isEqual(v, aggregates.defaultValue())) {return empty;}
 				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
-			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
 			}
 		}
 	}

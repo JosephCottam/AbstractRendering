@@ -73,14 +73,7 @@ public class Advise {
 				this.refImg = refImg;
 			}
 			
-			@Override
-			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-
 			@Override public Boolean emptyValue() {return Boolean.FALSE;}
-			@Override 
-			public Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {return this;}
 
 			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -143,6 +136,7 @@ public class Advise {
 				return rend.transfer(aggregates, new Inner<>(img, max, top, comp));
 			}
 		}
+		
 		private static final class Inner<A> implements Transfer.ItemWise<A, Boolean> {
 			final Aggregates<Color> refImg;
 			final Color top;
@@ -156,17 +150,7 @@ public class Advise {
 				this.comp = comp;
 			}
 
-			@Override
-			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-
 			@Override public Boolean emptyValue() {return false;}
-
-			@Override
-			public Specialized<A, Boolean> specialize(Aggregates<? extends A> aggregates) {
-				return this;
-			}
 
 			@Override
 			public Boolean at(int x, int y, Aggregates<? extends A> aggregates) {
@@ -267,18 +251,7 @@ public class Advise {
 					this.empty = empty;
 				}
 
-				@Override
-				public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
-					return rend.transfer(aggregates, this);
-				}
-
-				@Override
-				public Color emptyValue() {return empty;}
-
-				@Override
-				public ar.Transfer.Specialized<A, Color> specialize(Aggregates<? extends A> aggregates) {
-					return this;
-				}
+				@Override public Color emptyValue() {return empty;}
 			
 				@Override
 				//TODO: Investigate unspecialized version
@@ -321,19 +294,9 @@ public class Advise {
 		 * 
 		 * @param divisions Number of x/y divisions to use to create sub-pixels.
 		 */
-		public NeighborhoodDistribution(int divisions) {
-			this.divisions=divisions;
-		}
-		
-		@Override
-		public Specialized<Number,Number> specialize(Aggregates<? extends Number> aggs) {return this;}
+		public NeighborhoodDistribution(int divisions) {this.divisions=divisions;}
 
 		@Override public Number emptyValue() {return 0d;}
-
-		@Override
-		public Aggregates<Number> process(Aggregates<? extends Number> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 		
 		@Override
 		public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
@@ -369,15 +332,7 @@ public class Advise {
 		
 		public DataEdgeBoost(int radius) {this.radius=radius;}
 		
-		@Override
-		public Specialized<A,Number> specialize(Aggregates<? extends A> aggs) {return this;}
-
 		@Override public Double emptyValue() {return 0d;}
-
-		@Override
-		public Aggregates<Number> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 		
 		@Override
 		public Double at(int x, int y, Aggregates<? extends A> aggregates) {

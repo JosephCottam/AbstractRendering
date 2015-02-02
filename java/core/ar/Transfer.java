@@ -44,11 +44,12 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * and minimum value in the dataset.  "Specialize" will compute 
 	 * those maximum/minimum values.
 	 * 
-	 * TODO: Java 8 -- default for specialized types is to return 'this'
-	 * 
 	 * @param aggregates Aggregates to determine the parameters for.
 	 * **/
-	public Specialized<IN,OUT> specialize(Aggregates<? extends IN> aggregates);
+	public default Specialized<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {
+		if (this instanceof Transfer.Specialized) {return (Transfer.Specialized<IN, OUT>) this;}
+		else {throw new UnsupportedOperationException("Specialization not implemented and default specialization is not applicable.");}
+	}
 
 	/**Indicate that a transfer function is "ready to run".
 	 * 
@@ -69,10 +70,6 @@ public interface Transfer<IN,OUT> extends Serializable {
 	 * This function accepts the full set of aggregates so context 
 	 * (as determined by the full set of aggregates)
 	 * can be employed in determining a specific pixel.
-	 * 
-	 * Classes implementing this interface can trivially implement `process(Aggregates, Renderer)` 
-	 * as `return rend.transfer(aggregates, this);`
-	 * TODO: Java 8, add default method body for process
 	 * 
 	 * This function is not guaranteed to be  called from 
 	 * a single thread, so implementations must provide for thread safety.
