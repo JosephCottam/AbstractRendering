@@ -25,13 +25,13 @@ public abstract class Predicates<IN> {
     		this.ignoreDefault = ignoreDefault;
     	}
     	
-		public Boolean value(Aggregates<? extends IN> arg) {return value(arg, pred, ignoreDefault);}
+		public Boolean apply(Aggregates<? extends IN> arg) {return apply(arg, pred, ignoreDefault);}
 		
-		public static <IN> Boolean value(Aggregates<? extends IN> arg, Valuer<IN, Boolean> pred, boolean ignoreDefault) {
+		public static <IN> Boolean apply(Aggregates<? extends IN> arg, Valuer<IN, Boolean> pred, boolean ignoreDefault) {
 			for (IN v: arg) {
 				boolean empty = Util.isEqual(v, arg.defaultValue());
 				if (ignoreDefault && empty) {continue;}
-				if (!pred.value(v)) {return Boolean.FALSE;}
+				if (!pred.apply(v)) {return Boolean.FALSE;}
 			}
 			return Boolean.TRUE;			
 		}
@@ -47,8 +47,8 @@ public abstract class Predicates<IN> {
     public static final class Any<IN> implements Valuer<Aggregates<? extends IN>, Boolean> {
     	private final Valuer<IN, Boolean> pred;
     	public Any(Valuer<IN, Boolean> pred) {this.pred = pred;}
-		public Boolean value(Aggregates<? extends IN> arg) {
-			for (IN v: arg) {if (pred.value(v)) {return Boolean.TRUE;}}
+		public Boolean apply(Aggregates<? extends IN> arg) {
+			for (IN v: arg) {if (pred.apply(v)) {return Boolean.TRUE;}}
 			return Boolean.FALSE;
 		}
     }
@@ -57,7 +57,7 @@ public abstract class Predicates<IN> {
     public static final class Not<IN> implements Valuer<IN, Boolean> {
     	private final Valuer<IN, Boolean> base;
     	public Not(Valuer<IN, Boolean> base) {this.base = base;}
-		public Boolean value(IN arg) {return !base.value(arg);}
+		public Boolean apply(IN arg) {return !base.apply(arg);}
     }
     
 }

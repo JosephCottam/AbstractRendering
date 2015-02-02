@@ -64,7 +64,7 @@ public final class FilterGlyphs<G, I> implements Glyphset<G,I> {
 			if (!base.hasNext()) {return false;}
 			while (base.hasNext() && next == null) {
 				next = base.next();
-				if (predicate.value(next)) {break;}
+				if (predicate.apply(next)) {break;}
 				next = null;
 			}
 			return next != null;

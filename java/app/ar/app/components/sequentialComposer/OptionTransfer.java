@@ -204,7 +204,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public Class<?> returnType() {
 				Class<?> t;
 				try {
-					t = valuer().getClass().getMethod("value", Number.class).getReturnType();
+					t = valuer().getClass().getMethod("apply", Number.class).getReturnType();
 				} catch (NoSuchMethodException | SecurityException e) {
 					throw new UnsupportedOperationException("Error construct zero for selected operation: " + valuer(),e);
 				}

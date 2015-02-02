@@ -383,7 +383,7 @@ public class Presets extends JPanel {
 			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
 			
 			Valuer<CategoricalCounts<Color>, Boolean> p = new Valuer<CategoricalCounts<Color>, Boolean>() {
-				public Boolean value(CategoricalCounts<Color> val) {
+				public Boolean apply(CategoricalCounts<Color> val) {
 					if (val.hasKey(other)) {
 						double ratio = val.count(other)/((double) val.fullSize());
 						return ratio > .1;

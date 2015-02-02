@@ -37,9 +37,9 @@ public class AvroGlyphsTest {
 			valuer = new Indexed.ToValue<Object,V>(vfield);
 		}
 		
-		public Glyph<Rectangle2D, V> value(GenericRecord r) {
+		public Glyph<Rectangle2D, V> apply(GenericRecord r) {
 			Indexed from =new GlyphsetTools.IndexedRecord(r);
-			return new SimpleGlyph<Rectangle2D, V>(shaper.shape(from), valuer.value(from));
+			return new SimpleGlyph<Rectangle2D, V>(shaper.apply(from), valuer.apply(from));
 		}
 	}
 	

@@ -19,7 +19,7 @@ public class GlyphsetConverterTests {
 	
 	@Test
 	public void convert() {
-		Valuer<Integer, Double> converter = converter();
+		Valuer<Integer, Double> converter = (from) -> from/2.5;
 		Collection<Indexed> data = data();
 		Glyphset.RandomAccess<Rectangle2D, Integer> base = WrappedCollection.toList(data, shaper(), valuer());
 		Glyphset.RandomAccess<Rectangle2D, Double> glyphs = new GlyphsetConverter<>(base, converter);
@@ -28,7 +28,7 @@ public class GlyphsetConverterTests {
 		assertNotNull(glyphs);
 		assertEquals("Size mismatch.", base.size(), glyphs.size());
 		for (int i=0; i<base.size(); i++) {
-			assertEquals(converter.value(base.get(i).info()), glyphs.get(i).info());
+			assertEquals(converter.apply(base.get(i).info()), glyphs.get(i).info());
 		}
 		
 	}
@@ -36,11 +36,6 @@ public class GlyphsetConverterTests {
 
 	public Shaper<Indexed, Rectangle2D> shaper() {return new Indexed.ToRect(1, 0, 1);}
 	public Valuer<Indexed,Integer> valuer() {return new Indexed.ToValue<Object,Integer>(2);}
-	public Valuer<Integer, Double> converter() {
-		return new Valuer<Integer,Double>() {
-			public Double value(Integer from) {return from/2.5;}
-		};
-	}
 	
 	public ArrayList<Indexed> data() {
 		ArrayList<Indexed> values = new ArrayList<Indexed>();

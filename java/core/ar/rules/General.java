@@ -63,7 +63,7 @@ public class General {
 
 		@Override 
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-			return valuer.value(aggregates.get(x,y));
+			return valuer.apply(aggregates.get(x,y));
 		}
 
 		@Override public OUT emptyValue() {return empty;}
@@ -451,7 +451,7 @@ public class General {
 			Map<K,V> dict = new HashMap<K,V>();
 			String line = bf.readLine();
 			while(line != null) {
-				dict.put(keyer.value(line), valuer.value(line));
+				dict.put(keyer.apply(line), valuer.apply(line));
 				line = bf.readLine();
 			}
 

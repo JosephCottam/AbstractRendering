@@ -191,8 +191,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 			
 			try {
 				for (String s: next) {charsRead += s==null ? 0 : s.length();} //TODO: Probably not the fastest way to do this...
-				Indexed base = conv.applyTo(new Indexed.ListWrapper(next));
-				cached = new SimpleGlyph<>(shaper.shape(base), valuer.value(base));
+				Indexed base = conv.apply(new Indexed.ListWrapper(next));
+				cached = new SimpleGlyph<>(shaper.apply(base), valuer.apply(base));
 			} catch (Exception e) {
 				String msg = String.format("Error constructing glyph around character %d of %s", charsRead, source.getName());
 				if (report_only) {System.err.println(msg);}

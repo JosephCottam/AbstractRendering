@@ -52,7 +52,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 			public boolean hasNext() {return basis.hasNext();}
 			public ar.Glyph<G,I> next() {
 				B next = basis.next();
-				return next == null ? null : new SimpleGlyph<G,I>(shaper.shape(next), valuer.value(next));
+				return next == null ? null : new SimpleGlyph<G,I>(shaper.apply(next), valuer.apply(next));
 			}
 			public void remove() {throw new UnsupportedOperationException();}
 		};
@@ -99,7 +99,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 			if (l > Integer.MAX_VALUE) {throw new IllegalArgumentException("Can only index through ints in wrapped list.");}
 			if (l < 0) {throw new IllegalArgumentException("Negative index not allowed.");}
 			B value = values.get((int) l);
-			return new SimpleGlyph<G,I>(shaper.shape(value), valuer.value(value));
+			return new SimpleGlyph<G,I>(shaper.apply(value), valuer.apply(value));
 		}
 
 		@Override
@@ -138,7 +138,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 			Valuer<B,I> valuer) {
 		GlyphList<G,I> glyphs = new GlyphList<>();
 		for (B val: basis) {
-			Glyph<G,I> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			Glyph<G,I> g = new SimpleGlyph<>(shaper.apply(val), valuer.apply(val));
 			glyphs.add(g);
 		}
 		return glyphs;		
@@ -155,7 +155,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 			Valuer<B,I> valuer) {
 		DynamicQuadTree<G,I> glyphs = DynamicQuadTree.make();
 		for (B val: basis) {
-			Glyph<G,I> g = new SimpleGlyph<>(shaper.shape(val), valuer.value(val));
+			Glyph<G,I> g = new SimpleGlyph<>(shaper.apply(val), valuer.apply(val));
 			glyphs.add(g);
 		}
 		return glyphs;		

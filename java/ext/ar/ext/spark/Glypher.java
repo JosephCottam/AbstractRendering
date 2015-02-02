@@ -20,7 +20,7 @@ public class Glypher<G,I> extends Function<Indexed, Glyph<G,I>> {
 	}
 
 	public Glyph<G,I> call(Indexed item) throws Exception {
-		return new SimpleGlyph<G,I>(shaper.shape(item), valuer.value(item));
+		return new SimpleGlyph<G,I>(shaper.apply(item), valuer.apply(item));
 	}
 
 }

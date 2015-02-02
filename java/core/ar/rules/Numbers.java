@@ -73,14 +73,14 @@ public final class Numbers {
 		public Max(Valuer<Double,N> wrapper) {this.wrapper = wrapper;}
 
 		public N combine(N current, N update) {
-			 return wrapper.value(Math.max(current.doubleValue(), update.doubleValue()));
+			 return wrapper.apply(Math.max(current.doubleValue(), update.doubleValue()));
 		}
 		
 		public N rollup(N left, N right) {
-			return wrapper.value(Math.max(left.doubleValue(), right.doubleValue()));
+			return wrapper.apply(Math.max(left.doubleValue(), right.doubleValue()));
 		}
 		
-		public N identity() {return wrapper.value(0d);}
+		public N identity() {return wrapper.apply(0d);}
 	}
 	
 	/**Interpolate between two colors with fixed upper and lower bounds.

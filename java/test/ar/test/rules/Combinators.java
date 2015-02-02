@@ -27,28 +27,28 @@ public class Combinators {
 		Valuer<Boolean, Boolean> isTrue = new Valuer.Equals<>(true);
 		Valuer<Boolean, Boolean> isFalse = new Predicates.Not<>(isTrue);
 		
-		assertTrue(isTrue.value(t.get(0, 0)));
-		assertTrue(isFalse.value(f.get(0, 0)));
+		assertTrue(isTrue.apply(t.get(0, 0)));
+		assertTrue(isFalse.apply(f.get(0, 0)));
 		
 		Valuer<Aggregates<? extends Boolean>, Boolean> someTrue = new Predicates.Any<>(isTrue);		
-		assertTrue(someTrue.value(t));
-		assertFalse(someTrue.value(f));
-		assertTrue(someTrue.value(m));
+		assertTrue(someTrue.apply(t));
+		assertFalse(someTrue.apply(f));
+		assertTrue(someTrue.apply(m));
 
 		Valuer<Aggregates<? extends Boolean>, Boolean> allTrue = new Predicates.All<>(isTrue);
-		assertTrue(allTrue.value(t));
-		assertFalse(allTrue.value(f));
-		assertFalse(allTrue.value(m));
+		assertTrue(allTrue.apply(t));
+		assertFalse(allTrue.apply(f));
+		assertFalse(allTrue.apply(m));
 		
 		Valuer<Aggregates<? extends Boolean>, Boolean>  someFalse = new Predicates.Any<>(isFalse);
-		assertFalse(someFalse.value(t));
-		assertTrue(someFalse.value(f));
-		assertTrue(someFalse.value(m));
+		assertFalse(someFalse.apply(t));
+		assertTrue(someFalse.apply(f));
+		assertTrue(someFalse.apply(m));
 
 		Valuer<Aggregates<? extends Boolean>, Boolean>  allFalse = new Predicates.All<>(isFalse);
-		assertFalse(allFalse.value(t));
-		assertTrue(allFalse.value(f));
-		assertFalse(allFalse.value(m));
+		assertFalse(allFalse.apply(t));
+		assertTrue(allFalse.apply(f));
+		assertFalse(allFalse.apply(m));
 	}
 	
 
@@ -82,7 +82,7 @@ public class Combinators {
 		
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
-		assertTrue("Bluk test", p.value(rslt));
+		assertTrue("Bluk test", p.apply(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
 				assertThat(String.format("Error at (%d,%d)", x,y), rslt.get(x,y), is(11));
@@ -105,7 +105,7 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
-		assertTrue("Bluk test", p.value(rslt));
+		assertTrue("Bluk test", p.apply(rslt));
 	}
 	
 	@Test
@@ -122,7 +122,7 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
-		assertTrue("Bluk test", p.value(rslt));
+		assertTrue("Bluk test", p.apply(rslt));
 	}
 
 	@Test
@@ -136,6 +136,6 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
-		assertTrue("Bluk test", p.value(rslt));
+		assertTrue("Bluk test", p.apply(rslt));
 	}
 }
