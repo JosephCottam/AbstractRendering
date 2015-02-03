@@ -16,24 +16,6 @@ import ar.util.Util;
 
 /**Tools for working with categorical entries.**/
 public class Categories {
-	/**What is the first item in the given pixel (an over-plotting strategy)**/
-	public static final class First implements Aggregator<Color, Color> {
-		private static final long serialVersionUID = 5899328174090941310L;
-		public Color combine(Color left, Color update) {
-			if (left == Util.CLEAR) {return update;}
-			else {return left;}
-		}
-
-		public Color rollup(Color left, Color right) {
-			if (right != null) {return right;}
-			if (left != null) {return left;}
-			return identity();
-		}
-		
-		public Color identity() {return Util.CLEAR;}
-		public boolean equals(Object other) {return other instanceof First;}
-		public int hashCode() {return First.class.hashCode();}
-	}
 
 	
 	/**Convert a set of categorical counts to the number a categories present.**/ 
@@ -79,7 +61,6 @@ public class Categories {
 			for (int i=0; i< in.size(); i++) {out.extend(in.key(i), in.count(i));}
 			return out;
 		} 
-
 	}
 	
 	/**Replace category labels with other category labels.
@@ -408,12 +389,14 @@ public class Categories {
 	 * key-category constitutes more than X percent of the total then 
 	 * return one value.  Otherwise return another.  If category X is not present, return a third.
 	 * 
+	 * TODO: Convert to output Aggregates<Double>, outputs the percent of total that a key represents
+	 * 
 	 ***/
 	public static final class KeyPercent<T> implements Transfer.ItemWise<CategoricalCounts<T>, Color> {
 		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
-		private final Object firstKey;
+		private final T keyCategory;
 		
 		/**
 		 * @param ratio Target ratio
@@ -422,12 +405,12 @@ public class Categories {
 		 * @param match Color to return if key-category constitutes at least ratio percent of the total
 		 * @param noMatch Color to return if the key-category does not constitute at least ratio percent of the total
 		 */
-		public KeyPercent(double ratio, Object keyCategory,  Color background, Color match, Color noMatch) {
+		public KeyPercent(double ratio, T keyCategory,  Color background, Color match, Color noMatch) {
 			this.ratio = ratio;
 			this.background = background;
 			this.match = match;
 			this.noMatch = noMatch;
-			this.firstKey = keyCategory;
+			this.keyCategory = keyCategory;
 		}
 		
 		@Override
@@ -435,8 +418,9 @@ public class Categories {
 			CategoricalCounts<T> cats = aggregates.get(x,y);
 			double size = cats.fullSize();
 			
+			
 			if (size == 0) {return background;}
-			else if (!cats.key(0).equals(firstKey)) {return noMatch;} 
+			else if (!cats.hasKey(keyCategory)) {return noMatch;} 
 			else if (cats.count(0)/size >= ratio) {return match;}
 			else {return noMatch;}
 		}

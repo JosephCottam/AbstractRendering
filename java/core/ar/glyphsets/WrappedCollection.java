@@ -58,7 +58,7 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		};
 	}
 	
-	/**WARNING: Relies on different iterator instance returning elements in the same order...**/
+	/**WARNING: Relies on different iterator instances returning elements in the same order...**/
 	@Override
 	@SuppressWarnings("unchecked")
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {

@@ -26,7 +26,7 @@ public final class OptionAggregator<G,A> {
 		= new OptionAggregator<>("Blue (color)", new General.Const<>(Color.BLUE));
 	
 	public static final OptionAggregator<Color, Color> OVERPLOT_FIRST  
-		= new OptionAggregator<>("Overplot First (color)", new Categories.First());
+		= new OptionAggregator<>("Overplot First (color)", new General.First<>(Util.CLEAR));
 	
 	public static final OptionAggregator<Color, Color> OVERPLOT_LAST 
 		= new OptionAggregator<>("Overplot Last (color)", new General.Last<>(Util.CLEAR));

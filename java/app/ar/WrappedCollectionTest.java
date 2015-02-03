@@ -10,8 +10,8 @@ import ar.app.display.AggregatingDisplay;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.renderers.*;
-import ar.rules.Categories;
 import ar.rules.General;
+import ar.util.Util;
 
 public class WrappedCollectionTest {
 
@@ -51,7 +51,7 @@ public class WrappedCollectionTest {
 		RainbowCheckerboard g = new RainbowCheckerboard(11, 1);
 		WrappedCollection<Integer,Rectangle2D, Color> gs = new WrappedCollection<>(vs, g, WrappedCollectionTest::getColor);
 		
-		AggregatingDisplay p = new AggregatingDisplay(new Categories.First(), 
+		AggregatingDisplay p = new AggregatingDisplay(new General.First<>(Util.CLEAR), 
 								new General.Echo<>(null),
 								gs, 
 								new ParallelRenderer());

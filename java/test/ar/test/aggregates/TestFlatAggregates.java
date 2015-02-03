@@ -14,13 +14,13 @@ public class TestFlatAggregates {
 		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(10,10,0);
 		
 		for(int x=aggs.lowX();x<aggs.highX(); x++) {
-			for (int y=aggs.lowY();y<aggs.lowY(); y++) {
+			for (int y=aggs.lowY();y<aggs.highY(); y++) {
 				aggs.set(x, y, x*y);
 			}
 		}
 		
 		for(int x=aggs.lowX();x<aggs.highX(); x++) {
-			for (int y=aggs.lowY();y<aggs.lowY(); y++) {
+			for (int y=aggs.lowY();y<aggs.highY(); y++) {
 				assertEquals(String.format("Error at %d,%s", x,y), new Integer(x*y), aggs.get(x,y));
 			}
 		}
@@ -40,7 +40,7 @@ public class TestFlatAggregates {
 		for (int x=0; x<aggs.highX()*2; x++) {
 			for (int y=0; y<aggs.highY()*2; y++) {
 				if (x <aggs.lowX() || x>= aggs.highX()
-						|| y < aggs.lowY() || y >= aggs.lowY()) {
+						|| y < aggs.lowY() || y >= aggs.highY()) {
 					assertThat(String.format("Out-of-range range mismatch at %s, %s", x, y), aggs.get(x,y), is(defVal));
 				} else {
 					assertThat(String.format("In-range range mismatch at %s, %s", x, y),aggs.get(x, y), is(TestAggregates.valFor(x,y)));

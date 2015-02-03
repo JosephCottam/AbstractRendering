@@ -13,7 +13,7 @@ public class TestAggregates {
 	public static Aggregates<Integer> simpleAggregates(int lowX, int lowY, int highX, int highY, int defVal) {
 		Aggregates<Integer> aggs = new RefFlatAggregates<Integer>(lowX,lowY,highX,highY, defVal);
 		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-			for (int y=aggs.highY(); y<aggs.highY(); y++) {
+			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				aggs.set(x, y, valFor(x,y));
 			}
 		}

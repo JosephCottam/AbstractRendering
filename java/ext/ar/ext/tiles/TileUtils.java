@@ -15,7 +15,6 @@ import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.ext.avro.AggregateSerializer;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.rules.General;
 
 public class TileUtils {
 	/**Extend a root with the given set of subs.
@@ -83,15 +82,17 @@ public class TileUtils {
 		}
 	}
 	
+	
+	private static <A> A copyTile(A left, A right) {return right != null ? right : left;}
+	
 	/**Reload a specified subset of tiles into a single set of aggregates.**/
 	public static <A> Aggregates<A> loadTiles(Valuer<GenericRecord, A> converter, File... files) 
 			throws IOException {
 		
 		Aggregates<A> acc = null;
-		Aggregator<A,A> red = new General.Echo<A>(null);
 		for (File file: files) {
 			Aggregates<A> aggs = AggregateSerializer.deserialize(file, converter);
-			acc = AggregateUtils.__unsafeMerge(acc, aggs, red);
+			acc = AggregateUtils.__unsafeMerge(acc, aggs, null, TileUtils::copyTile);
 		}
 		return acc;
 	}

@@ -111,14 +111,13 @@ public class AggregateUtils {
 	 * 
 	 * @param left Aggregate set to use for left-hand arguments
 	 * @param right Aggregate set to use for right-hand arguments
-	 * @param red Reduction operation
+	 * @param identity Identity value for the rollup function
+	 * @param rollup Reduction operation
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
-	public static <T> Aggregates<T> __unsafeMerge(Aggregates<T> left, Aggregates<T> right, Aggregator<?,T> red) {
+	public static <T> Aggregates<T> __unsafeMerge(Aggregates<T> left, Aggregates<T> right, T identity, BiFunction<T,T,T> rollup) {
 		if (left == null) {return right;}
 		if (right == null) {return left;}
-
-		T identity = red.identity();
 
 		if ((left instanceof ConstantAggregates) && Util.isEqual(identity, left.defaultValue())) {return right;}
 		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return left;}
@@ -139,7 +138,7 @@ public class AggregateUtils {
 			sources.add(left);
 			sources.add(right);
 			target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 
-					(int) bounds.getMaxX(), (int) bounds.getMaxY(), red.identity());
+					(int) bounds.getMaxX(), (int) bounds.getMaxY(), identity);
 		}
 	
 		for (Aggregates<T> source: sources) {
@@ -147,7 +146,7 @@ public class AggregateUtils {
 				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
 					T newVal = source.get(x,y);
 					if (Util.isEqual(identity, newVal)) {continue;}
-					T comb = red.rollup(target.get(x,y), source.get(x,y));
+					T comb = rollup.apply(target.get(x,y), source.get(x,y));
 					target.set(x,y, comb); 
 				}
 			}

@@ -70,10 +70,10 @@ public class TestAggregateUtils {
 		Aggregates<Integer> ten = new RefFlatAggregates<Integer>(0,0,width,height, 10);
 		Aggregates<Integer> id = new ConstantAggregates<Integer>(0,0,width,height,red.identity());
 
-		Aggregates<Integer> c1 = AggregateUtils.__unsafeMerge(ten, id, red);
+		Aggregates<Integer> c1 = AggregateUtils.__unsafeMerge(ten, id, red.identity(), red::rollup);
 		assertThat("Error with right-side id", c1, is(ten));
 		
-		Aggregates<Integer> c2 = AggregateUtils.__unsafeMerge(id, ten, red);
+		Aggregates<Integer> c2 = AggregateUtils.__unsafeMerge(id, ten, red.identity(), red::rollup);
 		assertThat("Error with left-side id", c2, is(ten));
 	}
 }

@@ -1,5 +1,6 @@
 package ar.renderers;
 
+import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**Utility class for recording percent progress through a task.
@@ -55,10 +56,10 @@ public interface ProgressRecorder {
 
 		@Override public void update(long delta) {}
 		@Override public void reset(long expected) {}
-		@Override public long elapse() {return 0l;}
+		@Override public long elapse() {return -1l;}
 		@Override public double percent() {return -1;}
 		@Override public long reportStep() {return -1;}
-		@Override public String message() {return "";}
+		@Override public String message() {return null;}
 		@Override public void message(String message) {}		
 	}
 	
@@ -93,30 +94,34 @@ public interface ProgressRecorder {
 		}
 	}
 	
-	/**Wrap another reporter and show reports on standard out.**/
-	public static final class StdOut implements ProgressRecorder {
+	/**Wrap another reporter and show reports on an output stream (defaults to standard out).**/
+	public static final class Stream implements ProgressRecorder {
 		private final ProgressRecorder inner;
+		private final PrintStream target;
 		
-		public StdOut() {this(new Counter());}
-		public StdOut(ProgressRecorder reporter) {
+		public Stream() {this(new Counter(), System.out);}
+		public Stream(PrintStream stream) {this(new Counter(), stream);}
+		public Stream(ProgressRecorder reporter) {this(reporter, System.out);}
+		public Stream(ProgressRecorder reporter, java.io.PrintStream target) {
 			this.inner = reporter;
+			this.target = target;
 		}
 
 		@Override public void update(long delta) {
 			inner.update(delta);
-			System.out.printf("%.2f%%%n", percent()*100);
+			target.printf("%.2f%%%n", percent()*100);
 		}
 
 		@Override public double percent() {return inner.percent();}
 
 		@Override public void reset(long expected) {
-			System.out.println("--------------- Reporter Reset ------------");
+			target.println("--------------- Reporter Reset ------------");
 			inner.reset(expected);
 		}
 		
 		@Override public long elapse() {
 			long elapse = inner.elapse();
-			System.out.printf("Elapse time: %,d%n ms", elapse);
+			target.printf("Elapse time: %,d%n ms", elapse);
 			return elapse;
 		}
 
@@ -126,7 +131,7 @@ public interface ProgressRecorder {
 		@Override public String message() {return inner.message();}
 
 		@Override public void message(String message) {
-			System.out.printf("Message set: %s%n", message);
+			target.printf("Message set: %s%n", message);
 			inner.message(message);
 		}
 	}

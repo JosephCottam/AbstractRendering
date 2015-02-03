@@ -95,7 +95,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregates<A> aggs;
 		
 		try {
-			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op);
+			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op.identity(), op::rollup);
 			//System.out.printf("%s\n%s\n%s\n------------------\n", AggregateUtils.bounds(top.get()),AggregateUtils.bounds(bottom.get()),AggregateUtils.bounds(aggs));
 		}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}

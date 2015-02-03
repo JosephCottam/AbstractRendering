@@ -30,6 +30,10 @@ public class CategoricalCounts<T> implements Serializable {
 		this(comp, (T[]) new Object[]{label}, new int[]{count}, count);
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes"})
+	public CategoricalCounts(T label, int count) {this(new Util.ComparableComparator(), label, count);}
+
+	
 	/**@param counts Map backing this set of counts
 	 * @param fullSize Total of the items in the counts (the relationship is not checked, but must hold for derivatives to work correctly)
 	 ***/

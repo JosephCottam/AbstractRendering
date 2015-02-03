@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -51,6 +52,44 @@ public class General {
 		@Override public boolean equals(Object other) {return other instanceof Last;}
 		@Override public int hashCode() {return Last.class.hashCode();}
 	}
+	
+	/**What is the first item in the given aggregate cell (an over-plotting strategy)**/
+	public static final class First<A> implements Aggregator<A, A> {
+		private static final long serialVersionUID = 5899328174090941310L;
+		private final A identity;
+		
+		public First(A identity) {this.identity = identity;}
+		public A combine(A left, A update) {
+			if (left == identity) {return update;}
+			else {return left;}
+		}
+
+		public A rollup(A left, A right) {
+			if (left != null) {return left;}
+			if (right != null) {return right;}
+			return identity();
+		}
+		
+		public A identity() {return identity;}
+		public boolean equals(Object other) {return other instanceof First;}
+		public int hashCode() {return First.class.hashCode();}
+	}
+
+	/**Wraps a BiFunction as an aggregator.**/
+	public static final class Apply<A> implements Aggregator<A,A> {
+		private final A identity;
+		private final BiFunction<A,A,A> func;
+		
+		public Apply(A identity, BiFunction<A,A,A> func) {
+			this.identity = identity;
+			this.func = func;
+		}
+
+		@Override public A combine(A current, A update) {return func.apply(current, update);}
+		@Override public A rollup(A left, A right) {return func.apply(left, right);}
+		@Override public A identity() {return identity;}		
+	}
+	
 
 	/**Wrap a valuer in a transfer function.**/
 	public static final class ValuerTransfer<IN,OUT> implements Transfer.ItemWise<IN, OUT> {
@@ -275,9 +314,8 @@ public class General {
 		}
 	}
 	
-	/**Aggregator and Transfer that always returns the same value.
-	 * **/
-	
+	/**Aggregator/Transfer that always returns the same value.
+	 **/
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
@@ -300,7 +338,7 @@ public class General {
 
 
 	/**Return what is found at the given location.**/
-	public static final class Echo<T> implements Transfer.ItemWise<T,T>, Aggregator<T,T> {
+	public static final class Echo<T> implements Transfer.ItemWise<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		
@@ -310,14 +348,6 @@ public class General {
 		
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
-		@Override public T identity() {return emptyValue();}
-		@Override public T combine(T left, T update) {return update;}
-		
-		@Override public T rollup(T left, T right) {
-			if (left != null) {return left;}
-			if (right != null) {return right;}
-			return emptyValue();
-		}
 		
 		@Override
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {

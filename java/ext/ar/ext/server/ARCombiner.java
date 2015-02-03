@@ -77,7 +77,7 @@ public class ARCombiner<A> {
 		while (!queue.isEmpty()) {
 			Aggregates<A> item = queue.poll();
 			if (item != null) {
-				aggs = AggregateUtils.__unsafeMerge(aggs, item, reducer);
+				aggs = AggregateUtils.__unsafeMerge(aggs, item, reducer.identity(), reducer::rollup);
 			}
 		}
 		return aggs;
