@@ -82,7 +82,7 @@ public class Combinators {
 		
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
-		assertTrue("Bluk test", p.apply(rslt));
+		assertTrue("Bulk test", p.apply(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
 				assertThat(String.format("Error at (%d,%d)", x,y), rslt.get(x,y), is(11));
@@ -106,7 +106,7 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
-		assertTrue("Bluk test", p.apply(rslt));
+		assertTrue("Bulk test", p.apply(rslt));
 	}
 	
 	@Test
@@ -123,7 +123,7 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
-		assertTrue("Bluk test", p.apply(rslt));
+		assertTrue("Bulk test", p.apply(rslt));
 	}
 
 	@Test
@@ -137,6 +137,6 @@ public class Combinators {
 		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
-		assertTrue("Bluk test", p.apply(rslt));
+		assertTrue("Bulk test", p.apply(rslt));
 	}
 }
