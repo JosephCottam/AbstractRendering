@@ -41,11 +41,13 @@ public interface Renderer extends Serializable {
 	 * @param t Transfer function to apply
 	 * @return A resulting set of aggregates
 	 */
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN, OUT> t);
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, 
+											 Transfer.Specialized<IN, OUT> t);
 	
 
 	/**Produces a set of aggregates based on an item-wise specialization.**/
-	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN, OUT> t);
+	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, 
+											 Transfer.ItemWise<IN, OUT> t);
 
 	
 	/**For monitoring long-running render operations, this method provides a simple monitoring interface.

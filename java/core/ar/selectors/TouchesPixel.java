@@ -134,10 +134,8 @@ public abstract class TouchesPixel {
 	}
 	
 	public static final class Rectangles implements Selector<Rectangle2D> {
-		/**Iterates over the projection of a rectangle (no hit-tests required).
-		 * 
-		 * TODO: Can this be done with Point instead of Point2D?
-		 * **/
+		
+		/**Iterates over the projection of a rectangle (no hit-tests required).**/
 		public <I,A> Aggregates<A> processSubset(
 				Iterable<? extends Glyph<? extends Rectangle2D, ? extends I>> subset,
 				AffineTransform view, 
@@ -180,8 +178,6 @@ public abstract class TouchesPixel {
 
 	public static final class Shapes implements Selector<Shape> {
 		/**Iterates the bounds, with a hit-test to only set values inside of the shape.
-		 * 		 
-		 * TODO: Can this be done with Point instead of Point2D?
 		 **/
 		public <I,A> Aggregates<A> processSubset(
 				Iterable<? extends Glyph<? extends Shape, ? extends I>> subset,

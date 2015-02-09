@@ -141,8 +141,8 @@ public class Util {
 			if (parts == null) {continue;}
 			
 			Converter item = converter.applyTo(parts);
-			I value = valuer.value(item);
-			G shape = shaper.shape(item);
+			I value = valuer.apply(item);
+			G shape = shaper.apply(item);
 
 			Glyph<G,I> g = new SimpleGlyph<G,I>(shape, value);
 			try {m.invoke(glyphs, g);}

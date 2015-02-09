@@ -95,7 +95,7 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Aggregates<A> aggs;
 		
 		try {
-			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op);
+			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op.identity(), op::rollup);
 			//System.out.printf("%s\n%s\n%s\n------------------\n", AggregateUtils.bounds(top.get()),AggregateUtils.bounds(bottom.get()),AggregateUtils.bounds(aggs));
 		}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}
@@ -104,15 +104,6 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 
 		return aggs;
 	}
-	
-	
-	/**DESTRUCTIVELY updates the target at x/y with the value passed and the target operation.**/
-	protected final void update(Aggregates<A> target, I v, int x, int y) {
-		A existing = target.get(x,y);
-		A update = op.combine(existing, v);
-		target.set(x, y, update);
-	}
-	
 
 	protected TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds) {
 		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();

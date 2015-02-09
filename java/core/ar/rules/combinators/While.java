@@ -37,7 +37,7 @@ public class While<IN> implements Transfer<IN,IN> {
 
         public Aggregates<IN> process(Aggregates<? extends IN> aggs, Renderer rend) {
             Aggregates<IN> out = rend.transfer(aggs, op);
-        	while (!pred.value(out)) {out = rend.transfer(out, op);}
+        	while (!pred.apply(out)) {out = rend.transfer(out, op);}
             return out;
         }        
     }

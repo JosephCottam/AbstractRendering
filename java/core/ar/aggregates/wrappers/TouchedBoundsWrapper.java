@@ -49,8 +49,8 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 		
 		if (x < lowX && x >= base.lowX()) {lowX = x;}
 		if (y < lowY && y >= base.lowY()) {lowY = y;}
-		if (x >= highX && x < base.highX()) {highX = x+1;}
-		if (y >= highY && y < base.highY()) {highY = y+1;}
+		if (x >= highX && x+1 <= base.highX()) {highX = x+1;}
+		if (y >= highY && y+1 <= base.highY()) {highY = y+1;}
 	}
 
 	@Override public A defaultValue() {return base.defaultValue();}

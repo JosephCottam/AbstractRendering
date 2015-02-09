@@ -47,7 +47,7 @@ public class GlyphsetTools {
 	public static <G,V> Glyphset.RandomAccess<G,V> fullLoad(File source, Valuer<GenericRecord,Glyph<G,V>> glypher) throws IOException {
 		DataFileReader<GenericRecord> reader = reader(source); 
 		GlyphList<G,V> l = new GlyphList<>();
-		for (GenericRecord r: reader) {l.add(glypher.value(r));}
+		for (GenericRecord r: reader) {l.add(glypher.apply(r));}
 		return l;
 	}
 	
@@ -70,7 +70,7 @@ public class GlyphsetTools {
 		
 		DataFileReader<GenericRecord> reader = reader(source); 
 		ArrayList<INNER> l = new ArrayList<INNER>();
-		for (GenericRecord r: reader) {l.add(realizer.value(r));}
+		for (GenericRecord r: reader) {l.add(realizer.apply(r));}
 		return new WrappedCollection.List<INNER, G, V>(l, shaper, valuer);
 	}
 }

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import ar.rules.CategoricalCounts;
 import ar.util.Util;
@@ -19,21 +20,18 @@ import ar.util.Util;
  * <I> Input value type
  * <V> Output value type
  * **/
-public interface Valuer<I,V> extends Serializable {
-	/**Create a value from the passed item.**/
-	public V value(I from);
-	
+public interface Valuer<I,V> extends Serializable, Function<I,V> {
 	/**Pass-through valuer.  Value-in=value-out.*/
 	public static class Identity<I> implements Valuer<I,I> {
 		private static final long serialVersionUID = 6961888682185387204L;
 
-		public I value(I v) {return v;}
+		public I apply(I v) {return v;}
 	}
 
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToInt<V> implements Valuer<V,Integer> {
 		private static final long serialVersionUID = 2540867051146887184L;
-		public Integer value(V from) {
+		public Integer apply(V from) {
 			if (from instanceof Number) {return ((Number) from).intValue();}
 			else {return Integer.valueOf(from.toString());}
 		}
@@ -42,7 +40,7 @@ public interface Valuer<I,V> extends Serializable {
 	/**Convert a value to an integer via Integer.parseInt.**/
 	public final class ToDouble<V> implements Valuer<V,Double> {
 		private static final long serialVersionUID = 2540867051146887184L;
-		public Double value(V from) {
+		public Double apply(V from) {
 			if (from instanceof Number) {return ((Number) from).doubleValue();}
 			return Double.valueOf(from.toString());
 		}
@@ -60,7 +58,7 @@ public interface Valuer<I,V> extends Serializable {
 		
 		@SuppressWarnings("javadoc")
 		public Constant(V c) {this.c = c;}
-		public V value(I item) {return c;}
+		public V apply(I item) {return c;}
 	}
 	
 	/**Binary valuation scheme.  
@@ -75,7 +73,7 @@ public interface Valuer<I,V> extends Serializable {
 		
 		@SuppressWarnings("javadoc")
 		public Binary(T v, V a, V b) {this.v = v; this.a = a; this.b=b;}
-		public V value(T item) {
+		public V apply(T item) {
 			if (item == v || (v != null && v.equals(item))) {return a;}
 			return b;
 		}
@@ -97,7 +95,7 @@ public interface Valuer<I,V> extends Serializable {
 			this.comp = comp;
 		}
 		
-		public CategoricalCounts<T> value(Indexed from) {
+		public CategoricalCounts<T> apply(Indexed from) {
 			@SuppressWarnings("unchecked")
 			T key = (T) from.get(catIdx);
 			int val = ((Integer) from.get(valIdx)).intValue();
@@ -109,7 +107,7 @@ public interface Valuer<I,V> extends Serializable {
 	public static final class Equals<IN> implements Valuer<IN, Boolean> {
 		private final IN ref;
 		public Equals(IN ref) {this.ref = ref;}
-		public Boolean value(IN from) {return Util.isEqual(ref, from);}		
+		public Boolean apply(IN from) {return Util.isEqual(ref, from);}		
 	}
 
 
@@ -120,7 +118,7 @@ public interface Valuer<I,V> extends Serializable {
 	 * @param <V>
 	 */
 	public static final class MapValue<K,V> implements Valuer<Map.Entry<K,V>, V> {
-		@Override public V value(Entry<K,V> from) {return from.getValue();}		
+		@Override public V apply(Entry<K,V> from) {return from.getValue();}		
 	}
 
 	/**Given a map entry, return the key.  Used for maps where the key determines the info
@@ -129,6 +127,6 @@ public interface Valuer<I,V> extends Serializable {
 	 * @param <V>
 	 */
 	public static final class MapKey<K,V> implements Valuer<Map.Entry<K,V>, K> {
-		@Override public K value(Entry<K,V> from) {return from.getKey();}		
+		@Override public K apply(Entry<K,V> from) {return from.getKey();}		
 	}
 }

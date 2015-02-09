@@ -96,8 +96,8 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 			if (shaper instanceof Shaper.SafeApproximate) {
 				IndexedEncoding max = entryAt(header.maximaRecordOffset);				
 				IndexedEncoding min = entryAt(header.minimaRecordOffset);
-				Rectangle2D maxBounds = Util.boundOne(shaper.shape(max));
-				Rectangle2D minBounds = Util.boundOne(shaper.shape(min));
+				Rectangle2D maxBounds = Util.boundOne(shaper.apply(max));
+				Rectangle2D minBounds = Util.boundOne(shaper.apply(min));
 				bounds = Util.bounds(maxBounds, minBounds);
 				axisDescriptor = Axis.coordinantDescriptors(this);
 			} 
@@ -129,7 +129,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override
 	public Glyph<G,I> get(long i) {
 		IndexedEncoding entry = entryAt(recordOffset(i));
-		Glyph<G,I> g = new SimpleGlyph<G,I>(shaper.shape(entry), valuer.value(entry));
+		Glyph<G,I> g = new SimpleGlyph<G,I>(shaper.apply(entry), valuer.apply(entry));
 		return g;
 	}
 

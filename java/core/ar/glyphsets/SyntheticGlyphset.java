@@ -42,7 +42,7 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 	
 	@Override
 	public Glyph<G, I> get(long l) {
-		return new SimpleGlyph<>(shaper.shape(l), val);
+		return new SimpleGlyph<>(shaper.apply(l), val);
 	}
 		
 	/**Generators create elements in the glyphset.
@@ -74,7 +74,7 @@ public class SyntheticGlyphset<G,I> implements Glyphset.RandomAccess<G,I>{
 		@Override public Rectangle2D bounds() {return new Rectangle2D.Double(0,0,100,100);}
 		
 		@Override
-		public Point2D shape(Long from) {return new Point2D.Double(Math.random()*maxX, Math.random()*maxY);}
+		public Point2D apply(Long from) {return new Point2D.Double(Math.random()*maxX, Math.random()*maxY);}
 	}
 
 	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}

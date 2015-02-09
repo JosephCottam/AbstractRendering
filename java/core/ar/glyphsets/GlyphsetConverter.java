@@ -32,7 +32,7 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 	}
 	
 	protected Glyph<G,V> wrap(Glyph<G,I> g) {
-		return new SimpleGlyph<>(g.shape(), converter.value(g.info()));
+		return new SimpleGlyph<>(g.shape(), converter.apply(g.info()));
 	}
 	
 	@Override

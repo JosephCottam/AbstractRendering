@@ -94,7 +94,7 @@ public class RDDRender implements Serializable, Renderer {
 
 		public Aggregates<V> call(Aggregates<V> left, Aggregates<V> right)
 				throws Exception {
-			return AggregateUtils.__unsafeMerge(left, right, aggregator);
+			return AggregateUtils.__unsafeMerge(left, right, aggregator.identity(), aggregator::rollup);
 		}
 	}
 	

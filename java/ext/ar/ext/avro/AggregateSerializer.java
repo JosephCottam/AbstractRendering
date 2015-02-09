@@ -102,13 +102,13 @@ public class AggregateSerializer {
 
 		List<GenericRecord> records = new ArrayList<GenericRecord>();
 		A defVal = aggs.defaultValue();
-		GenericRecord defrec = converter.value(defVal);
+		GenericRecord defrec = converter.apply(defVal);
 
 		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
 				A val = aggs.get(x,y);
 				//if (defVal == val || (defVal != null && defVal.equals(val))) {continue;}  TODO: Investigate reinstating default-value omission by making a union type with null...(maybe)
-				GenericRecord vr = converter.value(val);
+				GenericRecord vr = converter.apply(val);
 				records.add(vr);
 			}
 		}
@@ -169,7 +169,7 @@ public class AggregateSerializer {
 			int yCount = (Integer) r.get("yBinCount");
 			int highX = lowX+xCount;
 			int highY = lowY+yCount;
-			A defVal = converter.value((GenericRecord) r.get("default"));			
+			A defVal = converter.apply((GenericRecord) r.get("default"));			
 			
 			@SuppressWarnings("unchecked")
 			GenericData.Array<GenericRecord> entries = 
@@ -179,7 +179,7 @@ public class AggregateSerializer {
 			for (int i=0; i<entries.size(); i++) {
 				int x = i % xCount;
 				int y = i / xCount;
-				A val = converter.value(entries.get(i));
+				A val = converter.apply(entries.get(i));
 				aggs.set(x+lowX, y+lowY, val);
 			}
 
@@ -201,7 +201,7 @@ public class AggregateSerializer {
 			 DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr)) {
 			
 			GenericRecord r = fr.next();
-			A defVal = converter.value((GenericRecord) r.get("default"));			
+			A defVal = converter.apply((GenericRecord) r.get("default"));			
 			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
 					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
 
@@ -212,7 +212,7 @@ public class AggregateSerializer {
 				for (int col=0; col<cols.size(); col++){
 					int y=col+aggs.lowY();
 					GenericRecord val = cols.get(col);
-					aggs.set(x, y, converter.value(val));
+					aggs.set(x, y, converter.apply(val));
 				}
 			}
 			fr.close();

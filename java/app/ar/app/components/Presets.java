@@ -229,7 +229,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return seq().then(new Categories.ToCount<>())
 					  	.then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
-					  	.then(new General.ValuerTransfer<>(new MathValuers.DivideInt<Integer>(4000),0))
+					  	.then(new General.ValuerTransfer<>(n -> (n/4000),0))
 					  	.then(new Numbers.FixedInterpolate<Integer>(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Population (Min Alpha)";}
@@ -244,7 +244,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return seq().then(new Categories.ToCount<>())
 						.then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
-						.then(new General.ValuerTransfer<>(new MathValuers.DivideInt<Integer>(4000),0))
+						.then(new General.ValuerTransfer<>(n -> (n/4000),0))
 						.then(new Numbers.FixedInterpolate<Integer>(Color.white, Color.red, 0, 25));
 		}
 		public String name() {return "US Population 10% alpha";}
@@ -285,7 +285,7 @@ public class Presets extends JPanel {
 		public Transfer<?,?> transfer() {
 			return seq().then(new Categories.ToCount<>())
 						.then(new General.Spread<>(new General.Spread.UnitRectangle<Integer>(1), new Numbers.Count<Integer>()))
-						.then(new General.ValuerTransfer<>(new MathValuers.Raise<Integer>(.333333d), 0d))
+						.then(new General.ValuerTransfer<>(n -> Math.cbrt(n), 0d))
 				  	  	.then(new  Numbers.Interpolate<Double>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Population (Exp)";}
@@ -383,7 +383,7 @@ public class Presets extends JPanel {
 			Transfer<CategoricalCounts<Color>, Color> black = new General.Const<>(Color.black);
 			
 			Valuer<CategoricalCounts<Color>, Boolean> p = new Valuer<CategoricalCounts<Color>, Boolean>() {
-				public Boolean value(CategoricalCounts<Color> val) {
+				public Boolean apply(CategoricalCounts<Color> val) {
 					if (val.hasKey(other)) {
 						double ratio = val.count(other)/((double) val.fullSize());
 						return ratio > .1;
@@ -424,7 +424,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return seq().then(new Categories.ToCount<>())
-	  					.then(new General.ValuerTransfer<>(new MathValuers.DivideInt<Integer>(10), 0))
+	  					.then(new General.ValuerTransfer<>(n -> n/10, 0))
 	  					.then(new Numbers.FixedInterpolate<Integer>(Color.white, Color.red, 0, 255));
 		}
 		public String name() {return "US Synthetic Population (Fractional Linear)";}
@@ -437,7 +437,7 @@ public class Presets extends JPanel {
 		public Glyphset<?,?> glyphset() {return CENSUS_SYN_PEOPLE;}
 		public Transfer<?,?> transfer() {
 			return seq().then(new Categories.ToCount<>())
-						.then(new General.ValuerTransfer<>(new MathValuers.Raise<Integer>(.333333d), 0d))
+						.then(new General.ValuerTransfer<>(n -> Math.cbrt(n), 0d))
 						.then(new Numbers.Interpolate<Double>(new Color(255,0,0,30), new Color(255,0,0,255)));
 		}
 		public String name() {return "US Synthetic Population (exp)";}

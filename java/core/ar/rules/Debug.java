@@ -25,16 +25,7 @@ public class Debug {
 		public int hashCode() {return Gradient.class.hashCode();}
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
-
-		@Override 
-		public ar.Transfer.Specialized<Object, Color> specialize(
-				Aggregates<? extends Object> aggregates) {return this;}
 		
-		@Override
-		public Aggregates<Color> process(
-				Aggregates<? extends Object> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 		@Override
 		public Color at(int x, int y, Aggregates<? extends Object> aggregates) {
 			float width =aggregates.highX()-aggregates.lowX();
@@ -114,7 +105,6 @@ public class Debug {
 	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;
 		private final String message;
-		
 		
 		/**
 		 * @param inner Transfer function to actually perform.

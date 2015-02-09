@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -51,6 +52,44 @@ public class General {
 		@Override public boolean equals(Object other) {return other instanceof Last;}
 		@Override public int hashCode() {return Last.class.hashCode();}
 	}
+	
+	/**What is the first item in the given aggregate cell (an over-plotting strategy)**/
+	public static final class First<A> implements Aggregator<A, A> {
+		private static final long serialVersionUID = 5899328174090941310L;
+		private final A identity;
+		
+		public First(A identity) {this.identity = identity;}
+		public A combine(A left, A update) {
+			if (left == identity) {return update;}
+			else {return left;}
+		}
+
+		public A rollup(A left, A right) {
+			if (left != null) {return left;}
+			if (right != null) {return right;}
+			return identity();
+		}
+		
+		public A identity() {return identity;}
+		public boolean equals(Object other) {return other instanceof First;}
+		public int hashCode() {return First.class.hashCode();}
+	}
+
+	/**Wraps a BiFunction as an aggregator.**/
+	public static final class Apply<A> implements Aggregator<A,A> {
+		private final A identity;
+		private final BiFunction<A,A,A> func;
+		
+		public Apply(A identity, BiFunction<A,A,A> func) {
+			this.identity = identity;
+			this.func = func;
+		}
+
+		@Override public A combine(A current, A update) {return func.apply(current, update);}
+		@Override public A rollup(A left, A right) {return func.apply(left, right);}
+		@Override public A identity() {return identity;}		
+	}
+	
 
 	/**Wrap a valuer in a transfer function.**/
 	public static final class ValuerTransfer<IN,OUT> implements Transfer.ItemWise<IN, OUT> {
@@ -63,17 +102,10 @@ public class General {
 
 		@Override 
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
-			return valuer.value(aggregates.get(x,y));
+			return valuer.apply(aggregates.get(x,y));
 		}
 
-		@Override public OUT emptyValue() {return empty;}
-		
-		@Override 
-		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-		
-		@Override public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
+		@Override public OUT emptyValue() {return empty;}		
 	}
 	
 	/**Performs a type-preserving replacement.  
@@ -91,13 +123,6 @@ public class General {
 		}
 		
 		@Override public T emptyValue() {return empty;}
-		@Override 
-		public Specialized<T,T> specialize(Aggregates<? extends T> aggregates) {return this;}
-
-		@Override
-		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 		
 		@Override 
 		public T at(int x, int y, Aggregates<? extends T> aggregates) {
@@ -130,13 +155,6 @@ public class General {
 		}
 		
 		@Override public V emptyValue() {return empty;}
-		@Override 
-		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
-		
-		@Override
-		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	/**Fill in empty values based on a function of nearby values.
@@ -151,8 +169,6 @@ public class General {
 		public Smear(V empty) {this.empty = empty;}
 
 		@Override public V emptyValue() {return empty;}
-		@Override 
-		public Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override
 		public V at(int x, int y, Aggregates<? extends V> aggregates) {
@@ -165,11 +181,6 @@ public class General {
 			throw new RuntimeException("Reached illegal state...");
 		}
 		
-		@Override
-		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
-
 		public Point spiralFrom(int X, int Y, int n, Point into) {
 			int x=0,y=0;
 			int dx = 0;
@@ -208,9 +219,6 @@ public class General {
 		}
 
 		@Override public V emptyValue() {return combiner.identity();}
-		
-		@Override 
-		public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return this;}
 		
 		@Override 
 		//TODO: Parallelize...
@@ -306,9 +314,8 @@ public class General {
 		}
 	}
 	
-	/**Aggregator and Transfer that always returns the same value.
-	 * **/
-	
+	/**Aggregator/Transfer that always returns the same value.
+	 **/
 	public static final class Const<A,OUT> implements Aggregator<A,OUT>, Transfer.ItemWise<A, OUT> {
 		private static final long serialVersionUID = 2274344808417248367L;
 		private final OUT val;
@@ -321,22 +328,17 @@ public class General {
 		public Const(OUT val, A ref) {this.val = val;}
 		/**@param val Value to return**/
 		public Const(OUT val) {this.val = val;}
+		
 		@Override public OUT combine(OUT left, A update) {return val;}
 		@Override public OUT rollup(OUT left, OUT right) {return val;}
 		@Override public OUT identity() {return val;}
 		@Override public OUT emptyValue() {return val;}
-		@Override public ar.Transfer.Specialized<A, OUT> specialize(Aggregates<? extends A> aggregates) {return this;}
 		@Override public OUT at(int x, int y, Aggregates<? extends A> aggregates) {return val;}
-
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends A> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 
 
 	/**Return what is found at the given location.**/
-	public static final class Echo<T> implements Transfer.ItemWise<T,T>, Aggregator<T,T> {
+	public static final class Echo<T> implements Transfer.ItemWise<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
 		
@@ -346,15 +348,6 @@ public class General {
 		
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
-		@Override public T identity() {return emptyValue();}
-		@Override public Echo<T> specialize(Aggregates<? extends T> aggregates) {return this;}		
-		@Override public T combine(T left, T update) {return update;}
-		
-		@Override public T rollup(T left, T right) {
-			if (left != null) {return left;}
-			if (right != null) {return right;}
-			return emptyValue();
-		}
 		
 		@Override
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
@@ -376,7 +369,6 @@ public class General {
 			this.absent=absent;
 		}
 		
-		@Override  public Present<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		@Override public OUT emptyValue() {return absent;}
 
 		@Override public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
@@ -385,10 +377,6 @@ public class General {
 			return absent;
 		}
 		
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	/**Transfer function that wraps a java.util.map.
@@ -424,13 +412,7 @@ public class General {
 		}
 
 		@Override public OUT emptyValue() {return other;}
-		@Override public MapWrapper<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
 		
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
-
 		/**From a reader, make a map wrapper.  
 		 * 
 		 * This is stream-based, line-oriented conversion.
@@ -451,7 +433,7 @@ public class General {
 			Map<K,V> dict = new HashMap<K,V>();
 			String line = bf.readLine();
 			while(line != null) {
-				dict.put(keyer.value(line), valuer.value(line));
+				dict.put(keyer.apply(line), valuer.apply(line));
 				line = bf.readLine();
 			}
 

@@ -76,7 +76,7 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("Gradient", new Debug.Gradient());
 						
 		AGGREGATORS.put("Blue",new General.Const<>(Color.BLUE));
-		AGGREGATORS.put("First", new Categories.First());
+		AGGREGATORS.put("First", new General.First<>(Util.CLEAR));
 		AGGREGATORS.put("Last", new General.Last<>(null));
 		AGGREGATORS.put("Count", new Numbers.Count<Object>());
 		AGGREGATORS.put("CoCColor", new Categories.CountCategories<Color>());

@@ -4,7 +4,6 @@ import java.awt.Color;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.Renderer;
 import ar.Transfer;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
@@ -28,42 +27,45 @@ public final class Numbers {
 		public int hashCode() {return Count.class.hashCode();}
 	}
 
+	
+
 	/**Total value of items present**/
-	public static final class Sum<N extends Number> implements Aggregator<N, N> {
-		Class<N> type;
-		public Sum(Class<N> type) {
-			if (type != Double.class
-					&& type != Float.class
-					&& type != Integer.class
-					&& type != Long.class) {
-				throw new IllegalArgumentException("Must supply a numerical primitive wrapper type");
-			}
-			this.type = type;
-		}
-		
+	public static final class Sum {
+		@SuppressWarnings("unchecked")
+		public static <N extends Number> Aggregator<N, N> make(N instance) {return (Aggregator<N, N>) make(instance.getClass());}
 		
 		@SuppressWarnings("unchecked")
-		@Override
-		public N combine(N current, N update) {
-			if (type == Double.class) {return (N) Double.valueOf(current.doubleValue() + update.doubleValue());}
-			if (type == Float.class) {return (N) Float.valueOf(current.floatValue() + update.floatValue());}
-			if (type == Integer.class) {return (N) Integer.valueOf(current.intValue() + update.intValue());}
-			if (type == Long.class) {return (N) Long.valueOf(current.longValue() + update.longValue());}
-			throw new IllegalArgumentException("Unsupported type " + type.getName());
+		public static <N extends Number> Aggregator<N, N> make(Class<N> clss) {
+			if (java.lang.Double.class.equals(clss)) {return (Aggregator<N, N>) new Double();}
+			if (java.lang.Float.class.equals(clss)) {return (Aggregator<N, N>) new Float();}
+			if (java.lang.Integer.class.equals(clss)) {return (Aggregator<N, N>) new Integer();}
+			if (java.lang.Long.class.equals(clss)) {return (Aggregator<N, N>) new Long();}
+			throw new IllegalArgumentException("No support for sum over " + clss.getName());
 		}
-
-		@Override public N rollup(N left, N right) {return combine(left, right);}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public N identity() {
-			if (type == Double.class) {return (N) Double.valueOf(0);}
-			if (type == Float.class) {return (N) Float.valueOf(0);}
-			if (type == Integer.class) {return (N) Integer.valueOf(0);}
-			if (type == Long.class) {return (N) Long.valueOf(0);}
-			throw new IllegalArgumentException("Unsupported type " + type.getName());
-		} 
 		
+		public static final class Double implements Aggregator<java.lang.Double, java.lang.Double> {
+			@Override public java.lang.Double combine(java.lang.Double current, java.lang.Double update) {return current.doubleValue() + update.doubleValue();}
+			@Override public java.lang.Double rollup(java.lang.Double left, java.lang.Double right) {return combine(left,right);}
+			@Override public java.lang.Double identity() {return 0d;}
+		}
+		
+		public static final class Float implements Aggregator<java.lang.Float, java.lang.Float> {
+			@Override public java.lang.Float combine(java.lang.Float current, java.lang.Float update) {return current.floatValue() + update.floatValue();}
+			@Override public java.lang.Float rollup(java.lang.Float left, java.lang.Float right) {return combine(left,right);}
+			@Override public java.lang.Float identity() {return 0f;}
+		}
+		
+		public static final class Integer implements Aggregator<java.lang.Integer , java.lang.Integer > {
+			@Override public java.lang.Integer combine(java.lang.Integer current, java.lang.Integer update) {return current.intValue() + update.intValue();}
+			@Override public java.lang.Integer rollup(java.lang.Integer left, java.lang.Integer right) {return combine(left,right);}
+			@Override public java.lang.Integer identity() {return 0;}
+		}
+		
+		public static final class Long implements Aggregator<java.lang.Long, java.lang.Long> {
+			@Override public java.lang.Long combine(java.lang.Long current, java.lang.Long update) {return current.longValue() + update.longValue();}
+			@Override public java.lang.Long rollup(java.lang.Long left, java.lang.Long right) {return combine(left,right);}
+			@Override public java.lang.Long identity() {return 0L;}
+		}		
 	}
 	
 	
@@ -73,14 +75,14 @@ public final class Numbers {
 		public Max(Valuer<Double,N> wrapper) {this.wrapper = wrapper;}
 
 		public N combine(N current, N update) {
-			 return wrapper.value(Math.max(current.doubleValue(), update.doubleValue()));
+			 return wrapper.apply(Math.max(current.doubleValue(), update.doubleValue()));
 		}
 		
 		public N rollup(N left, N right) {
-			return wrapper.value(Math.max(left.doubleValue(), right.doubleValue()));
+			return wrapper.apply(Math.max(left.doubleValue(), right.doubleValue()));
 		}
 		
-		public N identity() {return wrapper.value(0d);}
+		public N identity() {return wrapper.apply(0d);}
 	}
 	
 	/**Interpolate between two colors with fixed upper and lower bounds.
@@ -118,14 +120,8 @@ public final class Numbers {
 		public Color at(int x, int y, Aggregates<? extends IN> aggregates) {
 			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
 		}
-
-		@Override
-		public Aggregates<Color> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates,this);
-		}
 		
 		@Override public Color emptyValue() {return background;}
-		@Override public FixedInterpolate<IN>  specialize(Aggregates<? extends IN> aggregates) {return this;}
 	}
 	
 	/**HD interpolation between two colors.**/
@@ -171,11 +167,6 @@ public final class Numbers {
 				Number v = aggregates.get(x,y);
 				if (Util.isEqual(v, aggregates.defaultValue())) {return empty;}
 				return Util.interpolate(low, high, extrema.min.doubleValue(), extrema.max.doubleValue(), v.doubleValue());
-			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends A> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
 			}
 		}
 	}

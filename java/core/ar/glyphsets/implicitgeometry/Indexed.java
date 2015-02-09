@@ -140,12 +140,8 @@ public interface Indexed extends Serializable {
 		/**Create a new converter instance using the current types but the passed value source.**/
 		public Converter applyTo(Object[] values) {return new Converter(new ArrayWrapper(values), types);}
 		
-		/**Create a new converter instance using the current types but the passed value source.**/
-		public Converter applyTo(Indexed values) {return new Converter(values, types);}
-
 		@Override
-		//TODO: Remove 'applyTo' just use 'value' from here on out...
-		public Indexed value(Indexed from) {return new Converter(values, types);}
+		public Indexed apply(Indexed from) {return new Converter(from, types);}
 	}
 	
 	
@@ -168,9 +164,7 @@ public interface Indexed extends Serializable {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public V value(Indexed from) {
-			return basis.value((I) from.get(vIdx));
-		}
+		public V apply(Indexed from) {return basis.apply((I) from.get(vIdx));}
 	}
 	
 
@@ -189,7 +183,7 @@ public interface Indexed extends Serializable {
 		}
 		
 		@Override 
-		public Point2D shape(Indexed from) {
+		public Point2D apply(Indexed from) {
 			double x=((Number) from.get(xIdx)).doubleValue();
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
@@ -225,7 +219,7 @@ public interface Indexed extends Serializable {
 		}
 		
 		@Override 
-		public Rectangle2D shape(Indexed from) {
+		public Rectangle2D apply(Indexed from) {
 			double x=((Number) from.get(xIdx)).doubleValue();
 			double y=((Number) from.get(yIdx)).doubleValue();
 			
@@ -260,7 +254,7 @@ public interface Indexed extends Serializable {
 		}
 		
 		@Override 
-		public Ellipse2D shape(Indexed from) {
+		public Ellipse2D apply(Indexed from) {
 			double x=((Number) from.get(xIdx)).doubleValue();
 			double y=((Number) from.get(yIdx)).doubleValue();
 			

@@ -11,30 +11,11 @@ import java.util.TreeSet;
 
 import ar.Aggregates;
 import ar.Aggregator;
-import ar.Renderer;
 import ar.Transfer;
 import ar.util.Util;
 
 /**Tools for working with categorical entries.**/
 public class Categories {
-	/**What is the first item in the given pixel (an over-plotting strategy)**/
-	public static final class First implements Aggregator<Color, Color> {
-		private static final long serialVersionUID = 5899328174090941310L;
-		public Color combine(Color left, Color update) {
-			if (left == Util.CLEAR) {return update;}
-			else {return left;}
-		}
-
-		public Color rollup(Color left, Color right) {
-			if (right != null) {return right;}
-			if (left != null) {return left;}
-			return identity();
-		}
-		
-		public Color identity() {return Util.CLEAR;}
-		public boolean equals(Object other) {return other instanceof First;}
-		public int hashCode() {return First.class.hashCode();}
-	}
 
 	
 	/**Convert a set of categorical counts to the number a categories present.**/ 
@@ -43,16 +24,9 @@ public class Categories {
 
 		@Override public Integer emptyValue() {return 0;}
 		
-		@Override 
-		public NumCategories<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
-
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 			return aggregates.get(x,y).size();
-		}
-		@Override
-		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
 		}
 	}
 	
@@ -65,18 +39,10 @@ public class Categories {
 		private static final long serialVersionUID = -8842454931082209229L;
 
 		@Override public Integer emptyValue() {return 0;}
-		
-		@Override 
-		public ToCount<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 
 		@Override
 		public Integer at(int x, int y,Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 			return aggregates.get(x,y).fullSize();
-		}
-
-		@Override
-		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
 		}
 	}
 	
@@ -85,16 +51,8 @@ public class Categories {
 		private final Comparator<IN> comp;
 		
 		public Sort(Comparator<IN> comp) {this.comp = comp;}
-
-		@Override 
-		public Sort<IN> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 		
 		@Override public CategoricalCounts<IN> emptyValue() {return new CategoricalCounts<>(comp);}
-
-		@Override
-		public Aggregates<CategoricalCounts<IN>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 
 		@Override
 		public CategoricalCounts<IN> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> input) {
@@ -103,7 +61,6 @@ public class Categories {
 			for (int i=0; i< in.size(); i++) {out.extend(in.key(i), in.count(i));}
 			return out;
 		} 
-
 	}
 	
 	/**Replace category labels with other category labels.
@@ -139,18 +96,10 @@ public class Categories {
 
 		
 		@Override public CategoricalCounts<OUT> emptyValue() {return like.empty();}
-		
-		@Override  
-		public Rekey<IN,OUT> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}		
 
 		@Override
 		public CategoricalCounts<OUT> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 			return rekey(rekey, missing, aggregates.get(x, y), emptyValue());
-		}
-
-		@Override
-		public Aggregates<CategoricalCounts<OUT>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
 		}
 		
 		/**Rekey a set of categories.
@@ -243,15 +192,9 @@ public class Categories {
 			}
 
 			@Override
-			public Aggregates<CategoricalCounts<OUT>> process(Aggregates<? extends CategoricalCounts<IN>> aggregates,Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}
-
-			@Override
 			public CategoricalCounts<OUT> at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 				return Rekey.rekey(rekey, missing, aggregates.get(x, y), emptyValue());
-			}
-			
+			}			
 		}
 		
 	}
@@ -286,19 +229,11 @@ public class Categories {
 		
 		@Override public OUT emptyValue() {return noMatch;}
 		
-		@Override  
-		public Binary<IN,OUT> specialize(Aggregates<? extends IN> aggregates) {return this;}
-
 		@Override
 		public OUT at(int x, int y, Aggregates<? extends IN> aggregates) {
 			IN v = aggregates.get(x, y);
 			if ((comp != null && comp.compare(v, key) == 0) || v == key) {return match;}
 			return noMatch;
-		}
-
-		@Override
-		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
 		}
 	}
 	
@@ -390,15 +325,7 @@ public class Categories {
 			else {return cats.count(n);}
 		}
 		
-		@Override public Integer emptyValue() {return background;}
-		
-		@Override  
-		public NthCount<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
-
-		@Override
-		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
+		@Override public Integer emptyValue() {return background;}		
 	}
 	
 	/**Pull the nth entry from a set of categories.  Retains the key and the value.**/
@@ -427,14 +354,6 @@ public class Categories {
 		}
 		
 		@Override public CategoricalCounts<T> emptyValue() {return empty.empty();}
-		
-		@Override  
-		public NthEntry<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return new NthEntry<>(n, aggregates.defaultValue());}
-
-		@Override
-		public Aggregates<CategoricalCounts<T>> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	/**Pull the nth-item key from a set of categories.**/
@@ -460,14 +379,6 @@ public class Categories {
 		}
 		
 		@Override public T emptyValue() {return background;}
-		
-		@Override  
-		public NthKey<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
-
-		@Override
-		public Aggregates<T> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 
 
@@ -478,12 +389,14 @@ public class Categories {
 	 * key-category constitutes more than X percent of the total then 
 	 * return one value.  Otherwise return another.  If category X is not present, return a third.
 	 * 
+	 * TODO: Convert to output Aggregates<Double>, outputs the percent of total that a key represents
+	 * 
 	 ***/
 	public static final class KeyPercent<T> implements Transfer.ItemWise<CategoricalCounts<T>, Color> {
 		private static final long serialVersionUID = -5019762670520542229L;
 		private final double ratio;
 		private final Color background, match, noMatch;
-		private final Object firstKey;
+		private final T keyCategory;
 		
 		/**
 		 * @param ratio Target ratio
@@ -492,12 +405,12 @@ public class Categories {
 		 * @param match Color to return if key-category constitutes at least ratio percent of the total
 		 * @param noMatch Color to return if the key-category does not constitute at least ratio percent of the total
 		 */
-		public KeyPercent(double ratio, Object keyCategory,  Color background, Color match, Color noMatch) {
+		public KeyPercent(double ratio, T keyCategory,  Color background, Color match, Color noMatch) {
 			this.ratio = ratio;
 			this.background = background;
 			this.match = match;
 			this.noMatch = noMatch;
-			this.firstKey = keyCategory;
+			this.keyCategory = keyCategory;
 		}
 		
 		@Override
@@ -505,21 +418,15 @@ public class Categories {
 			CategoricalCounts<T> cats = aggregates.get(x,y);
 			double size = cats.fullSize();
 			
+			
 			if (size == 0) {return background;}
-			else if (!cats.key(0).equals(firstKey)) {return noMatch;} 
+			else if (!cats.hasKey(keyCategory)) {return noMatch;} 
 			else if (cats.count(0)/size >= ratio) {return match;}
 			else {return noMatch;}
 		}
-
-		@Override 
-		public KeyPercent<T> specialize(Aggregates<? extends CategoricalCounts<T>> aggregates) {return this;}
 		
 		@Override public Color emptyValue() {return background;}
 
-		@Override
-		public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<T>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}
 	}
 	
 	
@@ -567,11 +474,6 @@ public class Categories {
 				super(background, omin, log);
 				this.max = max;
 			}
-
-			@Override
-			public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
-				return rend.transfer(aggregates, this);
-			}			
 
 			@Override
 			public Color at(int x, int y, Aggregates<? extends CategoricalCounts<Color>> aggregates) {
@@ -634,34 +536,19 @@ public class Categories {
 		}
 
 		@Override public Color emptyValue() {return Util.CLEAR;}
-		
-		@Override  
-		public RandomWeave specialize(Aggregates<? extends CategoricalCounts<Color>> aggregates) {return this;}
-
-		@Override
-		public Aggregates<Color> process(Aggregates<? extends CategoricalCounts<Color>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}		
 	}
 	
 	/**Convert a CategoricalCounts just a set of counts for a specific category.**/
 	public static class Select<IN> implements Transfer.ItemWise<CategoricalCounts<IN>, Integer> {
 		private final IN label;
 		public Select(IN label) {this.label = label;}
+
 		@Override public Integer emptyValue() {return 0;}
-		
-		@Override  
-		public Specialized<CategoricalCounts<IN>, Integer> specialize(Aggregates<? extends CategoricalCounts<IN>> aggregates) {return this;}
 		
 		@Override
 		public Integer at(int x, int y, Aggregates<? extends CategoricalCounts<IN>> aggregates) {
 			return aggregates.get(x, y).count(label);
 		}
-
-		@Override
-		public Aggregates<Integer> process(Aggregates<? extends CategoricalCounts<IN>> aggregates, Renderer rend) {
-			return rend.transfer(aggregates, this);
-		}		
 	}
 	
 //
