@@ -27,16 +27,19 @@ abstract class IntegerBackingAggregates implements Serializable {
 	}
 
 	public Integer getInteger(int x, int y) {return getInt(x,y);}
+	
+	public void setInt(int x, int y, int val) {
+		if (x<lowX || x >=highX || y<lowY || y>=highY) {return;}
+		values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)] = val;
+	}
+	
 	public int getInt(int x, int y) {
 		if (x<lowX || x >=highX || y<lowY || y>=highY) {return defVal;}
 		return values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)];
 	}
 
 	
-	public void set(int x, int y, Integer val) {
-		if (x<lowX || x >=highX || y<lowY || y>=highY) {return;}
-		values[AggregateUtils.idx(x,y, lowX, lowY, highX, highY)] = val.intValue();
-	}
+	public void set(int x, int y, Integer val) {setInt(x, y, val.intValue());}
 
 	public Integer defaultInt() {return defVal;}
 	public int lowX() {return lowX;}

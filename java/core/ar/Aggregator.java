@@ -30,6 +30,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	public OUT combine(OUT current, IN update);
 	
 	
+	
 	/**Reduce aggregate values into a single value.
 	 * 
 	 * If there is any sequential notion, the "first" item should go into left and the "second" into right.
@@ -41,7 +42,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * @return Combination of the passed aggregates
 	 */
 	public OUT rollup(OUT left, OUT right);
-		
+			
 	/**What value is an mathematical identity value for this operation?
 	 * Value V is an identity is op(V, x) = x for all V.
 	 * 
@@ -51,4 +52,7 @@ public interface Aggregator<IN,OUT> extends Serializable {
 	 * property (for example, pixel-serial rendering just uses it for the ag).
 	 **/
 	public OUT identity();
+	
+	public int rollupInt(int left, int right);// {throw new UnsupportedOperationException();}
+	public int combineInt(int current, IN update);// {throw new UnsupportedOperationException();}
 }

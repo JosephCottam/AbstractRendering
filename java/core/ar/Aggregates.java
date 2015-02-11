@@ -33,6 +33,9 @@ public interface Aggregates<A> extends Serializable, Iterable<A> {
 	/**Get the aggregate value at the given position.**/
 	public A get(int x, int y);
 	
+	public default int getInt(int x, int y) {throw new UnsupportedOperationException();} 
+	public default void setInt(int x, int y, int val) {throw new UnsupportedOperationException();}
+	
 	/**Set the aggregate value at the given position.
 	 * 
 	 * 

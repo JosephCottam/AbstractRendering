@@ -19,12 +19,16 @@ public final class Numbers {
 	public static final class Count<V> implements Aggregator<V, Integer> {
 		private static final long serialVersionUID = 5984959309743633510L;
 		
-		public Integer combine(Integer left, V update) {return left+1;}
-		public Integer rollup(Integer left, Integer right) {return left+right;}
+		@Override public Integer combine(Integer left, V update) {return left+1;}
+		@Override public Integer rollup(Integer left, Integer right) {return left+right;}
 		
-		public Integer identity() {return 0;}
-		public boolean equals(Object other) {return other instanceof Count;}
-		public int hashCode() {return Count.class.hashCode();}
+		@Override public int combineInt(int left, V update) {return left+1;}
+		@Override public int rollupInt(int left, int right) {return left+right;}
+
+		
+		@Override public Integer identity() {return 0;}
+		@Override public boolean equals(Object other) {return other instanceof Count;}
+		@Override public int hashCode() {return Count.class.hashCode();}
 	}
 
 	
