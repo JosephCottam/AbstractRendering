@@ -1,6 +1,7 @@
 package ar;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Spliterator;
 
 import ar.util.axis.DescriptorPair;
 
@@ -73,7 +74,6 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * 
 	 */
 	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException;
-	
 	
 	/**Glyphsets that support random access.
 	 * 

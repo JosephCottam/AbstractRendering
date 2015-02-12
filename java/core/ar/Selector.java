@@ -2,6 +2,7 @@ package ar;
 
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
+import java.util.function.Function;
 
 /**Selectors associate glyphs with bins.  
  * 
@@ -12,7 +13,7 @@ import java.io.Serializable;
  * is driven by the data-parallel and aggregate-reduction based
  * execution model this implementation actually uses.
  */
-public interface Selector<G> extends Serializable {
+public interface Selector<G, I> extends Serializable, Function<Glyph<? extends G, ? extends I>, Aggregates<? extends I>> {
 	/**Process all items in a glyphset towards a given aggregates target.
 	 * 
 	 * This method is used in glyph-parallel aggregation because it is can be efficiently
@@ -24,7 +25,7 @@ public interface Selector<G> extends Serializable {
 	 * @param op Aggregator operation to use.
 	 * @return Aggregates representing the existing aggregates updated by the glyphset
 	 */
-	public <I,A> Aggregates<A> processSubset(
+	public <A> Aggregates<A> processSubset(
 			Iterable<? extends Glyph<? extends G, ? extends I>> glyphset, 
 			AffineTransform view,
 			Aggregates<A> existing, 
