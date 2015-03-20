@@ -126,21 +126,6 @@ public class Axis {
 	
 	
     //---------------------------------------------------- Rendering ----------------------------------------------------
-	
-
-	public static void drawAxes(DescriptorPair axes, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds) {
-		
-		Object restore_anti_alias = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-
-		drawAxis(axes.x, g2, viewTransform, screenBounds, true);
-		drawAxis(axes.y, g2, viewTransform, screenBounds, false);
-
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, restore_anti_alias);
-
-	}
-	
 	/**How far off of the line should labels be placed?**/
 	public static float LABEL_OFFSET = 10;
 	
@@ -153,31 +138,53 @@ public class Axis {
 	/**How many pixels high should the axes be given?**/
 	public static int AXIS_SPACE = 100;
 	
-	public static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds, boolean isX) {
-		g2.setColor(Color.GRAY);
+	/**
+	 * 
+	 * Note on colors:
+	 *  * Color 0 -- Tick line color
+	 *  * Color 1 -- Tick label color, defaults to color 0 if not supplied
+	 *  * Color 2 -- Baseline color, defaults to color 0 if not supplied
+	 *  * Color 3 -- Overall axis label color, defaults to color 1 if not supplied
+	 * 
+	 * @param axis Descriptor for the axis to draw 
+	 * @param g2 Graphics object to draw on
+	 * @param viewTransform View transform for the visualization's current rendering
+	 * @param screenBounds Bounding box of the space to draw in, must be in g2's coordinate space 
+	 * @param isX Is this an x-axis?
+	 * @param colors -- Optional colors for fine-tuning appearance
+	 */
+	public static final void drawAxis(AxisDescriptor<?> axis, Graphics2D g2, AffineTransform viewTransform, Rectangle2D screenBounds, boolean isX, Color... colors) {
+		Color tickColor = colors.length > 0 ? colors[0] : Color.GRAY;
+		Color tickLabelColor = colors.length > 1 ? colors[1] : tickColor;
+		Color baselineColor = colors.length > 2 ? colors[2] : tickColor;
+		Color baselineLabelColor = colors.length > 3 ? colors[3] : tickLabelColor;
+		
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
 		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
 			Double val = e.getValue();
 			
-			drawLine(val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
-			drawLabel(e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX);
+			drawLine(tickColor, val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
+			drawLabel(tickLabelColor, e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX);
 
 			max = Math.max(max, val);
 			min = Math.min(min, val);
 		}
 		
-		drawLine(min, max, 0,0, g2, viewTransform, screenBounds, isX);		
-		drawLabel(axis.label, min, max, LABEL_OFFSET*4.5, g2, viewTransform, screenBounds, isX, !isX); //TODO: The '4.5' is a magic number...remove it by doing some whole-axis analysis
+		drawLine(baselineColor, min, max, 0,0, g2, viewTransform, screenBounds, isX);		
+		drawLabel(baselineLabelColor, axis.label, min, max, LABEL_OFFSET*4.5, g2, viewTransform, screenBounds, isX, !isX); //TODO: The '4.5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
 	 * Text is drawn in unscaled space, but positioning is done with respect to the view transform.
 	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
 	 */
-	private static final void drawLabel(Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX, boolean rotate) {
-		AffineTransform restore = g2.getTransform();
-		g2.setTransform(new AffineTransform());
-		
+	private static final void drawLabel(Color c, Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX, boolean rotate) {
+		g2 = (Graphics2D) g2.create();
+		g2.setColor(c);
+		g2.translate(screenBounds.getMinX(), screenBounds.getMinY());
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+
 		String labelText;
 		if (label instanceof Integer || label instanceof Long) {
 			labelText = String.format("%,d", label);
@@ -212,26 +219,24 @@ public class Axis {
 		if (isX) {
 			x = (p1.getX()+p2.getX())/2 - (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
 			y = Math.min(p1.getY(), p2.getY()) + offset;
-			t = AffineTransform.getTranslateInstance(x+screenBounds.getMinX(), y+screenBounds.getMinY());
+			t = AffineTransform.getTranslateInstance(x, y);
 		} else {
 			x = Math.min(p1.getX(), p2.getX()) - (stringBounds.getWidth()+offset+offset); //HACK: TWICE!!! Not sure why...
 			y = (p1.getY()+p2.getY())/2 + (stringBounds.getHeight()/4); //HACK: Divide by 4????  It just looks better...
-			t = AffineTransform.getTranslateInstance(x+screenBounds.getMinX(), y+screenBounds.getMinY());
+			t = AffineTransform.getTranslateInstance(x, y);
 		}
 
 		if (rotate) {t.rotate(Math.PI/2);}
 
-		
-		g2.setTransform(t);
+		g2.transform(t);
 		g2.drawString(labelText, 0,0);
-		g2.setTransform(restore);
 	}
 	
 	/**Draws a line between two points.  The line is always drawn in unscaled space, 
 	 * so the line thickness is not affect by the view transform BUT the points are scaled to match 
 	 * the view transform.  Otherwise said, this method achieves Bertin-style 'line' implantation.   
 	 */
-	private static final void drawLine(double val1, double val2, double toward, double away, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX) {
+	private static final void drawLine(Color c, double val1, double val2, double toward, double away, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX) {
 		AffineTransform t = new AffineTransform(vt);
 		Point2D p1, p2;
 		if (isX) {
@@ -248,12 +253,12 @@ public class Axis {
 		
 		t.transform(p1, p1);
 		t.transform(p2, p2);
-		
-		AffineTransform restore = g2.getTransform();
-		g2.setTransform(AffineTransform.getTranslateInstance(screenBounds.getMinX(), screenBounds.getMinY()));
-		
+				
 		Line2D l = new Line2D.Double(p1, p2);
+		
+		g2 = (Graphics2D) g2.create();
+		g2.setColor(c);
+		g2.translate(screenBounds.getMinX(), screenBounds.getMinY());
 		g2.draw(l);
-		g2.setTransform(restore);
 	}	
 }

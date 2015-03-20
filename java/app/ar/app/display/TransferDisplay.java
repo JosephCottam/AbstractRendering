@@ -147,7 +147,8 @@ public class TransferDisplay extends ARComponent {
 		if (image != null) {
 			g2.drawRenderedImage(image, offsetTransform);
 			if (axes != null && includeAxes) {
-				Axis.drawAxes(axes, g2, viewTransform, this.getBounds());
+				Axis.drawAxis(axes.x, g2, viewTransform, this.getBounds(), true);
+				Axis.drawAxis(axes.y, g2, viewTransform, this.getBounds(), false);
 			}
 		}
 	}	
