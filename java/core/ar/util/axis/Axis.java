@@ -164,21 +164,23 @@ public class Axis {
 			Double val = e.getValue();
 			
 			drawLine(tickColor, val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
-			drawLabel(tickLabelColor, e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX);
+			drawLabel(tickLabelColor, e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX ? Math.PI/2 : 0);
 
 			max = Math.max(max, val);
 			min = Math.min(min, val);
 		}
 		
 		drawLine(baselineColor, min, max, 0,0, g2, viewTransform, screenBounds, isX);		
-		drawLabel(baselineLabelColor, axis.label, min, max, LABEL_OFFSET*4.5, g2, viewTransform, screenBounds, isX, !isX); //TODO: The '4.5' is a magic number...remove it by doing some whole-axis analysis
+		drawLabel(baselineLabelColor, axis.label, min, max, LABEL_OFFSET*4.5, g2, viewTransform, screenBounds, isX, isX ? 0 : -Math.PI/2); //TODO: The '4.5' is a magic number...remove it by doing some whole-axis analysis
 	}
 	
 	/**Draws text at the given position.
 	 * Text is drawn in unscaled space, but positioning is done with respect to the view transform.
 	 * This is an interpretation of Bertin-style 'point' implantation, applied to text.
+	 * 
+	 * @param rotate -- Factor to rotate by (Math.PI/2 is vertical, 0 is horizontal)  
 	 */
-	private static final void drawLabel(Color c, Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX, boolean rotate) {
+	private static final void drawLabel(Color c, Object label, double val1, double val2, double offset, Graphics2D g2, AffineTransform vt, Rectangle2D screenBounds, boolean isX, double rotation) {
 		g2 = (Graphics2D) g2.create();
 		g2.setColor(c);
 		g2.translate(screenBounds.getMinX(), screenBounds.getMinY());
@@ -226,7 +228,7 @@ public class Axis {
 			t = AffineTransform.getTranslateInstance(x, y);
 		}
 
-		if (rotate) {t.rotate(Math.PI/2);}
+		t.rotate(rotation);
 
 		g2.transform(t);
 		g2.drawString(labelText, 0,0);
