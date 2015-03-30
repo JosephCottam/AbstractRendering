@@ -169,7 +169,7 @@ public class EnhanceHost extends ARComponent.Aggregating {
 	@Override public void includeAxes(boolean include) {hosted.includeAxes(include);}
 	
 	@Override
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair axes) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair<?,?> axes) {
 		hosted.aggregates(aggregates, renderTransform, axes);
 	}
 	

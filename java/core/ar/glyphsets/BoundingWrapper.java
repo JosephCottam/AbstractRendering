@@ -57,8 +57,8 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 
 
 	/**Approximate!  Returns the descriptor for the base...**/
-	@Override public DescriptorPair axisDescriptors() {return base.axisDescriptors();}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair<?,?> axisDescriptors() {return base.axisDescriptors();}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 
 	
 	@Override

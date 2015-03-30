@@ -73,8 +73,8 @@ public class GlyphsetRDD<G,I> implements Glyphset<G,I>, Serializable {
 		throw new UnsupportedOperationException("Segmentation not supported.  Use Spark segmentation routines on RDD directly or convert to local glyphset (via iterator)");
 	}
 
-	private DescriptorPair axisDescriptor;
-	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair<?,?> axisDescriptor;
+	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 
 	
 }

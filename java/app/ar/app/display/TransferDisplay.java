@@ -28,7 +28,7 @@ public class TransferDisplay extends ARComponent {
 	/**Aggregates to render*/
 	private Aggregates<?> aggregates;
 	
-	private DescriptorPair axes;
+	private DescriptorPair<?,?> axes;
 	private boolean includeAxes;
 
 	/**What transform was used to produce the base aggregates.**/ 
@@ -86,7 +86,7 @@ public class TransferDisplay extends ARComponent {
 	/**Set the aggregates set in transfer.  
 	 * Used as default set of aggregates if refAggregates is null.
 	 */
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, DescriptorPair axes) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, DescriptorPair<?,?> axes) {
 		this.aggregates = aggregates;
 		this.renderedTransform = renderedTransform;
 		this.axes = axes;

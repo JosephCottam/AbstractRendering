@@ -36,8 +36,8 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 		return new Cached<>(base, bottom + this.low, top + this.low);
 	}
 
-	@Override public DescriptorPair axisDescriptors() {return Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair<?,?> axisDescriptors() {return Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 
 	
 	/**Subset where glyphs are cached in the subset.

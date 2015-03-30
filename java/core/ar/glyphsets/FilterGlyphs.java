@@ -46,8 +46,8 @@ public final class FilterGlyphs<G, I> implements Glyphset<G,I> {
 		return new FilterGlyphs<>(base.segmentAt(count, segId), predicate);
 	}
 
-	@Override public DescriptorPair axisDescriptors() {return base.axisDescriptors();}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair<?,?> axisDescriptors() {return base.axisDescriptors();}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 
 	public static final class FilterIterator<G, I> implements Iterator<Glyph<G,I>> {
 		private final Iterator<Glyph<G,I>> base;

@@ -53,8 +53,8 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 	@Override public boolean isEmpty() {return base.isEmpty();}
 	@Override public Rectangle2D bounds() {return base.bounds();}
 	@Override public long size() {return base.size();}
-	@Override public DescriptorPair axisDescriptors() {return base.axisDescriptors();}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {base.axisDescriptors(descriptor);}
+	@Override public DescriptorPair<?,?> axisDescriptors() {return base.axisDescriptors();}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 
 	@Override
 	public Glyphset<G,V> segmentAt(int count, int segId) throws IllegalArgumentException {

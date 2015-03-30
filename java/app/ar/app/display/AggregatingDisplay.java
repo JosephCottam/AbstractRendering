@@ -86,7 +86,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 	@Override public Aggregates<?> aggregates() {return aggregates;}
 	
 	@Override 
-	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, DescriptorPair axes) {
+	public void aggregates(Aggregates<?> aggregates, AffineTransform renderedTransform, DescriptorPair<?,?> axes) {
 		display.aggregates(aggregates, renderedTransform, axes);
 		display.refAggregates(null);
 

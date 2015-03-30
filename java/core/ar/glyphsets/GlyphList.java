@@ -23,7 +23,7 @@ import ar.util.axis.DescriptorPair;
 public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 	protected final List<Glyph<G,I>> glyphs = new ArrayList<Glyph<G,I>>();
 	protected Rectangle2D bounds;
-	private DescriptorPair axisDescriptor;
+	private DescriptorPair<?,?> axisDescriptor;
 
 	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
 	public void addAll(Glyphset<G,I> newGlyphs) {
@@ -56,6 +56,6 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 		return new GlyphSubset.Uncached<G,I>(this, low, high);
 	}
 	
-	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 
 }

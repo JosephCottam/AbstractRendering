@@ -185,7 +185,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		return bounds;
 	}
 
-	private DescriptorPair axisDescriptor;
-	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair<?,?> axisDescriptor;
+	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 
 }

@@ -29,7 +29,7 @@ public abstract class ARComponent extends JComponent implements HasViewTransform
 	public abstract Aggregates<?> aggregates();
 
 	/**Set Aggregates before transfer and the transform used to create them.**/
-	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair axes);
+	public abstract void aggregates(Aggregates<?> aggregates, AffineTransform renderTransform, DescriptorPair<?,?> axes);
 	
 	public abstract Aggregates<?> refAggregates();
 	public abstract void refAggregates(Aggregates<?> aggregates);

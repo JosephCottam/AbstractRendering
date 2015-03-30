@@ -44,16 +44,16 @@ import ar.Glyphset;
  */
 public class Axis {
 
-	public static final <T> AxisDescriptor<T> empty() {return new AxisDescriptor<T>("", Collections.<T,Double>emptyMap(), new Interpolate.Discrete<T>());}
+	public static final <T> AxisDescriptor<T> empty() {return new AxisDescriptor<T>("", Collections.<Double,T>emptyMap(), new Interpolate.Discrete<T>());}
 	
 	/**Produce descriptors indicating literal positions.
 	 * DOES NOT reflect backing data, just the bounding box of the projection.
 	 * **/
-	public static DescriptorPair coordinantDescriptors(Glyphset<?,?> glyphs) {
+	public static DescriptorPair<Number,Number> coordinantDescriptors(Glyphset<?,?> glyphs) {
 		Rectangle2D bounds = glyphs.bounds();
 		
-		return new DescriptorPair(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), bounds.getMinX(), bounds.getMaxX(), 10, true),
-					    		linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), bounds.getMinY(), bounds.getMaxY(), 10, true));
+		return new DescriptorPair<>(linearDescriptor("", bounds.getMinX(), bounds.getMaxX(), bounds.getMinX(), bounds.getMaxX(), 10, true),
+					    			linearDescriptor("", bounds.getMinY(), bounds.getMaxY(), bounds.getMinY(), bounds.getMaxY(), 10, true));
 	}
 	
 
@@ -73,7 +73,7 @@ public class Axis {
 	 * @return
 	 */
 	public static <T extends Number> AxisDescriptor<T> linearDescriptor(String label, double lowIn, double highIn, double lowOut, double highOut, int samples, boolean continuous) {
-		Map<Number, Double> rslt = continuous ? new TreeMap<Number, Double>() : new HashMap<Number, Double>();
+		Map<Double, Number> rslt = continuous ? new TreeMap<>() : new HashMap<>();
 		Interpolate<?> interp = continuous ? new Interpolate.LinearSmooth() : new Interpolate.Discrete<Long>();
 		
 		for (int i=0; i<samples+1; i++) {
@@ -88,21 +88,21 @@ public class Axis {
 				out = lowOut + ((highOut-lowOut)/samples)*i;
 			}
 			
-			rslt.put(in, out.doubleValue());
+			rslt.put(out.doubleValue(), in);
 		}
 		
-		return new AxisDescriptor<>(label, (Map<T, Double>) rslt, (Interpolate<T>) interp);
+		return new AxisDescriptor<>(label, (Map<Double, T>) rslt, (Interpolate<T>) interp);
 	}
 	
 	/**Create an evenly-spaced categorical axis.**/
 	public static AxisDescriptor<String> categoricalDescriptor(String label, double low, double high, String... labels) {
 		double positions = labels.length;
-		Map<String, Double> rslt = new HashMap<String, Double>();
+		Map<Double, String> rslt = new HashMap<>();
 		
 		double gap = low + ((high-low)/(positions*2));
 		for (int i=0; i<positions; i++) {
 			Double val = gap + gap*i*2;
-			rslt.put(labels[i], val);
+			rslt.put(val, labels[i]);
 		}
 		return new AxisDescriptor<>(label, rslt, new Interpolate.Discrete<String>());
 	}
@@ -113,7 +113,7 @@ public class Axis {
 	 * NOTE: Assumes the interpolate from 'first' is the one to carry forward.
 	 */
 	public <T> AxisDescriptor<T> merge(AxisDescriptor<T> first, AxisDescriptor<T> second) {
-		Map<T, Double> combined = new HashMap<>();
+		Map<Double, T> combined = new HashMap<>();
 		combined.putAll(first.seeds);
 		combined.putAll(second.seeds);
 		
@@ -160,11 +160,11 @@ public class Axis {
 		Color baselineLabelColor = colors.length > 3 ? colors[3] : tickLabelColor;
 		
 		double max=Double.NEGATIVE_INFINITY, min=Double.POSITIVE_INFINITY;		
-		for (Map.Entry<?,Double> e:axis.seeds.entrySet()) {
-			Double val = e.getValue();
+		for (Map.Entry<Double, ?> e:axis.seeds.entrySet()) {
+			Double val = e.getKey();
 			
 			drawLine(tickColor, val, val, TICK_TOWARD, TICK_AWAY, g2, viewTransform, screenBounds, isX);
-			drawLabel(tickLabelColor, e.getKey(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX ? Math.PI/2 : 0);
+			drawLabel(tickLabelColor, e.getValue(), val, val, LABEL_OFFSET, g2, viewTransform, screenBounds, isX, isX ? Math.PI/2 : 0);
 
 			max = Math.max(max, val);
 			min = Math.min(min, val);

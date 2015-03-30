@@ -203,7 +203,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		@Override public void remove() {throw new UnsupportedOperationException();}
 	}
 	
-	private DescriptorPair axisDescriptor;
-	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair<?,?> axisDescriptor;
+	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 
 }

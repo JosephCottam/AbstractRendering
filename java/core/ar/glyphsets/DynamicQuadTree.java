@@ -174,9 +174,9 @@ public abstract class DynamicQuadTree<G,I> implements Glyphset<G,I> {
 		return "Not a know type: " + t.getClass().getName();
 	}
 	
-	private DescriptorPair axisDescriptor;
-	@Override public DescriptorPair axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
-	@Override public void axisDescriptors(DescriptorPair descriptor) {this.axisDescriptor = descriptor;} 
+	private DescriptorPair<?,?> axisDescriptor;
+	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
+	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 
 
 
 	/**The root node does not actually hold an items, it is to facilitate the "up" direction splits.
