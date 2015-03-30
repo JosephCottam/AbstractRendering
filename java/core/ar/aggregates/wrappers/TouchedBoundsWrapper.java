@@ -7,7 +7,7 @@ import ar.aggregates.Iterator2D;
 import ar.util.Util;
 
 
-/**Wrap a set of aggregates.  Report min/max X/Y based on values set instead of the region that is set-able.**/
+/**Report min/max X/Y based on values set in the set-able region (instead of just the set-able region.)**/
 public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	private final Aggregates<A> base;
 	private int lowX = Integer.MAX_VALUE;
@@ -24,8 +24,8 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 					if (!Util.isEqual(base.get(x,y), base.defaultValue())) {
 						lowX = Math.min(lowX, x);
 						lowY = Math.min(lowY, y);
-						highX = Math.max(highX, x);
-						highY = Math.max(highY, y);
+						highX = Math.max(highX, x+1);
+						highY = Math.max(highY, y+1);
 					}
 				}
 			}
@@ -47,10 +47,13 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	@Override public void set(int x, int y, A val) {
 		base.set(x,y, val);
 		
-		if (x < lowX && x >= base.lowX()) {lowX = x;}
-		if (y < lowY && y >= base.lowY()) {lowY = y;}
-		if (x >= highX && x+1 <= base.highX()) {highX = x+1;}
-		if (y >= highY && y+1 <= base.highY()) {highY = y+1;}
+		if (x >= base.lowX() && x < base.highX()
+				&& y >= base.lowY() && y < base.highY()) {
+			lowX = Math.min(x, lowX);
+			lowY = Math.min(y, lowY);
+			highX = Math.max(x+1, highX);
+			highY = Math.max(y+1, highY);
+		}
 	}
 
 	@Override public A defaultValue() {return base.defaultValue();}
