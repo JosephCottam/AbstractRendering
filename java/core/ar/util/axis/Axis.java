@@ -85,7 +85,7 @@ public class Axis {
 				out = new Double(lowOut + ((highOut-lowOut)/samples)*i);
 			} else {
 				in = Math.round(lowIn + ((highIn-lowIn)/samples)*i);
-				out = Math.round(lowOut + ((highOut-lowOut)/samples)*i);
+				out = lowOut + ((highOut-lowOut)/samples)*i;
 			}
 			
 			rslt.put(in, out.doubleValue());
@@ -96,7 +96,7 @@ public class Axis {
 	
 	/**Create an evenly-spaced categorical axis.**/
 	public static AxisDescriptor<String> categoricalDescriptor(String label, double low, double high, String... labels) {
-		int positions = labels.length;
+		double positions = labels.length;
 		Map<String, Double> rslt = new HashMap<String, Double>();
 		
 		double gap = low + ((high-low)/(positions*2));
@@ -192,8 +192,10 @@ public class Axis {
 			labelText = String.format("%,d", label);
 		} else if (label instanceof Number) {
 			labelText = String.format("%.3f", label);
-		} else {
+		} else if (label != null){
 			labelText = label.toString();
+		} else {
+			labelText = "";
 		}
 		
 		Rectangle2D stringBounds = g2.getFontMetrics().getStringBounds(labelText, g2); 
