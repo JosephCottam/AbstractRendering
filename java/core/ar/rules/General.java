@@ -223,7 +223,7 @@ public class General {
 		@Override 
 		//TODO: Parallelize...
 		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
-			Aggregates<V> target = ar.aggregates.AggregateUtils.make(aggregates, emptyValue());
+			Aggregates<V> target = spreader.extend(aggregates, emptyValue());
 			
 			for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 				for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
@@ -242,6 +242,7 @@ public class General {
 		 */
 		public static interface Spreader<V> {
 			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?,V> op);
+			public Aggregates<V> extend(Aggregates<? extends V> source, V empty);
 		}
 		
 		
@@ -269,6 +270,15 @@ public class General {
 					}
 				}
 			}
+			@Override
+			public Aggregates<V> extend(Aggregates<? extends V> source, V empty) {
+				return ar.aggregates.AggregateUtils.make(
+								source.lowX()-left,
+								source.lowY()-up,
+								source.highX()+right,
+								source.highY()+down,
+								empty);
+			}
 		}
 		
 		/**Spread in a circular pattern with original value at the center**/
@@ -290,14 +300,24 @@ public class General {
 					}
 				}
 			}
+			
+			public Aggregates<V> extend(Aggregates<? extends V> source, V empty) {
+				return ar.aggregates.AggregateUtils.make(
+								source.lowX()-radius,
+								source.lowY()-radius,
+								source.highX()+radius,
+								source.highY()+radius,
+								empty);
+			}
 		}
 		
-		/**Spread in a circular pattern with original value at center, circle size is determined by
-		 * the value found in the cell.
+		/**Spread in a circular pattern with original value at center, 
+		 * circle area is determined derived from the value found in the cell.
+		 * (Radius is sqrt of the passed cell value).
 		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
 			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<?,N> op) {
-				int radius = (int) base.doubleValue();
+				int radius = (int) Math.ceil(Math.sqrt(base.doubleValue()));
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
@@ -310,6 +330,17 @@ public class General {
 						target.set(xv, yv, op.rollup(base, update));
 					}
 				}
+			}
+			
+			public Aggregates<N> extend(Aggregates<? extends N> source, N empty) {
+				Util.Stats<N> stats =  Util.stats(source, true, true, true);
+				int maxRadius = (int) Math.ceil(Math.sqrt(stats.max.doubleValue()));
+				return ar.aggregates.AggregateUtils.make(
+								source.lowX()-maxRadius,
+								source.lowY()-maxRadius,
+								source.highX()+maxRadius,
+								source.highY()+maxRadius,
+								empty);
 			}
 		}
 	}
