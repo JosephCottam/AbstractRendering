@@ -31,7 +31,11 @@ public class SpreadTests {
 		Aggregates<Integer> rslt = r.transfer(aggs, s4);
 		for (int x=rslt.lowX(); x<rslt.highX(); x++){
 			for (int y=rslt.lowY(); y<rslt.highY(); y++){
-				assertThat(String.format("Failed at (%d, %d)",x,y), rslt.get(x,y), is(1));
+				if (x < aggs.lowX() || x >= aggs.highX() || y < aggs.lowY() || y >= aggs.highY()) {
+					assertThat(String.format("Failed at (%d, %d)",x,y), rslt.get(x,y), is(0));
+				} else {
+					assertThat(String.format("Failed at (%d, %d)",x,y), rslt.get(x,y), is(1));
+				}
 			}
 		}
 	}
@@ -96,11 +100,12 @@ public class SpreadTests {
 		assertThat(String.format("Failed at (%d, %d)", 0,0), rslt.get(0,0), is(0));
 		assertThat(String.format("Failed at (%d, %d)", 1,1), rslt.get(1,1), is(0));
 		assertThat(String.format("Failed at (%d, %d)", 3,3), rslt.get(3,3), is(4));
+		assertThat(String.format("Failed at (%d, %d)", 3,4), rslt.get(3,4), is(4));
 		assertThat(String.format("Failed at (%d, %d)", 3,5), rslt.get(3,5), is(4));
-		assertThat(String.format("Failed at (%d, %d)", 3,6), rslt.get(3,6), is(4));
+		assertThat(String.format("Failed at (%d, %d)", 3,6), rslt.get(3,6), is(0));
 		assertThat(String.format("Failed at (%d, %d)", 5,5), rslt.get(5,5), is(4));
-		assertThat(String.format("Failed at (%d, %d)", 5,6), rslt.get(5,6), is(4));
-		assertThat(String.format("Failed at (%d, %d)", 6,6), rslt.get(6,6), is(4));
+		assertThat(String.format("Failed at (%d, %d)", 5,6), rslt.get(5,6), is(0));
+		assertThat(String.format("Failed at (%d, %d)", 6,6), rslt.get(6,6), is(0));
 		assertThat(String.format("Failed at (%d, %d)", 8,8), rslt.get(8,8), is(0));
 	}
 	
