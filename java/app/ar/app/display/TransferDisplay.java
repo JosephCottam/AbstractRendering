@@ -203,7 +203,7 @@ public class TransferDisplay extends ARComponent {
 				}
 			} catch (ClassCastException e) {
 				renderError = true;
-				if (PERFORMANCE_REPORTING) {e.printStackTrace();}
+				e.printStackTrace();
 			} 
 			
 			TransferDisplay.this.repaint();
