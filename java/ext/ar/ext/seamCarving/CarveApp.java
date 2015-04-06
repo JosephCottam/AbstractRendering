@@ -20,7 +20,7 @@ import ar.app.display.TransferDisplay;
 import ar.app.util.GlyphsetUtils;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.SeamCarving;
@@ -54,7 +54,7 @@ public class CarveApp {
 		else {seams = perhapsSeams;}
 
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregator<Object,Integer> aggregator = new Numbers.Count<Object>();
 		Selector<Point2D> selector = TouchesPixel.make(dataset);
 

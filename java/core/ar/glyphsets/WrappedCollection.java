@@ -143,21 +143,4 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		}
 		return glyphs;		
 	}
-	
-	/**Copies items from the basis into a quad-tree.
-	 * 	  
-	 * Copying to quad-tree is advisable if the source data structure is either (1) actively being changed
-	 * or (2) a pixel-parallel rendering is desired.
-	 * **/
-	public static <B,G,I> Glyphset<G,I> toQuadTree(
-			Collection<B> basis, 
-			Shaper<B,G> shaper, 
-			Valuer<B,I> valuer) {
-		DynamicQuadTree<G,I> glyphs = DynamicQuadTree.make();
-		for (B val: basis) {
-			Glyph<G,I> g = new SimpleGlyph<>(shaper.apply(val), valuer.apply(val));
-			glyphs.add(g);
-		}
-		return glyphs;		
-	}
 }

@@ -20,7 +20,7 @@ import ar.glyphsets.*;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer.Constant;
 import ar.glyphsets.implicitgeometry.Indexed.ToRect;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.renderers.SerialRenderer;
 import ar.rules.Advise;
 import ar.rules.Categories;
@@ -53,8 +53,8 @@ public class RenderSpeed {
 		int tasksPerThread = Integer.parseInt(arg(args,"-tasksMult", "-1"));
 		int synPoints = Integer.parseInt(arg(args,"-pc", "-1"));
 
-		cores = cores > 0 ? cores : ParallelRenderer.RENDER_POOL_SIZE;
-		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ParallelRenderer.RENDER_THREAD_LOAD;
+		cores = cores > 0 ? cores : ForkJoinRenderer.RENDER_POOL_SIZE;
+		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ForkJoinRenderer.RENDER_THREAD_LOAD;
 		
 		OptionDataset.SYNTHETIC = synPoints > 0 ? OptionDataset.syntheticPoints(synPoints) : OptionDataset.SYNTHETIC;
 
@@ -74,7 +74,7 @@ public class RenderSpeed {
 		
 		Renderer render;
 		if (rend.startsWith("PARALLEL")) {
-			render = new ParallelRenderer();
+			render = new ForkJoinRenderer();
 		} else if (rend.startsWith("SERIAL")) {
 			render = new SerialRenderer();
 		} else {

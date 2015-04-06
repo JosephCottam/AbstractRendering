@@ -16,16 +16,6 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 
 public class WrappedCollectionTests {
-	
-	@Test
-	public void toQuadTree() {
-		Collection<Indexed> data = data();
-		Glyphset<Rectangle2D, Object> g = WrappedCollection.toQuadTree(data, shaper(), valuer());
-		
-		assertNotNull(g);
-		assertEquals("Size mismatch.", data.size(), g.size());
-	}
-
 	@Test
 	public void wrapList() {
 		ArrayList<Indexed> data = data();

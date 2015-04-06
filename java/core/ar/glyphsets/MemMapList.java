@@ -13,7 +13,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
 import ar.util.memoryMapping.MappedFile;
@@ -179,8 +179,8 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 			bounds = pool.invoke(
 					new BoundsTask<>(
 							this, 
-							ParallelRenderer.RENDER_POOL_SIZE
-							  * ParallelRenderer.RENDER_THREAD_LOAD));
+							ForkJoinRenderer.RENDER_POOL_SIZE
+							  * ForkJoinRenderer.RENDER_THREAD_LOAD));
 		}
 		return bounds;
 	}

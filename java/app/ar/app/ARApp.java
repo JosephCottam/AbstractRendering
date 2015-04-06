@@ -14,10 +14,10 @@ import ar.app.components.*;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 
 public class ARApp implements ARComponent.Holder, ar.util.HasViewTransform {
-	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ParallelRenderer()));
+	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ForkJoinRenderer()));
 	private final JFrame frame = new JFrame();
 
 	private final RegionOptions enhanceOptions = new RegionOptions();

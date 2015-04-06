@@ -22,8 +22,7 @@ import ar.Aggregates;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Selector;
-import ar.glyphsets.DynamicQuadTree;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.Numbers;
@@ -35,6 +34,7 @@ import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.AggregateSerializer.FORMAT;
 import ar.ext.avro.Converters;
 import ar.ext.avro.SchemaComposer;
+import ar.glyphsets.GlyphList;
 
 public class AvroAggregatesTest {
 	public static Aggregates<Integer> count;
@@ -42,8 +42,8 @@ public class AvroAggregatesTest {
 	
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset<Rectangle2D, Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make());
-		Renderer r = new ParallelRenderer();
+		Glyphset<Rectangle2D, Color> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, new GlyphList<>());
+		Renderer r = new ForkJoinRenderer();
 		AffineTransform vt = new AffineTransform(241.4615556310524, 
 				0.0, 
 				0.0, 

@@ -19,7 +19,7 @@ import ar.renderers.tasks.PixelParallelTransfer;
  * Iterates the glyphs and produces many aggregate sets that are then combined
  * (i.e., glyph-driven iteration).
  */
-public class ParallelRenderer implements Renderer {
+public class ForkJoinRenderer implements Renderer {
 	private static final long serialVersionUID = 1103433143653202677L;
 	
 
@@ -65,15 +65,15 @@ public class ParallelRenderer implements Renderer {
 	private final int threadLoad;
 
 
-	public ParallelRenderer() {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, null);}
+	public ForkJoinRenderer() {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, null);}
 
-	public ParallelRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, recorder);}
+	public ForkJoinRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, recorder);}
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
-	public ParallelRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize, ProgressRecorder recorder) {
+	public ForkJoinRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize, ProgressRecorder recorder) {
 		this.pool = pool != null ? pool : new ForkJoinPool(RENDER_POOL_SIZE);
 		this.threadLoad = threadLoad > 0 ? threadLoad : RENDER_THREAD_LOAD;
 		this.transferTaskSize = transferTaskSize > 0 ? transferTaskSize : DEFAULT_TRANSFER_TASK_SIZE;

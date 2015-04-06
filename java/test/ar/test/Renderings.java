@@ -2,6 +2,7 @@ package ar.test;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+
 import org.junit.Test;
 
 import java.awt.Color;
@@ -19,7 +20,7 @@ import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.GlyphsetUtils;
-import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -69,7 +70,7 @@ public class Renderings {
 		Util.writeImage(ser_img, new File(String.format("./testResults/%s/ser.png", test)));
 		assertImageEquals("Serial", ref_img, ser_img);
 		
-		r = new ParallelRenderer();
+		r = new ForkJoinRenderer();
 		BufferedImage pg_img = image(r, glyphs, agg, t);
 		Util.writeImage(pg_img, new File(String.format("./testResults/%s/pg.png", test)));
 		assertImageEquals("Parallel glyphs", ref_img, pg_img);
@@ -78,7 +79,7 @@ public class Renderings {
 
 	@Test
 	public void CheckerboardQuad() throws Exception {
-		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/checkerboard.csv"), 1, new GlyphList<>());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5);
 		testWith("checker_quad", glyphs, agg, t);
@@ -87,7 +88,7 @@ public class Renderings {
 
 	@Test
 	public void CirclepointsQuad() throws Exception {
-		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, DynamicQuadTree.<Rectangle2D, Object>make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), 1, new GlyphList<>());
 		Aggregator<Object, Integer> agg = new Numbers.Count<>();
 		Transfer<Number, Color> t = new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5);
 		testWith("circle_quad", glyphs, agg, t);

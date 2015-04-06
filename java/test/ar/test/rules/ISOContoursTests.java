@@ -13,14 +13,14 @@ import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.RefFlatAggregates;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.ISOContours;
 import ar.rules.ISOContours.ContourAggregates;
 import ar.rules.ISOContours.MC_TYPE;
 
 
 public class ISOContoursTests {
-	private static final Renderer RENDERER = new ParallelRenderer();
+	private static final Renderer RENDERER = new ForkJoinRenderer();
 	
 	public Aggregates<Boolean> makeMarchingSquareCase(boolean zz, boolean oz, boolean zo, boolean oo) {
 		Aggregates<Boolean> source = new RefFlatAggregates<>(0,0,2,2,false);
@@ -64,7 +64,7 @@ public class ISOContoursTests {
 		source.set(2,2,5);
 		
 		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
-		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) new ParallelRenderer().transfer(source, contour);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) new ForkJoinRenderer().transfer(source, contour);
 		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
 
 		GeneralPath p2 = (GeneralPath) p.clone();
@@ -89,7 +89,7 @@ public class ISOContoursTests {
 		}
 		
 		ISOContours.Single<Integer> contour = new ISOContours.Single<Integer>(threshold, true);
-		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) new ParallelRenderer().transfer(source, contour);
+		ContourAggregates<Integer> ct = (ContourAggregates<Integer>) new ForkJoinRenderer().transfer(source, contour);
 		GeneralPath p = (GeneralPath) ct.contours().get(0).shape();
 
 

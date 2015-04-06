@@ -24,7 +24,7 @@ import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.General;
 import ar.rules.Numbers;
@@ -38,7 +38,7 @@ public class Cartogram {
 
 	public static void main(String[] args) throws Exception {
 		Rectangle viewBounds = new Rectangle(0, 0, 1200,800);
-		Renderer renderer = new ParallelRenderer();
+		Renderer renderer = new ForkJoinRenderer();
 		
 		
 		//Glyphset<Point2D, Character> populationSource = ar.app.components.sequentialComposer.OptionDataset.CENSUS_SYN_PEOPLE.dataset();

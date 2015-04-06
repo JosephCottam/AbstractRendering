@@ -16,8 +16,8 @@ import ar.Selector;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.ARCombiner;
-import ar.glyphsets.DynamicQuadTree;
-import ar.renderers.ParallelRenderer;
+import ar.glyphsets.GlyphList;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
@@ -27,9 +27,9 @@ public class ServerCombinerTests {
 
 	@BeforeClass
 	public static void load() throws Exception {
-		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Object>make());
+		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, new GlyphList<>());
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		count = r.aggregate(glyphs, selector, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10), 10,10);
 	}
 	

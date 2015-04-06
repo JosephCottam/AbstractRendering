@@ -12,7 +12,7 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.General;
 import ar.rules.combinators.*;
 
@@ -62,7 +62,7 @@ public class Combinators {
 		}
 		
 		Transfer.Specialized<Boolean,Color> t = new If<>(new Valuer.Constant<Boolean, Boolean>(true), new General.Const<>(Color.red, true), new General.Const<>(Color.black, true)).specialize(a);
-		Aggregates<Color> rslt = new ParallelRenderer().transfer(a, t);
+		Aggregates<Color> rslt = new ForkJoinRenderer().transfer(a, t);
 		
 		for (int x=a.lowX(); x < a.highX(); x++) {
 			for (int y=a.lowY(); y < a.lowY(); y++) {
@@ -80,7 +80,7 @@ public class Combinators {
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10d));
 		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
-		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
+		Aggregates<Integer> rslt = new ForkJoinRenderer().transfer(a, t);
 		
 		assertTrue("Bulk test", p.apply(rslt));
 		for (int x=a.lowX(); x < a.highX(); x++) {
@@ -103,7 +103,7 @@ public class Combinators {
 		
 				
 		Transfer.Specialized<Integer, Integer> t = new Fan<>(0, new Fan.AlignedMerge<>((l,r) -> (l+r)), ts).specialize(a);
-		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
+		Aggregates<Integer> rslt = new ForkJoinRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(45d));
 		assertTrue("Bulk test", p.apply(rslt));
@@ -120,7 +120,7 @@ public class Combinators {
 				new Split<Integer, Integer, Integer, Integer>(left, right, 0, (l,r) -> (l+r))
 				.specialize(a);
 		
-		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
+		Aggregates<Integer> rslt = new ForkJoinRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
 		assertTrue("Bulk test", p.apply(rslt));
@@ -134,7 +134,7 @@ public class Combinators {
 		Transfer<Integer,Integer> t2 = new General.ValuerTransfer<>(n -> n+2, 0);
 		Transfer.Specialized<Integer, Integer> t = new Seq<>(t1,t2).specialize(a);
 		
-		Aggregates<Integer> rslt = new ParallelRenderer().transfer(a, t);
+		Aggregates<Integer> rslt = new ForkJoinRenderer().transfer(a, t);
 		
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.EQ<Integer>(3d));
 		assertTrue("Bulk test", p.apply(rslt));

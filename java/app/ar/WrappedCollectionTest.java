@@ -54,7 +54,7 @@ public class WrappedCollectionTest {
 		AggregatingDisplay p = new AggregatingDisplay(new General.First<>(Util.CLEAR), 
 								new General.Echo<>(null),
 								gs, 
-								new ParallelRenderer());
+								new ForkJoinRenderer());
 		
 		frame.setLayout(new BorderLayout());
 		frame.add(p, BorderLayout.CENTER);

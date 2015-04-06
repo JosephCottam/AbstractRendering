@@ -29,7 +29,7 @@ import ar.app.components.sequentialComposer.*;
 import ar.util.HasViewTransform;
 import static ar.glyphsets.implicitgeometry.Valuer.*;
 import static ar.glyphsets.implicitgeometry.Indexed.*;
-import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.GlyphList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -606,7 +606,7 @@ public class Presets extends JPanel {
 		
 		Glyphset<Rectangle2D, Color> circle_temp = null;
 		try {
-			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, DynamicQuadTree.<Rectangle2D, Color>make());
+			circle_temp = GlyphsetUtils.autoLoad(new File(CIRCLE_CSV), .1, new GlyphList<>());
 		} catch (Exception e) {
 			System.err.printf("## Error loading data from %s.  Related presets are unavailable.\n", CIRCLE_CSV);
 		}

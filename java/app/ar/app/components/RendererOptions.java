@@ -32,7 +32,7 @@ public class RendererOptions extends JPanel {
 		if (renderers.getSelectedItem().equals("Serial")) {
 			return new SerialRenderer();
 		} else if (renderers.getSelectedItem().equals("Parallel")) {
-			return new ParallelRenderer();
+			return new ForkJoinRenderer();
 		} else {
 			throw new RuntimeException("Unknown renderer selected: " + renderers.getSelectedItem());
 		}

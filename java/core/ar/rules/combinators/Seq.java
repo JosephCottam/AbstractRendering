@@ -3,7 +3,7 @@ package ar.rules.combinators;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.General;
 
 /**Do one transfer, then pipe its results into another.
@@ -14,7 +14,7 @@ import ar.rules.General;
  * @param <OUT> Output type of the second transfer
  */
 public class Seq<IN,MID,OUT> implements Transfer<IN,OUT> {
-	public static final Renderer SHARED_RENDERER = new ParallelRenderer(); 
+	public static final Renderer SHARED_RENDERER = new ForkJoinRenderer(); 
     protected final Transfer<IN,MID> first;
     protected final Transfer<MID,OUT> second;
     protected final Renderer rend;

@@ -50,9 +50,7 @@ public class GlyphsetOptions extends JPanel  {
 
 	
 	public Glyphset<?,?> makeGlyphset() {
-		if (glyphsType.getSelectedItem().equals("Quad Tree")) {
-			return DynamicQuadTree.make();
-		} else if (glyphsType.getSelectedItem().equals("List")) {
+		if (glyphsType.getSelectedItem().equals("List")) {
 			return new GlyphList<Rectangle2D, Color>();			
 		} else if (glyphsType.getSelectedItem().equals("MemMap List")) {
 			double sz = (double) size.getSelectedItem();

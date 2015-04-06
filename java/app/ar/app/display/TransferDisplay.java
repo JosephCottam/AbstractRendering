@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.app.util.MostRecentOnlyExecutor;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.util.Util;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
@@ -64,7 +64,7 @@ public class TransferDisplay extends ARComponent {
 	}
 
 	public TransferDisplay(Aggregates<?> aggregates, AffineTransform rendererd, Transfer<?,?> transfer) {
-		this(aggregates, rendererd, transfer, new ParallelRenderer());
+		this(aggregates, rendererd, transfer, new ForkJoinRenderer());
 	}
 	
 	public TransferDisplay(Aggregates<?> aggregates, AffineTransform rendererdTransform, Transfer<?,?> transfer, Renderer renderer) {

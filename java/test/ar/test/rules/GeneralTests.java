@@ -46,7 +46,7 @@ public class GeneralTests {
 		final int size = 100;
 		Glyphset<Rectangle2D, Double> glyphs = glyphset(size);
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), size, size);
 				
@@ -75,7 +75,7 @@ public class GeneralTests {
 		final int size = 100;
 		Glyphset<Rectangle2D, Double> glyphs = glyphset(size);
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), 1, 1);
 
@@ -99,7 +99,7 @@ public class GeneralTests {
 		final int size = 100;
 		Glyphset<Rectangle2D, Double> glyphs = glyphset(size);
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), 1, 1);
 

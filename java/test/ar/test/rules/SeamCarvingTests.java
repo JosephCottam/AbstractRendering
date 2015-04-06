@@ -12,7 +12,7 @@ import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.SeamCarving;
 import static ar.rules.SeamCarving.*;
 import ar.rules.combinators.Predicates;
@@ -141,7 +141,7 @@ public class SeamCarvingTests extends TestSuite {
 			}
 		}
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregates<Double> rslt = r.transfer(input, carver);
 		
 		if (d == Direction.H) {
@@ -219,7 +219,7 @@ public class SeamCarvingTests extends TestSuite {
 			}
 			
 			Transfer<Double, Double> t = new SeamCarving.CumulativeEnergy();
-			Aggregates<Double> cumEng = new ParallelRenderer().transfer(energy, t.specialize(energy));
+			Aggregates<Double> cumEng = new ForkJoinRenderer().transfer(energy, t.specialize(energy));
 			
 			double val =0;
 			for (int y=energy.lowY(); y<energy.highY(); y++) {

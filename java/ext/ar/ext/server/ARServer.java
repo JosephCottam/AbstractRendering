@@ -18,13 +18,13 @@ import ar.Selector;
 import ar.Transfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.server.NanoHTTPD.Response.Status;
-import ar.glyphsets.DynamicQuadTree;
+import ar.glyphsets.GlyphList;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter.TYPE;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.Categories;
 import ar.rules.Debug;
 import ar.rules.General;
@@ -35,8 +35,6 @@ import ar.util.DelimitedReader;
 import ar.util.Util;
 import ar.Glyphset;
 
-
-
 public class ARServer extends NanoHTTPD {
 	public static Map<String, Transfer<?,?>> TRANSFERS = new HashMap<String,Transfer<?,?>>();
 	public static Map<String, Aggregator<?,?>> AGGREGATORS = new HashMap<String,Aggregator<?,?>>();
@@ -45,7 +43,7 @@ public class ARServer extends NanoHTTPD {
 	static {
 		@SuppressWarnings({"rawtypes" })
 		Glyphset circlepoints = Util.load(
-				DynamicQuadTree.<Rectangle2D, Integer>make(),
+				new GlyphList<>(),
 				new DelimitedReader(new File( "../data/circlepoints.csv"), 1, DelimitedReader.CSV),
 				new Indexed.Converter(TYPE.X, TYPE.X, TYPE.DOUBLE, TYPE.DOUBLE, TYPE.INT),
 				new Indexed.ToRect(1, 2, 3),
@@ -126,7 +124,7 @@ public class ARServer extends NanoHTTPD {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Selector s = TouchesPixel.make(glyphs);
 		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
 

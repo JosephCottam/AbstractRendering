@@ -10,7 +10,7 @@ import ar.Aggregates;
 import ar.Renderer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.RefFlatAggregates;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories.*;
 import ar.test.AllEqual;
@@ -54,7 +54,7 @@ public class CategoriesTests {
 	public void keyPercent() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregates<Color> rslt = r.transfer(aggs, new KeyPercent<String>(1/3d, "Two", Util.CLEAR, Color.BLACK, Color.WHITE));
 		assertThat(rslt, new AllEqual<>(AggregateUtils.make(10,10, Color.BLACK)));
 
@@ -68,7 +68,7 @@ public class CategoriesTests {
 	public void toCounts() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregates<Integer> rslt = r.transfer(aggs, new ToCount<String>());
 		assertThat(rslt, new AllEqual<>(AggregateUtils.make(10,10, 6)));
 	}
@@ -77,7 +77,7 @@ public class CategoriesTests {
 	public void NthEntry() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregates<CategoricalCounts<String>> ones = r.transfer(aggs, new NthEntry<String>(0));
 		assertThat(ones, new AllEqual<>(new RefFlatAggregates<>(10,10, new CategoricalCounts<>("One", 1))));
 		
@@ -95,7 +95,7 @@ public class CategoriesTests {
 	public void NthKey() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		Aggregates<String> ones = r.transfer(aggs, new NthKey<String>(0, "Empty"));
 		assertThat(ones, new AllEqual<>(new RefFlatAggregates<>(10,10, "One")));
 		
@@ -110,7 +110,7 @@ public class CategoriesTests {
 	public void NthCount() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		assertThat(r.transfer(aggs, new NthCount<String>(0, -1)), 
 					new AllEqual<>(AggregateUtils.make(10,10, 1)));
 
@@ -125,7 +125,7 @@ public class CategoriesTests {
 	public void NumCategories() {
 		Aggregates<CategoricalCounts<String>> aggs = testAggregates();
 		
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 		assertThat(r.transfer(aggs, new NumCategories<String>()), 
 					new AllEqual<>(AggregateUtils.make(10, 10, 4)));
 

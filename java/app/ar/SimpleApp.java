@@ -17,7 +17,7 @@ import ar.app.display.TransferDisplay;
 import ar.app.util.ZoomPanHandler;
 import ar.glyphsets.WrappedCollection;
 import ar.glyphsets.implicitgeometry.Indexed;
-import ar.renderers.ParallelRenderer;
+import ar.renderers.ForkJoinRenderer;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.DelimitedReader;
@@ -58,7 +58,7 @@ public class SimpleApp {
 		//The ParalleGlyph renderer is the highest performance BUT requires
 		// the glyphset to be partitionable and requires an "Aggregate Reduction" function
 		// to combine results from different glyph subsets.
-		Renderer r = new ParallelRenderer();
+		Renderer r = new ForkJoinRenderer();
 
 		//The Aggregator is used to combine values from multiple glyphs into a value for a single
 		//aggregate bin.  The 'Count' aggregator simply counts how many glyphs fell into the bin.
