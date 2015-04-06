@@ -23,14 +23,15 @@ import ar.app.components.sequentialComposer.SequentialComposer;
 import ar.app.display.ARComponent;
 import ar.app.display.AggregatingDisplay;
 import ar.app.display.EnhanceHost;
-import ar.renderers.ForkJoinRenderer;
+import ar.renderers.*;
 import ar.util.Util;
 
 
 //TODO: Add "subset input", useful for contours
 //TODO: Add "Specialize From Here"
 public class ARComposerApp implements ARComponent.Holder, ar.util.HasViewTransform {
-	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ForkJoinRenderer()));
+	//private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ForkJoinRenderer()));
+	private final EnhanceHost display = new EnhanceHost(new AggregatingDisplay(new ThreadpoolRenderer()));
 	private final JFrame frame = new JFrame();
 
 	private final RegionOptions enhanceOptions = new RegionOptions();

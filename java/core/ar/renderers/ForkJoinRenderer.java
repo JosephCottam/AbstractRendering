@@ -86,6 +86,7 @@ public class ForkJoinRenderer implements Renderer {
 			Selector<G> selector,
 			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
+		//TODO: height/width may be extraneous now...
 		
 		int taskCount = threadLoad* pool.getParallelism();
 		long ticks = GlyphParallelAggregation.ticks(taskCount);

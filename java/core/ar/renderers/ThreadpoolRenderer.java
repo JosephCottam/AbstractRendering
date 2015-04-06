@@ -2,7 +2,13 @@ package ar.renderers;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.util.concurrent.ForkJoinPool;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -11,8 +17,8 @@ import ar.Renderer;
 import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.wrappers.TouchedBoundsWrapper;
 import ar.renderers.tasks.GlyphParallelAggregation;
-import ar.renderers.tasks.PixelParallelTransfer;
 
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
@@ -53,30 +59,25 @@ public class ThreadpoolRenderer implements Renderer {
 		RENDER_THREAD_LOAD = size;	
 	}
 
-	
-	/**How small can a transfer task get before it won't be subdivided anymore.**/
-	public static final long DEFAULT_TRANSFER_TASK_SIZE = 100000;
 	//-------------------------------------------------------------------------------------
 	
-	private final ForkJoinPool pool;
+	private final ExecutorService pool;
 	private final ProgressRecorder recorder;
-	private final long transferTaskSize;
 	
 	private final int threadLoad;
 
 
-	public ThreadpoolRenderer() {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, null);}
+	public ThreadpoolRenderer() {this(null, RENDER_THREAD_LOAD, null);}
 
-	public ThreadpoolRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, DEFAULT_TRANSFER_TASK_SIZE, recorder);}
+	public ThreadpoolRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, recorder);}
 	
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
-	public ThreadpoolRenderer(ForkJoinPool pool, int threadLoad, long transferTaskSize, ProgressRecorder recorder) {
-		this.pool = pool != null ? pool : new ForkJoinPool(RENDER_POOL_SIZE);
+	public ThreadpoolRenderer(ExecutorService pool, int threadLoad, ProgressRecorder recorder) {
+		this.pool = pool != null ? pool : Executors.newFixedThreadPool(RENDER_POOL_SIZE);
 		this.threadLoad = threadLoad > 0 ? threadLoad : RENDER_THREAD_LOAD;
-		this.transferTaskSize = transferTaskSize > 0 ? transferTaskSize : DEFAULT_TRANSFER_TASK_SIZE;
 		this.recorder = recorder == null ? new ProgressRecorder.Counter() : recorder;
 	}
 
@@ -86,37 +87,104 @@ public class ThreadpoolRenderer implements Renderer {
 			Selector<G> selector,
 			Aggregator<I,A> op,
 			AffineTransform view, int width, int height) {
+		//TODO: height/width may be extraneous now...
+
+		return stepOne(glyphs, selector, op, view);
 		
-		int taskCount = threadLoad* pool.getParallelism();
+//		int taskCount = threadLoad * RENDER_POOL_SIZE;
+//		long ticks = GlyphParallelAggregation.ticks(taskCount);
+//		recorder.reset(ticks);
+//		
+//		Rectangle allocateBounds = glyphs.bounds().getBounds();
+//
+//		List<AggregateTask<G,I,A>> tasks = new ArrayList<>();
+//		for (int i=0; i<taskCount; i++) {
+//			AggregateTask<G,I,A> task = new AggregateTask<>(
+//					recorder, 
+//					allocateBounds,
+//					view,
+//					glyphs.segmentAt(taskCount, i),
+//					selector,
+//					op);
+//			tasks.add(task);
+//		}
+//		
+//	
+//		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
+//		
+//		try {
+//			List<Future<Aggregates<A>>> parts = pool.invokeAll(tasks);
+//			for (Future<Aggregates<A>> part: parts) {
+//				Aggregates<A> from = part.get();
+//				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
+//			}
+//		}  catch (Exception e) {throw new RuntimeException("Error completing transfer", e);} 
+//		
+//		return result;
+	}
+	
+	public <A,G,I> Aggregates<A> stepOne(Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			Aggregator<I,A> op,
+			AffineTransform view) {
+		
+		int taskCount = threadLoad * RENDER_POOL_SIZE;
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
 		recorder.reset(ticks);
+		
+		Rectangle allocateBounds = glyphs.bounds().getBounds();
 
-		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(
-				glyphs, 
-				glyphs.bounds(), 
-				selector,
-				op, 
-				view, 
-				new Rectangle(0,0,width,height),
-				recorder,
-				0, taskCount, taskCount);
-		
-		Aggregates<A> a= pool.invoke(t);
-		
-		return a;
+		List<AggregateTask<G,I,A>> tasks = new ArrayList<>();
+		for (int i=0; i<taskCount; i++) {
+			AggregateTask<G,I,A> task = new AggregateTask<>(
+					recorder, 
+					allocateBounds,
+					view,
+					glyphs.segmentAt(taskCount, i),
+					selector,
+					op);
+			tasks.add(task);
+		}
+	
+		try {
+			List<Future<Aggregates<A>>> parts = pool.invokeAll(tasks);
+			return stepTwo(parts, allocateBounds, view, op);
+		} catch (Exception e) {throw new RuntimeException("Error completing transfer", e);} 
+	}
+	
+	public <A> Aggregates<A> stepTwo(List<Future<Aggregates<A>>> parts, Rectangle allocateBounds, AffineTransform view, Aggregator<?,A> op) throws Exception {
+		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
+
+			for (Future<Aggregates<A>> part: parts) {
+				Aggregates<A> from = part.get();
+				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
+			}
+	
+		return result;
 	}
 	
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
-		long taskSize = Math.max(transferTaskSize, AggregateUtils.size(aggregates)/pool.getParallelism());
 		
-		recorder.reset(0);
-		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
-		pool.invoke(task);
-		recorder.reset(1);
-		recorder.update(1);
-		return result;		
+		int taskCount = threadLoad * RENDER_POOL_SIZE;
+		recorder.reset(taskCount);
+
+		int span = (aggregates.highX() - aggregates.lowX())/taskCount;
+		List<TransferTask<IN,OUT>> tasks = new ArrayList<>();
+		for (int i=0; i<taskCount; i++) {
+			int lowX = aggregates.lowX() + (span*i);
+			int lowY = aggregates.lowY();
+			int highX = Math.max(aggregates.highX(), aggregates.lowX() + (span*(i+1)));
+			int highY = aggregates.highY();
+					
+			TransferTask<IN,OUT> task = new TransferTask<>(recorder, t, lowX, lowY, highX, highY, aggregates, result);
+			tasks.add(task);
+		}
+		
+		try {pool.invokeAll(tasks);}
+		catch (InterruptedException e) {throw new RuntimeException("Error completing transfer", e);}
+		return result;
 	}
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
@@ -128,4 +196,84 @@ public class ThreadpoolRenderer implements Renderer {
 	}	
 	
 	public ProgressRecorder recorder() {return recorder;}
+	
+	
+	protected static <A> TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds, AffineTransform viewTransform, A identity) {
+		Rectangle fullBounds = viewTransform.createTransformedShape(bounds).getBounds();
+		Aggregates<A> aggs = AggregateUtils.make(
+				fullBounds.x, fullBounds.y,
+				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height,
+				identity);
+		return new TouchedBoundsWrapper<>(aggs, false);
+	}	
+	
+	
+	
+	
+	private static final class TransferTask<IN,OUT> implements Callable<Aggregates<OUT>> {
+		private final int lowX, lowY, highX, highY;
+		private final Aggregates<? extends IN> in;
+		private final Aggregates<OUT> out;
+		private final Transfer.ItemWise<IN,OUT> t;
+		private final ProgressRecorder recorder;
+
+		
+		public TransferTask(ProgressRecorder recorder, Transfer.ItemWise<IN,OUT> t, int lowX, int lowY, int highX, int highY, Aggregates<? extends IN> in, Aggregates<OUT> out) {
+			this.recorder = recorder;
+			this.lowX=lowX;
+			this.lowY = lowY;
+			this.highX = highX;
+			this.highY = highY;
+			this.in = in;
+			this.out = out;
+			this.t = t;
+		}
+		
+		public Aggregates<OUT> call() throws Exception {
+			for (int x=lowX; x<highX; x++) {
+				for (int y=lowY; y<highY; y++) {
+					OUT val = t.at(x, y, in);
+					out.set(x, y, val);
+				}
+			}
+			return out;
+		}
+	}
+	
+	private static final class AggregateTask<G,I,A> implements Callable<Aggregates<A>> {
+		private final ProgressRecorder recorder;
+		private final Glyphset<? extends G, ? extends I> glyphset;
+		private final Selector<G> selector;
+		private final AffineTransform viewTransform;
+		private final Aggregator<I,A> op;
+		private final Rectangle allocateBounds;
+		
+		public AggregateTask(
+				ProgressRecorder recorder, 
+				Rectangle allocateBounds,
+				AffineTransform viewTransform,
+				Glyphset<? extends G, ? extends I> glyphs,
+				Selector<G> selector,
+				Aggregator<I,A> op
+				) {
+			this.recorder = recorder;
+			this.glyphset = glyphs;
+			this.selector = selector;
+			this.viewTransform = viewTransform;
+			this.op = op;
+			this.allocateBounds = allocateBounds;
+		}
+		
+		
+		@Override
+		public Aggregates<A> call() throws Exception {
+			TouchedBoundsWrapper<A> target = allocateAggregates(allocateBounds, viewTransform, op.identity());
+			recorder.update(1);
+			selector.processSubset(glyphset, viewTransform, target, op);
+			
+			if (target.untouched()) {return null;}
+			else {return target;}
+		}
+	}
+	
 }
