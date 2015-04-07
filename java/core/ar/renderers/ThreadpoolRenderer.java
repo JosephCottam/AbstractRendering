@@ -6,6 +6,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -89,38 +90,44 @@ public class ThreadpoolRenderer implements Renderer {
 			AffineTransform view, int width, int height) {
 		//TODO: height/width may be extraneous now...
 
-		return stepOne(glyphs, selector, op, view);
+		//return stepOne(glyphs, selector, op, view);
+		return oneStep(glyphs, selector, op, view);
+
+	}
+	
+	public <I,G,A> Aggregates<A> oneStep(
+			Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			Aggregator<I,A> op,
+			AffineTransform view) {
+
 		
-//		int taskCount = threadLoad * RENDER_POOL_SIZE;
-//		long ticks = GlyphParallelAggregation.ticks(taskCount);
-//		recorder.reset(ticks);
-//		
-//		Rectangle allocateBounds = glyphs.bounds().getBounds();
-//
-//		List<AggregateTask<G,I,A>> tasks = new ArrayList<>();
-//		for (int i=0; i<taskCount; i++) {
-//			AggregateTask<G,I,A> task = new AggregateTask<>(
-//					recorder, 
-//					allocateBounds,
-//					view,
-//					glyphs.segmentAt(taskCount, i),
-//					selector,
-//					op);
-//			tasks.add(task);
-//		}
-//		
-//	
-//		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
-//		
-//		try {
-//			List<Future<Aggregates<A>>> parts = pool.invokeAll(tasks);
-//			for (Future<Aggregates<A>> part: parts) {
-//				Aggregates<A> from = part.get();
-//				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
-//			}
-//		}  catch (Exception e) {throw new RuntimeException("Error completing transfer", e);} 
-//		
-//		return result;
+		int taskCount = threadLoad * RENDER_POOL_SIZE;
+		long ticks = GlyphParallelAggregation.ticks(taskCount);
+		recorder.reset(ticks);
+		ExecutorCompletionService<Aggregates<A>> service = new ExecutorCompletionService<>(pool);
+		
+		Rectangle2D allocateBounds = glyphs.bounds();
+		for (int i=0; i<taskCount; i++) {
+			Glyphset<? extends G, ? extends I> subset =glyphs.segmentAt(taskCount, i);
+			AggregateTask<G,I,A> task = new AggregateTask<>(
+					recorder, allocateBounds, view,
+					subset, selector, op);
+			service.submit(task);
+		}
+		
+	
+		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
+		try {
+			for (int i=0; i<taskCount; i++) {
+				Aggregates<A> from = service.take().get();
+				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
+			}
+		}  catch (Exception e) {
+			throw new RuntimeException("Error completing transfer", e);
+		} 
+		
+		return result;
 	}
 	
 	public <A,G,I> Aggregates<A> stepOne(Glyphset<? extends G, ? extends I> glyphs, 
@@ -132,13 +139,12 @@ public class ThreadpoolRenderer implements Renderer {
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
 		recorder.reset(ticks);
 		
-		Rectangle allocateBounds = glyphs.bounds().getBounds();
 
 		List<AggregateTask<G,I,A>> tasks = new ArrayList<>();
 		for (int i=0; i<taskCount; i++) {
 			AggregateTask<G,I,A> task = new AggregateTask<>(
 					recorder, 
-					allocateBounds,
+					glyphs.bounds(),
 					view,
 					glyphs.segmentAt(taskCount, i),
 					selector,
@@ -148,11 +154,11 @@ public class ThreadpoolRenderer implements Renderer {
 	
 		try {
 			List<Future<Aggregates<A>>> parts = pool.invokeAll(tasks);
-			return stepTwo(parts, allocateBounds, view, op);
+			return stepTwo(parts, glyphs.bounds(), view, op);
 		} catch (Exception e) {throw new RuntimeException("Error completing transfer", e);} 
 	}
 	
-	public <A> Aggregates<A> stepTwo(List<Future<Aggregates<A>>> parts, Rectangle allocateBounds, AffineTransform view, Aggregator<?,A> op) throws Exception {
+	public <A> Aggregates<A> stepTwo(List<Future<Aggregates<A>>> parts, Rectangle2D allocateBounds, AffineTransform view, Aggregator<?,A> op) throws Exception {
 		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
 
 			for (Future<Aggregates<A>> part: parts) {
@@ -230,6 +236,7 @@ public class ThreadpoolRenderer implements Renderer {
 		}
 		
 		public Aggregates<OUT> call() throws Exception {
+			recorder.update(1);
 			for (int x=lowX; x<highX; x++) {
 				for (int y=lowY; y<highY; y++) {
 					OUT val = t.at(x, y, in);
@@ -246,11 +253,11 @@ public class ThreadpoolRenderer implements Renderer {
 		private final Selector<G> selector;
 		private final AffineTransform viewTransform;
 		private final Aggregator<I,A> op;
-		private final Rectangle allocateBounds;
+		private final Rectangle2D allocateBounds;
 		
 		public AggregateTask(
 				ProgressRecorder recorder, 
-				Rectangle allocateBounds,
+				Rectangle2D allocateBounds,
 				AffineTransform viewTransform,
 				Glyphset<? extends G, ? extends I> glyphs,
 				Selector<G> selector,
@@ -270,7 +277,7 @@ public class ThreadpoolRenderer implements Renderer {
 			TouchedBoundsWrapper<A> target = allocateAggregates(allocateBounds, viewTransform, op.identity());
 			recorder.update(1);
 			selector.processSubset(glyphset, viewTransform, target, op);
-			
+						
 			if (target.untouched()) {return null;}
 			else {return target;}
 		}
