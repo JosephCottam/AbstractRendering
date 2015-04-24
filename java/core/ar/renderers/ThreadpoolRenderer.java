@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -90,9 +89,7 @@ public class ThreadpoolRenderer implements Renderer {
 			AffineTransform view, int width, int height) {
 		//TODO: height/width may be extraneous now...
 
-		//return stepOne(glyphs, selector, op, view);
 		return oneStep(glyphs, selector, op, view);
-
 	}
 	
 	public <I,G,A> Aggregates<A> oneStep(
@@ -116,7 +113,6 @@ public class ThreadpoolRenderer implements Renderer {
 			service.submit(task);
 		}
 		
-	
 		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
 		try {
 			for (int i=0; i<taskCount; i++) {
@@ -129,46 +125,6 @@ public class ThreadpoolRenderer implements Renderer {
 		
 		return result;
 	}
-	
-	public <A,G,I> Aggregates<A> stepOne(Glyphset<? extends G, ? extends I> glyphs, 
-			Selector<G> selector,
-			Aggregator<I,A> op,
-			AffineTransform view) {
-		
-		int taskCount = threadLoad * RENDER_POOL_SIZE;
-		long ticks = GlyphParallelAggregation.ticks(taskCount);
-		recorder.reset(ticks);
-		
-
-		List<AggregateTask<G,I,A>> tasks = new ArrayList<>();
-		for (int i=0; i<taskCount; i++) {
-			AggregateTask<G,I,A> task = new AggregateTask<>(
-					recorder, 
-					glyphs.bounds(),
-					view,
-					glyphs.segmentAt(taskCount, i),
-					selector,
-					op);
-			tasks.add(task);
-		}
-	
-		try {
-			List<Future<Aggregates<A>>> parts = pool.invokeAll(tasks);
-			return stepTwo(parts, glyphs.bounds(), view, op);
-		} catch (Exception e) {throw new RuntimeException("Error completing transfer", e);} 
-	}
-	
-	public <A> Aggregates<A> stepTwo(List<Future<Aggregates<A>>> parts, Rectangle2D allocateBounds, AffineTransform view, Aggregator<?,A> op) throws Exception {
-		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
-
-			for (Future<Aggregates<A>> part: parts) {
-				Aggregates<A> from = part.get();
-				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
-			}
-	
-		return result;
-	}
-	
 	
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
