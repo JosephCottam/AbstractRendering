@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.GridLayout;
 
 import javax.swing.JComponent;
@@ -76,16 +75,6 @@ public class Legend<A> implements Transfer<A, Color> {
 		}
 	}
 	
-	public static final class ColorSwatch extends JPanel {
-		private final Color c;
-		public ColorSwatch(Color c) {this.c = c;}		
-		@Override public void paintComponent(Graphics g) {
-			g.setColor(c);
-			g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		}
-	}
-
-
 	/**Keeps the legend display up to date as the values inside shift.
 	 * 
 	 * TODO: Shift to an event-based system that fires a "legendChanged" events
@@ -240,7 +229,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			for (Map.Entry<T, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				exampleSet.add(new ColorSwatch(entry.getValue()));
+				exampleSet.add(new ar.util.axis.Legend.ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
@@ -321,7 +310,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			for (Map.Entry<CategoricalCounts<T>, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				exampleSet.add(new ColorSwatch(entry.getValue()));
+				exampleSet.add(new ar.util.axis.Legend.ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
@@ -446,7 +435,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			for (Map.Entry<CategoricalCounts<T>, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				exampleSet.add(new ColorSwatch(entry.getValue()));
+				exampleSet.add(new ar.util.axis.Legend.ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
@@ -540,7 +529,7 @@ public class Legend<A> implements Transfer<A, Color> {
 			for (Map.Entry<A, Color> entry: exemplars.entrySet()) {
 				labels.add(new JLabel(entry.getKey().toString()));
 				JPanel exampleSet = new JPanel(new GridLayout(1,0));
-				exampleSet.add(new ColorSwatch(entry.getValue()));
+				exampleSet.add(new ar.util.axis.Legend.ColorSwatch(entry.getValue()));
 				examples.add(exampleSet);
 			}
 			JPanel legend = new JPanel(new BorderLayout());
