@@ -79,11 +79,12 @@ public class Debug {
 		public Stats(IN empty) {this.empty = empty;}
 		public IN emptyValue() {return empty;}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Aggregates<IN > process(Aggregates<? extends IN> aggregates, Renderer rend) {
 			Util.Stats<?> s= Util.stats(aggregates);
 			System.out.println(s.toString());
-			return (Aggregates<IN>) aggregates; //TODO: Investigate transfer.process returning Aggregates<? extends OUT>
+			return (Aggregates<IN>) aggregates; //TODO: Investigate transfer.process returning Aggregates<? extends OUT> (a zero-copy instance)
 		}
 	}
 	
