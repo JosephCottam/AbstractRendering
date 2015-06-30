@@ -5,7 +5,6 @@ import java.awt.Color;
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import static ar.rules.combinators.Combinators.*;
 import ar.util.Util;
 
 /**Classes used largely for debugging.
@@ -75,34 +74,22 @@ public class Debug {
 	
 
 	/**Print out statistics on an aggregate set.**/
-	public static final class Stats<IN extends Number, OUT> implements Transfer<IN,OUT> {
-		private final Transfer<IN,OUT> inner;
-		
-		private Stats(Transfer<IN,OUT> inner) {this.inner = inner;}
-		
-		/**Print out statistics before the passed function's specialization occurs.**/
-		public static <IN extends Number, OUT> Stats<IN, OUT> before(Transfer<IN,OUT> inner) {
-			return new Stats<>(inner);
-		}
-		
-		/**Print out statistics before after passed function has executed.**/
-		public static <IN, OUT extends Number> Transfer<IN, OUT> after(Transfer<IN,OUT> inner, OUT val) {
-			return seq().then(inner).then(new Stats<>(new General.Echo<>(val)));
-		}
-
-		public OUT emptyValue() {return inner.emptyValue();}
+	public static final class Stats<IN extends Number> implements Transfer.Specialized<IN,IN> {
+		private final IN empty;
+		public Stats(IN empty) {this.empty = empty;}
+		public IN emptyValue() {return empty;}
 
 		@Override
-		public ar.Transfer.Specialized<IN, OUT> specialize(Aggregates<? extends IN> aggregates) {
-			Util.Stats<?> s= Util.stats(aggregates, false, false, false);
+		public Aggregates<IN > process(Aggregates<? extends IN> aggregates, Renderer rend) {
+			Util.Stats<?> s= Util.stats(aggregates);
 			System.out.println(s.toString());
-			return inner.specialize(aggregates);
+			return (Aggregates<IN>) aggregates; //TODO: Investigate transfer.process returning Aggregates<? extends OUT>
 		}
 	}
 	
 	
 	/**Will print a message on specialization.**/
-	public static final class Report<IN, OUT> implements Transfer<IN,OUT> {
+	public static final class ReportSpecialization<IN, OUT> implements Transfer<IN,OUT> {
 		private final Transfer<IN,OUT> inner;
 		private final String message;
 		
@@ -110,7 +97,7 @@ public class Debug {
 		 * @param inner Transfer function to actually perform.
 		 * @param message Message to print at specialization time.
 		 */
-		public Report(Transfer<IN,OUT> inner, String message) {
+		public ReportSpecialization(Transfer<IN,OUT> inner, String message) {
 			this.inner = inner;
 			this.message = message;
 		}

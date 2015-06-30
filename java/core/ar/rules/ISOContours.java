@@ -58,7 +58,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			
 			public Specialized(double spacing, N floor, boolean fill, Aggregates<? extends N> aggregates) {
 				super(spacing, floor, fill);
-				Util.Stats<N> stats = Util.stats(aggregates, true, true, true);
+				Util.Stats<N> stats = Util.stats(aggregates);
 				N bottom = floor == null ? (N) stats.min : floor;
 				contourLevels = LocalUtils.steps(bottom, stats.max, spacing);
 			}
@@ -99,7 +99,7 @@ public interface ISOContours<N> extends Transfer.Specialized<N,N> {
 			
 			public Specialized(int n, boolean fill, Aggregates<? extends N> aggregates) {
 				super(n, fill);
-				Util.Stats<N> stats = Util.stats(aggregates, true, true, true);				
+				Util.Stats<N> stats = Util.stats(aggregates);				
 				double spacing = (stats.max.doubleValue()-stats.min.doubleValue())/n;
 				contourLevels = LocalUtils.steps(stats.min, stats.max, spacing);
 			}

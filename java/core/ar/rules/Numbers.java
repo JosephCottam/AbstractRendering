@@ -159,7 +159,7 @@ public final class Numbers {
 
 			public Specialized(Aggregates<? extends A> aggregates, Color low, Color high, Color empty) {
 				super(low, high, empty);
-				this.extrema = Util.stats(aggregates, false, false, false);
+				this.extrema = Util.stats(aggregates, false, false, false, false);
 			}
 
 			@Override

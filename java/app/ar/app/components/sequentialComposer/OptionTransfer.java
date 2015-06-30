@@ -862,7 +862,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	public static final class PrintStats extends OptionTransfer<ControlPanel> {
 		@Override public Transfer<Number, Color> transfer(ControlPanel p, Transfer subsequent) {
-			return Debug.Stats.before(subsequent);
+			return extend(new Debug.Stats((Number) subsequent.emptyValue()), subsequent);
 		}
 		
 		@Override public String toString() {return "Print Statistics";}

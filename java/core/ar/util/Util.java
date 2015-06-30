@@ -220,18 +220,28 @@ public class Util {
 	}
 
 
+	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates) {return stats(aggregates, true, true, true, true);} 
+
+	
 	/**What is the min/max/mean/stdev in the collection of aggregates (assuming its over numbers).
 	 * 
-	 * By default NaNs, Nulls and infinity are fully skipped.  
+	 * By default default values, NaNs, Nulls and infinity are fully skipped.  
 	 * However, if the relevant parameters set to false they will be included in the "count" basis and thus influence the mean.
 	 * 
 	 * **/
-	public static <N extends Number> Stats<N> stats(Aggregates<? extends N> aggregates, boolean ignoreNulls, boolean ignoreNaNs, boolean ignoreInfinity) {
-		//For a single-test std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
+	public static <N extends Number> Stats<N> stats(
+			Aggregates<? extends N> aggregates, 
+			boolean ignoreDefault, 
+			boolean ignoreNulls, 
+			boolean ignoreNaNs, 
+			boolean ignoreInfinity) {
+		
+		//For a single-pass std. dev is based on: http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		long count=0;
 		long nullCount=0;
 		long nanCount=0;
 		long infCount=0;
+		long defCount=0;
 		N min = null;
 		N max = null;
 		double sum=0;
@@ -242,13 +252,22 @@ public class Util {
 			double v = n.doubleValue();
 			if (Double.isNaN(v)) {nanCount++; continue;}
 			if (Double.isInfinite(v)) {infCount++; continue;}
+			if (aggregates.defaultValue().equals(n)) {
+				defCount++; continue;
+			}
+			
 			if (min == null || min.doubleValue() > v) {min = n;}
 			if (max == null || max.doubleValue() < v) {max = n;}
+			
 			sum += v;
 			count++;
 		}
 		
-		final long fullCount = count + (ignoreNulls ? 0 : nullCount) + (ignoreNaNs ? 0 : nanCount) + (ignoreInfinity ? 0 : infCount);
+		final long fullCount = count
+				+ (ignoreDefault ? 0 : defCount)
+				+ (ignoreNulls ? 0 : nullCount) 
+				+ (ignoreNaNs ? 0 : nanCount) 
+				+ (ignoreInfinity ? 0 : infCount);
 
 		final double mean = sum/fullCount;
 		double acc =0;
@@ -259,7 +278,7 @@ public class Util {
 		}
 		double stdev = Math.sqrt(acc/fullCount);
 		
-		return new Stats<>(min,max,mean,stdev,nullCount,nanCount);
+		return new Stats<>(min,max,mean,stdev,defCount, nullCount,nanCount);
 	}
 
 
@@ -272,12 +291,14 @@ public class Util {
 		public final double stdev;
 		public final long nullCount;
 		public final long nanCount;
+		public final long defaultCount;
 		
-		public Stats(N min, N max, double mean, double stdev, long nullCount, long nanCount) {
+		public Stats(N min, N max, double mean, double stdev, long defCount, long nullCount, long nanCount) {
 			this.min = min; 
 			this.max=max;
 			this.mean=mean;
 			this.stdev = stdev;
+			this.defaultCount = defCount;
 			this.nullCount = nullCount;
 			this.nanCount = nanCount;
 		}

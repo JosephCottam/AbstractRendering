@@ -61,6 +61,8 @@ public interface Transfer<IN,OUT> extends Serializable {
 	public static interface Specialized<IN,OUT> extends Transfer<IN,OUT> {
 		 /** To facilitate efficient processing of possibly nested transfers,
 		  *  the renderer is also taken as an argument.
+		  *  
+		  *  TODO: Should the return type be <? extends OUT>?  Enables some zero-copy stuff, costs a lot of 'extends...' stuff everywhere
 		  **/
 		public Aggregates<OUT> process(Aggregates<? extends IN> aggregates, Renderer rend);
 	}

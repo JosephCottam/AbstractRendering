@@ -301,7 +301,7 @@ public class Advise {
 		@Override
 		public Double at(int x, int y, Aggregates<? extends Number> aggregates) {
 			Aggregates<? extends Number> subset = new SubsetWrapper<>(aggregates, x-divisions, y-divisions, x+divisions, y+divisions);
-			Util.Stats<? extends Number> stats = Util.stats(subset, true,true,true);
+			Util.Stats<? extends Number> stats = Util.stats(subset);
 				
 			return stats.stdev;
 		}

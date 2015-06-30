@@ -333,7 +333,7 @@ public class General {
 			}
 			
 			public Aggregates<N> extend(Aggregates<? extends N> source, N empty) {
-				Util.Stats<N> stats =  Util.stats(source, true, true, true);
+				Util.Stats<N> stats =  Util.stats(source);
 				int maxRadius = (int) Math.ceil(Math.sqrt(stats.max.doubleValue()));
 				return ar.aggregates.AggregateUtils.make(
 								source.lowX()-maxRadius,

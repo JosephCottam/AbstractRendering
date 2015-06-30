@@ -103,16 +103,22 @@ public static final class ColorSwatch extends JPanel {
 	}
 	
 	
-	public static final Descriptor EMPTY = new Descriptor(null);
+	public static final Descriptor EMPTY = new Descriptor();
 	
 	//TODO: combine legend and axis descriptor.  Think hard about d3 'scales' and how to use that idea in IG in general (complications on the AR side, but the IG side should be straightforward)
 	public static final class Descriptor {
 		public Optional<String> label;
 		public List<Entry> entries;
-		public Descriptor(String label, Entry... entries) {
-			this.label = Optional.ofNullable(label);
-			this.entries = Collections.unmodifiableList(Arrays.asList(entries));
+
+		public Descriptor(Optional<String> label, List<Entry> entries) {
+			this.label = label;
+			this.entries = Collections.unmodifiableList(entries);	
 		}
+		
+		public Descriptor() {this(Optional.empty(), Collections.emptyList());}
+		public Descriptor(Optional<String> label, Entry... entries) {this(label, Arrays.asList(entries));}
+		public Descriptor(String label, Entry... entries) {this (Optional.ofNullable(label), entries);}
+		public Descriptor(String label, List<Entry> entries) {this(Optional.of(label), entries);}
 	}
 
 	public static <T> Entry.Item<T> entry(T label, Color value) {return new Entry.Item<>(label, value);}
@@ -201,6 +207,7 @@ public static final class ColorSwatch extends JPanel {
 			this.desc = Optional.ofNullable(desc);
 			this.width = width;
 			this.colors = colors;
+			this.setBackground(Color.white);
 		}		
 
 		/**Change the descriptor being used.**/
@@ -216,6 +223,9 @@ public static final class ColorSwatch extends JPanel {
 		
 		@Override
 		public void paintComponent(Graphics g) {
+			g.setColor(this.getBackground());
+			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+
 			desc.ifPresent(
 				desc -> Legend.drawLegend(
 							desc, 
@@ -223,6 +233,7 @@ public static final class ColorSwatch extends JPanel {
 							new Rectangle2D.Double(10, 10, width, this.getHeight()-10), //TODO: Fix those 10s they're arbitrary... 
 							colors)	
 			);
+			
 		}
 		
 		@Override public String toString() {return "Legend panel for: " + desc.orElse(EMPTY);}
