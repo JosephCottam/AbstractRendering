@@ -51,8 +51,8 @@ public class AvroAggregatesTest {
 				238.49100176586487, 
 				236.13546883394775);
 		Selector<Rectangle2D> s = TouchesPixel.make(glyphs);
-		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt, 500,500);
-		cocs = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(Util.COLOR_SORTER), vt, 500,500);
+		count = r.aggregate(glyphs, s, new Numbers.Count<Object>(), vt);
+		cocs = r.aggregate(glyphs, s, new Categories.CountCategories<Color>(Util.COLOR_SORTER), vt);
 	}
 	
 	@Test

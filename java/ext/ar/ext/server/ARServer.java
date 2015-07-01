@@ -107,7 +107,7 @@ public class ARServer extends NanoHTTPD {
 			List<Transfer<?,?>> transfers = getTransfers(transferIDS);
 			AffineTransform vt = viewTransform(viewTransTXT, dataset, width, height);
 			
-			Aggregates<?> aggs = execute(dataset, agg, transfers, vt, width, height);
+			Aggregates<?> aggs = execute(dataset, agg, transfers, vt);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			AggregateSerializer.serialize(aggs, baos, AggregateSerializer.FORMAT.JSON);
 			Response response = new Response(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
@@ -123,10 +123,10 @@ public class ARServer extends NanoHTTPD {
 	 * This is inherently not statically type-safe, so it may produce type errors at runtime.  
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view, int width, int height) {
+	public Aggregates<?> execute(Glyphset<?,?> glyphs, Aggregator agg, List<Transfer<?,?>> transfers, AffineTransform view) {
 		Renderer r = new ForkJoinRenderer();
 		Selector s = TouchesPixel.make(glyphs);
-		Aggregates aggs = r.aggregate(glyphs, s, agg, view, width, height);
+		Aggregates aggs = r.aggregate(glyphs, s, agg, view);
 
 		Transfer transfer;
 		if (transfers.size() >= 2) {

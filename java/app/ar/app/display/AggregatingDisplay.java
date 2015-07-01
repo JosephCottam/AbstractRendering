@@ -173,7 +173,7 @@ public class AggregatingDisplay extends ARComponent.Aggregating {
 				Selector selector = TouchesPixel.make(dataset);
 				
 				@SuppressWarnings({"unchecked","rawtypes"})
-				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt, databounds.width, databounds.height);
+				Aggregates<?> a = renderer.aggregate(dataset, selector, (Aggregator) aggregator, rt);
 				
 				AggregatingDisplay.this.aggregates(a, rt, dataset.axisDescriptors());
 				if (PERFORMANCE_REPORTING) {

@@ -30,7 +30,7 @@ public class ServerCombinerTests {
 		Glyphset<Rectangle2D, Object> glyphs = GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, new GlyphList<>());
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		Renderer r = new ForkJoinRenderer();
-		count = r.aggregate(glyphs, selector, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10), 10,10);
+		count = r.aggregate(glyphs, selector, new Numbers.Count<>(), Util.zoomFit(glyphs.bounds(), 10, 10));
 	}
 	
 	@Test

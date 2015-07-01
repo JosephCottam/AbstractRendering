@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +19,6 @@ import ar.util.memoryMapping.BigFileByteBuffer;
 import ar.util.memoryMapping.MemMapEncoder;
 import ar.util.memoryMapping.MemMapEncoder.TYPE;
 import ar.util.Util;
-
 import static ar.test.RectNear.rectNear;
 
 public class MemoryMappingTests {
@@ -97,8 +97,8 @@ public class MemoryMappingTests {
 //			g.toString();
 //		}
 		
-		Glyphset<Rectangle2D, Integer> glyphsA = mm.segmentAt(1, 0);
-		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segmentAt(1, 0);
+		Glyphset<Rectangle2D, Integer> glyphsA = mm.segment(1).get(0);
+		Glyphset<Rectangle2D, Integer> glyphsB = glyphsA.segment(1).get(0);
 		assertEquals(mm.size(), glyphsA.size());
 		assertEquals(mm.size(), glyphsB.size());
 		assertThat(glyphsA.bounds(), rectNear(mm.bounds(), 0.1));

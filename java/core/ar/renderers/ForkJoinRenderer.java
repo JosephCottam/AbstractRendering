@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.concurrent.ForkJoinPool;
 
@@ -85,22 +84,28 @@ public class ForkJoinRenderer implements Renderer {
 			Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			Aggregator<I,A> op,
-			AffineTransform view, int width, int height) {
-		//TODO: height/width may be extraneous now...
+			AffineTransform view) {
+		
+		return innerAggregate(glyphs, selector, op, view);
+	}
+	
+	private <I,G,A, GG extends G, II extends I> Aggregates<A> innerAggregate(
+			Glyphset<GG,II> glyphs, 
+			Selector<? super GG> selector,
+			Aggregator<? super II,A> op,
+			AffineTransform view) {
 		
 		int taskCount = threadLoad* pool.getParallelism();
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
 		recorder.reset(ticks);
 
-		GlyphParallelAggregation<G,I,A> t = new GlyphParallelAggregation<>(
-				glyphs, 
+		GlyphParallelAggregation<GG,II,A> t = new GlyphParallelAggregation<GG,II,A>(
+				glyphs.segment(taskCount), 
 				glyphs.bounds(), 
 				selector,
 				op, 
 				view, 
-				new Rectangle(0,0,width,height),
-				recorder,
-				0, taskCount, taskCount);
+				recorder);
 		
 		Aggregates<A> a= pool.invoke(t);
 		

@@ -116,7 +116,7 @@ public class SparkDemoApp {
 		
  		RDDRender render = new RDDRender();
 
- 		Aggregates<A> aggs = render.aggregate(glyphs, selector, aggregator, view, width, height);
+ 		Aggregates<A> aggs = render.aggregate(glyphs, selector, aggregator, view);
  		
 		if (outFile == null) {
 			TransferDisplay.show("", width, height, aggs, transfer);

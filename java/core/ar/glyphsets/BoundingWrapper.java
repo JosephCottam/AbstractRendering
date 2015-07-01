@@ -2,6 +2,8 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -59,11 +61,12 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 	/**Approximate!  Returns the descriptor for the base...**/
 	@Override public DescriptorPair<?,?> axisDescriptors() {return base.axisDescriptors();}
 	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
-
 	
 	@Override
-	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
-		return new BoundingWrapper<>(base.segmentAt(count, segId), limitBound);
+	public List<Glyphset<G, I>> segment(int count) throws IllegalArgumentException {
+		return base.segment(count).stream()
+				.map((s) -> new BoundingWrapper<>(s, limitBound))
+				.collect(Collectors.toList());
 	}
 	
 	public Glyphset<G,I> base() {return base;}

@@ -5,17 +5,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 
 import ar.Glyph;
 import ar.Glyphset;
-import ar.glyphsets.BoundsTask;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.util.Util;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
 
@@ -25,9 +25,7 @@ import org.supercsv.prefs.CsvPreference;
 /**Given a file with line-oriented, regular-expression delimited values,
  * provides a list-like (read-only) interface.
  * 
- * 
  * TODO: Replace 'Indexed' and 'Converter' to a RecordCreator of some sort.  The default one is essentially Converter, but sometimes that cost does not need to paid  
- * 
  */
 public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip by default.  Captured at object creation time.**/
@@ -91,25 +89,20 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 
 	@Override
 	public Rectangle2D bounds() {
-		if (bounds == null) {bounds = bounds(2);}
-		return bounds;
-	}
-	
-	
-	public Rectangle2D bounds(int m) {
-		int procs = Runtime.getRuntime().availableProcessors();
-		ForkJoinPool pool = new ForkJoinPool(procs);
-		bounds = pool.invoke(new BoundsTask<>(this, m*procs));
+		if (bounds == null) {bounds = Util.bounds(this);}
 		return bounds;
 	}
 		
 	@Override
-	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
-		long stride = (source.length()/count)+1; //+1 for the round-down
-		long low = stride*segId;
-		long high = Math.min(low+stride, source.length());
-
-		return new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high, report_only);
+	public List<Glyphset<G, I>> segment(int count) {
+		long stride = (size()/count)+1; //+1 for the round-down
+		List<Glyphset<G,I>> segments = new ArrayList<>();
+		for (int segId=0; segId<count; segId++) {
+			long low = stride*segId;
+			long high = segId == count-1 ? size() : Math.min(low+stride, size());
+			segments.add(new DelimitedFile<>(source, delimiter, types, skip, shaper, valuer, low, high, report_only));
+		}
+		return segments;
 	}
 	
 	@Override public boolean isEmpty() {return source.length() == 0;}

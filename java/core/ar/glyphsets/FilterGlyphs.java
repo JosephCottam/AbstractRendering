@@ -2,7 +2,9 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -42,10 +44,13 @@ public final class FilterGlyphs<G, I> implements Glyphset<G,I> {
 	@Override public long size() {return base.size();}
 
 	@Override
-	public Glyphset<G, I> segmentAt(int count, int segId) throws IllegalArgumentException {
-		return new FilterGlyphs<>(base.segmentAt(count, segId), predicate);
+	public List<Glyphset<G, I>> segment(int count) throws IllegalArgumentException {
+		return base.segment(count).stream()
+				.map(s -> new FilterGlyphs<>(s, predicate))
+				.collect(Collectors.toList());
 	}
-
+	
+	
 	@Override public DescriptorPair<?,?> axisDescriptors() {return base.axisDescriptors();}
 	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 

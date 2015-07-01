@@ -81,7 +81,7 @@ public class SimpleApp {
 		int width = 800;
 		int height = 800;
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
-		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
+		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt);
 		Transfer.Specialized<Number,Color> specializedTransfer = transfer.specialize(aggregates);
 		Aggregates<Color> colors = r.transfer(aggregates, specializedTransfer);
 		

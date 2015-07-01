@@ -3,6 +3,7 @@ package ar.renderers.tasks;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RecursiveTask;
 
@@ -11,57 +12,59 @@ import ar.Aggregator;
 import ar.Glyphset;
 import ar.Selector;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.TouchedBoundsWrapper;
 import ar.renderers.ProgressRecorder;
 import ar.util.Util;
 
 public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>> {
 	private static final long serialVersionUID = 705015978061576950L;
-	protected final int lowTask;
-	protected final int highTask;
-	protected final int totalTasks;
 	
-	protected final Glyphset<? extends G, ? extends I> glyphs;
+	protected final List<Glyphset<G, I>> glyphs;
 	
 	/**To save (potentially costly) multiple calculations of the overall bounds, the full bounds are passed around as a parameter.**/
 	protected final Rectangle2D glyphBounds;
 	protected final AffineTransform view;
-	protected final Rectangle viewport;
-	protected final Aggregator<I,A> op;
+	protected final Aggregator<? super I,A> op;
 	protected final ProgressRecorder recorder;
-	protected final Selector<G> selector;
+	protected final Selector<? super G> selector;
+	protected final int low, high;
 
-	public GlyphParallelAggregation(
-		Glyphset<? extends G, ? extends I> glyphs, 
+	public GlyphParallelAggregation(List<Glyphset<G, I>> glyphs, 
+			Rectangle2D glyphBounds,
+			Selector<? super G> selector,
+			Aggregator<? super I, A> op,
+			AffineTransform view,
+			ProgressRecorder recorder) {
+		this(glyphs, glyphBounds, selector, op, view, recorder, 0, glyphs.size());
+	}
+	
+	private GlyphParallelAggregation(
+		List<Glyphset<G, I>> glyphs, 
 		Rectangle2D glyphBounds,
-		Selector<G> selector,
-		Aggregator<I,A> op,
+		Selector<? super G> selector,
+		Aggregator<? super I,A> op,
 		AffineTransform view,
-		Rectangle viewport,
 		ProgressRecorder recorder,
-		int lowTask, int highTask, int totalTasks) {
+		int low,
+		int high) {
 
 		this.glyphs = glyphs;
 		this.glyphBounds = glyphBounds;
 		this.selector = selector;
 		this.op = op;
 		this.view = view;
-		this.viewport =viewport;
 		this.recorder = recorder;
-		this.lowTask = lowTask;
-		this.highTask = highTask;
-		this.totalTasks = totalTasks;		
+		this.low = low;
+		this.high = high;
 	}
 	
 	protected Aggregates<A> compute() {
 		try {
-			if (viewport.isEmpty()) {return new ConstantAggregates<>(op.identity());}
 			Aggregates<A> rslt;
-			if (highTask-lowTask != 1) {rslt=split();}
+			if (high-low > 1) {rslt=split();}
 			else {rslt=local();}
 			recorder.update(UP_MULT);
-			
+
 			if (rslt instanceof TouchedBoundsWrapper) {
 				TouchedBoundsWrapper<A> tbr = (TouchedBoundsWrapper<A>) rslt;
 				if (AggregateUtils.bounds(tbr).equals(AggregateUtils.bounds(tbr.base()))) {return tbr.base();}
@@ -72,25 +75,24 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 			throw e;
 		} catch (Throwable t) {
 			recorder.message("Error");
-			throw new AggregationException(t, "Error processign segments %d-%d of %d",  lowTask, highTask, totalTasks);
+			throw new AggregationException(t, String.format("Error processign segment %d-%d", low,high));
 		}
 	}
 	
 	protected final Aggregates<A> local() {
 		TouchedBoundsWrapper<A> target = allocateAggregates(glyphBounds);
 		recorder.update(DOWN_MULT);
-		Glyphset<? extends G, ? extends I> subset = glyphs.segmentAt(totalTasks, lowTask);
-		selector.processSubset(subset, view, target, op);
+		selector.processSubset(glyphs.get(low), view, target, op);
 		
 		if (target.untouched()) {return null;}
 		else {return target;}
 	}
 	
 	protected final Aggregates<A> split() {
-		int midTask = Util.mean(lowTask, highTask);
+		int midTask = Util.mean(low, high);
 		
-		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, viewport, recorder, lowTask, midTask, totalTasks);
-		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, viewport, recorder, midTask, highTask, totalTasks);
+		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, recorder, low, midTask);
+		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, recorder, midTask, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		

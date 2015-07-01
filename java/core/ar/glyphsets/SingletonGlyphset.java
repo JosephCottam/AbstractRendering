@@ -23,17 +23,13 @@ public final class SingletonGlyphset<G,I> implements Glyphset.RandomAccess<G,I> 
 		bounds = Util.boundOne(g.shape());
 	}
 	
-	public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
-	public Glyph<G,I> get(long i) {return glyphs.get(0);}
-	public boolean isEmpty() {return glyphs.isEmpty();}
-	public long size() {return glyphs.size();}
-	public Rectangle2D bounds() {return bounds;}
+	@Override public Iterator<Glyph<G,I>> iterator() {return glyphs.iterator();}
+	@Override public Glyph<G,I> get(long i) {return glyphs.get(0);}
+	@Override public boolean isEmpty() {return glyphs.isEmpty();}
+	@Override public long size() {return glyphs.size();}
+	@Override public Rectangle2D bounds() {return bounds;}
 
-	public Glyphset<G,I> segmentAt(int count, int segId) {
-		if (segId == 1) {return this;}
-		return new EmptyGlyphset<>();
-	}
-
+	@Override public List<Glyphset<G,I>> segment(int count) {return Collections.singletonList(this);}
 	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}
 	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {this.axisDescriptor = descriptor;} 	
 }

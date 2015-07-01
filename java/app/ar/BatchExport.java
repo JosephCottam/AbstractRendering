@@ -58,7 +58,7 @@ public class BatchExport {
 				int height = Integer.parseInt(heights[i]);
 				System.out.printf("Processing %s at %dx%d\n", source, width, height);
 				AffineTransform ivt = Util.zoomFit(glyphs.bounds(), width, height).createInverse();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, selector, aggregator, ivt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, selector, aggregator, ivt);
 				String filepart = String.format("%dx%d", width, height);
 				String filename = String.format(outPattern, filepart);
 				System.out.printf("\t Writing to %s\n", filename);

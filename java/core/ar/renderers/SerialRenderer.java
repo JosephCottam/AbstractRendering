@@ -1,5 +1,6 @@
 package ar.renderers;
 
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,10 +27,11 @@ public final class SerialRenderer implements Renderer {
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			final Aggregator<I,A> op,
-			final AffineTransform view, final int width, final int height) {
+			final AffineTransform view) {
 		
-		recorder.reset(width*height);
-		Aggregates<A> aggregates = AggregateUtils.make(width, height, op.identity());
+		Rectangle viewport = view.createTransformedShape(glyphs.bounds()).getBounds();
+		recorder.reset(viewport.height*viewport.width);
+		Aggregates<A> aggregates = AggregateUtils.make(viewport.height, viewport.width, op.identity());
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {

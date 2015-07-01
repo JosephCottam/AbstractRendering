@@ -53,7 +53,7 @@ public class Renderings {
 		
 		AffineTransform vt = Util.zoomFit(g.bounds(), WIDTH, HEIGHT);
 		Selector<G> selector = TouchesPixel.make(g);
-		Aggregates<A> aggs = r.aggregate(g, selector, agg, vt, WIDTH, HEIGHT);
+		Aggregates<A> aggs = r.aggregate(g, selector, agg, vt);
 		Transfer.Specialized<? super A,Color> t2 = t.specialize(aggs);
 		Aggregates<Color> imgAggs = r.transfer(aggs, t2);
 		BufferedImage img = AggregateUtils.asImage(imgAggs, WIDTH, HEIGHT, Color.white);
@@ -67,13 +67,19 @@ public class Renderings {
 		
 		r = new SerialRenderer();
 		BufferedImage ser_img = image(r, glyphs, agg, t);
-		Util.writeImage(ser_img, new File(String.format("./testResults/%s/ser.png", test)));
-		assertImageEquals("Serial", ref_img, ser_img);
+		Util.writeImage(ser_img, new File(String.format("./testResults/%s/Serial.png", test)));
 		
 		r = new ForkJoinRenderer();
 		BufferedImage pg_img = image(r, glyphs, agg, t);
-		Util.writeImage(pg_img, new File(String.format("./testResults/%s/pg.png", test)));
-		assertImageEquals("Parallel glyphs", ref_img, pg_img);
+		Util.writeImage(pg_img, new File(String.format("./testResults/%s/ForkJoin.png", test)));
+		
+		r = new ThreadpoolRenderer();
+		BufferedImage tp_img = image(r, glyphs, agg, t);
+		Util.writeImage(tp_img, new File(String.format("./testResults/%s/Threadpool.png", test)));
+
+		assertImageEquals("Serial", ref_img, ser_img);
+		assertImageEquals("Fork/Join", ref_img, pg_img);
+		assertImageEquals("Threadpool", ref_img, tp_img);
 	}
 	
 

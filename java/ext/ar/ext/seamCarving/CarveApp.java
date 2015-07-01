@@ -60,7 +60,7 @@ public class CarveApp {
 
 
 		AffineTransform vt = Util.zoomFit(dataset.bounds(), width, height);
-		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt, width, height);
+		Aggregates<Integer> aggregates = r.aggregate(dataset, selector, aggregator, vt);
 
 		
 		Map<String, Transfer<Integer,Integer>> allCarvers = new HashMap<String, Transfer<Integer,Integer>>() {{

@@ -130,7 +130,7 @@ public class Presets extends JPanel {
 
 	public static class SyntheticPoints implements Preset {
 		public Aggregator<?,?> aggregator() {return new Numbers.Count<Object>();}
-		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(100_000_000, 0, new SyntheticGlyphset.UniformPoints());}
+		public Glyphset<?,?> glyphset() {return new SyntheticGlyphset<>(100_000_000, new SyntheticGlyphset.UniformPoints(), l->0);}
 		public Transfer<?,?> transfer() {return new Numbers.Interpolate<>(Color.white, Color.red);}
 		public String name() {return String.format("Synthetic Points (%,d points)", glyphset().size());}
 		public String toString() {return fullName(this);}

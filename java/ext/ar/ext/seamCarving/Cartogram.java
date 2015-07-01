@@ -55,8 +55,8 @@ public class Cartogram {
 		final AffineTransform viewTransform = Util.zoomFit(populationSource.bounds().createUnion(states.bounds()), viewBounds.width, viewBounds.height);
 
 		
-		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform, viewBounds.width, viewBounds.height);
-		final Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform, viewBounds.width, viewBounds.height);
+		final Aggregates<Integer> population = renderer.aggregate(populationSource, TouchesPixel.make(populationSource), new Numbers.Count<>(), viewTransform);
+		final Aggregates<String> labels = renderer.aggregate(states, TouchesPixel.make(states), new General.Last<>(""), viewTransform);
 		Aggregates<Pair<String,Integer>> pairs = CompositeWrapper.wrap(labels, population);
 		System.out.println("Base aggregates created.\n");
 		

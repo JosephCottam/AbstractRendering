@@ -28,7 +28,7 @@ public interface Renderer extends Serializable {
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			final Selector<G> selector,
 			final Aggregator<I,A> aggregator, 
-			final AffineTransform viewTransform, final int width, final int height);
+			final AffineTransform viewTransform);
 	
 	
 	/**Produces an new set of aggregates from an existing one.

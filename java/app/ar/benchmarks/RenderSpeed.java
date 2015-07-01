@@ -92,7 +92,7 @@ public class RenderSpeed {
 		try {
 			for (int i=0; i<iterations; i++) {
 				long start = System.currentTimeMillis();
-				Aggregates<Integer> aggs = render.aggregate(glyphs, s, aggregator, vt, width, height);
+				Aggregates<Integer> aggs = render.aggregate(glyphs, s, aggregator, vt);
 				long end = System.currentTimeMillis();
 				long aggTime = end-start;
 

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -69,7 +70,7 @@ public class GlyphsetRDD<G,I> implements Glyphset<G,I>, Serializable {
 	@Override public long size() {return base.count();}
 	
 	@Override
-	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+	public List<Glyphset<G,I>> segment(int count) throws IllegalArgumentException {
 		throw new UnsupportedOperationException("Segmentation not supported.  Use Spark segmentation routines on RDD directly or convert to local glyphset (via iterator)");
 	}
 

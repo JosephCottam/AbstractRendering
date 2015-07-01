@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
@@ -86,14 +87,14 @@ public class ThreadpoolRenderer implements Renderer {
 			Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			Aggregator<I,A> op,
-			AffineTransform view, int width, int height) {
-		//TODO: height/width may be extraneous now...
+			AffineTransform view) {
 
 		return oneStep(glyphs, selector, op, view);
 	}
 	
-	public <I,G,A> Aggregates<A> oneStep(
-			Glyphset<? extends G, ? extends I> glyphs, 
+	//Exists to make the types work out right
+	private <I, G, A, GG extends G, II extends I> Aggregates<A> oneStep(
+			Glyphset<GG, II> glyphs, 
 			Selector<G> selector,
 			Aggregator<I,A> op,
 			AffineTransform view) {
@@ -105,17 +106,17 @@ public class ThreadpoolRenderer implements Renderer {
 		ExecutorCompletionService<Aggregates<A>> service = new ExecutorCompletionService<>(pool);
 		
 		Rectangle2D allocateBounds = glyphs.bounds();
-		for (int i=0; i<taskCount; i++) {
-			Glyphset<? extends G, ? extends I> subset =glyphs.segmentAt(taskCount, i);
+		Collection<Glyphset<GG, II>> segments = glyphs.segment(taskCount);
+		for (Glyphset<GG, II> segment: segments) {
 			AggregateTask<G,I,A> task = new AggregateTask<>(
 					recorder, allocateBounds, view,
-					subset, selector, op);
+					segment, selector, op);
 			service.submit(task);
 		}
 		
 		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
 		try {
-			for (int i=0; i<taskCount; i++) {
+			for (int i=0; i<segments.size(); i++) {
 				Aggregates<A> from = service.take().get();
 				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
 			}

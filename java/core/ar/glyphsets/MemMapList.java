@@ -4,8 +4,9 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.ForkJoinPool;
+import java.util.List;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -13,7 +14,6 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.renderers.ForkJoinRenderer;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
 import ar.util.memoryMapping.MappedFile;
@@ -153,35 +153,32 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override public Iterator<Glyph<G,I>> iterator() {return new GlyphsetIterator<G,I>(this);}
 
 	@Override
-	public Glyphset<G,I> segmentAt(int count, int segId)  throws IllegalArgumentException {
+	public List<Glyphset<G,I>> segment(int count)  throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
-		long low = stride*segId;
-		long high = segId == count-1 ? size() : Math.min(low+stride, size());
-		
-		long offset = recordOffset(low)+buffer.filePosition();
-		long end = Math.min(recordOffset(high)+buffer.filePosition(), source.length());
-		
-		try {
-			MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
-			if (mf == null) {return new GlyphList<>();}
-			
-			mf.order(buffer.order());
-			return new MemMapList<>(mf, source, shaper, valuer, types, 0);
-		} catch (Exception e) {
-			throw new RuntimeException(String.format("Error segmenting glyphset (parameters %d, %d)", count, segId), e);
+		List<Glyphset<G,I>> segments = new ArrayList<>();
+		for (int segId=0; segId<count; segId++) {
+			long low = stride*segId;
+			long high = segId == count-1 ? size() : Math.min(low+stride, size());
+			long offset = recordOffset(low)+buffer.filePosition();
+			long end = Math.min(recordOffset(high)+buffer.filePosition(), source.length());
+
+			try {
+				MappedFile mf = MappedFile.Util.make(source, FileChannel.MapMode.READ_ONLY, BUFFER_BYTES, offset, end);
+				if (mf == null) {segments.add(new EmptyGlyphset<>());}
+				else {
+					mf.order(buffer.order());
+					segments.add(new MemMapList<>(mf, source, shaper, valuer, types, 0));				
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(String.format("Error segmenting glyphset (parameters %d, %d)", count, segId), e);
+			}
 		}
+		return segments;
 	}
 	
 	/**Bounds calculation.  Is run in parallel using the tuning parameters of ParallelRenderer.**/
 	public Rectangle2D bounds() {
-		if (bounds == null) {
-			ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-			bounds = pool.invoke(
-					new BoundsTask<>(
-							this, 
-							ForkJoinRenderer.RENDER_POOL_SIZE
-							  * ForkJoinRenderer.RENDER_THREAD_LOAD));
-		}
+		if (bounds == null) {bounds = Util.bounds(this);}
 		return bounds;
 	}
 

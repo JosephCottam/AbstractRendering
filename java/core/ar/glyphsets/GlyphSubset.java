@@ -1,6 +1,8 @@
 package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -28,12 +30,13 @@ public abstract class GlyphSubset<G,I> implements Glyphset.RandomAccess<G,I> {
 	@Override public Rectangle2D bounds() {return Util.bounds(this);}
 
 	@Override 
-	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+	public List<Glyphset<G,I>> segment(int count) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
-		long bottom = stride*segId;
-		long top = Math.min(low+stride, high);
-
-		return new Cached<>(base, bottom + this.low, top + this.low);
+		List<Glyphset<G,I>> segments = new ArrayList<>();
+		for (long offset=low; offset<high; offset+=stride) {
+			segments.add(new Cached<>(base, offset, offset+stride));
+		}
+		return segments;
 	}
 
 	@Override public DescriptorPair<?,?> axisDescriptors() {return Axis.coordinantDescriptors(this);}

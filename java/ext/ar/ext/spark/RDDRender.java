@@ -43,8 +43,7 @@ public class RDDRender implements Serializable, Renderer {
 			Glyphset<? extends G, ? extends I> genericGlyphs, 
 			Selector<G> selector,
 			Aggregator<I, A> aggregator, 
-			AffineTransform viewTransform,
-			int width, int height) {
+			AffineTransform viewTransform) {
 		
 		//TODO: Can we do auto-conversion to RDD here?  
 		if (!(genericGlyphs instanceof GlyphsetRDD)) {throw new IllegalArgumentException("Can only use RDD Glyphsets");}

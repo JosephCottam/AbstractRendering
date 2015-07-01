@@ -21,10 +21,13 @@ import ar.util.axis.DescriptorPair;
  *
  */
 public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
-	protected final List<Glyph<G,I>> glyphs = new ArrayList<Glyph<G,I>>();
+	protected final List<Glyph<G,I>> glyphs;
 	protected Rectangle2D bounds;
 	private DescriptorPair<?,?> axisDescriptor;
 
+	public GlyphList() {this(new ArrayList<Glyph<G,I>>());}
+	public GlyphList(List<Glyph<G,I>> glyphs) {this.glyphs = glyphs;}
+	
 	public void add(Glyph<G,I> g) {glyphs.add(g); bounds=null;}
 	public void addAll(Glyphset<G,I> newGlyphs) {
 		for (Glyph<G,I> g: newGlyphs) {glyphs.add(g);}
@@ -48,12 +51,13 @@ public class GlyphList<G,I> implements Glyphset.RandomAccess<G,I> {
 	}
 
 	@Override
-	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
+	public List<Glyphset<G,I>> segment(int count) throws IllegalArgumentException {
 		long stride = (size()/count)+1; //+1 for the round-down
-		long low = stride*segId;
-		long high = Math.min(low+stride, size());
-		
-		return new GlyphSubset.Uncached<G,I>(this, low, high);
+		List<Glyphset<G,I>> segments = new ArrayList<>();
+		for (long offset=0; offset<size(); offset+=stride) {
+			segments.add(new GlyphSubset.Uncached<>(this, offset, Math.min(offset+stride, size())));
+		}
+		return segments;
 	}
 	
 	@Override public DescriptorPair<?,?> axisDescriptors() {return axisDescriptor != null ? axisDescriptor : Axis.coordinantDescriptors(this);}

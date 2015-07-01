@@ -1,6 +1,7 @@
 package ar;
 
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 
 import ar.util.axis.DescriptorPair;
 
@@ -59,22 +60,17 @@ public interface Glyphset<G,I> extends Iterable<Glyph<G,I>> {
 	 * */
 	public long size();
 	
-	/**Get subset of the data.
+	/**Create a number of subsets of the data.
 	 * 
 	 * Notes:
-	 *  * Each item in the glyphset must uniquely map to some segID.
-	 *  * Segments may have size zero.
-	 *  * A client will call segmentAt with segId of at most count-1.
-	 *  * By the time all segId's [0..count-1] have been called, all glyphs must have been returned
+	 *  * Each items in the source must be in exactly one return segment.
+	 *  * Segments may have size zero (discouraged, but allowed).
 	 *  * Segments do not need to be the same size (though it is helpful) 
 	 * 
-	 * @param count How many times will segmentAt be called for a glyphset
-	 * @param segId Which segment is desired at this time
-	 * 
-	 */
-	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException;
-	
-	
+	 * @param count Maximum number of segments to return. May return fewer.
+	 **/
+	public List<Glyphset<G,I>> segment(int count) throws IllegalArgumentException;
+
 	/**Glyphsets that support random access.
 	 * 
 	 * Random-access glyphsets should return 'segments' equal to size and

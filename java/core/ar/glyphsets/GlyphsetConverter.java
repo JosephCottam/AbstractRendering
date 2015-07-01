@@ -2,6 +2,8 @@ package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -46,7 +48,6 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 				Glyph<G,I> g = base.next();
 				return wrap(g);
 			}
-
 		};
 	}
 
@@ -57,13 +58,15 @@ public class GlyphsetConverter<G,I,V> implements Glyphset.RandomAccess<G,V> {
 	@Override public void axisDescriptors(DescriptorPair<?,?> descriptor) {base.axisDescriptors(descriptor);}
 
 	@Override
-	public Glyphset<G,V> segmentAt(int count, int segId) throws IllegalArgumentException {
-		return new GlyphsetConverter<>(base.segmentAt(count, segId), converter);
+	public List<Glyphset<G, V>> segment(int count) throws IllegalArgumentException {
+		return base.segment(count).stream().map(s -> new GlyphsetConverter<>(s, converter)).collect(Collectors.toList());
 	}
-
+	
 	@Override
 	public Glyph<G,V> get(long l) {
 		if (randomAccess != null) {return wrap(randomAccess.get(l));}
 		else {throw new UnsupportedOperationException("Cannot perform random access because backing collection does not support it.");}
 	}
+
+	
 }

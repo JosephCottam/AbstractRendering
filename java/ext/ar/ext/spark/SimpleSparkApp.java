@@ -59,7 +59,7 @@ public class SimpleSparkApp {
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
 		
  		RDDRender render = new RDDRender();
- 		Aggregates<Integer> aggs = render.aggregate(glyphs, selector, new Numbers.Count<Integer>(), view, width, height);
+ 		Aggregates<Integer> aggs = render.aggregate(glyphs, selector, new Numbers.Count<Integer>(), view);
 
 		
 		if (outFile == null) {

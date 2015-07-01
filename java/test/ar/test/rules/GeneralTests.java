@@ -51,12 +51,12 @@ public class GeneralTests {
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), size, size);
 				
 		Aggregator<Double, Double> aggregator = new General.Apply<>(0d, Math::max);
-		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt, size, size);
+		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt);
 		
 		for (int i=0; i<size; i++) {assertThat(aggs.get(i,i), equalTo((double) i));}
 		
 		vt = Util.zoomFit(glyphs.bounds(), 1,1);
-		aggs = r.aggregate(glyphs, selector, aggregator, vt, size, size);
+		aggs = r.aggregate(glyphs, selector, aggregator, vt);
 		assertThat(aggs.get(0,0), equalTo((double) size-1));
 	}
 
@@ -79,7 +79,7 @@ public class GeneralTests {
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), 1, 1);
 
-		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt, 1, 1);		
+		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt);		
 		assertThat(aggs.get(0,0), equalTo((double) size-1));		
 	}
 
@@ -103,7 +103,7 @@ public class GeneralTests {
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), 1, 1);
 
-		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt, 1, 1);		
+		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt);		
 		assertThat(aggs.get(0,0), equalTo((double) 0));		
 	}
 

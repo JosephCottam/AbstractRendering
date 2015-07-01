@@ -24,6 +24,7 @@ import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
+import ar.renderers.ThreadpoolRenderer;
 
 /**Collection of various utilities that don't have other homes.**/
 public class Util {
@@ -59,7 +60,17 @@ public class Util {
 	public static Rectangle2D boundOne(Point2D p) {return new Rectangle2D.Double(p.getX(), p.getY(), Double.MIN_VALUE, Double.MIN_VALUE);}
 	///------------------------------------------------------------------------------------------------	
 
+	/**Compute bounds of the glyphset.**/
+	public static <G,I> Rectangle2D bounds(Glyphset<G,I> glyphs) {
+		if (glyphs.size() < 100000) {return Util.bounds((Iterable<? extends Glyph<G,I>>) glyphs);} //TODO: Can I get rid of that magic number?
+		int taskCount = ThreadpoolRenderer.RENDER_POOL_SIZE;
+		return glyphs.segment(taskCount).stream().parallel()
+			.map(s -> Util.bounds(s))
+			.reduce((l,r) -> Util.bounds(l,r))
+			.orElse(new Rectangle2D.Double(Double.NaN, Double.NaN, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY));		
+	}
 
+	
 	/**What bounding box closely contains all of the glyphs in the passed collection.**/
 	public static <G> Rectangle2D bounds(Iterable<? extends Glyph<G, ?>> glyphs) {return bounds(glyphs.iterator());}
 	

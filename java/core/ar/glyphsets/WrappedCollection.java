@@ -1,9 +1,11 @@
 package ar.glyphsets;
 
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+
+import java.util.stream.Collectors;
 
 import ar.Glyph;
 import ar.Glyphset;
@@ -58,22 +60,19 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		};
 	}
 	
-	/**WARNING: Relies on different iterator instances returning elements in the same order...**/
+	/**Breaks the collection into segments BUT does so in a serial operation...**/
 	@Override
-	@SuppressWarnings("unchecked")
-	public Glyphset<G,I> segmentAt(int count, int segId) throws IllegalArgumentException {
-		long stride = (size()/count)+1; //+1 for the round-down
-		long low = stride*segId;
-		long high = Math.min(low+stride, size());
+	public java.util.List<Glyphset<G,I>> segment(int count) throws IllegalArgumentException {
+		java.util.List<ArrayList<Glyph<G,I>>> segments = new ArrayList<>();
+		for (int i=0; i<count; i++) {segments.add(new ArrayList<>());}
 
-		if (stride > Integer.MAX_VALUE) {throw new IllegalArgumentException("Segment size excceeds maximum allowable.");}
+		long i = 0;
+		for (Glyph<G,I> glyph: this) {
+			segments.get((int) i%count).add(glyph);
+			i++;
+		}
 		
-		int size = (int) (high-low);
-		final B[] vals = (B[]) new Object[size];
-		Iterator<B> it = values.iterator();
-		for (long i=0; i<low; i++) {it.next();}  //Walk iterator up to the start
-		for (int i=0; i<size; i++) {vals[i]=it.next();} //Copy values over...
-		return new WrappedCollection.List<B,G,I>(Arrays.asList(vals), shaper, valuer);
+		return segments.stream().map(s -> new GlyphList<>(s)).collect(Collectors.toList());
 	}
 
 	
@@ -103,12 +102,15 @@ public class WrappedCollection<B,G,I> implements Glyphset<G,I> {
 		}
 
 		@Override
-		public Glyphset<G,I> segmentAt(int count ,int segId) {
+		public java.util.List<Glyphset<G,I>> segment(int count) {
+			java.util.List<Glyphset<G,I>> segments = new ArrayList<>();
 			long stride = (size()/count)+1; //+1 for the round-down
-			long low = stride*segId;
-			long high = Math.min(low+stride, size());
-
-			return GlyphSubset.make(this, low, high, true);
+			for (int segId=0; segId< count; segId++) {
+				long low = stride*segId;
+				long high = Math.min(low+stride, size());
+				segments.add(GlyphSubset.make(this, low, high, true));
+			}
+			return segments;
 		}
 	}
 	
