@@ -178,7 +178,11 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	
 	/**Bounds calculation.  Is run in parallel using the tuning parameters of ParallelRenderer.**/
 	public Rectangle2D bounds() {
-		if (bounds == null) {bounds = Util.bounds(this);}
+		if (bounds == null) {
+			//TODO: Get rid of magic number;
+			if (size() > 1000000) {bounds = Util.bounds(this);}		//Parallel case		
+			else {bounds = Util.bounds(this.iterator());}			//Serial case
+		}
 		return bounds;
 	}
 

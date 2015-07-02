@@ -89,7 +89,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 
 	@Override
 	public Rectangle2D bounds() {
-		if (bounds == null) {bounds = Util.bounds(this);}
+		if (segStart ==0 && segEnd == -1) {bounds = Util.bounds(this);}	//Only call this parallel version if it is the full file...
+		else {bounds = Util.bounds(this.iterator());}
 		return bounds;
 	}
 		

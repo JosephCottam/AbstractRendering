@@ -40,7 +40,6 @@ public class Util {
 		return def;
 	}
 	
-	
 	///---------- TOOLS FOR PRETENDING THAT POINTS ARE SHAPES TOO!! ----------------------------
 	/**Check for intersection between a rectangle and another (presumably) geometric object.**/
 	public static boolean intersects(Rectangle2D r, Object o) {
@@ -60,12 +59,14 @@ public class Util {
 	public static Rectangle2D boundOne(Point2D p) {return new Rectangle2D.Double(p.getX(), p.getY(), Double.MIN_VALUE, Double.MIN_VALUE);}
 	///------------------------------------------------------------------------------------------------	
 
-	/**Compute bounds of the glyphset.**/
+	/**Compute bounds of the glyphset.
+	 * 
+	 * Uses Segment and bounds on segments. The caller is responsible for avoiding recursive casees.
+	 * **/
 	public static <G,I> Rectangle2D bounds(Glyphset<G,I> glyphs) {
-		if (glyphs.size() < 100000) {return Util.bounds((Iterable<? extends Glyph<G,I>>) glyphs);} //TODO: Can I get rid of that magic number?
-		int taskCount = ThreadpoolRenderer.RENDER_POOL_SIZE;
+		int taskCount = ThreadpoolRenderer.RENDER_POOL_SIZE * ThreadpoolRenderer.RENDER_THREAD_LOAD;
 		return glyphs.segment(taskCount).stream().parallel()
-			.map(s -> Util.bounds(s))
+			.map(s -> s.bounds())
 			.reduce((l,r) -> Util.bounds(l,r))
 			.orElse(new Rectangle2D.Double(Double.NaN, Double.NaN, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY));		
 	}
