@@ -110,6 +110,7 @@ public interface ProgressRecorder {
 		@Override public void update(long delta) {
 			inner.update(delta);
 			target.printf("%.2f%%%n", percent()*100);
+			elapse();
 		}
 
 		@Override public double percent() {return inner.percent();}
@@ -121,7 +122,7 @@ public interface ProgressRecorder {
 		
 		@Override public long elapse() {
 			long elapse = inner.elapse();
-			target.printf("Elapse time: %,d%n ms", elapse);
+			target.printf("Elapse time: %,d ms%n", elapse);
 			return elapse;
 		}
 

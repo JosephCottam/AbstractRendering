@@ -37,6 +37,8 @@ public interface Renderer extends Serializable {
 	 * is essentially producing an image.  Therefore, this function may be used to prepare an image
 	 * that is ready-to-display.
 	 * 
+	 * TODO: Why is this Transfer.Specialized?  Could it be just Transfer?  It has to do with the .Specialized/.ItemWise split.
+	 * 
 	 * @param aggregates Set of aggregates to perform transfer on 
 	 * @param t Transfer function to apply
 	 * @return A resulting set of aggregates

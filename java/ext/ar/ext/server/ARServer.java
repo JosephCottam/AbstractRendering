@@ -61,7 +61,7 @@ public class ARServer extends NanoHTTPD {
 		
 		TRANSFERS.put("RedWhiteLinear", new Numbers.Interpolate<>(new Color(255,0,0,38), Color.red));
 		TRANSFERS.put("RedWhiteLog", new Seq<Number, Double, Color>(
-											new General.ValuerTransfer<>(new MathValuers.Log<Number>(10d, true), 0d), 
+											new General.TransferFn<>(new MathValuers.Log<Number>(10d, true), 0d), 
 											new Numbers.Interpolate<Double>(new Color(255,0,0,38), Color.red, Color.white)));
 		TRANSFERS.put("Alpha10", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 25.5));
 		TRANSFERS.put("AlphaMin", new Numbers.FixedInterpolate<>(Color.white, Color.red, 0, 255));

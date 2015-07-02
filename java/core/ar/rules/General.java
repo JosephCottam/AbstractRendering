@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -76,11 +77,11 @@ public class General {
 	}
 
 	/**Wraps a BiFunction as an aggregator.**/
-	public static final class Apply<A> implements Aggregator<A,A> {
+	public static final class AggregatorFn<A> implements Aggregator<A,A> {
 		private final A identity;
 		private final BiFunction<A,A,A> func;
 		
-		public Apply(A identity, BiFunction<A,A,A> func) {
+		public AggregatorFn(A identity, BiFunction<A,A,A> func) {
 			this.identity = identity;
 			this.func = func;
 		}
@@ -91,11 +92,15 @@ public class General {
 	}
 	
 
-	/**Wrap a valuer in a transfer function.**/
-	public static final class ValuerTransfer<IN,OUT> implements Transfer.ItemWise<IN, OUT> {
-		private final Valuer<IN,OUT> valuer;
+	/**Wrap a function as a transfer function.
+	 * 
+	 * (Note: Replaces the 'ValuerTransfer' since valuers are now Function instances.)
+	 * **/
+	public static final class TransferFn<IN,OUT> implements Transfer.ItemWise<IN, OUT> {
+		private final Function<IN,OUT> valuer;
 		private final OUT empty;
-		public ValuerTransfer(Valuer<IN,OUT> valuer, OUT empty) {
+		
+		public TransferFn(Function<IN,OUT> valuer, OUT empty) {
 			this.valuer = valuer;
 			this.empty = empty;
 		}

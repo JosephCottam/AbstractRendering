@@ -76,7 +76,7 @@ public class Combinators {
 	public void While() {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 1);
 		
-		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(n -> n+1,0);
+		Transfer<Integer,Integer> t1 = new General.TransferFn<>(n -> n+1,0);
 		Valuer<Aggregates<? extends Integer>, Boolean> p = new Predicates.All<>(new MathValuers.GT<Integer>(10d));
 		Transfer.Specialized<Integer,Integer> t = new While<>(p, t1).specialize(a);
 		
@@ -96,7 +96,7 @@ public class Combinators {
 		Transfer<Integer,Integer>[] ts = new Transfer[10];
 		for (int i=0; i<ts.length; i++) {
 			final int j = i;
-			ts[i] = new General.ValuerTransfer<>(n -> n+j, 0);
+			ts[i] = new General.TransferFn<>(n -> n+j, 0);
 		}
 		
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
@@ -111,8 +111,8 @@ public class Combinators {
 	
 	@Test
 	public void Split() {
-		Transfer<Integer, Integer> left = new General.ValuerTransfer<>(n -> n+1, 0);
-		Transfer<Integer, Integer> right = new General.ValuerTransfer<>(n -> n+2, 0);
+		Transfer<Integer, Integer> left = new General.TransferFn<>(n -> n+1, 0);
+		Transfer<Integer, Integer> right = new General.TransferFn<>(n -> n+2, 0);
 		
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
 				
@@ -130,8 +130,8 @@ public class Combinators {
 	public void Seq() {
 		Aggregates<Integer> a = AggregateUtils.make(11, 31, 0);
 		
-		Transfer<Integer,Integer> t1 = new General.ValuerTransfer<>(n -> n+1, 0);
-		Transfer<Integer,Integer> t2 = new General.ValuerTransfer<>(n -> n+2, 0);
+		Transfer<Integer,Integer> t1 = new General.TransferFn<>(n -> n+1, 0);
+		Transfer<Integer,Integer> t2 = new General.TransferFn<>(n -> n+2, 0);
 		Transfer.Specialized<Integer, Integer> t = new Seq<>(t1,t2).specialize(a);
 		
 		Aggregates<Integer> rslt = new ForkJoinRenderer().transfer(a, t);

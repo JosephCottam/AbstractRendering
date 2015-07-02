@@ -1,9 +1,10 @@
 package ar.rules.combinators;
 
+import java.util.function.Function;
+
 import ar.Aggregates;
 import ar.Renderer;
 import ar.Transfer;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.General;
 
 /**If/Then/Else implementation.
@@ -20,13 +21,13 @@ public class If<IN,OUT> implements Transfer<IN,OUT> {
 
     
     /**The empty value will be taken from fail.**/
-    public If(Valuer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {
-        this(new General.ValuerTransfer<>(pred, false), pass, fail, fail.emptyValue());
+    public If(Function<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {
+        this(new General.TransferFn<>(pred, false), pass, fail, fail.emptyValue());
     }
     
     /**The empty value will be the same as the fail value.**/
-    public If(Valuer<IN, Boolean> pred, OUT pass, OUT fail) {
-    	this(new General.ValuerTransfer<>(pred, false), new General.Const<IN,OUT>(pass), new General.Const<IN,OUT>(fail), fail);
+    public If(Function<IN, Boolean> pred, OUT pass, OUT fail) {
+    	this(new General.TransferFn<>(pred, false), new General.Const<IN,OUT>(pass), new General.Const<IN,OUT>(fail), fail);
     }
 
     public If(Transfer<IN, Boolean> pred, Transfer<IN,OUT> pass, Transfer<IN,OUT> fail) {

@@ -109,7 +109,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer<?, ?> subsequent) {
-			Transfer t = new General.ValuerTransfer(params.valuer(), Controls.convert(0, params.returnType()));
+			Transfer t = new General.TransferFn(params.valuer(), Controls.convert(0, params.returnType()));
 			return extend(t, subsequent);
 		}
 

@@ -66,7 +66,7 @@ public class Cartogram {
 		//Aggregates<Pair<String,Integer>> smeared = renderer.transfer(pairs, smear);
 
 		final Transfer<Integer, Color> colorPopulation = 
-				seq().then(new General.ValuerTransfer<>(new MathValuers.Log<Integer>(10d), 0d))
+				seq().then(new General.TransferFn<>(new MathValuers.Log<Integer>(10d), 0d))
 					 .then(new General.Replace<>(Double.NEGATIVE_INFINITY, 0d, 0d))
 					 .then(new Numbers.Interpolate<Double>(new Color(255,0,0,25), new Color(255,0,0,255)));
 

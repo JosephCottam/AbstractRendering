@@ -50,7 +50,7 @@ public class GeneralTests {
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs);
 		AffineTransform vt = Util.zoomFit(glyphs.bounds(), size, size);
 				
-		Aggregator<Double, Double> aggregator = new General.Apply<>(0d, Math::max);
+		Aggregator<Double, Double> aggregator = new General.AggregatorFn<>(0d, Math::max);
 		Aggregates<Double> aggs = r.aggregate(glyphs, selector, aggregator, vt);
 		
 		for (int i=0; i<size; i++) {assertThat(aggs.get(i,i), equalTo((double) i));}
