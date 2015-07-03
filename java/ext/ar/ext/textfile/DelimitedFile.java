@@ -96,7 +96,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 		
 	@Override
 	public List<Glyphset<G, I>> segment(int count) {
-		long stride = (size()/count)+1; //+1 for the round-down
+		long stride = (source.length()/count)+1; //+1 for the round-down
 		List<Glyphset<G,I>> segments = new ArrayList<>();
 		for (int segId=0; segId<count; segId++) {
 			long low = stride*segId;
