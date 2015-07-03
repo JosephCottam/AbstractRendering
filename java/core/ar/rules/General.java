@@ -216,14 +216,27 @@ public class General {
 	/**Spread a value out in a general geometric shape.**/
 	public static class Spread<V> implements Transfer.Specialized<V,V> {
 		final Spreader<V> spreader;
-		final Aggregator<?,V> combiner;
+		final BiFunction<V,V,V> combiner;
+		final V identity;
 		
 		public Spread(Spreader<V> spreader, Aggregator<?,V> combiner) {
-			this.spreader = spreader;
-			this.combiner = combiner;
+			this(spreader, combiner::rollup, combiner.identity());
 		}
 
-		@Override public V emptyValue() {return combiner.identity();}
+		/**
+		 * @param spreader Function to spread with
+		 * @param combiner How to combine values
+		 * @param identity Identity value on spreading (used to intialized output aggregates)
+		 * 
+		 * NOTE: combiner/identity can be satisfied by Aggregator.rollup() and Aggregator.identity()
+		 */
+		public Spread(Spreader<V> spreader, BiFunction<V,V,V> combiner, V identity) {
+			this.spreader = spreader;
+			this.combiner = combiner;
+			this.identity = identity;
+		}
+		
+		@Override public V emptyValue() {return identity;}
 		
 		@Override 
 		//TODO: Parallelize...
@@ -233,7 +246,7 @@ public class General {
 			for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 				for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
 					V baseVal = aggregates.get(x,y);
-					if (Util.isEqual(combiner.identity(), baseVal)) {continue;}
+					if (Util.isEqual(identity, baseVal)) {continue;}
 					spreader.spread(target , x,y, baseVal, combiner);
 				}
 			}
@@ -246,7 +259,10 @@ public class General {
 		 * This capability can be used to implement (for example) a map with circles centered-on and proportional to a value. 
 		 */
 		public static interface Spreader<V> {
-			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?,V> op);
+			/**Spread a value out.**/
+			public void spread(Aggregates<V> target, int x, int y, V base, BiFunction<V,V,V> op);
+			
+			/**Allocate a new set of aggregates to contain spreading.**/
 			public Aggregates<V> extend(Aggregates<? extends V> source, V empty);
 		}
 		
@@ -264,14 +280,14 @@ public class General {
 			}
 
 			@Override
-			public void spread(Aggregates<V> target, int x, int y, V base, Aggregator<?, V> op) {
+			public void spread(Aggregates<V> target, int x, int y, V base, BiFunction<V,V,V> op) {
 				for (int xx=-left; xx<=right; xx++) {
 					for (int yy=-up; yy<=down; yy++) {
 
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
-						target.set(xv, yv, op.rollup(base, update));
+						target.set(xv, yv, op.apply(base, update));
 					}
 				}
 			}
@@ -291,7 +307,7 @@ public class General {
 			private final int radius;
 			public UnitCircle(int radius) {this.radius=Math.abs(radius);}
 			
-			public void spread(Aggregates<V> target, final int x, final int y, V base, Aggregator<?,V> op) {
+			public void spread(Aggregates<V> target, final int x, final int y, V base, BiFunction<V,V,V> op) {
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {
@@ -301,7 +317,7 @@ public class General {
 						p.setLocation(xv, yv);
 						if (!e.contains(p)) {continue;}
 						V update = target.get(xv, yv);
-						target.set(xv, yv, op.rollup(base, update));
+						target.set(xv, yv, op.apply(base, update));
 					}
 				}
 			}
@@ -321,7 +337,7 @@ public class General {
 		 * (Radius is sqrt of the passed cell value).
 		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
-			public void spread(Aggregates<N> target, final int x, final int y, N base, Aggregator<?,N> op) {
+			public void spread(Aggregates<N> target, final int x, final int y, N base, BiFunction<N,N,N> op) {
 				int radius = (int) Math.ceil(Math.sqrt(base.doubleValue()));
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
@@ -332,7 +348,7 @@ public class General {
 						p.setLocation(xv, yv);
 						if (!e.contains(p)) {continue;}
 						N update = target.get(xv, yv);
-						target.set(xv, yv, op.rollup(base, update));
+						target.set(xv, yv, op.apply(base, update));
 					}
 				}
 			}
