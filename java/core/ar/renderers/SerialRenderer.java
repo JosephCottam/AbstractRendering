@@ -4,6 +4,8 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -21,17 +23,38 @@ public final class SerialRenderer implements Renderer {
 	private static final long serialVersionUID = -377145195943991994L;
 	private final ProgressRecorder recorder = new ProgressRecorder.Counter();
 	
-	/**@throws IllegalArgumentException If the view transform can't be inverted.**/
+	
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			Aggregator<I, A> aggregator, 
+			AffineTransform viewTransform) {
+		
+		Rectangle viewport = viewTransform.createTransformedShape(glyphs.bounds()).getBounds();
+		
+		return aggregate(glyphs, selector, aggregator, viewTransform,
+				(defVal) -> AggregateUtils.make(viewport.height, viewport.width, defVal),
+				(l,r) -> null);
+	}
+	
+	
+	/**
+	 * @param merge Ignored in this implementation
+	 * @throws IllegalArgumentException If the view transform can't be inverted.**/
 	@Override 
 	public <I,G,A> Aggregates<A> aggregate(
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			final Aggregator<I,A> op,
-			final AffineTransform view) {
+			final AffineTransform view,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
 		
 		Rectangle viewport = view.createTransformedShape(glyphs.bounds()).getBounds();
 		recorder.reset(viewport.height*viewport.width);
-		Aggregates<A> aggregates = AggregateUtils.make(viewport.height, viewport.width, op.identity());
+		Aggregates<A> aggregates = allocator.apply(op.identity());
 		
 		for (int x=aggregates.lowX(); x<aggregates.highX(); x++) {
 			for (int y=aggregates.lowY(); y<aggregates.highY(); y++) {
@@ -78,4 +101,5 @@ public final class SerialRenderer implements Renderer {
 	}
 	
 	@Override public ProgressRecorder recorder() {return recorder;}
+
 }

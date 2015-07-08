@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.BiFunction;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -20,6 +21,7 @@ import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SingletonGlyphset;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.SerialRenderer;
+import ar.renderers.ThreadpoolRenderer;
 import ar.util.Util;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -40,10 +42,24 @@ public class RDDRender implements Serializable, Renderer {
 
 	@Override
 	public <I, G, A> Aggregates<A> aggregate(
-			Glyphset<? extends G, ? extends I> genericGlyphs, 
+			Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			Aggregator<I, A> aggregator, 
 			AffineTransform viewTransform) {
+		return aggregate(glyphs, selector, aggregator, viewTransform,
+				ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform), 
+				ThreadpoolRenderer.defaultMerge(aggregator.identity(), aggregator::rollup));
+	}
+	
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> genericGlyphs,
+			Selector<G> selector,
+			Aggregator<I, A> aggregator, 
+			AffineTransform viewTransform,
+			java.util.function.Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
 		
 		//TODO: Can we do auto-conversion to RDD here?  
 		if (!(genericGlyphs instanceof GlyphsetRDD)) {throw new IllegalArgumentException("Can only use RDD Glyphsets");}
@@ -59,7 +75,6 @@ public class RDDRender implements Serializable, Renderer {
 		} else {
 			eachAggs = rdd.map(new GlyphToAggregates<I,G,A>(selector, aggregator, viewTransform));
 		}
-		
 		
 		return eachAggs.reduce(new Rollup<A>(aggregator));
 	}
@@ -163,5 +178,4 @@ public class RDDRender implements Serializable, Renderer {
 			return Arrays.asList(selector.processSubset(glyphList, vt, aggs, op));
 		}
 	}
-	
 }

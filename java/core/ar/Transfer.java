@@ -27,7 +27,9 @@ import java.io.Serializable;
  * **/
 public interface Transfer<IN,OUT> extends Serializable {
 	
-	/**What value that represents "empty" from this transfer function?*/
+	/**What value that represents "empty" from this transfer function?
+	 * TODO: with the specialized/item-wise work, this may no longer be needed.  Remove and have Transfer implement BiFunction (replaced 'process' with 'apply')?
+	 * */
 	public OUT emptyValue();
 	
 	

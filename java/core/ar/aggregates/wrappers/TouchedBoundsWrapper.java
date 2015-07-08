@@ -38,7 +38,7 @@ public class TouchedBoundsWrapper<A> implements Aggregates<A> {
 	public Aggregates<A> base() {return base;}
 	
 	/**True if nothing was changed on the base aggregates via this wrapper.**/
-	public boolean untouched() {return lowX == Integer.MAX_VALUE && lowY == Integer.MAX_VALUE && highX == Integer.MIN_VALUE && highY == Integer.MIN_VALUE;}
+	@Override public boolean empty() {return lowX == Integer.MAX_VALUE && lowY == Integer.MAX_VALUE && highX == Integer.MIN_VALUE && highY == Integer.MIN_VALUE;}
 	
 	@Override public Iterator<A> iterator() {return new Iterator2D<>(this);}
 

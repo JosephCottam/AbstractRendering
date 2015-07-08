@@ -116,8 +116,8 @@ public class AggregateUtils {
 	 * @return Resulting aggregate set (may be new or a destructively updated left or right parameter) 
 	 */
 	public static <T> Aggregates<T> __unsafeMerge(Aggregates<T> left, Aggregates<T> right, T identity, BiFunction<T,T,T> rollup) {
-		if (left == null) {return right;}
-		if (right == null) {return left;}
+		if (left == null || left.empty()) {return right;}
+		if (right == null || right.empty()) {return left;}
 
 		if ((left instanceof ConstantAggregates) && Util.isEqual(identity, left.defaultValue())) {return right;}
 		if ((right instanceof ConstantAggregates) && Util.isEqual(identity, right.defaultValue())) {return left;}

@@ -1,11 +1,12 @@
 package ar.renderers.tasks;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RecursiveTask;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -28,14 +29,18 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	protected final ProgressRecorder recorder;
 	protected final Selector<? super G> selector;
 	protected final int low, high;
+	protected final Function<A, Aggregates<A>> allocator;
+	protected final BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge;
 
 	public GlyphParallelAggregation(List<Glyphset<G, I>> glyphs, 
 			Rectangle2D glyphBounds,
 			Selector<? super G> selector,
 			Aggregator<? super I, A> op,
 			AffineTransform view,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
 			ProgressRecorder recorder) {
-		this(glyphs, glyphBounds, selector, op, view, recorder, 0, glyphs.size());
+		this(glyphs, glyphBounds, selector, op, view, allocator, merge, recorder, 0, glyphs.size());
 	}
 	
 	private GlyphParallelAggregation(
@@ -44,6 +49,8 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		Selector<? super G> selector,
 		Aggregator<? super I,A> op,
 		AffineTransform view,
+		Function<A, Aggregates<A>> allocator,
+		BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
 		ProgressRecorder recorder,
 		int low,
 		int high) {
@@ -53,6 +60,8 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 		this.selector = selector;
 		this.op = op;
 		this.view = view;
+		this.allocator = allocator;
+		this.merge = merge;
 		this.recorder = recorder;
 		this.low = low;
 		this.high = high;
@@ -80,40 +89,28 @@ public class GlyphParallelAggregation<G,I,A> extends RecursiveTask<Aggregates<A>
 	}
 	
 	protected final Aggregates<A> local() {
-		TouchedBoundsWrapper<A> target = allocateAggregates(glyphBounds);
+		Aggregates<A> target = allocator.apply(op.identity());
 		recorder.update(DOWN_MULT);
 		selector.processSubset(glyphs.get(low), view, target, op);
 		
-		if (target.untouched()) {return null;}
+		if (target.empty()) {return null;}
 		else {return target;}
 	}
 	
 	protected final Aggregates<A> split() {
 		int midTask = Util.mean(low, high);
 		
-		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, recorder, low, midTask);
-		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, recorder, midTask, high);
+		GlyphParallelAggregation<G,I,A> top = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, allocator, merge, recorder, low, midTask);
+		GlyphParallelAggregation<G,I,A> bottom = new GlyphParallelAggregation<>(glyphs, glyphBounds, selector, op, view, allocator, merge, recorder, midTask, high);
 		invokeAll(top, bottom);
 		Aggregates<A> aggs;
 		
-		try {
-			aggs = AggregateUtils.__unsafeMerge(top.get(), bottom.get(), op.identity(), op::rollup);
-			//System.out.printf("%s\n%s\n%s\n------------------\n", AggregateUtils.bounds(top.get()),AggregateUtils.bounds(bottom.get()),AggregateUtils.bounds(aggs));
-		}
+		try {aggs = merge.apply(top.get(), bottom.get());}
 		catch (InterruptedException | ExecutionException e) {throw new RuntimeException(e);}
 		catch (OutOfMemoryError e) {throw new RuntimeException(e);}
 		
 
 		return aggs;
-	}
-
-	protected TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds) {
-		Rectangle fullBounds = view.createTransformedShape(bounds).getBounds();
-		Aggregates<A> aggs = AggregateUtils.make(
-				fullBounds.x, fullBounds.y,
-				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height,
-				op.identity());
-		return new TouchedBoundsWrapper<>(aggs, false);
 	}
 	
 	private static final int DOWN_MULT = 5;

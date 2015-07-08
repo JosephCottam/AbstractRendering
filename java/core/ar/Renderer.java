@@ -2,6 +2,8 @@ package ar;
 
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.renderers.ProgressRecorder;
 import ar.Selector;
@@ -14,7 +16,18 @@ import ar.Selector;
  */
 public interface Renderer extends Serializable {
 	
+	public <I,G,A> Aggregates<A> aggregate(
+			final Glyphset<? extends G, ? extends I> glyphs, 
+			final Selector<G> selector,
+			final Aggregator<I,A> aggregator, 
+			final AffineTransform viewTransform);
+
 	/**Produces the aggregates for a specific set of glyphs given the current view.
+	 * 
+	 * The aggregate allocator function may be invoked multiple times during parallel 
+	 * aggregating and should return a new instance each time (as parallel aggregation
+	 * assumes independent aggregate instances as targets).
+	 * 
 	 * 
 	 * @param glyphs  The items to render
 	 * @param selector Associates glyphs with positions
@@ -22,14 +35,16 @@ public interface Renderer extends Serializable {
 	 * @param viewTransform The view transform (e.g., geometry to screen) 
 	 * @param width The width of the current viewport
 	 * @param height The height of the current viewport
+	 * @param allocator Function to allocate aggregates
 	 * @return Resulting aggregate set
 	 */
 	public <I,G,A> Aggregates<A> aggregate(
 			final Glyphset<? extends G, ? extends I> glyphs, 
 			final Selector<G> selector,
 			final Aggregator<I,A> aggregator, 
-			final AffineTransform viewTransform);
-	
+			final AffineTransform viewTransform,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge);
 	
 	/**Produces an new set of aggregates from an existing one.
 	 * 

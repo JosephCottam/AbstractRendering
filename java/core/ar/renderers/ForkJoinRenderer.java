@@ -2,6 +2,8 @@ package ar.renderers;
 
 import java.awt.geom.AffineTransform;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -79,21 +81,35 @@ public class ForkJoinRenderer implements Renderer {
 		this.recorder = recorder == null ? new ProgressRecorder.Counter() : recorder;
 	}
 
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, 
+			Selector<G> selector,
+			Aggregator<I, A> aggregator, 
+			AffineTransform view,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
+		
+		return innerAggregate(glyphs, selector, aggregator, view, allocator, merge);
+	}
+	
 	@Override
 	public <I,G,A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
 			Aggregator<I,A> op,
 			AffineTransform view) {
-		
-		return innerAggregate(glyphs, selector, op, view);
+		return aggregate(glyphs, selector, op, view, ThreadpoolRenderer.defaultAllocator(glyphs, view), ThreadpoolRenderer.defaultMerge(op.identity(), op::rollup));
 	}
 	
 	private <I,G,A, GG extends G, II extends I> Aggregates<A> innerAggregate(
 			Glyphset<GG,II> glyphs, 
 			Selector<? super GG> selector,
 			Aggregator<? super II,A> op,
-			AffineTransform view) {
+			AffineTransform view,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
 		
 		int taskCount = threadLoad* pool.getParallelism();
 		long ticks = GlyphParallelAggregation.ticks(taskCount);
@@ -105,10 +121,11 @@ public class ForkJoinRenderer implements Renderer {
 				selector,
 				op, 
 				view, 
+				allocator,
+				merge,
 				recorder);
 		
 		Aggregates<A> a= pool.invoke(t);
-		
 		return a;
 	}
 	
@@ -134,4 +151,5 @@ public class ForkJoinRenderer implements Renderer {
 	}	
 	
 	public ProgressRecorder recorder() {return recorder;}
+
 }

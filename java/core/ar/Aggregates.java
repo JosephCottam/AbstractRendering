@@ -83,4 +83,10 @@ public interface Aggregates<A> extends Serializable, Iterable<A> {
 	 * (See notes on lowX for boundary behaviors).
 	 * */
 	public int highY();
+	
+	/**Is this aggregate set empty? 
+	 * 
+	 * By default, always assume a set of aggregates is not empty.   
+	 */
+	public default boolean empty() {return false;}
 }

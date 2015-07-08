@@ -2,7 +2,6 @@ package ar.renderers;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +9,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import ar.Aggregates;
 import ar.Aggregator;
@@ -82,14 +83,27 @@ public class ThreadpoolRenderer implements Renderer {
 		this.recorder = recorder == null ? new ProgressRecorder.Counter() : recorder;
 	}
 
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+			Aggregator<I, A> aggregator, AffineTransform viewTransform,
+			Function<A, Aggregates<A>> allocator, 
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
+		return oneStep(glyphs, selector, aggregator, viewTransform, allocator, merge);
+	}
+	
 	@Override
 	public <I,G,A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, 
 			Selector<G> selector,
-			Aggregator<I,A> op,
-			AffineTransform view) {
+			Aggregator<I,A> aggregator,
+			AffineTransform viewTransform) {
 
-		return oneStep(glyphs, selector, op, view);
+		return aggregate(glyphs, selector, aggregator, viewTransform, 
+				defaultAllocator(glyphs, viewTransform),
+				defaultMerge(aggregator.identity(), aggregator::rollup)
+				);
 	}
 	
 	//Exists to make the types work out right
@@ -97,7 +111,9 @@ public class ThreadpoolRenderer implements Renderer {
 			Glyphset<GG, II> glyphs, 
 			Selector<G> selector,
 			Aggregator<I,A> op,
-			AffineTransform view) {
+			AffineTransform view,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
 
 		
 		int taskCount = threadLoad * RENDER_POOL_SIZE;
@@ -105,23 +121,22 @@ public class ThreadpoolRenderer implements Renderer {
 		recorder.reset(ticks);
 		ExecutorCompletionService<Aggregates<A>> service = new ExecutorCompletionService<>(pool);
 		
-		Rectangle2D allocateBounds = glyphs.bounds();
 		Collection<Glyphset<GG, II>> segments = glyphs.segment(taskCount);
 		for (Glyphset<GG, II> segment: segments) {
 			AggregateTask<G,I,A> task = new AggregateTask<>(
-					recorder, allocateBounds, view,
-					segment, selector, op);
+					recorder, view,
+					segment, selector, op, allocator);
 			service.submit(task);
 		}
 		
-		Aggregates<A> result = allocateAggregates(allocateBounds, view, op.identity()).base();
+		Aggregates<A> result = allocator.apply(op.identity());	//TODO: Maybe remove, not necessarily needed
 		try {
 			for (int i=0; i<segments.size(); i++) {
 				Aggregates<A> from = service.take().get();
-				AggregateUtils.__unsafeMerge(result, from, result.defaultValue(), op::rollup);
+				result = merge.apply(result, from);
 			}
 		}  catch (Exception e) {
-			throw new RuntimeException("Error completing transfer", e);
+			throw new RuntimeException("Error completing aggregation", e);
 		} 
 		
 		return result;
@@ -161,14 +176,24 @@ public class ThreadpoolRenderer implements Renderer {
 	public ProgressRecorder recorder() {return recorder;}
 	
 	
-	protected static <A> TouchedBoundsWrapper<A> allocateAggregates(Rectangle2D bounds, AffineTransform viewTransform, A identity) {
-		Rectangle fullBounds = viewTransform.createTransformedShape(bounds).getBounds();
-		Aggregates<A> aggs = AggregateUtils.make(
-				fullBounds.x, fullBounds.y,
-				fullBounds.x+fullBounds.width, fullBounds.y+fullBounds.height,
-				identity);
-		return new TouchedBoundsWrapper<>(aggs, false);
+	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/
+	public static <A> BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> defaultMerge(A defVal, BiFunction<A,A,A> rollup) {
+		return (result, from) -> AggregateUtils.__unsafeMerge(result, from, defVal, rollup);
+
+	}
+	
+	/**Allocate for full-bounds in the current view.**/
+	public static <A> Function<A, Aggregates<A>> defaultAllocator(Glyphset<?,?> glyphs, AffineTransform viewTransform) {
+		Rectangle bounds = viewTransform.createTransformedShape(glyphs.bounds()).getBounds();
+		return (defVal) ->
+			new TouchedBoundsWrapper<>(
+					AggregateUtils.make(
+							bounds.x, bounds.y,
+							bounds.x+bounds.width, bounds.y+bounds.height,
+							defVal),
+					false);		
 	}	
+	
 	
 	
 	
@@ -210,34 +235,33 @@ public class ThreadpoolRenderer implements Renderer {
 		private final Selector<G> selector;
 		private final AffineTransform viewTransform;
 		private final Aggregator<I,A> op;
-		private final Rectangle2D allocateBounds;
+		private final Function<A, Aggregates<A>> allocator;
 		
 		public AggregateTask(
 				ProgressRecorder recorder, 
-				Rectangle2D allocateBounds,
 				AffineTransform viewTransform,
 				Glyphset<? extends G, ? extends I> glyphs,
 				Selector<G> selector,
-				Aggregator<I,A> op
+				Aggregator<I,A> op,
+				Function<A, Aggregates<A>> allocator
 				) {
 			this.recorder = recorder;
 			this.glyphset = glyphs;
 			this.selector = selector;
 			this.viewTransform = viewTransform;
 			this.op = op;
-			this.allocateBounds = allocateBounds;
+			this.allocator = allocator;
 		}
 		
 		
 		@Override
 		public Aggregates<A> call() throws Exception {
-			TouchedBoundsWrapper<A> target = allocateAggregates(allocateBounds, viewTransform, op.identity());
+			Aggregates<A> target = allocator.apply(op.identity());
 			recorder.update(1);
 			selector.processSubset(glyphset, viewTransform, target, op);
 						
-			if (target.untouched()) {return null;}
+			if (target.empty()) {return null;}
 			else {return target;}
 		}
 	}
-	
 }

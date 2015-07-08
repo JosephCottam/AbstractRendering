@@ -7,14 +7,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.SimpleGlyph;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Indexed.Converter;
-import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.Util;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
@@ -47,8 +46,8 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	/**Number of lines to skip at the start of the file.**/
 	private final int skip;
 
-	private final Shaper<Indexed,G> shaper;
-	private final Valuer<Indexed,I> valuer;
+	private final Function<Indexed,G> shaper;
+	private final Function<Indexed,I> valuer;
 
 	///Cached items.
 	private long size =-1;
@@ -67,9 +66,9 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 	 * @param shaper 
 	 * @param valuer
 	 */
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1, false);}
-	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Shaper<Indexed,G> shaper, Valuer<Indexed, I> valuer, long segStart, long segEnd, boolean report_only) {
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, Function<Indexed,G> shaper, Function<Indexed, I> valuer) {this(source, delimiter, types, DEFAULT_SKIP, shaper, valuer);}
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Function<Indexed,G> shaper, Function<Indexed, I> valuer) {this(source, delimiter, types, skip, shaper, valuer, 0, -1, false);}
+	public DelimitedFile(File source, char delimiter, Converter.TYPE[] types, int skip, Function<Indexed,G> shaper, Function<Indexed, I> valuer, long segStart, long segEnd, boolean report_only) {
 		this.source = source;
 		this.delimiter = delimiter;
 		this.types = types;
@@ -178,7 +177,7 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 			try {next = base.read();}
 			catch (IOException e) {
 				String msg = String.format("Error reading around character %d of %s.", charsRead, source.getName());
-				if (report_only) {System.err.println(msg);}
+				if (report_only) {System.err.println(msg); System.err.println(e.getMessage());}
 				else {throw new RuntimeException(msg, e);}
 			}
 			if (next == null) {return;}
@@ -189,8 +188,9 @@ public class DelimitedFile<G,I> implements Glyphset<G,I> {
 				cached = new SimpleGlyph<>(shaper.apply(base), valuer.apply(base));
 			} catch (Exception e) {
 				String msg = String.format("Error constructing glyph around character %d of %s", charsRead, source.getName());
-				if (report_only) {System.err.println(msg);}
+				if (report_only) {System.err.println(msg); System.err.println(e.getMessage());}
 				else {throw new RuntimeException(msg, e);}
+				cacheNext();
 			}
 		}
 
