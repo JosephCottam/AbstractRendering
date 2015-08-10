@@ -60,6 +60,45 @@
   </target>
 
 
+  <target name="flask"
+    depends="core, app"
+    description="Build just the flask extension (no spark).">
+
+    <delete dir="${extBin}"/>
+    <mkdir dir="${extBin}"/>
+    <javac destdir="${extBin}" sourcepath="" srcdir="${extSrc}" 
+      includeantruntime="false" debug="true" debuglevel="lines,source">
+
+      <exclude name="**/spark/**"/>
+
+      <classpath>
+        <fileset dir="${lib}" includes="*.jar"/>
+        <fileset dir="." includes="*.jar"/>
+      </classpath>
+    </javac>
+
+    <!--Copy resource files over-->
+    <copy todir="${extBin}">
+      <fileset dir="${extSrc}" includes="**/*.avsc"/>
+    </copy>
+
+    <manifestclasspath property="jar.classpath" jarfile="ARExt.jar">
+      <classpath>
+        <fileset dir="${lib}" includes="avro-*.jar"/>
+        <fileset dir="${lib}" includes="jackson-*.jar"/>
+        <fileset dir="." includes="*.jar"/>
+      </classpath>
+    </manifestclasspath>
+
+    <antcall target="package">
+      <param name="file" value="${extJar}"/>
+      <param name="bin" value="${extBin}"/>
+      <param name="main" value="ar.ext.flask.FlaskApp"/>
+      <param name="classpath" value="${jar.classpath}"/>
+    </antcall>
+
+  </target>
+
   <target name="ext"
     depends="core,app" 
     description="Build the extensions libraries with the core system; this is core-plus.">
@@ -87,6 +126,7 @@
       <param name="file" value="${extJar}"/>
       <param name="bin" value="${extBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
+      <param name="classpath" value="AR.jar"/>
     </antcall>
 
   </target>
