@@ -10,11 +10,29 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
+import ar.Aggregator;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
+import ar.rules.Categories;
+import ar.rules.Numbers;
 import ar.util.Util;
 
 public class Converters {
+	
+	/**Get a deserializing valuer based on the passed aggregator.*/
+	//TODO: Make more general...
+	@SuppressWarnings("unchecked")
+	public static <A> Valuer<GenericRecord, A> getDeserialize(Aggregator<?,A> aggregator) {
+		if (aggregator instanceof Numbers.Count<?>) {
+			return (Valuer<GenericRecord, A>) new ToCount();
+		} else if (aggregator instanceof Categories.CountCategories<?>
+			|| aggregator instanceof Categories.MergeCategories<?>) {
+			return (Valuer<GenericRecord, A>) new ToCoC();
+		} else {
+			throw new IllegalArgumentException("No converter known for aggregator " + aggregator.toString());
+		}
+	}
+	
 	public static class ToCount implements Valuer<GenericRecord, Integer> {
 		private static final long serialVersionUID = 1015273131104304754L;
 

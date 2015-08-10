@@ -33,25 +33,17 @@ import ar.util.Util;
  * **/
 @SuppressWarnings("unused")
 public class RenderSpeed {
-	private static String arg(String[] args, String flag, String def) {
-		flag = flag.toUpperCase();
-		for (int i=0; i<args.length; i++) {
-			if (args[i].toUpperCase().equals(flag)) {return args[i+1];}
-		}
-		return def;
-	}
-	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void main(String[] args) throws Exception {
-		int iterations = Integer.parseInt(arg(args, "-iters", "10"));
-		int cores = Integer.parseInt(arg(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
-		String config = arg(args, "-config", "CENSUS_SYN_PEOPLE");
-		String rend = arg(args, "-rend", "parallel").toUpperCase();
-		int width = Integer.parseInt(arg(args, "-width", "800"));
-		int height = Integer.parseInt(arg(args, "-height", "800"));
-		boolean header = Boolean.valueOf(arg(args, "-header", "true"));
-		int tasksPerThread = Integer.parseInt(arg(args,"-tasksMult", "-1"));
-		int synPoints = Integer.parseInt(arg(args,"-pc", "-1"));
+		int iterations = Integer.parseInt(Util.argKey(args, "-iters", "10"));
+		int cores = Integer.parseInt(Util.argKey(args, "-p", Integer.toString(Runtime.getRuntime().availableProcessors())));
+		String config = Util.argKey(args, "-config", "CENSUS_SYN_PEOPLE");
+		String rend = Util.argKey(args, "-rend", "parallel").toUpperCase();
+		int width = Integer.parseInt(Util.argKey(args, "-width", "800"));
+		int height = Integer.parseInt(Util.argKey(args, "-height", "800"));
+		boolean header = Boolean.valueOf(Util.argKey(args, "-header", "true"));
+		int tasksPerThread = Integer.parseInt(Util.argKey(args,"-tasksMult", "-1"));
+		int synPoints = Integer.parseInt(Util.argKey(args,"-pc", "-1"));
 
 		cores = cores > 0 ? cores : ForkJoinRenderer.RENDER_POOL_SIZE;
 		tasksPerThread = tasksPerThread > 0 ? tasksPerThread : ForkJoinRenderer.RENDER_THREAD_LOAD;
