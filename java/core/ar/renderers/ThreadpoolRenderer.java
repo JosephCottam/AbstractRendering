@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -73,12 +74,18 @@ public class ThreadpoolRenderer implements Renderer {
 
 	public ThreadpoolRenderer(ProgressRecorder recorder) {this(null, RENDER_THREAD_LOAD, recorder);}
 	
+	private static final AtomicInteger threadCounter = new AtomicInteger(0); 
 	/**Render that uses the given thread pool for parallel operations.
 	 * 
 	 * @param pool -- Thread pool to use.  Null to create a pool
 	 * **/
 	public ThreadpoolRenderer(ExecutorService pool, int threadLoad, ProgressRecorder recorder) {
-		this.pool = pool != null ? pool : Executors.newFixedThreadPool(RENDER_POOL_SIZE);
+		this.pool = pool != null ? pool : Executors.newFixedThreadPool(RENDER_POOL_SIZE,
+				(Runnable r) -> {
+					Thread t = new Thread(r, "AR Renderer Pool -- " + threadCounter.getAndIncrement());
+					t.setDaemon(true);
+			        return t;
+			    });
 		this.threadLoad = threadLoad > 0 ? threadLoad : RENDER_THREAD_LOAD;
 		this.recorder = recorder == null ? new ProgressRecorder.Counter() : recorder;
 	}
