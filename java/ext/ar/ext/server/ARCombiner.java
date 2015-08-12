@@ -31,7 +31,7 @@ import ar.glyphsets.implicitgeometry.Valuer;
  * When a new aggregate arrives, listeners can be notified.  Alternatively, polling can 
  * be achieved by monitoring the "count" method's value. 
  * 
- * This is NOT a compliment to the ARServer.  The ARServer is a REST application that expects incoming
+ * This is NOT a complement to the ARServer.  The ARServer is a REST application that expects incoming
  * socket connections.  Use the ar.ext.avro.AggregateSerializer.deserialize methods to handle
  * the results returned from ARServer.
  * 
