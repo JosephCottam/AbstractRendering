@@ -122,11 +122,19 @@
       <fileset dir="${extSrc}" includes="**/*.avsc"/>
     </copy>
     
+    <manifestclasspath property="jar.classpath" jarfile="ARExt.jar">
+      <classpath>
+        <fileset dir="${lib}" includes="avro-*.jar"/>
+        <fileset dir="${lib}" includes="jackson-*.jar"/>
+        <fileset dir="." includes="*.jar"/>
+      </classpath>
+    </manifestclasspath>
+
     <antcall target="package">
       <param name="file" value="${extJar}"/>
       <param name="bin" value="${extBin}"/>
       <param name="main" value="ar.ext.server.ARServer"/>
-      <param name="classpath" value="AR.jar"/>
+      <param name="classpath" value="${jar.classpath}"/>
     </antcall>
 
   </target>

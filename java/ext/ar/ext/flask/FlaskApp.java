@@ -6,9 +6,7 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.avro.generic.GenericRecord;

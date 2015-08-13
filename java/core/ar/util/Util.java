@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -345,36 +346,43 @@ public class Util {
 		return t;
 	}
 	
-
 	public static void writeImage(final BufferedImage src, File f) {writeImage(src, f, true);}
 
 	/**Write a buffered image to a file.**/
 	public static void writeImage(BufferedImage src, File f, boolean removeAlpha) {
 		try {
-			if (f.getParentFile() != null && !f.getParentFile().exists()) {
-				f.getParentFile().mkdirs();
-			}
-			
-			if (removeAlpha) {
-				//Remove alpha component because it was causing problems on some machines.
-				BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
-				Color bgColor = Color.white;
-				for (int x=0; x<src.getWidth(); x++) {
-					for (int y=0; y<src.getHeight();y++) {
-						Color fgColor = new Color(src.getRGB(x,y), true);
-						noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
-					}
-					
-				}
-				src = noAlpha;
-			}			
+			if (f.getParentFile() != null && !f.getParentFile().exists()) {f.getParentFile().mkdirs();}
+			if (removeAlpha) {src = premultiplyAlpha(src, Color.white);}
 			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
 			if (!ImageIO.write(src, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
 		}catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
+
+	/**Write a buffered image to a file.**/
+	public static void writeImage(BufferedImage src, OutputStream s, boolean removeAlpha) {
+		try {
+			if (removeAlpha) {src = premultiplyAlpha(src, Color.white);}
+			if (!ImageIO.write(src, "PNG", s)) {throw new RuntimeException("Could not find encoder for stream");}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**Remove the alpha component from the source image.**/
+	public static final BufferedImage premultiplyAlpha(BufferedImage src, Color bgColor) {
+		BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
+		for (int x=0; x<src.getWidth(); x++) {
+			for (int y=0; y<src.getHeight();y++) {
+				Color fgColor = new Color(src.getRGB(x,y), true);
+				noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
+			}
+		}
+		return noAlpha;
+	}
 	
+	/**Combine a foreground color with a background color per the foreground color's alpha.**/
 	public static final Color premultiplyAlpha(Color fgColor, Color bgColor) {
 		int r, g, b;
 		int fgAlpha = fgColor.getAlpha();

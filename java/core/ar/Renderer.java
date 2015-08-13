@@ -75,4 +75,6 @@ public interface Renderer extends Serializable {
 	 * @return The percent of predicted work that has been completed.
 	 */
 	public ProgressRecorder recorder();
+	
+	public static Renderer defaultInstance() {return new ar.renderers.ThreadpoolRenderer();}
 }

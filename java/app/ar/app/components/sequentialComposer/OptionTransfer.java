@@ -827,7 +827,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 //		@Override public String toString() {return "Weave States";}
 //	}
 	
-	public static final class Present2 extends OptionTransfer<ControlPanel> {
+	public static final class PresentInt extends OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<Integer,Integer> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new General.Present<Integer, Integer>(0,1);
@@ -839,7 +839,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override public ControlPanel control(HasViewTransform transformProvider) {return new ControlPanel();}
 	}
 	
-	public static final class Present extends OptionTransfer<ControlPanel> {
+	public static final class PresentColor extends OptionTransfer<ControlPanel> {
 		@Override 
 		public Transfer<Integer,Color> transfer(ControlPanel p, Transfer subsequent) {
 			Transfer t = new General.Present<Integer, Color>(Color.red, Color.white);
