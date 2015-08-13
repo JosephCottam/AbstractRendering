@@ -660,8 +660,7 @@ public abstract class NanoHTTPD {
                     int read = inputStream.read(buf, 0, BUFSIZE);
                     if(read == -1){
                         // socket was closed
-                        //throw new SocketException();  TODO: Should this exception be thrown instead?
-                    	return;
+                        throw new SocketException();  //TODO: Should silent return instead?
                     }
                     while (read > 0) {
                         rlen += read;

@@ -26,7 +26,7 @@ public class ServerTest {
 		
 		assertEquals(8, server.getDatasets().size());
 		assertEquals(7, server.getAggregators().size());
-		assertEquals(17, server.getTransfers().size());
+		assertEquals(18, server.getTransfers().size());
 	}
 	
 	private final Object[][] ARGUMENTS = 
