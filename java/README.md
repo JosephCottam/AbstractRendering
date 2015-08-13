@@ -21,13 +21,13 @@ The simplest application is titled "SimpleApp." It is executed with
 The source code (found in app/ar/SimpleApp.jar) provides documented example of how
 to use Abstract Rendering through the provided swing panel or to produce images directly.
 
-For a more interactive demo, run "java -cp ARApp.jar:AR.jar:lib/* ar.app.ARApp".
+For a more interactive demo, run 'java -cp "ARApp.jar:AR.jar:lib/*" ar.app.ARApp'.
 This application presents a number of preset datasets/treatments in the drop-down box.
 Shifting between datasets results in a full rendering, but only shifting
 between a treatments results in partial re-rendering (just 
 re-executing the transfer function).
 
-For a more full-featured application execute "java -cp ARApp.jar:AR.jar:lib/* ar.app.ARApp -ext".
+For a more full-featured application execute 'java -cp "ARApp.jar:AR.jar:lib/*" ar.app.ARApp -ext'.
 This application allows exploration of your own data and various treatments.
 However, there are combinations that will not work (for example, glyph-parallel 
 rendering requires a list-based glyph container type).  No effort is made to 
@@ -56,13 +56,13 @@ are supported as aggregate types). Avro can be used to serialize to binary or to
 ### Seam Carving
 Image retargeting based on [seam-carving](http://en.wikipedia.org/wiki/Seam_carving).
 
-### Sever
+### Server
 The ARServer is a self-contained HTTP server that responds to post messages that describe
-a dataset and treatment.  It returns json-encoded aggregates that result 
-If the AR.jar file was built with extensions, the server can be executed with
-"java -jar AR.jar ar.ext.server.ARServer" paramters are -host and -port 
-(which default to "localhost" and "8080," respectively).  The sever uses the Avro extensions
-to format the return result.
+a dataset and treatment.  It returns json-encoded aggregates that result. Using an ARext.jar
+file built using "ant fetch-ext ext" to get the extensions, the server can be executed with
+"java -jar ARext.jar ar.ext.server.ARServer".  Parameters are -host and -port 
+(which default to "localhost" and "8080," respectively).  The server uses the Avro extensions
+to format the returned result.
 
 ### Spark
 Abstract Rendering implementation to run in the [AMP Spark](http://spark-project.org/) framework.
@@ -70,12 +70,12 @@ This uses many of the standard tools, but different driver (e.g., not true "Rend
 to do aggregation in a distributed memory environment.  Transfer is still done locally.
 
 Because there are many Spark-specific dependencies, they are acquired with "ant fetch-spark".
-Run with "java -cp ./*:lib/* ar.ext.spark.SimpleSparkApp" for a basic demo.  For access to
-other demos, use "java -cp ./*:lib/* ar.ext.spark.SparkDemoApp" and related options.
+Run with 'java -cp "./*:lib/*" ar.ext.spark.SimpleSparkApp' for a basic demo.  For access to
+other demos, use 'java -cp "./*:lib/*" ar.ext.spark.SparkDemoApp' and related options.
  
 ### Tiles
 Tools for manipulating aggregates for use with a tile-server.
 Can create tiles from aggregates or combine multiple tiles into an aggregate set.
-RElies on the Avro extension.
+Relies on the Avro extension.
 
 
