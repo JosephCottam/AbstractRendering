@@ -12,7 +12,7 @@ geometric entities (such as circles, squares and text) but always involves
 pixels eventually to display.  In most systems, the pixels are tucked away
 under levels of abstraction in the rendering system.  Abstract Rendering
 takes the opposite approach: expose the pixels and gain powerful pixel-level
-control.  This pixel-level power is a complement many existing visualization
+control.  This pixel-level power is a complement to many existing visualization
 techniques.  It is an elaboration on rendering, not an analytic or projection step,
 so it can be used as epilogue to many existing techniques.
 
@@ -22,7 +22,7 @@ represented on that image's discrete pixels.  The source space is a
 canvas that contains logically continuous geometric primitives 
 and the target space is an image that contains discrete colors.
 Abstract Rendering fits between these two states.  It introduces
-a discretization of the data at the pixel-level, but not necessarily all
+a discretization of the data at the pixel level, but not necessarily all
 the way to colors.  This enables many pixel-level concerns to be efficiently 
 and concisely captured.
 
