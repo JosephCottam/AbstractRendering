@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,17 +35,47 @@ import ar.ext.avro.Converters;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
-import ar.rules.Categories;
-import ar.rules.Debug;
 import ar.rules.General;
-import ar.rules.Numbers;
-import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
+import ar.util.HasViewTransform;
 import ar.util.Util;
 import ar.Glyphset;
 
 public class ARServer extends NanoHTTPD {
 	public static final int DEFAULT_PORT = 6582; //In ascii A=65, R=82
+	
+	private static Map<String, OptionTransfer<?>> TRANSFERS;
+	static {
+		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
+				.filter(c -> OptionTransfer.class.isAssignableFrom(c))
+				.filter(c -> !c.getSimpleName().equals("AutoLegend"))
+				.filter(c -> !c.getSimpleName().equals("MathTransfer"))
+				.collect(Collectors.toMap(
+						c -> c.getSimpleName(), 
+						c -> {try {return (OptionTransfer<?>) c.newInstance();}
+							  catch (Exception e) {return null;}}));
+
+		TRANSFERS.put("HDInterpolate", TRANSFERS.get("ColorCatInterpolate"));
+
+		
+		TRANSFERS.put("Log10", new OptionTransfer() {
+			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
+				MathValuers.Log log = new MathValuers.Log(10);
+				Transfer t = new General.TransferFn<Number, Number>(log::apply, 0d);
+				return extend(t, subsequent);
+			}
+			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
+		});
+		
+		TRANSFERS.put("Cuberoot", new OptionTransfer() {
+			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
+				Transfer t = new General.TransferFn<Number, Number>(n -> Math.cbrt(n.doubleValue()), 0d);
+				return extend(t, subsequent);
+			}
+			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
+		});
+	}
+	
 	
 	private final Path cachedir;
 	private final Renderer render = Renderer.defaultInstance();
@@ -211,11 +240,8 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	public OptionTransfer getTransfer(String transfer) {
-		try {
-			return (OptionTransfer) OptionAggregator.class.getField(transfer).get(null);
-		} catch (Exception e) {
-			throw new IllegalArgumentException("Could not find indicated transfer: " + transfer);
-		}
+		if (!TRANSFERS.containsKey(transfer)) {throw new IllegalArgumentException("Could not find indicated transfer: " + transfer);}
+		return TRANSFERS.get(transfer);
 	}
 
 	/**Get an item from the parameters dictionary. 
@@ -227,7 +253,7 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	/**@return collection of known transfer names**/
-	public Collection<String> getTransfers() {return getContainedClasses(OptionTransfer.class, OptionTransfer.class);}
+	public Collection<String> getTransfers() {return TRANSFERS.keySet();}
 	
 	/**@return collection of known transfer names**/
 	public Collection<String> getAggregators() {return getFieldsOfType(OptionAggregator.class, OptionAggregator.class);}
