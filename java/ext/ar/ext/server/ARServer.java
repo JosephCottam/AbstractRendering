@@ -130,7 +130,7 @@ public class ARServer extends NanoHTTPD {
 
 			final Glyphset<?,?> glyphs = !selection.isPresent() 
 										? baseConfig.glyphset
-										: new BoundingWrapper<>(baseConfig.glyphset, selection.get(), false);
+										: new BoundingWrapper<>(baseConfig.glyphset, selection.get());
 			if (selection.isPresent()) {ignoreCached = true;}  //TODO: implement caching logic with selections
 			
 			Rectangle2D bounds = glyphs.bounds(); 
@@ -141,6 +141,7 @@ public class ARServer extends NanoHTTPD {
 			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, agg, width, height) : Optional.empty();
 			Aggregates<?> aggs = cached.orElseGet(() -> aggregate(glyphs, agg, vt));
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
+			if (aggs == null && selection.isPresent()) {throw new RuntimeException("Empty selection, no result.");}
 			
 			System.out.println("## Excuting transfer");
 			
@@ -221,12 +222,14 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Aggregates<?> aggregate(Glyphset glyphs, Aggregator agg, AffineTransform view) {
 		Selector<?> s = TouchesPixel.make(glyphs);
 		Aggregates<?> aggs = render.aggregate(glyphs, s, agg, view);
 		return aggs;
 	}
 			
+	@SuppressWarnings({"rawtypes" })
 	public OptionDataset baseConfig(String uri) {
 		String config = uri.substring(1).toUpperCase(); //Trim off leading slash
 		try {
