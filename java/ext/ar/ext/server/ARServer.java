@@ -194,8 +194,8 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 
-	public Transfer getTransfer(String transferIds, List<OptionTransfer<?>> def) {
-		List<OptionTransfer<?>> transfers = def;
+	public Transfer getTransfer(String transferIds, List<OptionTransfer> def) {
+		List<OptionTransfer> transfers = def;
 		
 		if (transferIds!=null && !transferIds.trim().equals("")) {
 			transfers = Arrays.stream(transferIds.split(";")).map(this::getTransfer).collect(Collectors.toList());
@@ -299,11 +299,11 @@ public class ARServer extends NanoHTTPD {
 					+ "\nBase-Configurations: one of --\n" + asList(getDatasets(), "<li><a href='%1$s'>%1$s</a></li>") + "<br><br>" 
 					+ "Query Paramters ----------------<br>"
 					+ "width/height: Set in pixels, directly influencing zoom (as there is it always runs a 'zoom fit')<br>"
-					+ "format: either png or json<br>"
-					+ "ignoreCache: True/False -- If set to True, will not laod cached data (may still save it)"
-					//+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates;  Will only process data inside the clip."
-					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only process data inside the clip."
-					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates"
+					+ "format: either 'png' or 'json'<br>"
+					+ "ignoreCache: True/False -- If set to True, will not laod cached data (may still save it)<br>"
+					+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates;  Will only process data inside the clip.<br>"
+					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only process data inside the clip.<br>"
+					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br>"
 					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
 					+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n";
 				
