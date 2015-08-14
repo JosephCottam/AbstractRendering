@@ -242,8 +242,9 @@ public class ARServer extends NanoHTTPD {
 	}
 		
 	public Aggregator<?,?> getAgg(String aggId, OptionAggregator<?,?> def) {
+		if (aggId == null) {return def.aggregator();}
 		aggId = aggId.trim();
-		if (aggId == null || aggId.equals("") || aggId.equals("null")) {return def.aggregator();}
+		if (aggId.equals("") || aggId.equals("null")) {return def.aggregator();}
 		
 		try {
 			OptionAggregator option = (OptionAggregator) OptionAggregator.class.getField(aggId).get(null);
