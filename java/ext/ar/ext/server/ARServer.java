@@ -64,7 +64,7 @@ public class ARServer extends NanoHTTPD {
 		TRANSFERS.put("HDInterpolate", TRANSFERS.get("ColorCatInterpolate"));
 
 		
-		TRANSFERS.put("Log10", new OptionTransfer() {
+		TRANSFERS.put("Log10", new OptionTransfer<OptionTransfer.ControlPanel>() {
 			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
 				MathValuers.Log log = new MathValuers.Log(10);
 				Transfer t = new General.TransferFn<Number, Number>(log::apply, 0d);
@@ -73,7 +73,7 @@ public class ARServer extends NanoHTTPD {
 			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
 		});
 		
-		TRANSFERS.put("Cuberoot", new OptionTransfer() {
+		TRANSFERS.put("Cuberoot", new OptionTransfer<OptionTransfer.ControlPanel>() {
 			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
 				Transfer t = new General.TransferFn<Number, Number>(n -> Math.cbrt(n.doubleValue()), 0d);
 				return extend(t, subsequent);
@@ -139,7 +139,7 @@ public class ARServer extends NanoHTTPD {
 			AffineTransform vt = Util.zoomFit(bounds, width, height);
 			
 			
-			File cacheFile = cacheFile(baseConfig.name, agg, width, height);
+			File cacheFile = cacheFile(baseConfig, vt, agg);
 			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, agg, width, height) : Optional.empty();
 			Aggregates<?> aggs = cached.orElseGet(() -> aggregate(glyphs, agg, vt));
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
@@ -155,7 +155,9 @@ public class ARServer extends NanoHTTPD {
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(aggs)));	//An estimate...png is compressed after all
 			if (format.equals("png")) {
-				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer); 
+				@SuppressWarnings("unchecked")
+				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer);
+				
 				Util.writeImage(img, baos, true);
 				rslt = newChunkedResponse(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
 			} else {
@@ -170,8 +172,14 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
-	public File cacheFile(String datasetId, Aggregator<?,?> agg, int width, int height) {
+	public File cacheFile(OptionDataset<?,?> config, AffineTransform vt, Aggregator<?,?> agg) {
+		String datasetId = config.name;
 		String aggId = agg.getClass().getSimpleName();
+		Rectangle renderBounds = vt.createTransformedShape(config.glyphset.bounds()).getBounds();
+		
+		int width = (renderBounds.width/10)*10;
+		int height = (renderBounds.height/10)*10;
+		
 		String base = Arrays.stream(new String[]{datasetId, aggId, Integer.toString(width), Integer.toString(height)}).collect(Collectors.joining("-"));
 		return cachedir.resolve(base + ".avsc").toFile();
 	}
@@ -196,7 +204,7 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 
-	public Transfer getTransfer(String transferIds, List<OptionTransfer> def) {
+	public Transfer<?,?> getTransfer(String transferIds, List<OptionTransfer> def) {
 		List<OptionTransfer> transfers = def;
 		
 		if (transferIds!=null && !transferIds.trim().equals("")) {
@@ -207,7 +215,7 @@ public class ARServer extends NanoHTTPD {
 		}
 		
 		Collections.reverse(transfers);
-		Transfer t=null;
+		Transfer<?,?> t=null;
 		for (OptionTransfer option: transfers) {
 			t = option.transfer(option.control(null), t);
 		}
@@ -247,14 +255,14 @@ public class ARServer extends NanoHTTPD {
 		if (aggId.equals("") || aggId.equals("null")) {return def.aggregator();}
 		
 		try {
-			OptionAggregator option = (OptionAggregator) OptionAggregator.class.getField(aggId).get(null);
+			OptionAggregator<?,?> option = (OptionAggregator<?,?>) OptionAggregator.class.getField(aggId).get(null);
 			return option.aggregator();
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Could not find indicated aggregator: " + aggId);
 		}
 	}
 
-	public OptionTransfer getTransfer(String transfer) {
+	public OptionTransfer<?> getTransfer(String transfer) {
 		if (!TRANSFERS.containsKey(transfer)) {throw new IllegalArgumentException("Could not find indicated transfer: " + transfer);}
 		return TRANSFERS.get(transfer);
 	}
