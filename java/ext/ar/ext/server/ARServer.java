@@ -113,7 +113,7 @@ public class ARServer extends NanoHTTPD {
 		
 		try {
 			if (uri.equals("/")) {return help();}
-			if (uri.equals("/favicon.ico")) {return new Response(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
+			if (uri.equals("/favicon.ico")) {return newFixedLengthResponse(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
 			
 			OptionDataset baseConfig = baseConfig(uri);
 			
@@ -157,16 +157,16 @@ public class ARServer extends NanoHTTPD {
 			if (format.equals("png")) {
 				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer); 
 				Util.writeImage(img, baos, true);
-				rslt = new Response(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
+				rslt = newChunkedResponse(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
 			} else {
 				AggregateSerializer.serialize(post_transfer, baos, AggregateSerializer.FORMAT.JSON);
-				rslt = new Response(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
+				rslt = newFixedLengthResponse(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
 			}
 			System.out.println("## Sending response");
 			return rslt;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new Response(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
+			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
 		}
 	}
 	
@@ -319,7 +319,7 @@ public class ARServer extends NanoHTTPD {
 				
 					
 		
-		return new Response(Status.OK, MIME_HTML, help);
+		return newFixedLengthResponse(Status.OK, MIME_HTML, help);
 	}
 	
 	public static void main(String[] args) throws Exception {
