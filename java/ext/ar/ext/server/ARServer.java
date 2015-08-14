@@ -1,6 +1,7 @@
 package ar.ext.server;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.avro.generic.GenericRecord;
@@ -27,12 +29,14 @@ import ar.Renderer;
 import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.components.sequentialComposer.OptionAggregator;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
 import ar.ext.server.NanoHTTPD.Response.Status;
+import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.General;
@@ -76,6 +80,18 @@ public class ARServer extends NanoHTTPD {
 		});
 	}
 	
+	Collector<String, ArrayList<Integer>, Optional<Rectangle>> INT_RECT = Collector.of(
+			() -> new ArrayList<Integer>(), 
+			(a, s) -> {if (!s.equals("")) {a.add(Integer.parseInt(s));}}, 
+			(a, b) -> {a.addAll(b); return a;}, 
+			(ArrayList<Integer> a) -> a.size() >= 4 ? Optional.of(new Rectangle(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
+	
+	Collector<String, ArrayList<Double>, Optional<Rectangle2D>> DOUBLE_RECT = Collector.of(
+			() -> new ArrayList<Double>(), 
+			(a, s) -> {if (!s.equals("")) {a.add(Double.parseDouble(s));}}, 
+			(a, b) -> {a.addAll(b); return a;}, 
+			(ArrayList<Double> a) -> a.size() >= 4 ? Optional.of(new Rectangle2D.Double(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
+
 	
 	private final Path cachedir;
 	private final Renderer render = Renderer.defaultInstance();
@@ -103,31 +119,40 @@ public class ARServer extends NanoHTTPD {
 			int width = Integer.parseInt(parms.getOrDefault("width", "500"));
 			int height = Integer.parseInt(parms.getOrDefault("height", "500"));
 			boolean ignoreCached = Boolean.parseBoolean(parms.getOrDefault("ignoreCache", "False"));
-			String viewTransTXT = parms.getOrDefault("vt", null);
+			Optional<Rectangle2D> selection = Arrays.stream(parms.getOrDefault("select", "").split(";")).collect(DOUBLE_RECT);
+			Optional<Rectangle> crop = Arrays.stream(parms.getOrDefault("crop", "").split(";")).collect(INT_RECT);
+			Optional<Rectangle> enhance = Arrays.stream(parms.getOrDefault("enhance", "").split(";")).collect(INT_RECT);
 			
 			if (!format.equals("json") && !format.equals("png")) {throw new RuntimeException("Invalid return format: " + format);}
 			
 			Aggregator<?,?> agg = getAgg(parms.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-			AffineTransform vt = viewTransform(viewTransTXT, baseConfig.glyphset, width, height);
 			Transfer transfer = getTransfer(parms.getOrDefault("transfers", null), baseConfig.defaultTransfers);
-			//Transfer transfer = Combinators.seq().then(new Categories.ToCount()).then(new Numbers.Interpolate(Color.white, Color.red));
 
+			final Glyphset<?,?> glyphs = !selection.isPresent() 
+										? baseConfig.glyphset
+										: new BoundingWrapper<>(baseConfig.glyphset, selection.get(), false);
+			if (selection.isPresent()) {ignoreCached = true;}  //TODO: implement caching logic with selections
+			
+			Rectangle2D bounds = glyphs.bounds(); 
+			AffineTransform vt = Util.zoomFit(bounds, width, height);
+			
 			
 			File cacheFile = cacheFile(baseConfig.name, agg, width, height);
 			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, agg, width, height) : Optional.empty();
-			Aggregates<?> aggs = cached.orElseGet(() -> aggregate(baseConfig.glyphset, agg, vt));
-			if (!cached.isPresent()) {cache(aggs, cacheFile);}
-			
+			Aggregates<?> aggs = cached.orElseGet(() -> aggregate(glyphs, agg, vt));
+			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
 			
 			System.out.println("## Excuting transfer");
-			Transfer.Specialized ts = transfer.specialize(aggs);
-			Aggregates<?> post_transfer = render.transfer(aggs, ts);
-			//Aggregates<?> post_transfer = aggs;
+			
+ 			Aggregates<?> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
+			Aggregates<?> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
+			Transfer.Specialized ts = transfer.specialize(spec_aggs);
+			Aggregates<?> post_transfer = render.transfer(target_aggs, ts);
 
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(aggs)));	//An estimate...png is compressed after all
 			if (format.equals("png")) {
-				BufferedImage img = AggregateUtils.asImage((Aggregates<? extends Color>) post_transfer); 
+				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer); 
 				Util.writeImage(img, baos, true);
 				rslt = new Response(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
 			} else {
@@ -201,24 +226,7 @@ public class ARServer extends NanoHTTPD {
 		Aggregates<?> aggs = render.aggregate(glyphs, s, agg, view);
 		return aggs;
 	}
-		
-	//TODO: Remove dependence on g...'render before zoom' work
-	public AffineTransform viewTransform(String vtTXT, Glyphset<?,?> g, int width, int height) {
-		if (vtTXT == null) {
-			Rectangle2D bounds = g.bounds();
-			return Util.zoomFit(bounds, width, height);
-		} else {
-			String[] parts = vtTXT.split(",");
-			double sx = Double.parseDouble(parts[0]);
-			double sy = Double.parseDouble(parts[1]);
-			double tx = Double.parseDouble(parts[2]);
-			double ty = Double.parseDouble(parts[3]);
-			AffineTransform vt = new AffineTransform(sx,0,0,sy,tx,ty);
-			return vt;
-		}
-	}
-	
-	
+			
 	public OptionDataset baseConfig(String uri) {
 		String config = uri.substring(1).toUpperCase(); //Trim off leading slash
 		try {
@@ -287,11 +295,12 @@ public class ARServer extends NanoHTTPD {
 					+ "URL Format:  host\\base-configuration&...<br><br>"
 					+ "\nBase-Configurations: one of --\n" + asList(getDatasets(), "<li><a href='%1$s'>%1$s</a></li>") + "<br><br>" 
 					+ "Query Paramters ----------------<br>"
-					+ "width/height: Set in pixels<br>"
-					+ "format: png, json<br>"
+					+ "width/height: Set in pixels, directly influencing zoom (as there is it always runs a 'zoom fit')<br>"
+					+ "format: either png or json<br>"
 					+ "ignoreCache: True/False -- If set to True, will not laod cached data (may still save it)"
-					//+ "vt: Set the view transform as list scale-x, scale-y, translate-x, translate-y"
-					//+ "limit: Sets a clip-rectangle as list x,y,w,h;  Will only process data inside the clip"
+					//+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates;  Will only process data inside the clip."
+					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only process data inside the clip."
+					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates"
 					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
 					+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n";
 				

@@ -1,5 +1,6 @@
 package ar.aggregates.wrappers;
 
+import java.awt.Rectangle;
 import java.util.Iterator;
 
 import ar.Aggregates;
@@ -20,6 +21,11 @@ import ar.aggregates.Iterator2D;
 public class SubsetWrapper<A> implements Aggregates<A> {
 	private final Aggregates<A> base;
 	private final int lowX, lowY, highX, highY;
+	
+
+	public SubsetWrapper(Aggregates<A> base, Rectangle bounds) {
+		this(base, bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height);
+	}
 	
 	public SubsetWrapper(Aggregates<A> base, int lowX, int lowY, int highX, int highY) {
 		this.base = base;
