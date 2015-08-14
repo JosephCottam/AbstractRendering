@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -240,7 +242,8 @@ public class ARServer extends NanoHTTPD {
 	}
 		
 	public Aggregator<?,?> getAgg(String aggId, OptionAggregator<?,?> def) {
-		if (aggId == null || aggId.trim().equals("")) {return def.aggregator();}
+		aggId = aggId.trim();
+		if (aggId == null || aggId.equals("") || aggId.equals("null")) {return def.aggregator();}
 		
 		try {
 			OptionAggregator option = (OptionAggregator) OptionAggregator.class.getField(aggId).get(null);
@@ -281,9 +284,15 @@ public class ARServer extends NanoHTTPD {
 				.collect(Collectors.toList());
 	}
 	
+	public static Predicate<Field> loaded(Class<?> source) {
+		return f -> {try {return f.get(source) != null;}
+						   catch (Throwable e) {return false;}};
+	}
+	
 	public Collection<String> getFieldsOfType(Class<?> source, Class<?> type) {
 		return Arrays.stream(source.getFields())
 				.filter(f -> f.getType().equals(type))
+				.filter(loaded(source))
 				.map(f -> f.getName())
 				.collect(Collectors.toList());
 	}

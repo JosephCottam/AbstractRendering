@@ -31,8 +31,8 @@ public class ServerTest {
 	
 	private final Object[][] ARGUMENTS = 
 			new Object[][]{
-				new Object[]{"localhost", 8080, "CIRCLE_SCATTER","COUNT", null},
-				new Object[]{"localhost", 8080, "CIRCLE_SCATTER","COUNT", null}
+				new Object[]{"localhost", 8080, "CENSUS_TRACTS", "MERGE_CATS", null},
+				new Object[]{"localhost", 8080, "CENSUS_TRACTS",null, null}
 			};
 	
 	@Test
@@ -40,12 +40,15 @@ public class ServerTest {
 		ARServer server = new ARServer("localhost", 8080);
 		server.start();
 		
-		Method m = this.getClass().getMethod("sendMessage", String.class, int.class, String.class, String.class, String.class);
-		for (Object[] args: ARGUMENTS) {
-			String result = (String) m.invoke(this, args);
-			assertTrue(result, result.startsWith("{\"xOffset"));
+		try {
+			Method m = this.getClass().getMethod("sendMessage", String.class, int.class, String.class, String.class, String.class);
+			for (Object[] args: ARGUMENTS) {
+				String result = (String) m.invoke(this, args);
+				assertTrue(result, result.startsWith("{\"xOffset"));
+			}
+		} finally {
+			server.stop();
 		}
-		server.stop();
 	}
 
 	public String sendMessage(String host, int port, String dataset, String aggregator, String transfer) throws Exception {
