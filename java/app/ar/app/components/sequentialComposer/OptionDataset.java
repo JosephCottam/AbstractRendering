@@ -205,9 +205,7 @@ public final class OptionDataset<G,I> {
 			new Valuer.Constant<Indexed, Integer>(1),
 			OptionAggregator.COUNT,
 			new OptionTransfer.Interpolate());
-		} catch (Exception e) {
-			e.printStackTrace();
-			temp = null;}
+		} catch (Exception e) {temp = null;}
 		CIRCLE_SCATTER = temp;
 	}
 
