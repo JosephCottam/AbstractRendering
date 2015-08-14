@@ -1,5 +1,6 @@
 language: java
 install: ant -f ./java/build.xml fetch-ext
 script: cd java; ant ext test
+sudo: false
 jdk:
   - oraclejdk8
