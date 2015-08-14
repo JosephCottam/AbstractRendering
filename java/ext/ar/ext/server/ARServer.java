@@ -130,13 +130,19 @@ public class ARServer extends NanoHTTPD {
 			Aggregator<?,?> agg = getAgg(parms.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
 			Transfer transfer = getTransfer(parms.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 
-			final Glyphset<?,?> glyphs = !selection.isPresent() 
-										? baseConfig.glyphset
-										: new BoundingWrapper<>(baseConfig.glyphset, selection.get());
-			if (selection.isPresent()) {ignoreCached = true;}  //TODO: implement caching logic with selections
+			Glyphset<?,?> glyphs;
+			Rectangle2D zoomBounds;
+			if (selection.isPresent()) {
+				glyphs = new BoundingWrapper<>(baseConfig.glyphset, selection.get());
+				zoomBounds = selection.get();
+				ignoreCached = true; //TODO: implement caching logic with selections
+			} else {
+				glyphs = baseConfig.glyphset;
+				zoomBounds = glyphs.bounds();
+						
+			}
 			
-			Rectangle2D bounds = glyphs.bounds(); 
-			AffineTransform vt = Util.zoomFit(bounds, width, height);
+			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
 			
 			
 			File cacheFile = cacheFile(baseConfig, vt, agg);
