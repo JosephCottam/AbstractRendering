@@ -173,6 +173,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 				valuers.addItem(new Entry<>("EQ", 0d, n -> new MathValuers.EQ(n)));
 				valuers.addItem(new Entry<>("GT", 0d, n -> new MathValuers.GT(n)));
 				valuers.addItem(new Entry<>("LT", 0d, n -> new MathValuers.LT(n)));
+				valuers.addItem(new Entry<>("None", Double.NaN, n -> (Number m) -> m.doubleValue()));
 				
 				
 				this.setLayout(new GridLayout(1,0));
