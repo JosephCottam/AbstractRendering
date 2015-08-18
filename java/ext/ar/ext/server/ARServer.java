@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -58,7 +59,7 @@ public class ARServer extends NanoHTTPD {
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
 
 	private final Path cachedir;
-	private final Renderer render = Renderer.defaultInstance();
+	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
 
 	public ARServer(String hostname) {this(hostname, DEFAULT_PORT);}
 	public ARServer(String hostname, int port) {this(hostname, port, new File("./cache"));}
@@ -79,30 +80,36 @@ public class ARServer extends NanoHTTPD {
 	@Override 
 	public Response serve(String uri, Method method,
 			Map<String, String> headers, 
-			Map<String, String> parms,
+			Map<String, String> params,
 			Map<String, String> files) {
 		
-		try {
-			if (uri.equals("/")) {return help();}
-			if (uri.equals("/favicon.ico")) {return newFixedLengthResponse(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
-			
-			OptionDataset baseConfig = baseConfig(uri);
-			
-			String format = parms.getOrDefault("format", "png");
-			int width = Integer.parseInt(parms.getOrDefault("width", "500"));
-			int height = Integer.parseInt(parms.getOrDefault("height", "500"));
-			boolean ignoreCached = Boolean.parseBoolean(parms.getOrDefault("ignoreCache", "False"));
-			Optional<Rectangle2D> selection = Arrays.stream(parms.getOrDefault("select", "").split(";|,")).collect(DOUBLE_RECT);
-			Optional<List<Point2D>> latlon = Arrays.stream(parms.getOrDefault("latlon", "").split(";|,")).collect(POINTS);
-			Optional<Rectangle> crop = Arrays.stream(parms.getOrDefault("crop", "").split(";|,")).collect(INT_RECT);
-			Optional<Rectangle> enhance = Arrays.stream(parms.getOrDefault("enhance", "").split(";|,")).collect(INT_RECT);
-			
-			if (!format.equals("json") && !format.equals("png")) {throw new RuntimeException("Invalid return format: " + format);}
-			
-			Aggregator<?,?> agg = getAgg(parms.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-			Transfer transfer = getTransfer(parms.getOrDefault("transfers", null), baseConfig.defaultTransfers);
+		if (uri.equals("/")) {return help();}
+		if (uri.equals("/favicon.ico")) {return newFixedLengthResponse(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
+		
+		OptionDataset baseConfig = baseConfig(uri);
+		
+		String format = params.getOrDefault("format", "png");
+		int width = Integer.parseInt(params.getOrDefault("width", "500"));
+		int height = Integer.parseInt(params.getOrDefault("height", "500"));
+		boolean ignoreCached = Boolean.parseBoolean(params.getOrDefault("ignoreCache", "False"));
+		Optional<Rectangle2D> selection = Arrays.stream(params.getOrDefault("select", "").split(";|,")).collect(DOUBLE_RECT);
+		Optional<List<Point2D>> latlon = Arrays.stream(params.getOrDefault("latlon", "").split(";|,")).collect(POINTS);
+		Optional<Rectangle> crop = Arrays.stream(params.getOrDefault("crop", "").split(";|,")).collect(INT_RECT);
+		Optional<Rectangle> enhance = Arrays.stream(params.getOrDefault("enhance", "").split(";|,")).collect(INT_RECT);
+		Object requesterID = params.getOrDefault("requesterID", Double.toString(Math.random()));
+		
+		if (tasks.containsKey(requesterID)) {
+			System.out.println("## Signaling shutdown to existing session by requester " + requesterID);
+			tasks.get(requesterID).stop();
+		}
+		
+		if (!format.equals("json") && !format.equals("png")) {throw new RuntimeException("Invalid return format: " + format);}
+		
+		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
+		Transfer transfer = getTransfer(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 
-			
+		try {
+			System.out.println("## Loading dataset");
 			if (latlon.isPresent()) {
 				Rectangle2D bounds;
 				if (baseConfig.flags.contains("EPSG:900913")) {
@@ -126,15 +133,22 @@ public class ARServer extends NanoHTTPD {
 			}
 			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
 			
+			System.out.printf("## Request ready to execute %s, requester %s%n", baseConfig.name, requesterID);
+			Renderer render = Renderer.defaultInstance();
+			tasks.put(requesterID, render);
 			
 			File cacheFile = cacheFile(baseConfig, vt, agg);
 			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, agg, width, height) : Optional.empty();
-			Aggregates<?> aggs = cached.orElseGet(() -> aggregate(glyphs, agg, vt));
+			
+			Aggregates<?> aggs;
+			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
+			catch (Renderer.RenderInterruptedException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
+			
+			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
-			if (aggs == null && selection.isPresent()) {throw new RuntimeException("Empty selection, no result.");}
 			
+
 			System.out.println("## Excuting transfer");
-			
  			Aggregates<?> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
 			Aggregates<?> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
 			Transfer.Specialized ts = transfer.specialize(spec_aggs);
@@ -178,7 +192,8 @@ public class ARServer extends NanoHTTPD {
 		return cachedir.resolve(base + ".avsc").toFile();
 	}
 	
-	//TODO: Add View transform to cache info
+	
+	//TODO: Add View transform (or derivative) to cache info?
 	public Optional<Aggregates<?>> loadCached(File cacheFile, Aggregator<?,?> aggregator, int width, int height) {		
 		if (!cacheFile.exists()) {return Optional.empty();}
 		
@@ -197,6 +212,8 @@ public class ARServer extends NanoHTTPD {
 			return Optional.empty();
 		}
 	}
+	
+	
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Transfer<?,?> getTransfer(String transferIds, List<OptionTransfer<?>> def) {
@@ -230,7 +247,7 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Aggregates<?> aggregate(Glyphset glyphs, Aggregator agg, AffineTransform view) {
+	public Aggregates<?> aggregate(Renderer render, Glyphset glyphs, Aggregator agg, AffineTransform view) {
 		Selector<?> s = TouchesPixel.make(glyphs);
 		Aggregates<?> aggs = render.aggregate(glyphs, s, agg, view);
 		return aggs;
