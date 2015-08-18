@@ -5,7 +5,9 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ar.Glyphset;
 import ar.glyphsets.MemMapList;
@@ -19,17 +21,21 @@ import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
 public final class OptionDataset<G,I> {	
-	public final String name;
-	public final Glyphset<G,I> glyphset;
-	public final File sourceFile;
-	public final Shaper<Indexed, G> shaper;
-	public final Valuer<Indexed, I> valuer;
+	public final String name;				//Name to appear in convenient locations
+	public final Glyphset<G,I> glyphset;	//Actual glyphset to load
+	public final File sourceFile;			//Where it came from
+	public final Shaper<Indexed, G> shaper; //How shapes were determined
+	public final Valuer<Indexed, I> valuer; //How values were determined
 	public final OptionAggregator<? super I,?> defaultAggregator;
 	public final List<OptionTransfer<?>> defaultTransfers;
+	public final Set<String> flags = new HashSet<>();	//Hints, allegations and other information about the data set
+	
 	
 	public OptionDataset(
-			String name, File file, 
-			Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer, 
+			String name, 
+			File file, 
+			Shaper<Indexed, G> shaper, 
+			Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
 		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, defTrans);
@@ -46,7 +52,7 @@ public final class OptionDataset<G,I> {
 	private OptionDataset(
 			String name, 
 			Glyphset<G,I> glyphset,
-			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer, 
+			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
 		this.name = name;
@@ -103,13 +109,16 @@ public final class OptionDataset<G,I> {
 			temp = new OptionDataset<>(
 				"US Census Tracts", 
 				new File("../data/2010Census_RaceTract.hbin"), 
-				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				OptionAggregator.MERGE_CATS,
 				new OptionTransfer.Spread(),
 				new OptionTransfer.ToCount(),
 				new OptionTransfer.MathTransfer(),
 				new OptionTransfer.Interpolate());
+			
+			temp.flags.add("NegativeDown");
+			temp.flags.add("LatLon");
 		} catch (Exception e) {temp = null;}
 		CENSUS_TRACTS = temp;
 	}
@@ -121,16 +130,18 @@ public final class OptionDataset<G,I> {
 		try {
 			temp = new OptionDataset<>(
 				"US Census Synthetic People", 
-				new File("../data/2010Census_RacePersonPoints.hbin"), 
-				new Indexed.ToPoint(true, 0, 1),
+				new File("../data/2010Census_RacePersonPoints.hbin"),
+				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
+			
+			temp.flags.add("NegativeDown");
+			temp.flags.add("EPSG:900913");
 		} catch (Exception e) {temp = null;}
 		CENSUS_SYN_PEOPLE = temp;
 	}
-	
 
 	public static final OptionDataset<Point2D, Character> CENSUS_NY_SYN_PEOPLE;
 	static {
@@ -139,11 +150,14 @@ public final class OptionDataset<G,I> {
 			temp = new OptionDataset<>(
 				"US Census Synthetic People (NY)", 
 				new File("../data/2010Census_RacePersonPoints_NY.hbin"), 
-				new Indexed.ToPoint(true, 0, 1),
+				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
+			
+			temp.flags.add("NegativeDown");
+			temp.flags.add("EPSG:900913");
 		} catch (Exception e) {temp = null;}
 		CENSUS_NY_SYN_PEOPLE = temp;
 	}

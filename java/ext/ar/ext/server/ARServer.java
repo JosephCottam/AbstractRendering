@@ -3,8 +3,12 @@ package ar.ext.server;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,7 +43,9 @@ import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
+import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
+import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.General;
 import ar.selectors.TouchesPixel;
@@ -49,52 +55,8 @@ import ar.Glyphset;
 
 public class ARServer extends NanoHTTPD {
 	public static final int DEFAULT_PORT = 6582; //In ascii A=65, R=82
-	
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
-	static {
-		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
-				.filter(c -> OptionTransfer.class.isAssignableFrom(c))
-				.filter(c -> !c.getSimpleName().equals("AutoLegend"))
-				.filter(c -> !c.getSimpleName().equals("MathTransfer"))
-				.collect(Collectors.toMap(
-						c -> c.getSimpleName(), 
-						c -> {try {return (OptionTransfer<?>) c.newInstance();}
-							  catch (Exception e) {return null;}}));
 
-		TRANSFERS.put("HDInterpolate", TRANSFERS.get("ColorCatInterpolate"));
-
-		
-		TRANSFERS.put("Log10", new OptionTransfer<OptionTransfer.ControlPanel>() {
-			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
-				MathValuers.Log log = new MathValuers.Log(10);
-				Transfer t = new General.TransferFn<Number, Number>(log::apply, 0d);
-				return extend(t, subsequent);
-			}
-			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
-		});
-		
-		TRANSFERS.put("Cuberoot", new OptionTransfer<OptionTransfer.ControlPanel>() {
-			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
-				Transfer t = new General.TransferFn<Number, Number>(n -> Math.cbrt(n.doubleValue()), 0d);
-				return extend(t, subsequent);
-			}
-			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
-		});
-	}
-	
-	Collector<String, ArrayList<Integer>, Optional<Rectangle>> INT_RECT = Collector.of(
-			() -> new ArrayList<Integer>(), 
-			(a, s) -> {if (!s.equals("")) {a.add(Integer.parseInt(s));}}, 
-			(a, b) -> {a.addAll(b); return a;}, 
-			(ArrayList<Integer> a) -> a.size() >= 4 ? Optional.of(new Rectangle(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
-	
-	Collector<String, ArrayList<Double>, Optional<Rectangle2D>> DOUBLE_RECT = Collector.of(
-			() -> new ArrayList<Double>(), 
-			(a, s) -> {if (!s.equals("")) {a.add(Double.parseDouble(s));}}, 
-			(a, b) -> {a.addAll(b); return a;}, 
-			(ArrayList<Double> a) -> a.size() >= 4 ? Optional.of(new Rectangle2D.Double(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
-
-	
 	private final Path cachedir;
 	private final Renderer render = Renderer.defaultInstance();
 
@@ -103,6 +65,15 @@ public class ARServer extends NanoHTTPD {
 	public ARServer(String hostname, int port, File cachedir) {
 		super(hostname, port);
 		this.cachedir = cachedir.toPath();
+	}
+
+	
+	public static final AffineTransform flipHorizontal(int height) {
+		AffineTransform flip = new AffineTransform();
+		flip.translate(0, height/2);
+		flip.scale(1, -1);
+		flip.translate(0, -height/2);
+		return flip;
 	}
 
 	@Override 
@@ -121,27 +92,38 @@ public class ARServer extends NanoHTTPD {
 			int width = Integer.parseInt(parms.getOrDefault("width", "500"));
 			int height = Integer.parseInt(parms.getOrDefault("height", "500"));
 			boolean ignoreCached = Boolean.parseBoolean(parms.getOrDefault("ignoreCache", "False"));
-			Optional<Rectangle2D> selection = Arrays.stream(parms.getOrDefault("select", "").split(";")).collect(DOUBLE_RECT);
-			Optional<Rectangle> crop = Arrays.stream(parms.getOrDefault("crop", "").split(";")).collect(INT_RECT);
-			Optional<Rectangle> enhance = Arrays.stream(parms.getOrDefault("enhance", "").split(";")).collect(INT_RECT);
+			Optional<Rectangle2D> selection = Arrays.stream(parms.getOrDefault("select", "").split(";|,")).collect(DOUBLE_RECT);
+			Optional<List<Point2D>> latlon = Arrays.stream(parms.getOrDefault("latlon", "").split(";|,")).collect(POINTS);
+			Optional<Rectangle> crop = Arrays.stream(parms.getOrDefault("crop", "").split(";|,")).collect(INT_RECT);
+			Optional<Rectangle> enhance = Arrays.stream(parms.getOrDefault("enhance", "").split(";|,")).collect(INT_RECT);
 			
 			if (!format.equals("json") && !format.equals("png")) {throw new RuntimeException("Invalid return format: " + format);}
 			
 			Aggregator<?,?> agg = getAgg(parms.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
 			Transfer transfer = getTransfer(parms.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 
+			
+			if (latlon.isPresent()) {
+				Rectangle2D bounds;
+				if (baseConfig.flags.contains("EPSG:900913")) {
+					bounds = DegreesToMeters.from(latlon.get().get(0), latlon.get().get(1));
+				} else {
+					bounds = new Line2D.Double(latlon.get().get(0), latlon.get().get(1)).getBounds2D();
+				}
+				selection = Optional.of(bounds);
+			}
+			
 			Glyphset<?,?> glyphs;
 			Rectangle2D zoomBounds;
 			if (selection.isPresent()) {
-				glyphs = new BoundingWrapper<>(baseConfig.glyphset, selection.get());
 				zoomBounds = selection.get();
+				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
 				ignoreCached = true; //TODO: implement caching logic with selections
 			} else {
 				glyphs = baseConfig.glyphset;
 				zoomBounds = glyphs.bounds();
 						
 			}
-			
 			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
 			
 			
@@ -163,6 +145,12 @@ public class ARServer extends NanoHTTPD {
 			if (format.equals("png")) {
 				@SuppressWarnings("unchecked")
 				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer);
+				if (baseConfig.flags.contains("NegativeDown")) {
+					BufferedImageOp op = new AffineTransformOp(flipHorizontal(img.getHeight()), AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+					BufferedImage src = img;
+					img = op.createCompatibleDestImage(src, src.getColorModel());
+					op.filter(src, img);
+				}
 				
 				Util.writeImage(img, baos, true);
 				rslt = newChunkedResponse(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
@@ -317,7 +305,7 @@ public class ARServer extends NanoHTTPD {
 	}
 	public Response help() {
 		String help = "<H1>AR Server help</H1>"
-					+ "Simple interface to the default configurations in the extended AR demo application (ar.app.components.sequentialComposer)<br>"
+					+ "Simple interface to the default configurations in the extended AR demo application (ar.ap)p.components.sequentialComposer)<br>"
 					+ "The path sets the base configuration, query parameters modify that configuration.<br>"
 					+ "URL Format:  host\\base-configuration&...<br><br>"
 					+ "\nBase-Configurations: one of --\n" + asList(getDatasets(), "<li><a href='%1$s'>%1$s</a></li>") + "<br><br>" 
@@ -351,4 +339,110 @@ public class ARServer extends NanoHTTPD {
 		System.out.printf("AR Server started on %s:%d%n", host, port);
 		while (server.isAlive()) {synchronized(server) {server.wait(10000);;}}
 	}
+	
+	
+
+	static {
+		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
+				.filter(c -> OptionTransfer.class.isAssignableFrom(c))
+				.filter(c -> !c.getSimpleName().equals("AutoLegend"))
+				.filter(c -> !c.getSimpleName().equals("MathTransfer"))
+				.collect(Collectors.toMap(
+						c -> c.getSimpleName(), 
+						c -> {try {return (OptionTransfer<?>) c.newInstance();}
+							  catch (Exception e) {return null;}}));
+
+		TRANSFERS.put("HDInterpolate", TRANSFERS.get("ColorCatInterpolate"));
+
+		
+		TRANSFERS.put("Log10", new OptionTransfer<OptionTransfer.ControlPanel>() {
+			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
+				MathValuers.Log log = new MathValuers.Log(10);
+				Transfer t = new General.TransferFn<Number, Number>(log::apply, 0d);
+				return extend(t, subsequent);
+			}
+			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
+		});
+		
+		TRANSFERS.put("Cuberoot", new OptionTransfer<OptionTransfer.ControlPanel>() {
+			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
+				Transfer t = new General.TransferFn<Number, Number>(n -> Math.cbrt(n.doubleValue()), 0d);
+				return extend(t, subsequent);
+			}
+			@Override public ControlPanel control(HasViewTransform transformProvider) {return null;}			
+		});
+	}
+	
+
+	/**Convert values in the latitude, longitude to EPSG:900913 meters system (used by google maps)
+	 * 
+	 * based on: https://gist.github.com/onderaltintas/6649521
+	 */
+	public static final class DegreesToMeters {
+		private static final double PI360 = Math.PI / 360;
+		private static final double PI180 = Math.PI / 180;
+		
+		public static Rectangle2D from(Rectangle2D degrees) {
+			Point2D topLeft = from(new Point2D.Double(degrees.getMaxX(), degrees.getMaxY()));
+			Point2D bottomRight = from(new Point2D.Double(degrees.getMinX(), degrees.getMinY()));
+			return from(topLeft, bottomRight);
+		}
+		
+		public static Rectangle2D from(Point2D one, Point2D two) {
+			Point2D a = from(one);
+			Point2D b = from(two);
+			return new Line2D.Double(a,b).getBounds2D();			
+		}
+		
+		public static Point2D from(Point2D degrees) {
+			final double lat = degrees.getY();
+			final double lon = degrees.getX();
+			final double x = lon * 20037508.34 / 180;
+			double y = Math.log(Math.tan((90 + lat) * PI360)) / (PI180);
+	        y = y * 20037508.34 / 180;
+	        return new Point2D.Double(x,y);
+		}
+	}
+	
+	/**Convert values in the EPSG:900913 meters system (used by google maps) to latitude, longitude.
+	 * 
+	 * based on: https://gist.github.com/onderaltintas/6649521
+	 */
+	public static final class MetersToDegrees implements Shaper<Indexed, Point2D> {
+		private final int xIdx, yIdx;
+		private static final double PI2 = Math.PI / 20037508.34;
+		
+		public MetersToDegrees(int xIdx, int yIdx) {this.xIdx = xIdx; this.yIdx = yIdx;}
+		
+		@Override
+		public Point2D apply(Indexed t) {
+			final double x = ((Number) t.get(xIdx)).doubleValue();
+			final double y = ((Number) t.get(yIdx)).doubleValue();
+			final double lon = x *  180 / 20037508.34 ;
+			final double lat = Math.atan(Math.exp(y * PI2)) * 360 / Math.PI - 90;
+			final Point2D rslt = new Point2D.Double(lon, -lat);
+			return rslt;
+		}
+	}
+	
+	Collector<String, ArrayList<Double>, Optional<List<Point2D>>> POINTS = Collector.of(
+			() -> new ArrayList<Double>(), 
+			(a, s) -> {if (!s.equals("")) {a.add(Double.parseDouble(s));}}, 
+			(a, b) -> {a.addAll(b); return a;}, 
+			(ArrayList<Double> a) -> a.size() >= 4 
+					? Optional.of(Arrays.asList(new Point2D.Double(a.get(0), a.get(1)), new Point2D.Double(a.get(2), a.get(3)))) 
+					: Optional.empty());
+
+	Collector<String, ArrayList<Integer>, Optional<Rectangle>> INT_RECT = Collector.of(
+			() -> new ArrayList<Integer>(), 
+			(a, s) -> {if (!s.equals("")) {a.add(Integer.parseInt(s));}}, 
+			(a, b) -> {a.addAll(b); return a;}, 
+			(ArrayList<Integer> a) -> a.size() >= 4 ? Optional.of(new Rectangle(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
+	
+	Collector<String, ArrayList<Double>, Optional<Rectangle2D>> DOUBLE_RECT = Collector.of(
+			() -> new ArrayList<Double>(), 
+			(a, s) -> {if (!s.equals("")) {a.add(Double.parseDouble(s));}}, 
+			(a, b) -> {a.addAll(b); return a;}, 
+			(ArrayList<Double> a) -> a.size() >= 4 ? Optional.of(new Rectangle2D.Double(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
+
 }
