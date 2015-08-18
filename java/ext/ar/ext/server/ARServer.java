@@ -152,7 +152,7 @@ public class ARServer extends NanoHTTPD {
 					op.filter(src, img);
 				}
 				
-				Util.writeImage(img, baos, true);
+				Util.writeImage(img, baos, false);
 				rslt = newChunkedResponse(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
 			} else {
 				AggregateSerializer.serialize(post_transfer, baos, AggregateSerializer.FORMAT.JSON);
