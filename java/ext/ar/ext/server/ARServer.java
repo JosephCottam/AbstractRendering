@@ -157,6 +157,7 @@ public class ARServer extends NanoHTTPD {
 			try {post_transfer = render.transfer(target_aggs, ts);}
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Transfer stopped by signal before completion.");} 
 
+			tasks.remove(requesterID);
 
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(aggs)));	//An estimate...png is compressed after all
