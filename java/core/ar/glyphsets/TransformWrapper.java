@@ -1,7 +1,10 @@
 package ar.glyphsets;
 
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
@@ -14,10 +17,8 @@ import ar.util.axis.DescriptorPair;
 
 /**Wrap a glyphset, all glyphs are returned transformed via the supplied affine transform.
  * 
- * Note: This class is only safe to use with Poiont2D.Double, Rectangle2D.Double and Shape glyphs.  
+ * Note: This class is only safe to use with glyphs containing Point2D.Double/Float, Rectangle2D.Double/Float, Line2D.Double/Float, Point, Rectangle and Shape.  
  * Other glyph types will result in an exception. (This always avoids heap pollution.)
- * 
- * TODO: Can the transform-and-convert be made more liberal without risking heap polution? 
  * **/
 public class TransformWrapper<G,I> implements Glyphset<G,I> {
 	protected final Glyphset<G,I> base;
@@ -73,17 +74,41 @@ public class TransformWrapper<G,I> implements Glyphset<G,I> {
 		public Glyph<G, I> next() {
 			Glyph<G,I> g = base.next();
 			G shape = g.shape();
+			//Points
 			if (shape.getClass() == Point2D.Double.class) {
-				shape = (G) transform.transform((Point2D) shape, null);
+				shape = (G) transform.transform((Point2D) shape, new Point2D.Double());
+			} else if (shape.getClass() == Point2D.Float.class) {
+				shape = (G) transform.transform((Point2D) shape, new Point2D.Float());
+			} else if (shape.getClass() == Point.class) {
+				shape = (G) transform.transform((Point2D) shape, new Point());
+			
+			//Rectangles
 			} else if (shape.getClass() == Rectangle2D.Double.class) {
-				shape  = (G) transform.createTransformedShape((Rectangle2D) shape).getBounds2D();
+				Rectangle2D r = transform.createTransformedShape((Shape) shape).getBounds2D();
+				shape = (G) new Rectangle2D.Double(r.getX(),r.getY(), r.getWidth(), r.getHeight());
+			} else if (shape.getClass() == Rectangle2D.Float.class) {
+				Rectangle2D r = transform.createTransformedShape((Shape) shape).getBounds2D();
+				shape = (G) new Rectangle2D.Float((float) r.getX(), (float) r.getY(), (float) r.getWidth(), (float) r.getHeight());
+			} else if (shape.getClass() == Rectangle.class) {
+				shape = (G) transform.createTransformedShape((Rectangle2D) shape).getBounds();
+
+			//Lines
+			} else if (shape.getClass() == Line2D.Double.class) {
+				Point2D a = transform.transform(((Line2D) shape).getP1(), new Point2D.Double());
+				Point2D b = transform.transform(((Line2D) shape).getP2(), new Point2D.Double());
+				shape = (G) new Line2D.Double(a,b);
+			} else if (shape.getClass() == Line2D.Float.class) {
+				Point2D a = transform.transform(((Line2D) shape).getP1(), new Point2D.Float());
+				Point2D b = transform.transform(((Line2D) shape).getP2(), new Point2D.Float());
+				shape = (G) new Line2D.Float(a,b);
+				
+			//Generic Shape	
 			} else if (shape.getClass() == Shape.class) {
 				shape  = (G) transform.createTransformedShape((Rectangle2D) shape);
 			} else {
 				throw new IllegalArgumentException("Could not safely transform instance of " + shape.getClass());
 			}
-				
-			
+							
 			return new SimpleGlyph<G, I>(shape, g.info());
 		}
 		
