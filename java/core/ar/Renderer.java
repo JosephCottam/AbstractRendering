@@ -87,8 +87,10 @@ public interface Renderer extends Serializable {
 	 * This is not a guarantee of resource cleanup.  In general, render related tasks may spawn their 
 	 * own threads, and it thus impossible to guarantee all activity is stopped. Therefore, this should
 	 * be taken as a best-effort method.
+	 * 
+	 * Default implementation throws UnsupportedOperationException.
 	 **/
-	public void stop();
+	default public void stop() {throw new UnsupportedOperationException();}
 
 	/**Signals that the rendering tasks were interrupted due to a call to stop.**/
 	public static final class StopSignaledException extends RuntimeException {}

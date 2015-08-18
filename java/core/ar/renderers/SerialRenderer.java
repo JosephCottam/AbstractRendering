@@ -100,8 +100,5 @@ public final class SerialRenderer implements Renderer {
 		}
 	}
 	
-	@Override public ProgressRecorder recorder() {return recorder;}
-	
-	/**No-op, serial renderer can only be stopped by killing the thread it runs on.**/
-	@Override public void stop() {}
+	@Override public ProgressRecorder recorder() {return recorder;}	
 }
