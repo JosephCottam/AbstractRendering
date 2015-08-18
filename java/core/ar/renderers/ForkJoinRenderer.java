@@ -126,7 +126,7 @@ public class ForkJoinRenderer implements Renderer {
 				recorder);
 		
 		try {return pool.invoke(t);}
-		finally {if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}}
+		finally {if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}}
 	}
 	
 	
@@ -142,7 +142,7 @@ public class ForkJoinRenderer implements Renderer {
 			recorder.reset(1);
 			recorder.update(1);
 		}
-		finally {if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}}
+		finally {if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}}
 
 		return result;
 	}

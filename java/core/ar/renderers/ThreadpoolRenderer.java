@@ -145,7 +145,7 @@ public class ThreadpoolRenderer implements Renderer {
 		} catch (Exception e) {
 			throw new RuntimeException("Error completing aggregation", e);
 		} finally {
-			if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}
+			if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}
 		}
 
 		return result;
@@ -174,7 +174,7 @@ public class ThreadpoolRenderer implements Renderer {
 		catch (InterruptedException e) {
 			throw new RuntimeException("Error completing transfer", e);
 		} finally {
-			if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}
+			if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}
 		}
 		
 		return result;

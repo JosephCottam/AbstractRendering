@@ -90,6 +90,6 @@ public interface Renderer extends Serializable {
 	 **/
 	public void stop();
 
-	/**Signals that the task was interrupted. Commonly used when stop is called but tasks remain.**/
-	public static final class RenderInterruptedException extends RuntimeException {}
+	/**Signals that the rendering tasks were interrupted due to a call to stop.**/
+	public static final class StopSignaledException extends RuntimeException {}
 }

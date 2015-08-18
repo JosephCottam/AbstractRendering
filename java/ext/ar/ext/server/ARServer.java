@@ -142,7 +142,7 @@ public class ARServer extends NanoHTTPD {
 			
 			Aggregates<?> aggs;
 			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
-			catch (Renderer.RenderInterruptedException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
+			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
@@ -152,7 +152,11 @@ public class ARServer extends NanoHTTPD {
  			Aggregates<?> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
 			Aggregates<?> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
 			Transfer.Specialized ts = transfer.specialize(spec_aggs);
-			Aggregates<?> post_transfer = render.transfer(target_aggs, ts);
+
+			Aggregates<?> post_transfer;
+			try {post_transfer = render.transfer(target_aggs, ts);}
+			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Transfer stopped by signal before completion.");} 
+
 
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(aggs)));	//An estimate...png is compressed after all
