@@ -3,6 +3,7 @@ package ar.app.components.sequentialComposer;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -16,6 +17,7 @@ import ar.app.display.ARComponent;
 import ar.app.util.ActionProvider;
 import ar.app.util.AppUtil;
 import ar.app.util.LabeledItem;
+import ar.glyphsets.TransformWrapper;
 import ar.util.HasViewTransform;
 
 @SuppressWarnings({"rawtypes"})
@@ -29,7 +31,7 @@ public class SequentialComposer extends JPanel  {
 	
 	public SequentialComposer(HasViewTransform transformProvider) {
 		transferBuilder = new TransferBuilder(transformProvider);
-		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory");
+		AppUtil.loadStaticItems(datasets, OptionDataset.class, OptionDataset.class, "BGL Memory", SequentialComposer::flip);
 		AppUtil.loadStaticItems(aggregators, OptionAggregator.class, OptionAggregator.class, "Count (int)");
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
@@ -51,6 +53,22 @@ public class SequentialComposer extends JPanel  {
 		
 	}	
 
+	private static final OptionDataset flip(OptionDataset source) {
+		if (!source.flags.contains("NegativeDown")) {return source;}
+		source = new OptionDataset<>(
+				source.name, 
+				new TransformWrapper(source.glyphset, AffineTransform.getScaleInstance(1, -1)),
+				source.sourceFile, 
+				source.shaper, 
+				source.valuer, 
+				source.defaultAggregator, 
+				source.defaultTransfers, 
+				source.flags);
+		
+		return source;
+	}
+	
+	
 	public void transferDefaults() {
 		OptionDataset<?,?> od = datasets.getItemAt(datasets.getSelectedIndex());
 		aggregators.setSelectedItem(od.defaultAggregator);

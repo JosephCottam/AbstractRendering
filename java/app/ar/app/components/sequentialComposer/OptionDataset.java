@@ -28,7 +28,7 @@ public final class OptionDataset<G,I> {
 	public final Valuer<Indexed, I> valuer; //How values were determined
 	public final OptionAggregator<? super I,?> defaultAggregator;
 	public final List<OptionTransfer<?>> defaultTransfers;
-	public final Set<String> flags = new HashSet<>();	//Hints, allegations and other information about the data set
+	public final Set<String> flags;	//Hints, allegations and other information about the data set
 	
 	
 	public OptionDataset(
@@ -38,7 +38,7 @@ public final class OptionDataset<G,I> {
 			Valuer<Indexed,I> valuer, 
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
-		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, defTrans);
+		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, Arrays.asList(defTrans), new HashSet<>());
 	}
 	
 	public OptionDataset(
@@ -46,23 +46,24 @@ public final class OptionDataset<G,I> {
 			Glyphset<G,I> glyphset,
 			OptionAggregator<? super I,?> defAgg,
 			OptionTransfer<?>... defTrans) {
-		this(name, glyphset, null, null, null, defAgg, defTrans);
+		this(name, glyphset, null, null, null, defAgg, Arrays.asList(defTrans), new HashSet<>());
 	}
-	
-	private OptionDataset(
+		
+	public OptionDataset(
 			String name, 
 			Glyphset<G,I> glyphset,
 			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
-			OptionTransfer<?>... defTrans) {
+			List<OptionTransfer<?>> defTrans,
+			Set<String> flags) {
 		this.name = name;
 		this.sourceFile = file;
 		this.shaper = shaper;
 		this.valuer = valuer;
 		this.glyphset = glyphset;
 		this.defaultAggregator = defAgg;
-		this.defaultTransfers = Arrays.asList(defTrans);
-	
+		this.defaultTransfers = defTrans;
+		this.flags = flags;
 	}
 	
 	public String toString() {return name;}

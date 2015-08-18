@@ -2,6 +2,7 @@ package ar.app.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.Function;
 
 import javax.swing.JComboBox;
 
@@ -35,9 +36,20 @@ public class AppUtil {
 			}		
 		}
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	public static <A,B> void loadStaticItems(JComboBox<B> target, Class<A> source, Class<?> limit, String defaultItem) {
+		loadStaticItems(target, source, limit, defaultItem, a -> a);
+	}
+
+	@SuppressWarnings("unchecked")
+	/** 
+	 * @param target Combo box to populate
+	 * @param source Class to load fields from
+	 * @param limit Only load fields of this type
+	 * @param defaultItem Name of the default item
+	 * @param modify Before the item is loaded, it will be passed to this function for any patch-up work (default is identity)
+	 */
+	public static <A,B> void loadStaticItems(JComboBox<B> target, Class<A> source, Class<?> limit, String defaultItem, Function<B,B> modify) {
 		Field[] fields = source.getFields();
 		for (Field f: fields) {
 			try {
@@ -45,7 +57,7 @@ public class AppUtil {
 				Object v = f.get(null);
 				if (v ==null) {continue;}
 				if (limit.isInstance(v)) {
-					target.addItem((B) v);
+					target.addItem(modify.apply((B) v));
 				}
 			} catch (IllegalAccessException | IllegalArgumentException
 					| SecurityException e) {
