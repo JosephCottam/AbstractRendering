@@ -125,23 +125,29 @@ public class ForkJoinRenderer implements Renderer {
 				merge,
 				recorder);
 		
-		Aggregates<A> a= pool.invoke(t);
-		return a;
+		try {return pool.invoke(t);}
+		finally {if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}}
 	}
 	
 	
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
 		long taskSize = Math.max(transferTaskSize, AggregateUtils.size(aggregates)/pool.getParallelism());
 		
 		recorder.reset(0);
 		PixelParallelTransfer<IN, OUT> task = new PixelParallelTransfer<>(aggregates, result, t, taskSize, aggregates.lowX(),aggregates.lowY(), aggregates.highX(), aggregates.highY());
-		pool.invoke(task);
-		recorder.reset(1);
-		recorder.update(1);
-		return result;		
+		try {
+			pool.invoke(task);
+			recorder.reset(1);
+			recorder.update(1);
+		}
+		finally {if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}}
+
+		return result;
 	}
 	
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		if (t instanceof Transfer.ItemWise) {
 			return transfer(aggregates, (Transfer.ItemWise<IN, OUT>) t);
@@ -150,6 +156,7 @@ public class ForkJoinRenderer implements Renderer {
 		}
 	}	
 	
-	public ProgressRecorder recorder() {return recorder;}
-
+	@Override public ProgressRecorder recorder() {return recorder;}
+	
+	@Override public void stop() {pool.shutdownNow();}
 }

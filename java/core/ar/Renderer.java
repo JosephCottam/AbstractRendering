@@ -77,4 +77,19 @@ public interface Renderer extends Serializable {
 	public ProgressRecorder recorder();
 	
 	public static Renderer defaultInstance() {return new ar.renderers.ThreadpoolRenderer();}
+	
+	/**Attempt to stop all processing related to this renderer.
+	 * 
+	 * Shutdown should be done as immediately as possible, while only affecting resources allocated
+	 * by this renderer itself. For example, if the renderer allocates its own threads, it may shut 
+	 * down those threads.  However, it should not shut down the calling thread.   
+	 *
+	 * This is not a guarantee of resource cleanup.  In general, render related tasks may spawn their 
+	 * own threads, and it thus impossible to guarantee all activity is stopped. Therefore, this should
+	 * be taken as a best-effort method.
+	 **/
+	public void stop();
+
+	/**Signals that the task was interrupted. Commonly used when stop is called but tasks remain.**/
+	public static final class RenderInterruptedException extends RuntimeException {}
 }

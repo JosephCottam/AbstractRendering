@@ -138,17 +138,20 @@ public class ThreadpoolRenderer implements Renderer {
 		
 		Aggregates<A> result = allocator.apply(op.identity());	//TODO: Maybe remove, not necessarily needed
 		try {
-			for (int i=0; i<segments.size(); i++) {
+			for (int i=0; i<segments.size() && !pool.isShutdown(); i++) {
 				Aggregates<A> from = service.take().get();
 				result = merge.apply(result, from);
 			}
-		}  catch (Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Error completing aggregation", e);
-		} 
-		
+		} finally {
+			if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}
+		}
+
 		return result;
 	}
 	
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.ItemWise<IN,OUT> t) {
 		Aggregates<OUT> result = AggregateUtils.make(aggregates, t.emptyValue());		
 		
@@ -168,10 +171,16 @@ public class ThreadpoolRenderer implements Renderer {
 		}
 		
 		try {pool.invokeAll(tasks);}
-		catch (InterruptedException e) {throw new RuntimeException("Error completing transfer", e);}
+		catch (InterruptedException e) {
+			throw new RuntimeException("Error completing transfer", e);
+		} finally {
+			if (pool.isShutdown()) {throw new Renderer.RenderInterruptedException();}
+		}
+		
 		return result;
 	}
 	
+	@Override 
 	public <IN,OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Transfer.Specialized<IN,OUT> t) {
 		if (t instanceof Transfer.ItemWise) {
 			return transfer(aggregates, (Transfer.ItemWise<IN, OUT>) t);
@@ -180,8 +189,8 @@ public class ThreadpoolRenderer implements Renderer {
 		}
 	}	
 	
-	public ProgressRecorder recorder() {return recorder;}
-	
+	@Override public ProgressRecorder recorder() {return recorder;}	
+	@Override public void stop() {pool.shutdownNow();}
 	
 	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/
 	public static <A> BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> defaultMerge(A defVal, BiFunction<A,A,A> rollup) {
@@ -200,10 +209,6 @@ public class ThreadpoolRenderer implements Renderer {
 							defVal),
 					false);		
 	}	
-	
-	
-	
-	
 	
 	private static final class TransferTask<IN,OUT> implements Callable<Aggregates<OUT>> {
 		private final int lowX, lowY, highX, highY;
