@@ -42,7 +42,6 @@ import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
-import ar.ext.server.NanoHTTPD.IHTTPSession;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -119,10 +118,10 @@ public class ARServer extends NanoHTTPD {
         return rsp;
 	}
 		
-	private Response execute(String format, int width, int height, boolean ignoreCached, 
-			Aggregator<?,?> agg,
-			Transfer transfer,
-			OptionDataset<?,?> baseConfig,
+	private <G,I,A,OUT> Response execute(String format, int width, int height, boolean ignoreCached, 
+			Aggregator<I,A> agg,
+			Transfer<A,OUT> transfer,
+			OptionDataset<G,I> baseConfig,
 			Optional<Rectangle2D> selection, Optional<List<Point2D>> latlon, Optional<Rectangle> crop, Optional<Rectangle> enhance, 
 			Object requesterID) {
 		
@@ -146,7 +145,7 @@ public class ARServer extends NanoHTTPD {
 				selection = Optional.of(bounds);
 			}
 			
-			Glyphset<?,?> glyphs;
+			Glyphset<G,I> glyphs;
 			Rectangle2D zoomBounds;
 			if (selection.isPresent()) {
 				zoomBounds = selection.get();
@@ -159,15 +158,14 @@ public class ARServer extends NanoHTTPD {
 			}
 
 			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
-			Rectangle2D renderBounds = vt.createTransformedShape(glyphs.bounds()).getBounds2D();
 			
 			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
 			
 			File cacheFile = cacheFile(baseConfig, vt, agg);
-			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, baseConfig, vt, agg) : Optional.empty();
+			Optional<Aggregates<A>> cached = !ignoreCached ? loadCached(cacheFile, baseConfig, vt, agg) : Optional.empty();
 			
-			Aggregates<?> aggs;
+			Aggregates<A> aggs;
 			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
@@ -175,9 +173,9 @@ public class ARServer extends NanoHTTPD {
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
 			
 			System.out.println("## Excuting transfer");
- 			Aggregates<?> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
-			Aggregates<?> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
-			Transfer.Specialized ts = transfer.specialize(spec_aggs);
+ 			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
+			Aggregates<A> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
+			Transfer.Specialized<A,OUT> ts = transfer.specialize(spec_aggs);
 
 			Aggregates<?> post_transfer;
 			try {post_transfer = render.transfer(target_aggs, ts);}
@@ -225,14 +223,14 @@ public class ARServer extends NanoHTTPD {
 	
 	
 	//TODO: Add View transform (or derivative) to cache info?
-	public Optional<Aggregates<?>> loadCached(File cacheFile, OptionDataset<?,?> baseConfig, AffineTransform vt, Aggregator<?,?> aggregator) {		
+	public <A> Optional<Aggregates<A>> loadCached(File cacheFile, OptionDataset<?,?> baseConfig, AffineTransform vt, Aggregator<?,A> aggregator) {		
 		if (!cacheFile.exists()) {return Optional.empty();}
 		
-		Valuer<GenericRecord, ?> converter = Converters.getDeserialize(aggregator);
+		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
 		try {
 			System.out.println("## Loading cached aggregates.");
-			Aggregates<?> aggs = AggregateSerializer.deserialize(cacheFile, converter);
+			Aggregates<A> aggs = AggregateSerializer.deserialize(cacheFile, converter);
 			
 			Rectangle projected = vt.createTransformedShape(baseConfig.glyphset.bounds()).getBounds();
 
@@ -282,9 +280,9 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Aggregates<?> aggregate(Renderer render, Glyphset glyphs, Aggregator agg, AffineTransform view) {
+	public <A> Aggregates<A> aggregate(Renderer render, Glyphset glyphs, Aggregator agg, AffineTransform view) {
 		Selector<?> s = TouchesPixel.make(glyphs);
-		Aggregates<?> aggs = render.aggregate(glyphs, s, agg, view);
+		Aggregates<A> aggs = render.aggregate(glyphs, s, agg, view);
 		return aggs;
 	}
 			
