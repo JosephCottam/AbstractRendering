@@ -198,8 +198,9 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 
-	public Transfer<?,?> getTransfer(String transferIds, List<OptionTransfer> def) {
-		List<OptionTransfer> transfers = def;
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public Transfer<?,?> getTransfer(String transferIds, List<OptionTransfer<?>> def) {
+		List<OptionTransfer<?>> transfers = def;
 		
 		if (transferIds!=null && !transferIds.trim().equals("")) {
 			transfers = Arrays.stream(transferIds.split(";")).map(this::getTransfer).collect(Collectors.toList());
@@ -215,6 +216,8 @@ public class ARServer extends NanoHTTPD {
 		}
 		return t;
 	}
+	
+	
 	
 	public <A> void cache(Aggregates<A> aggs, File cacheFile) {		
 		try {
@@ -356,6 +359,7 @@ public class ARServer extends NanoHTTPD {
 
 		
 		TRANSFERS.put("Log10", new OptionTransfer<OptionTransfer.ControlPanel>() {
+			@SuppressWarnings({"unchecked", "rawtypes"})
 			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
 				MathValuers.Log log = new MathValuers.Log(10);
 				Transfer t = new General.TransferFn<Number, Number>(log::apply, 0d);
@@ -365,6 +369,7 @@ public class ARServer extends NanoHTTPD {
 		});
 		
 		TRANSFERS.put("Cuberoot", new OptionTransfer<OptionTransfer.ControlPanel>() {
+			@SuppressWarnings({"unchecked", "rawtypes"})
 			@Override public Transfer transfer(ControlPanel params, Transfer subsequent) {
 				Transfer t = new General.TransferFn<Number, Number>(n -> Math.cbrt(n.doubleValue()), 0d);
 				return extend(t, subsequent);

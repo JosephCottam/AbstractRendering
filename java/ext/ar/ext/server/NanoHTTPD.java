@@ -1883,6 +1883,7 @@ public abstract class NanoHTTPD {
      * @return HTTP response, see class Response for details
      */
     @Deprecated
+    @SuppressWarnings("unused") 
     public Response serve(String uri, Method method, Map<String, String> headers, Map<String, String> parms, Map<String, String> files) {
         return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
     }

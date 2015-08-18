@@ -53,11 +53,11 @@ public class SequentialComposer extends JPanel  {
 		
 	}	
 
-	private static final OptionDataset flip(OptionDataset source) {
+	private static final <G,I> OptionDataset<G,I> flip(OptionDataset<G,I> source) {
 		if (!source.flags.contains("NegativeDown")) {return source;}
 		source = new OptionDataset<>(
 				source.name, 
-				new TransformWrapper(source.glyphset, AffineTransform.getScaleInstance(1, -1)),
+				new TransformWrapper<>(source.glyphset, AffineTransform.getScaleInstance(1, -1)),
 				source.sourceFile, 
 				source.shaper, 
 				source.valuer, 
