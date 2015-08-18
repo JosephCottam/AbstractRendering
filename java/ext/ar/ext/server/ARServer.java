@@ -42,12 +42,15 @@ import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
+import ar.ext.server.NanoHTTPD.IHTTPSession;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.ProgressRecorder;
+import ar.renderers.ThreadpoolRenderer;
 import ar.rules.General;
 import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
@@ -76,15 +79,19 @@ public class ARServer extends NanoHTTPD {
 		flip.translate(0, -height/2);
 		return flip;
 	}
+	
 
 	@Override 
-	public Response serve(String uri, Method method,
-			Map<String, String> headers, 
-			Map<String, String> params,
-			Map<String, String> files) {
+	public Response serve(IHTTPSession session) {
+			
+		String uri = session.getUri();
+		Map<String, String> headers = session.getHeaders(); 
+		Map<String, String> params = session.getParms();
 		
 		if (uri.equals("/")) {return help();}
 		if (uri.equals("/favicon.ico")) {return newFixedLengthResponse(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
+		
+		System.out.printf("## Processing request: %s?%s%n", uri, session.getQueryParameterString());
 		
 		OptionDataset baseConfig = baseConfig(uri);
 		
@@ -98,6 +105,27 @@ public class ARServer extends NanoHTTPD {
 		Optional<Rectangle> enhance = Arrays.stream(params.getOrDefault("enhance", "").split(";|,")).collect(INT_RECT);
 		Object requesterID = params.getOrDefault("requesterID", Double.toString(Math.random()));
 		
+		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
+		Transfer transfer = getTransfer(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
+		
+        long start = System.currentTimeMillis();
+        Response rsp;
+        try {
+        	rsp = execute(format, width, height, ignoreCached, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID);
+        } finally { 
+            long end = System.currentTimeMillis();
+            System.out.printf("## Excution time: %d ms%n", (end-start));
+        }
+        return rsp;
+	}
+		
+	private Response execute(String format, int width, int height, boolean ignoreCached, 
+			Aggregator<?,?> agg,
+			Transfer transfer,
+			OptionDataset<?,?> baseConfig,
+			Optional<Rectangle2D> selection, Optional<List<Point2D>> latlon, Optional<Rectangle> crop, Optional<Rectangle> enhance, 
+			Object requesterID) {
+		
 		if (tasks.containsKey(requesterID)) {
 			System.out.println("## Signaling shutdown to existing session by requester " + requesterID);
 			tasks.get(requesterID).stop();
@@ -105,8 +133,6 @@ public class ARServer extends NanoHTTPD {
 		
 		if (!format.equals("json") && !format.equals("png")) {throw new RuntimeException("Invalid return format: " + format);}
 		
-		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-		Transfer transfer = getTransfer(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 
 		try {
 			System.out.println("## Loading dataset");
@@ -131,14 +157,15 @@ public class ARServer extends NanoHTTPD {
 				zoomBounds = glyphs.bounds();
 						
 			}
+
 			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
+			Rectangle2D renderBounds = vt.createTransformedShape(glyphs.bounds()).getBounds2D();
 			
-			System.out.printf("## Request ready to execute %s, requester %s%n", baseConfig.name, requesterID);
-			Renderer render = Renderer.defaultInstance();
+			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
 			
 			File cacheFile = cacheFile(baseConfig, vt, agg);
-			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, agg, width, height) : Optional.empty();
+			Optional<Aggregates<?>> cached = !ignoreCached ? loadCached(cacheFile, baseConfig, vt, agg) : Optional.empty();
 			
 			Aggregates<?> aggs;
 			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
@@ -147,7 +174,6 @@ public class ARServer extends NanoHTTPD {
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
 			
-
 			System.out.println("## Excuting transfer");
  			Aggregates<?> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
 			Aggregates<?> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
@@ -199,7 +225,7 @@ public class ARServer extends NanoHTTPD {
 	
 	
 	//TODO: Add View transform (or derivative) to cache info?
-	public Optional<Aggregates<?>> loadCached(File cacheFile, Aggregator<?,?> aggregator, int width, int height) {		
+	public Optional<Aggregates<?>> loadCached(File cacheFile, OptionDataset<?,?> baseConfig, AffineTransform vt, Aggregator<?,?> aggregator) {		
 		if (!cacheFile.exists()) {return Optional.empty();}
 		
 		Valuer<GenericRecord, ?> converter = Converters.getDeserialize(aggregator);
@@ -207,10 +233,14 @@ public class ARServer extends NanoHTTPD {
 		try {
 			System.out.println("## Loading cached aggregates.");
 			Aggregates<?> aggs = AggregateSerializer.deserialize(cacheFile, converter);
+			
+			Rectangle projected = vt.createTransformedShape(baseConfig.glyphset.bounds()).getBounds();
 
-			boolean renderMatches = (aggs.highX()-aggs.lowX() == width || aggs.highY()-aggs.lowY() == height);
-			if (renderMatches) {return Optional.of(aggs);}
-			else {return Optional.empty();}
+			boolean renderMatches = (aggs.highX()-aggs.lowX() == projected.width|| aggs.highY()-aggs.lowY() == projected.height);
+			if (renderMatches) {return Optional.of(aggs);} 
+			else {
+				System.out.println("## Render match failed, scraping cached aggegates. " + projected);
+				return Optional.empty();}
 		} catch (Exception e) {
 			System.err.println("## Cache located for " + cacheFile + ", but error deserializing.");
 			e.printStackTrace();
@@ -349,24 +379,6 @@ public class ARServer extends NanoHTTPD {
 		return newFixedLengthResponse(Status.OK, MIME_HTML, help);
 	}
 	
-	public static void main(String[] args) throws Exception {
-		String host = ar.util.Util.argKey(args, "-host", "localhost");
-		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
-		File cachedir = new File(ar.util.Util.argKey(args, "-cache", "./cache"));
-		
-		if (!cachedir.exists()) {cachedir.mkdirs();}
-		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
-		
-		ARServer server = new ARServer(host, port, cachedir);
-		
-		server.start();
-		
-		System.out.printf("AR Server started on %s:%d%n", host, port);
-		while (server.isAlive()) {synchronized(server) {server.wait(10000);;}}
-	}
-	
-	
-
 	static {
 		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
 				.filter(c -> OptionTransfer.class.isAssignableFrom(c))
@@ -472,4 +484,20 @@ public class ARServer extends NanoHTTPD {
 			(a, b) -> {a.addAll(b); return a;}, 
 			(ArrayList<Double> a) -> a.size() >= 4 ? Optional.of(new Rectangle2D.Double(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
 
+	
+	public static void main(String[] args) throws Exception {
+		String host = ar.util.Util.argKey(args, "-host", "localhost");
+		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
+		File cachedir = new File(ar.util.Util.argKey(args, "-cache", "./cache"));
+		
+		if (!cachedir.exists()) {cachedir.mkdirs();}
+		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
+				
+		ARServer server = new ARServer(host, port, cachedir);
+		
+		server.start();
+		
+		System.out.printf("AR Server started on %s: %d%n", host, port);
+		while (server.isAlive()) {synchronized(server) {server.wait(10000);;}}
+	}
 }
