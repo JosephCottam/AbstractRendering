@@ -242,9 +242,9 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 		@Override 
 		public Transfer<Number,Color> transfer(Controls p, Transfer subsequent) {
 			if (p.highDef()) {
-				return new Numbers.Interpolate<>(p.lowColor.color(), p.highColor.color());
+				return new Numbers.Interpolate<>(p.lowColor.color(), p.highColor.color(), Util.CLEAR);
 			} else {
-				return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()));
+				return new Numbers.FixedInterpolate<>(p.lowColor.color(), p.highColor.color(), ((int) p.low.getValue()), ((int) p.high.getValue()), Util.CLEAR);
 			}
 		}
 		
@@ -874,7 +874,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class ColorCatInterpolate extends OptionTransfer<ColorCatInterpolate.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			return new Categories.HighDefAlpha(Color.white, .1, params.log());
+			return new Categories.HighDefAlpha(Util.CLEAR, .1, params.log());
 		}
 
 		@Override public String toString() {return "HD Alpha (CoC<Color>)";}
