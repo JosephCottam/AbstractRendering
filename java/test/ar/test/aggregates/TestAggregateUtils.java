@@ -24,15 +24,15 @@ public class TestAggregateUtils {
 		
 		assertThat("Left greather than right",
 				   AggregateUtils.alignedMerge(ten, two, false, (l, r) -> (l > r)),
-				   new AllEqual<>(new ConstantAggregates<>(0,0, width, height, true)));
+				   new AllEqual<>(new ConstantAggregates<>(true, 0,0, width, height)));
 		
 		assertThat("Right less than left",
 				   AggregateUtils.alignedMerge(two, ten, true, (l, r) -> (l > r)),
-				   new AllEqual<>(new ConstantAggregates<>(0,0, width, height, false)));
+				   new AllEqual<>(new ConstantAggregates<>(false, 0,0, width, height)));
 		
 		assertThat("Sum in merge",
 					AggregateUtils.alignedMerge(two, ten, 0d, (l, r) -> ((double) (l + r))),
-					new AllEqual<>(new ConstantAggregates<>(0,0, width, height, 12d)));
+					new AllEqual<>(new ConstantAggregates<>(12d, 0,0, width, height)));
 		
 	}
 	

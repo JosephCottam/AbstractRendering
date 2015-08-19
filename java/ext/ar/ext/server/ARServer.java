@@ -36,6 +36,7 @@ import ar.Renderer;
 import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.app.components.sequentialComposer.OptionAggregator;
 import ar.app.components.sequentialComposer.OptionDataset;
@@ -156,8 +157,9 @@ public class ARServer extends NanoHTTPD {
 				zoomBounds = glyphs.bounds();
 						
 			}
-
-			AffineTransform vt = Util.zoomFit(zoomBounds, width, height);
+			
+			AffineTransform vt = centerFit(zoomBounds, width, height);
+			zoomBounds = expandSelection(vt, zoomBounds, width, height);
 			
 			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
@@ -177,17 +179,25 @@ public class ARServer extends NanoHTTPD {
 			Aggregates<A> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
 			Transfer.Specialized<A,OUT> ts = transfer.specialize(spec_aggs);
 
-			Aggregates<?> post_transfer;
+			Aggregates<OUT> post_transfer;
 			try {post_transfer = render.transfer(target_aggs, ts);}
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Transfer stopped by signal before completion.");} 
 
 			tasks.remove(requesterID);
+			
+			System.out.println(AggregateUtils.bounds(post_transfer));
 
+			Rectangle returnBounds = vt.createTransformedShape(zoomBounds).getBounds();
+			Aggregates<OUT> full_size = new OverlayWrapper<>(
+					post_transfer, 
+					new ConstantAggregates<>(post_transfer.defaultValue(), 
+							returnBounds.x, returnBounds.y, returnBounds.x+returnBounds.width, returnBounds.y+returnBounds.height));
+			
 			Response rslt;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(aggs)));	//An estimate...png is compressed after all
+			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(full_size)));	//An estimate...png is compressed after all
 			if (format.equals("png")) {
 				@SuppressWarnings("unchecked")
-				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) post_transfer);
+				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) full_size);
 				if (baseConfig.flags.contains("NegativeDown")) {
 					BufferedImageOp op = new AffineTransformOp(flipHorizontal(img.getHeight()), AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 					BufferedImage src = img;
@@ -198,7 +208,7 @@ public class ARServer extends NanoHTTPD {
 				Util.writeImage(img, baos, false);
 				rslt = newChunkedResponse(Status.OK, "png", new ByteArrayInputStream(baos.toByteArray()));
 			} else {
-				AggregateSerializer.serialize(post_transfer, baos, AggregateSerializer.FORMAT.JSON);
+				AggregateSerializer.serialize(full_size, baos, AggregateSerializer.FORMAT.JSON);
 				rslt = newFixedLengthResponse(Status.OK, "avro/" + format, new String(baos.toByteArray(), "UTF-8"));
 			}
 			System.out.println("## Sending response");
@@ -207,6 +217,30 @@ public class ARServer extends NanoHTTPD {
 			e.printStackTrace();
 			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
 		}
+	}
+
+	/**Zoom fit, but align the center of the bounding region (not top-left, as Util.zoomFit does)**/
+	public AffineTransform centerFit(Rectangle2D bounds, int width, int height) {
+		AffineTransform vt = Util.zoomFit(bounds, width, height);
+		Rectangle2D fit = vt.createTransformedShape(bounds).getBounds2D();
+		
+		double dtx = (width - fit.getWidth())/2;
+		double dty = (height - fit.getHeight())/2;
+		
+		vt.preConcatenate(AffineTransform.getTranslateInstance(-dtx, -dty));
+		return vt;
+	}
+
+	/**Expand the given bounds so it fills width/height region under the given view transform**/
+	public Rectangle2D expandSelection(AffineTransform vt, Rectangle2D bounds, int width, int height) {
+		Rectangle2D selection = vt.createTransformedShape(bounds).getBounds2D();
+		//TODO: Does not account for shear...so not fully general
+		try {
+			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0,width-selection.getWidth(), height-selection.getHeight()))).getBounds2D();
+			double dtx = remainder.getWidth();
+			double dty = remainder.getHeight();
+			return new Rectangle2D.Double(bounds.getX()-dtx/2, bounds.getY()-dty/2, bounds.getWidth()+dtx, bounds.getHeight()+dtx);
+		} catch (Exception e) {throw new RuntimeException("Specified view cannot be realized.");}
 	}
 	
 	public File cacheFile(OptionDataset<?,?> config, AffineTransform vt, Aggregator<?,?> agg) {

@@ -18,12 +18,12 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 	private final int lowX, lowY, highX, highY;
 	
 	/**Create a constant aggregates with zero-extent, but a default value.**/
-	public ConstantAggregates(A value) {this(0,0,0,0, value);}
+	public ConstantAggregates(A value) {this(value,0,0,0,0);}
 	
 	/**Create an aggregate set with the given value at all locations
 	 * (i.e., default value IS the held value).
 	 */
-	public ConstantAggregates(int lowX, int lowY, int highX, int highY, A value) {
+	public ConstantAggregates(A value, int lowX, int lowY, int highX, int highY) {
 		if (lowX > highX) {
 			throw new IllegalArgumentException(String.format("Inverted bounds: lowX (%d) must be lower than highX (%d)", lowX, highX));}
 		if (lowY > highY) {

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import ar.Aggregates;
 import ar.aggregates.AggregateUtils;
 
+/**Wrap a set of aggregates so it belongs to the java.util.Collections framework.**/
 public class CollectionWrapper<T> extends AbstractCollection<T> {
 	private final Aggregates<T> base;
 	

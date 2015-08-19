@@ -29,7 +29,7 @@ public class AggregateUtils {
 	}
 
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs) {
-		return asImage(aggs, Color.white);
+		return asImage(aggs, aggs.defaultValue() == null ? Color.WHITE : aggs.defaultValue());
 	}
 
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs, Color background) {
@@ -47,10 +47,10 @@ public class AggregateUtils {
 		g.setColor(background);
 		g.fillRect(0, 0, width, height);
 		g.dispose();
-		for (int x=Math.max(0, aggs.lowX()); x<Math.min(width, aggs.highX()); x++) {
-			for (int y=Math.max(0, aggs.lowY()); y<Math.min(height, aggs.highY()); y++) {
+		for (int x=aggs.lowX(); x<aggs.highX(); x++) {
+			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
 				Color c = aggs.get(x, y);
-				if (c != null) {i.setRGB(x, y, c.getRGB());}			
+				if (c != null) {i.setRGB(x-aggs.lowX(), y-aggs.lowY(), c.getRGB());}			
 			}			
 		}
 		return i;
