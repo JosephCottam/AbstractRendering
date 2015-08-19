@@ -74,13 +74,13 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 	
 	public static final class BoundedIterator<G,I> implements Iterator<Glyph<G,I>> {
 		private final Iterator<Glyph<G,I>> base;
-		private final Rectangle2D bound;
+		private final Rectangle2D limitBound;
 		private Glyph<G,I> next;
 		
-		public BoundedIterator(Iterator<Glyph<G,I>> base, Rectangle2D bound) {
+		public BoundedIterator(Iterator<Glyph<G,I>> base, Rectangle2D limitBound) {
 			super();
 			this.base = base;
-			this.bound = bound;
+			this.limitBound = limitBound;
 		}
 
 		@Override
@@ -90,7 +90,7 @@ public class BoundingWrapper<G,I> implements Glyphset<G,I> {
 				if (maybeNext == null) {continue;}
 				G shape = maybeNext.shape();
 				Rectangle2D b = Util.boundOne(shape);
-				if (bound.intersects(b)) {next = maybeNext;}
+				if (limitBound.intersects(b)) {next = maybeNext;}
 			}
 			
 			return next != null;

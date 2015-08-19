@@ -40,7 +40,7 @@ public class AggregateUtils {
 	
 	/**From a set of color aggregates, make a new image.**/
 	public static BufferedImage asImage(Aggregates<? extends Color> aggs, int width, int height, Color background) {
-		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}
+		if (aggs instanceof ColorAggregates) {return ((ColorAggregates) aggs).image();}		//TODO: Check width/height before using this faster method, what about background color issues?
 		
 		BufferedImage i = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = i.getGraphics();

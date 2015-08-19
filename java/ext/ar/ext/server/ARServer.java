@@ -150,16 +150,19 @@ public class ARServer extends NanoHTTPD {
 			Rectangle2D zoomBounds;
 			if (selection.isPresent()) {
 				zoomBounds = selection.get();
-				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
 				ignoreCached = true; //TODO: implement caching logic with selections
 			} else {
-				glyphs = baseConfig.glyphset;
-				zoomBounds = glyphs.bounds();
-						
+				zoomBounds = baseConfig.glyphset.bounds();
 			}
 			
 			AffineTransform vt = centerFit(zoomBounds, width, height);
 			zoomBounds = expandSelection(vt, zoomBounds, width, height);
+			
+			if (selection.isPresent()) {
+				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
+			} else {
+				glyphs = baseConfig.glyphset;
+			}
 			
 			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
@@ -192,6 +195,7 @@ public class ARServer extends NanoHTTPD {
 					post_transfer, 
 					new ConstantAggregates<>(post_transfer.defaultValue(), 
 							returnBounds.x, returnBounds.y, returnBounds.x+returnBounds.width, returnBounds.y+returnBounds.height));
+			full_size = post_transfer;
 			
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(full_size)));	//An estimate...png is compressed after all
@@ -239,7 +243,8 @@ public class ARServer extends NanoHTTPD {
 			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0,width-selection.getWidth(), height-selection.getHeight()))).getBounds2D();
 			double dtx = remainder.getWidth();
 			double dty = remainder.getHeight();
-			return new Rectangle2D.Double(bounds.getX()-dtx/2, bounds.getY()-dty/2, bounds.getWidth()+dtx, bounds.getHeight()+dtx);
+			Rectangle2D newBounds = new Rectangle2D.Double(bounds.getX()-dtx/2, bounds.getY()-dty/2, bounds.getWidth()+dtx, bounds.getHeight()+dty);
+			return newBounds;
 		} catch (Exception e) {throw new RuntimeException("Specified view cannot be realized.");}
 	}
 	
@@ -400,9 +405,11 @@ public class ARServer extends NanoHTTPD {
 					+ "width/height: Set in pixels, directly influencing zoom (as there is it always runs a 'zoom fit')<br>"
 					+ "format: either 'png' or 'json'<br>"
 					+ "ignoreCache: True/False -- If set to True, will not laod cached data (may still save it)<br>"
-					+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates;  Will only process data inside the clip.<br>"
-					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only process data inside the clip.<br>"
-					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br>"
+					+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates<br>"
+					+ "latlon: x1;y1;x2;y2 -- Sets a clip-rectangle as list by diagonal opposite points in lat/lon coordinates.<br>"
+					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only return values in the crop.<br>"
+					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br><br>"
+					+ "select and latlon have may process values outside of the specified bounding rectangles<br><br>"
 					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
 					+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n";
 				
