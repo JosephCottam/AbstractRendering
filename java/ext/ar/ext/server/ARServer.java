@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
@@ -81,11 +82,12 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override 
 	public Response serve(IHTTPSession session) {
 			
 		String uri = session.getUri();
-		Map<String, String> headers = session.getHeaders(); 
+		//Map<String, String> headers = session.getHeaders(); 
 		Map<String, String> params = session.getParms();
 		
 		if (uri.equals("/")) {return help();}
@@ -188,14 +190,11 @@ public class ARServer extends NanoHTTPD {
 
 			tasks.remove(requesterID);
 			
-			System.out.println(AggregateUtils.bounds(post_transfer));
-
 			Rectangle returnBounds = vt.createTransformedShape(zoomBounds).getBounds();
 			Aggregates<OUT> full_size = new OverlayWrapper<>(
 					post_transfer, 
 					new ConstantAggregates<>(post_transfer.defaultValue(), 
 							returnBounds.x, returnBounds.y, returnBounds.x+returnBounds.width, returnBounds.y+returnBounds.height));
-			full_size = post_transfer;
 			
 			Response rslt;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream((int) (AggregateUtils.size(full_size)));	//An estimate...png is compressed after all
@@ -228,11 +227,14 @@ public class ARServer extends NanoHTTPD {
 		AffineTransform vt = Util.zoomFit(bounds, width, height);
 		Rectangle2D fit = vt.createTransformedShape(bounds).getBounds2D();
 		
-		double dtx = (width - fit.getWidth())/2;
-		double dty = (height - fit.getHeight())/2;
 		
-		vt.preConcatenate(AffineTransform.getTranslateInstance(-dtx, -dty));
-		return vt;
+		try {
+			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0, width - fit.getWidth(), height - fit.getHeight()))).getBounds2D();
+			double dtx = remainder.getWidth();
+			double dty = remainder.getHeight();
+			vt.translate(dtx/2, dty/2);
+			return vt;
+		} catch (Exception e) {throw new RuntimeException("Specified view cannot be realized.");}
 	}
 
 	/**Expand the given bounds so it fills width/height region under the given view transform**/
