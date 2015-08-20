@@ -99,6 +99,7 @@ public class ARServer extends NanoHTTPD {
 		String format = params.getOrDefault("format", "png");
 		int width = Integer.parseInt(params.getOrDefault("width", "500"));
 		int height = Integer.parseInt(params.getOrDefault("height", "500"));
+		boolean onlySelected = Boolean.parseBoolean(params.getOrDefault("onlySelected", "False"));
 		boolean ignoreCached = Boolean.parseBoolean(params.getOrDefault("ignoreCache", "False"));
 		Optional<Rectangle2D> selection = Arrays.stream(params.getOrDefault("select", "").split(";|,")).collect(DOUBLE_RECT);
 		Optional<List<Point2D>> latlon = Arrays.stream(params.getOrDefault("latlon", "").split(";|,")).collect(POINTS);
@@ -112,7 +113,7 @@ public class ARServer extends NanoHTTPD {
         long start = System.currentTimeMillis();
         Response rsp;
         try {
-        	rsp = execute(format, width, height, ignoreCached, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID);
+        	rsp = execute(format, width, height, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, onlySelected);
         } finally { 
             long end = System.currentTimeMillis();
             System.out.printf("## Excution time: %d ms%n", (end-start));
@@ -120,12 +121,14 @@ public class ARServer extends NanoHTTPD {
         return rsp;
 	}
 		
-	private <G,I,A,OUT> Response execute(String format, int width, int height, boolean ignoreCached, 
+	private <G,I,A,OUT> Response execute(String format, int width, int height, 
 			Aggregator<I,A> agg,
 			Transfer<A,OUT> transfer,
 			OptionDataset<G,I> baseConfig,
 			Optional<Rectangle2D> selection, Optional<List<Point2D>> latlon, Optional<Rectangle> crop, Optional<Rectangle> enhance, 
-			Object requesterID) {
+			Object requesterID,
+			boolean ignoreCached, 
+			boolean onlySelected) {
 		
 		if (tasks.containsKey(requesterID)) {
 			System.out.println("## Signaling shutdown to existing session by requester " + requesterID);
@@ -157,7 +160,8 @@ public class ARServer extends NanoHTTPD {
 			}
 			
 			AffineTransform vt = centerFit(zoomBounds, width, height);
-			zoomBounds = expandSelection(vt, zoomBounds, width, height);
+			Rectangle2D renderBounds = expandSelection(vt, zoomBounds, width, height);
+			if (!onlySelected) {zoomBounds = renderBounds;}
 			
 			if (selection.isPresent()) {
 				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
@@ -189,7 +193,7 @@ public class ARServer extends NanoHTTPD {
 
 			tasks.remove(requesterID);
 			
-			Rectangle returnBounds = vt.createTransformedShape(zoomBounds).getBounds();
+			Rectangle returnBounds = vt.createTransformedShape(renderBounds).getBounds();
 			Aggregates<OUT> full_size = new OverlayWrapper<>(
 					post_transfer, 
 					new ConstantAggregates<>(post_transfer.defaultValue(), 
@@ -405,7 +409,8 @@ public class ARServer extends NanoHTTPD {
 					+ "Query Paramters ----------------<br>"
 					+ "width/height: Set in pixels, directly influencing zoom (as there is it always runs a 'zoom fit')<br>"
 					+ "format: either 'png' or 'json'<br>"
-					+ "ignoreCache: True/False -- If set to True, will not laod cached data (may still save it)<br>"
+					+ "ignoreCache: True/False -- If set to True, will not load cached data (may still save it)<br>"
+					+ "onlySelected: True/False -- If True, will only render items in the selection (if a selection is present)<br>"
 					+ "select: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the glyphs in glyph coordinates<br>"
 					+ "latlon: x1;y1;x2;y2 -- Sets a clip-rectangle as list by diagonal opposite points in lat/lon coordinates.<br>"
 					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only return values in the crop.<br>"
