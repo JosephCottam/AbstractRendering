@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
+import ar.ext.lang.Parser;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -51,7 +54,11 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
+import ar.rules.Categories;
 import ar.rules.General;
+import ar.rules.Numbers;
+import ar.rules.combinators.Combinators;
+import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
@@ -60,6 +67,7 @@ import ar.Glyphset;
 public class ARServer extends NanoHTTPD {
 	public static final int DEFAULT_PORT = 6582; //In ascii A=65, R=82
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
+	private static Map<String, Function<List<Object>, Object>> FUNCTIONS;
 
 	private final Path cachedir;
 	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
@@ -108,7 +116,8 @@ public class ARServer extends NanoHTTPD {
 		Object requesterID = params.getOrDefault("requesterID", Double.toString(Math.random()));
 		
 		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-		Transfer transfer = getTransfer(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
+		Transfer transfer = getTransferByList(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
+		transfer = params.containsKey("transfer") ? parseTransfer(params.get("transfer")) : transfer;
 		
         long start = System.currentTimeMillis();
         Response rsp;
@@ -313,11 +322,9 @@ public class ARServer extends NanoHTTPD {
 			return Optional.empty();
 		}
 	}
-	
-	
-
+		
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public Transfer<?,?> getTransfer(String transferIds, List<OptionTransfer<?>> def) {
+	public Transfer<?,?> getTransferByList(String transferIds, List<OptionTransfer<?>> def) {
 		List<OptionTransfer<?>> transfers = def;
 		
 		if (transferIds!=null && !transferIds.trim().equals("")) {
@@ -448,6 +455,42 @@ public class ARServer extends NanoHTTPD {
 		return newFixedLengthResponse(Status.OK, MIME_HTML, help);
 	}
 	
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Transfer<?,?> seqFromList(List<Transfer> transfers) {
+		if (transfers.size() == 0) {return new General.Echo(null);}
+		if (transfers.size() == 1) {return transfers.get(0);}
+		
+		Seq s = Combinators.seq(transfers.get(0)).then(transfers.get(1));		//TODO: Look at unifying Seq/SeqStub/SeqEmpty so this can be done with a simple loop; or look at a collector seq type
+		for (int i=2; i<transfers.size(); i++) {
+			s = s.then(transfers.get(i));
+		}
+		return s;
+	}
+
+
+	
+	public Transfer<?,?> parseTransfer(String source) {
+		try {
+			Transfer<?,?> t = (Transfer<?,?>) Parser.reify(Parser.parse(source), FUNCTIONS);
+			return t;
+		} catch (Throwable e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
+	static {
+		FUNCTIONS = new HashMap<>();
+		FUNCTIONS.putAll(Parser.DEFAULT_FUNCTIONS);
+		FUNCTIONS.put("interpolate", args -> new Numbers.Interpolate<>((Color) args.get(0), (Color) args.get(1)));
+		FUNCTIONS.put("interpolate3", args -> new Numbers.Interpolate<>((Color) args.get(0), (Color) args.get(1), (Color) args.get(2)));
+		FUNCTIONS.put("toCount", args -> new Categories.ToCount<>());
+		FUNCTIONS.put("seq", args -> seqFromList((List<Transfer>) (List) args));
+	}
+	
+
+	
 	static {
 		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
 				.filter(c -> OptionTransfer.class.isAssignableFrom(c))
@@ -552,8 +595,7 @@ public class ARServer extends NanoHTTPD {
 			(a, s) -> {if (!s.equals("")) {a.add(Double.parseDouble(s));}}, 
 			(a, b) -> {a.addAll(b); return a;}, 
 			(ArrayList<Double> a) -> a.size() >= 4 ? Optional.of(new Rectangle2D.Double(a.get(0), a.get(1), a.get(2), a.get(3))) : Optional.empty());
-
-	
+		
 	public static void main(String[] args) throws Exception {
 		String host = ar.util.Util.argKey(args, "-host", "localhost");
 		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
