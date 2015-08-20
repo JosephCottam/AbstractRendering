@@ -19,8 +19,8 @@ public class TestAggregateUtils {
 	public void alignedMerge() {
 		int width = 10;
 		int height = 10;
-		Aggregates<Integer> ten = new ConstantAggregates<Integer>(0,0,width,height, 10);
-		Aggregates<Integer> two = new ConstantAggregates<Integer>(0,0,width,height, 2);
+		Aggregates<Integer> ten = new ConstantAggregates<Integer>(10, 0,0,width,height);
+		Aggregates<Integer> two = new ConstantAggregates<Integer>(2, 0,0,width,height);
 		
 		assertThat("Left greather than right",
 				   AggregateUtils.alignedMerge(ten, two, false, (l, r) -> (l > r)),
@@ -68,7 +68,7 @@ public class TestAggregateUtils {
 		int height = 10;
 		Aggregator<Object,Integer> red= new Numbers.Count<>();
 		Aggregates<Integer> ten = new RefFlatAggregates<Integer>(0,0,width,height, 10);
-		Aggregates<Integer> id = new ConstantAggregates<Integer>(0,0,width,height,red.identity());
+		Aggregates<Integer> id = new ConstantAggregates<Integer>(red.identity(), 0,0,width,height);
 
 		Aggregates<Integer> c1 = AggregateUtils.__unsafeMerge(ten, id, red.identity(), red::rollup);
 		assertThat("Error with right-side id", c1, is(ten));

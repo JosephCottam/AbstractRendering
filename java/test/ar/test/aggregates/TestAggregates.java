@@ -25,7 +25,7 @@ public class TestAggregates {
 	@Test
 	public void Constant() {
 		int value = -1;
-		Aggregates<Integer> aggs = new ConstantAggregates<Integer>(10,10,20,20,value);
+		Aggregates<Integer> aggs = new ConstantAggregates<Integer>(value, 10,10,20,20);
 		assertThat(aggs.lowX(), is(10));
 		assertThat(aggs.lowY(), is(10));
 		assertThat(aggs.highX(), is(20));

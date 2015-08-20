@@ -14,8 +14,8 @@ public class TestCompositeWrapper {
 	@Test
 	public void PackUnpack() {
 		int leftVal = 2, rightVal = -100;
-		Aggregates<Integer> left = new ConstantAggregates<Integer>(10,10,20,20,leftVal);
-		Aggregates<Integer> right = new ConstantAggregates<Integer>(10,10,20,20,rightVal);
+		Aggregates<Integer> left = new ConstantAggregates<Integer>(leftVal, 10,10,20,20);
+		Aggregates<Integer> right = new ConstantAggregates<Integer>(rightVal, 10,10,20,20);
 		
 		Aggregates<Pair<Integer,Integer>> aggs = CompositeWrapper.wrap(left, right);
 		
