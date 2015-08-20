@@ -142,8 +142,8 @@ public class AggregateUtils {
 		}
 	
 		for (Aggregates<T> source: sources) {
-			for (int x=Math.max(0, source.lowX()); x<source.highX(); x++) {
-				for (int y=Math.max(0, source.lowY()); y<source.highY(); y++) {
+			for (int x=source.lowX(); x<source.highX(); x++) {
+				for (int y=source.lowY(); y<source.highY(); y++) {
 					T newVal = source.get(x,y);
 					if (Util.isEqual(identity, newVal)) {continue;}
 					T comb = rollup.apply(target.get(x,y), source.get(x,y));
