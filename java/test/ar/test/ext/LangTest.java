@@ -2,7 +2,8 @@ package ar.test.ext;
 
 import static org.junit.Assert.*;
 
-import org.fusesource.jansi.Ansi.Color;
+import java.awt.Color;
+
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.*;
@@ -38,6 +39,8 @@ public class LangTest {
 	
 	@Test
 	public void reifyNested() {
-		assertThat(reify(parse("(rgb 0 0 0)")), is(Color.BLACK));
+		assertThat(reify(parse("(rgb 0 0 0)")), is(new Color(0,0,0)));
+		assertThat(reify(parse("(rgb 255 255 255)")), is(new Color(255,255,255)));
+		assertThat(reify(parse("(string 255 255 255)")), is("255 255 255"));
 	}
 }

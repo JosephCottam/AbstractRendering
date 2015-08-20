@@ -3,11 +3,15 @@ package ar.ext.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.Optional;
+import java.awt.Color;
 
 import static java.util.stream.Collectors.*;
 
@@ -85,16 +89,20 @@ public class Parser {
 		return root;
 	}
 	
-	public static Object reify(TreeNode<?> tree) {
+	public static Object reify(TreeNode<?> tree) {return reify(tree, DEFAULT_FUNCTIONS);}
+	public static Object reify(TreeNode<?> tree, Map<String, Function<List<Object>, Object>> lookup) {
 		if (!tree.value().isPresent()) {
-			Object[] parts = tree.children().stream().map(e -> reify(e)).toArray();
-			String fn;
-			if (parts[0] instanceof String) {fn = (String) parts[0];}
-			else {throw new IllegalArgumentException("Must have string in first position");}
+			List<Object> parts = tree.children().stream().map(e -> reify(e, lookup)).collect(toList());
+			String name;
 			
+			if (parts.get(0) instanceof String) {name = (String) parts.get(0);}
+			else {throw new IllegalArgumentException("Must have function-name in first position");}
 			
+			Function<List<Object>, Object> fn  = lookup.getOrDefault(name, null);
+			if (fn == null) {throw new IllegalArgumentException("Function name not known: " + name);}
 			
-			throw new UnsupportedOperationException("Recursive case not implemented");
+			List<Object> args = parts.subList(1, parts.size());
+			return fn.apply(args);
 		}
 		
 		String val = tree.value().get().toString();
@@ -107,4 +115,11 @@ public class Parser {
 	}
 	
 	public static TreeNode<String> parse(String input) {return parseTree(tokens(input));}
+	
+	public static final Map<String, Function<List<Object>, Object>> DEFAULT_FUNCTIONS = new HashMap<>();
+	static {
+		DEFAULT_FUNCTIONS.put("rgb", args -> new Color((int) args.get(0), (int) args.get(1), (int) args.get(2)));
+		DEFAULT_FUNCTIONS.put("string", args -> args.stream().map(e -> e.toString()).collect(joining(" ")));
+		
+	}
 }
