@@ -16,6 +16,7 @@ public class LangTest {
 		assertThat(tokens("test"), contains("test"));
 		assertThat(tokens("(test)"), contains("(", "test", ")"));
 		assertThat(tokens("(test of some more)"), contains("(", "test", "of", "some", "more", ")"));
+		assertThat(tokens("(test, comas, too)"), contains("(", "test", "comas", "too", ")"));
 		assertThat(tokens("((nested))"), contains("(", "(", "nested", ")", ")"));
 		assertThat(tokens("((nested (deeply)) shallowly)"), contains("(", "(", "nested", "(", "deeply", ")", ")", "shallowly", ")"));
 	}

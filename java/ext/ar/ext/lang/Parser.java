@@ -61,8 +61,9 @@ public class Parser {
 	}
 	
 	public static List<String> tokens(String input) {
-		 return Arrays.stream(input.trim().split("(?<=[\\s|(|)])|(?=[\\s|(|)])"))
+		 return Arrays.stream(input.trim().split("(?<=[\\s|(|)|,])|(?=[\\s|(|)|,])"))	//Lookahead/behind to return separators as tokens
 				 .filter(s -> !s.trim().equals(""))
+				 .filter(s -> !s.trim().equals(","))
 				 .collect(toList());
 	}
 	
