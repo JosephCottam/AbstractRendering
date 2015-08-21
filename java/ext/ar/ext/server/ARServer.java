@@ -111,7 +111,9 @@ public class ARServer extends NanoHTTPD {
 		
 		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
 		Transfer transfer = getTransferByList(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
-		transfer = params.containsKey("transfer") ? parseTransfer(params.get("transfer")) : transfer;
+		
+		try {transfer = params.containsKey("transfer") ? parseTransfer(params.get("transfer")) : transfer;}
+		catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
 		
         long start = System.currentTimeMillis();
         Response rsp;

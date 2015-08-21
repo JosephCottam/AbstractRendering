@@ -44,10 +44,10 @@ public class Parser {
 		  }
 		  
 		  public String toString() {
-			  String val = value.isPresent() ? value.get().toString() : "<null>";
+			  String val = value.isPresent() ? value.get().toString() + " " : "";
 			  String start = children.size() > 0 ? "(" : "";
 			  String end = children.size() > 0 ? ")" : "";
-			  return start +  val + " " + children.stream().map(e -> e.toString()).collect(Collectors.joining(" ")) + end;
+			  return start +  val + children.stream().map(e -> e.toString()).collect(Collectors.joining(" ")) + end;
 		  }
 		  
 		  public static <A> TreeNode<A> empty() {return new TreeNode<A>(Optional.empty(), Collections.emptyList());}
@@ -100,7 +100,8 @@ public class Parser {
 			if (fn == null) {throw new IllegalArgumentException("Function name not known: " + name);}
 			
 			List<Object> args = parts.subList(1, parts.size());
-			return fn.apply(args);
+			try {return fn.apply(args);}
+			catch (Exception e) {throw new RuntimeException("Error reifying " + tree + "\n" + e.getMessage());}
 		}
 		
 		String val = tree.value().get().toString();
