@@ -29,7 +29,9 @@ public class Advise {
 		protected final double tolerance; 
 		protected final Comparator<A> comp;
 		
-		/**@param reference Transfer function that determines representation**/
+		/**@param reference Transfer function that determines representation
+		 * @param Comparator that measures the difference between two values
+		 * @param Threshold for ecuclidean distance bweteen two colors to be 'different'; 5 is a reasonable default **/
 		public UnderSaturate(Transfer<A,Color> reference, Comparator<A> comp, double tolerance) {
 			this.ref = reference;
 			this.comp = comp;
