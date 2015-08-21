@@ -54,6 +54,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
+import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
 import ar.rules.General;
 import ar.rules.Numbers;
@@ -480,13 +481,55 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static final <A> A get(List<Object> list, int n, A def) {
+		return list.size() < n ? (A) list.get(n) : def;
+	}
+	
 	static {
+		List<Color> CABLE_COLORS = Arrays.asList(
+				new Color(255,69,0),new Color(0,200,0),
+				new Color(255,165,0),new Color(136,90,68),
+				new Color(0,0,200));
+		
+		List<Color> BREWER12 = Arrays.asList(new Color(166,206,227), new Color(31,120,180),
+					new Color(178,223,138), new Color(51,160,44),
+					new Color(251,154,153), new Color(227,26,28),					
+					new Color(253,191,111), new Color(255,127,0),
+					new Color(202,178,214), new Color(106,61,154), 
+					new Color(255,255,153), new Color(177,89,40));
+		List<Color> RED_BLUE = Arrays.asList(new Color[]{Color.blue, Color.red});
+		
 		FUNCTIONS = new HashMap<>();
 		FUNCTIONS.putAll(Parser.DEFAULT_FUNCTIONS);
-		FUNCTIONS.put("interpolate", args -> new Numbers.Interpolate<>((Color) args.get(0), (Color) args.get(1)));
-		FUNCTIONS.put("interpolate3", args -> new Numbers.Interpolate<>((Color) args.get(0), (Color) args.get(1), (Color) args.get(2)));
+		FUNCTIONS.put("interpolate", args -> new Numbers.Interpolate<>(get(args, 0, Color.BLACK), get(args, 1, Color.WHITE)));
+		FUNCTIONS.put("interpolate3", args -> new Numbers.Interpolate<>(get(args, 0, Color.BLACK), get(args, 1, Color.WHITE), get(args, 2, Util.CLEAR)));
+		FUNCTIONS.put("present", args -> new General.Present<>(get(args, 0, Color.RED), get(args, 0, Color.WHITE)));
 		FUNCTIONS.put("toCount", args -> new Categories.ToCount<>());
+		
 		FUNCTIONS.put("seq", args -> seqFromList((List<Transfer>) (List) args));
+		
+		FUNCTIONS.put("Log", args -> new General.TransferFn<>(
+										new MathValuers.Log<>(get(args, 0, 10)),  
+										get(args, 1, Double.NaN)));
+		
+		FUNCTIONS.put("ColorKey", args -> new Categories.DynamicRekey<>(
+												new CategoricalCounts<>(Util.COLOR_SORTER), 
+												get(args, 0, CABLE_COLORS), 
+												get(args, args.size()-1, Color.BLACK)));
+		
+		FUNCTIONS.put("Percent",  args ->  new Categories.KeyPercent<Color>(
+												get(args, 0, 50)/100d, 
+												get(args, 1, Color.blue), 
+												get(args, 2, Color.white), 
+												get(args, 3, Color.blue),
+												get(args, 4, Color.red)));
+		
+		//Some color pallets
+		FUNCTIONS.put("CableColors", args -> CABLE_COLORS);
+		FUNCTIONS.put("Brewer12", args -> BREWER12);
+		FUNCTIONS.put("RedBlue", args -> RED_BLUE);
+		
 	}
 	
 
