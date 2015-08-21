@@ -107,6 +107,8 @@ public class Parser {
 		}
 		
 		String val = tree.value().get().toString();
+		if (val.equals("NaN")) {return Double.NaN;}
+		if (val.equals("fNaN")) {return Float.NaN;}
 		try {return Integer.parseInt(val);}
 		catch (Exception e) {
 			try {return Double.parseDouble(val);}
@@ -121,6 +123,32 @@ public class Parser {
 	static {
 		DEFAULT_FUNCTIONS.put("rgb", args -> new Color((int) args.get(0), (int) args.get(1), (int) args.get(2)));
 		DEFAULT_FUNCTIONS.put("string", args -> args.stream().map(e -> e.toString()).collect(joining(" ")));
+	}
+	
+	/**Create a help string for the language, including information on the function library passed in **/
+	public static String[] help(Map<List<Object>, Object> functions) {
+		String[] basics = new String[]{
+				"Basic syntax follows s-epxressions: (item (item item item))",
+				"Looks like lisp, with all of the visual appeal and very little of the actual power!",
+				"There are separators, lists, numeric literals, symbol liteals and function calls.",
+				"There are no strings, variables, function definitions, comments or other nice things like that.",
+				"You do, however, get NaN is literal for Double.NaN, fNaN for if you really need the float variant.",
+				"There is one namespace.",
+				"",
+				"The first item in the expression determines a function to call, all other items are arguments.",
+				"Since there are no higher-order functions, the first item in each list must be a symbol.",
+				"Expressions are evaluated inside out and left to right.",
+				"For example (RGB 0 0 0) makes the color black. RGB is the function, 0 is a numeric literal.",
+				"Whitespace and comma are the separators.  All seperators are equal, so (RGB,0,0,0) works just as well.",
+				"",
+				"Available Functions:"
+		};
 		
+		String[] funcs = functions.keySet().stream().map(e -> e.toString()).toArray(n -> new String[n]);
+		
+		String[] full = new String[basics.length + funcs.length];
+		System.arraycopy(basics, 0, full, 0, basics.length);
+		System.arraycopy(funcs, 0, full, basics.length, funcs.length);
+		return full;
 	}
 }
