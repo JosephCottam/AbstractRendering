@@ -3,7 +3,6 @@ package ar.ext.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.Optional;
-import java.awt.Color;
 
 import static java.util.stream.Collectors.*;
 
@@ -90,8 +88,7 @@ public class Parser {
 		return root;
 	}
 	
-	public static Object reify(TreeNode<?> tree) {return reify(tree, DEFAULT_FUNCTIONS);}
-	public static Object reify(TreeNode<?> tree, Map<String, Function<List<Object>, Object>> lookup) {
+	public static Object reify(TreeNode<?> tree, Map<String, Function<List, ?>> lookup) {
 		if (!tree.value().isPresent()) {
 			List<Object> parts = tree.children().stream().map(e -> reify(e, lookup)).collect(toList());
 			String name;
@@ -99,7 +96,7 @@ public class Parser {
 			if (parts.get(0) instanceof String) {name = (String) parts.get(0);}
 			else {throw new IllegalArgumentException("Must have function-name in first position");}
 			
-			Function<List<Object>, Object> fn  = lookup.getOrDefault(name, null);
+			Function<List, ?> fn  = lookup.getOrDefault(name, null);
 			if (fn == null) {throw new IllegalArgumentException("Function name not known: " + name);}
 			
 			List<Object> args = parts.subList(1, parts.size());
@@ -119,12 +116,6 @@ public class Parser {
 	
 	public static TreeNode<String> parse(String input) {return parseTree(tokens(input));}
 	
-	public static final Map<String, Function<List<Object>, Object>> DEFAULT_FUNCTIONS = new HashMap<>();
-	static {
-		DEFAULT_FUNCTIONS.put("rgb", args -> new Color((int) args.get(0), (int) args.get(1), (int) args.get(2)));
-		DEFAULT_FUNCTIONS.put("string", args -> args.stream().map(e -> e.toString()).collect(joining(" ")));
-	}
-	
 	/**Create a help string for the language, including information on the function library passed in **/
 	public static String[] help(Map<List<Object>, Object> functions) {
 		String[] basics = new String[]{
@@ -132,6 +123,7 @@ public class Parser {
 				"Looks like lisp, with all of the visual appeal and very little of the actual power!",
 				"There are separators, lists, numeric literals, symbol liteals and function calls.",
 				"There are no strings, variables, function definitions, comments or other nice things like that.",
+				"There are first-class functions and externally defined higher-order functions, so you get some fun.",
 				"You do, however, get NaN is literal for Double.NaN, fNaN for if you really need the float variant.",
 				"There is one namespace.",
 				"",

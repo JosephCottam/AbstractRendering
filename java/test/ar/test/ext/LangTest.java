@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import static org.hamcrest.Matchers.*;
 import static ar.ext.lang.Parser.*;
+import static ar.ext.lang.BasicLibrary.PRIMITIVE_FUNCTIONS;
 import static ar.ext.lang.Parser.TreeNode.*;
 
 public class LangTest {
@@ -32,16 +33,16 @@ public class LangTest {
 	
 	@Test
 	public void reifyAtom() {
-		assertThat(reify(parse("1")), is(Integer.valueOf(1)));
-		assertThat(reify(parse("1.3")), is(Double.valueOf(1.3)));
-		assertThat(reify(parse("1.3b")), is("1.3b"));
-		assertThat(reify(parse("hello")), is("hello"));
+		assertThat(reify(parse("1"), PRIMITIVE_FUNCTIONS), is(Integer.valueOf(1)));
+		assertThat(reify(parse("1.3"), PRIMITIVE_FUNCTIONS), is(Double.valueOf(1.3)));
+		assertThat(reify(parse("1.3b"), PRIMITIVE_FUNCTIONS), is("1.3b"));
+		assertThat(reify(parse("hello"), PRIMITIVE_FUNCTIONS), is("hello"));
 	}
 	
 	@Test
 	public void reifyNested() {
-		assertThat(reify(parse("(rgb 0 0 0)")), is(new Color(0,0,0)));
-		assertThat(reify(parse("(rgb 255 255 255)")), is(new Color(255,255,255)));
-		assertThat(reify(parse("(string 255 255 255)")), is("255 255 255"));
+		assertThat(reify(parse("(rgb 0 0 0)"), PRIMITIVE_FUNCTIONS), is(new Color(0,0,0)));
+		assertThat(reify(parse("(rgb 255 255 255)"), PRIMITIVE_FUNCTIONS), is(new Color(255,255,255)));
+		assertThat(reify(parse("(string 255 255 255)"), PRIMITIVE_FUNCTIONS), is("255 255 255"));
 	}
 }

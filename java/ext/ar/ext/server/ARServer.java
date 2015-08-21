@@ -20,12 +20,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -45,6 +43,7 @@ import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
+import ar.ext.lang.BasicLibrary;
 import ar.ext.lang.Parser;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
@@ -54,12 +53,7 @@ import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
-import ar.rules.CategoricalCounts;
-import ar.rules.Categories;
 import ar.rules.General;
-import ar.rules.Numbers;
-import ar.rules.combinators.Combinators;
-import ar.rules.combinators.Seq;
 import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
@@ -68,7 +62,6 @@ import ar.Glyphset;
 public class ARServer extends NanoHTTPD {
 	public static final int DEFAULT_PORT = 6582; //In ascii A=65, R=82
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
-	private static Map<String, Function<List<Object>, Object>> FUNCTIONS;
 
 	private final Path cachedir;
 	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
@@ -455,84 +448,16 @@ public class ARServer extends NanoHTTPD {
 		
 		return newFixedLengthResponse(Status.OK, MIME_HTML, help);
 	}
-	
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Transfer<?,?> seqFromList(List<Transfer> transfers) {
-		if (transfers.size() == 0) {return new General.Echo(null);}
-		if (transfers.size() == 1) {return transfers.get(0);}
-		
-		Seq s = Combinators.seq(transfers.get(0)).then(transfers.get(1));		//TODO: Look at unifying Seq/SeqStub/SeqEmpty so this can be done with a simple loop; or look at a collector seq type
-		for (int i=2; i<transfers.size(); i++) {
-			s = s.then(transfers.get(i));
-		}
-		return s;
-	}
 
-
-	
 	public Transfer<?,?> parseTransfer(String source) {
 		try {
-			Transfer<?,?> t = (Transfer<?,?>) Parser.reify(Parser.parse(source), FUNCTIONS);
+			Transfer<?,?> t = (Transfer<?,?>) Parser.reify(Parser.parse(source), BasicLibrary.ALL);
 			return t;
 		} catch (Throwable e) {
 			e.printStackTrace();
 			throw e;
 		}
 	}
-	
-	@SuppressWarnings("unchecked")
-	public static final <A> A get(List<Object> list, int n, A def) {
-		return list.size() < n ? (A) list.get(n) : def;
-	}
-	
-	static {
-		List<Color> CABLE_COLORS = Arrays.asList(
-				new Color(255,69,0),new Color(0,200,0),
-				new Color(255,165,0),new Color(136,90,68),
-				new Color(0,0,200));
-		
-		List<Color> BREWER12 = Arrays.asList(new Color(166,206,227), new Color(31,120,180),
-					new Color(178,223,138), new Color(51,160,44),
-					new Color(251,154,153), new Color(227,26,28),					
-					new Color(253,191,111), new Color(255,127,0),
-					new Color(202,178,214), new Color(106,61,154), 
-					new Color(255,255,153), new Color(177,89,40));
-		List<Color> RED_BLUE = Arrays.asList(new Color[]{Color.blue, Color.red});
-		
-		FUNCTIONS = new HashMap<>();
-		FUNCTIONS.putAll(Parser.DEFAULT_FUNCTIONS);
-		FUNCTIONS.put("interpolate", args -> new Numbers.Interpolate<>(get(args, 0, Color.BLACK), get(args, 1, Color.WHITE)));
-		FUNCTIONS.put("interpolate3", args -> new Numbers.Interpolate<>(get(args, 0, Color.BLACK), get(args, 1, Color.WHITE), get(args, 2, Util.CLEAR)));
-		FUNCTIONS.put("present", args -> new General.Present<>(get(args, 0, Color.RED), get(args, 0, Color.WHITE)));
-		FUNCTIONS.put("toCount", args -> new Categories.ToCount<>());
-		
-		FUNCTIONS.put("seq", args -> seqFromList((List<Transfer>) (List) args));
-		
-		FUNCTIONS.put("Log", args -> new General.TransferFn<>(
-										new MathValuers.Log<>(get(args, 0, 10)),  
-										get(args, 1, Double.NaN)));
-		
-		FUNCTIONS.put("ColorKey", args -> new Categories.DynamicRekey<>(
-												new CategoricalCounts<>(Util.COLOR_SORTER), 
-												get(args, 0, CABLE_COLORS), 
-												get(args, args.size()-1, Color.BLACK)));
-		
-		FUNCTIONS.put("Percent",  args ->  new Categories.KeyPercent<Color>(
-												get(args, 0, 50)/100d, 
-												get(args, 1, Color.blue), 
-												get(args, 2, Color.white), 
-												get(args, 3, Color.blue),
-												get(args, 4, Color.red)));
-		
-		//Some color pallets
-		FUNCTIONS.put("CableColors", args -> CABLE_COLORS);
-		FUNCTIONS.put("Brewer12", args -> BREWER12);
-		FUNCTIONS.put("RedBlue", args -> RED_BLUE);
-		
-	}
-	
-
 	
 	static {
 		TRANSFERS = Arrays.stream(OptionTransfer.class.getClasses())
