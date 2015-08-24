@@ -88,7 +88,7 @@ public class Parser {
 		return root;
 	}
 	
-	public static Object reify(TreeNode<?> tree, Map<String, Function<List, ?>> lookup) {
+	public static Object reify(TreeNode<?> tree, Map<String, ? extends Function<List<Object>,?>> lookup) {
 		if (!tree.value().isPresent()) {
 			List<Object> parts = tree.children().stream().map(e -> reify(e, lookup)).collect(toList());
 			String name;
@@ -96,7 +96,7 @@ public class Parser {
 			if (parts.get(0) instanceof String) {name = (String) parts.get(0);}
 			else {throw new IllegalArgumentException("Must have function-name in first position");}
 			
-			Function<List, ?> fn  = lookup.getOrDefault(name, null);
+			Function<List<Object>,?> fn  = lookup.getOrDefault(name, null);
 			if (fn == null) {throw new IllegalArgumentException("Function name not known: " + name);}
 			
 			List<Object> args = parts.subList(1, parts.size());
@@ -117,31 +117,46 @@ public class Parser {
 	
 	public static TreeNode<String> parse(String input) {return parseTree(tokens(input));}
 	
-	/**Create a help string for the language, including information on the function library passed in **/
-	public static String[] help(Map<List<Object>, Object> functions) {
+	
+	/**Utility for storing functions with some documentation.**/
+	public static final class FunctionRecord<T> implements Function<List<Object>, T> {
+		public final String name;
+		public final String help;
+		public final Function<List<Object>, T> fn;
+		public FunctionRecord(String name, String help, Function<List<Object>, T> fn) {
+			this.name = name;
+			this.help = help;
+			this.fn = fn;
+		}
+		
+		@Override public int hashCode() {return name.hashCode();}
+		@Override public boolean equals(Object other) {return other instanceof FunctionRecord && this.name.equals(((FunctionRecord<?>) other).name);}
+		@Override public T apply(List<Object> args) {return fn.apply(args);}
+		@Override public String toString() {return name + ": " + help;}
+	}
+	
+	/**Create a help string for the language, including information on the function library passed in.
+	 * Returns two lists of strings.  The first is a brief description of syntax/semantics.  
+	 * The second is a list of the available functions.**/
+	public static String basicHelp(String lineSep) {
 		String[] basics = new String[]{
 				"Basic syntax follows s-epxressions: (item (item item item))",
 				"Looks like lisp, with all of the visual appeal and very little of the actual power!",
 				"There are separators, lists, numeric literals, symbol liteals and function calls.",
 				"There are no strings, variables, function definitions, comments or other nice things like that.",
 				"There are first-class functions and externally defined higher-order functions, so you get some fun.",
-				"You do, however, get NaN is literal for Double.NaN, fNaN for if you really need the float variant.",
 				"There is one namespace.",
 				"",
 				"The first item in the expression determines a function to call, all other items are arguments.",
 				"Since there are no higher-order functions, the first item in each list must be a symbol.",
-				"Expressions are evaluated inside out and left to right.",
+				"All expression arguments are evaluated before the function call is made.",
 				"For example (RGB 0 0 0) makes the color black. RGB is the function, 0 is a numeric literal.",
 				"Whitespace and comma are the separators.  All seperators are equal, so (RGB,0,0,0) works just as well.",
-				"",
-				"Available Functions:"
 		};
-		
-		String[] funcs = functions.keySet().stream().map(e -> e.toString()).toArray(n -> new String[n]);
-		
-		String[] full = new String[basics.length + funcs.length];
-		System.arraycopy(basics, 0, full, 0, basics.length);
-		System.arraycopy(funcs, 0, full, basics.length, funcs.length);
-		return full;
+		return Arrays.stream(basics).collect(Collectors.joining(lineSep)); 
+	}
+	
+	public static String functionHelp(Map<?, ?> funcs, String format, String sep) {
+		return funcs.values().stream().map(e -> e.toString()).map(s -> String.format(format, s)).collect(Collectors.joining(sep));
 	}
 }

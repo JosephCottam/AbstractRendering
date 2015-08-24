@@ -112,8 +112,10 @@ public class ARServer extends NanoHTTPD {
 		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
 		Transfer transfer = getTransferByList(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 		
-		try {transfer = params.containsKey("transfer") ? parseTransfer(params.get("transfer")) : transfer;}
-		catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
+		try {transfer = params.containsKey("arl") ? parseTransfer(params.get("arl")) : transfer;}
+		catch (Exception e) {
+			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
+		}
 		
         long start = System.currentTimeMillis();
         Response rsp;
@@ -428,6 +430,8 @@ public class ARServer extends NanoHTTPD {
 		return "<ul>" + items.stream().map(e -> String.format(format, e)).collect(Collectors.joining("\n")) + "</ul>\n\n";
 	}
 	public Response help() {
+		
+		
 		String help = "<H1>AR Server help</H1>"
 					+ "Simple interface to the default configurations in the extended AR demo application (ar.ap)p.components.sequentialComposer)<br>"
 					+ "The path sets the base configuration, query parameters modify that configuration.<br>"
@@ -443,8 +447,17 @@ public class ARServer extends NanoHTTPD {
 					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only return values in the crop.<br>"
 					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br><br>"
 					+ "select and latlon have may process values outside of the specified bounding rectangles<br><br>"
+					+ "arl: AR-language string (superceeds transfers argument, if present)<br>\n" 
 					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
-					+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n";
+					//+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n"
+					+ "<hr>"
+					+ "<h3>AR Language:</h3>"
+					+ Parser.basicHelp("<br>") + "<br><br>"
+					+ "Available functions:<br>"
+					+ Parser.functionHelp(BasicLibrary.ALL, "<li>%s</li>", "\n");
+				
+		
+		
 				
 					
 		
