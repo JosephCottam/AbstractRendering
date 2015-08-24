@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionTransfer.Spread.FlexSpread;
@@ -103,6 +104,10 @@ public class BasicLibrary {
 				args -> new General.TransferFn<>(
 								get(args, 0, (Object a) -> (Number) a), 
 								get(args, 1, (Number) 0d)));
+		put(COMMON, "string", "Make a list of symbols into a string, separated by item in the first argument",
+				args -> args.subList(1, args.size()).stream().map(s -> s.toString()).collect(Collectors.joining(args.get(0).toString())));
+		
+		put(COMMON, "space", "Returns a single space...needed because there are no string literals.", args -> " ");
 	}
 		
 	public static final Map<String, Function<List<Object>, Object>> ADVISE = new HashMap<>();
@@ -147,7 +152,7 @@ public class BasicLibrary {
 		put(MATH, "rad->deg", "Function to convert radians to degrees.", args -> v -> Math.toDegrees(v.doubleValue()));
 		put(MATH, "deg->rad", "Function to convert degrees to radians.",args -> v -> Math.toRadians(v.doubleValue()));
 		
-		put(MATH, "x+c", "Make a function that adds a constant.", args -> (Number v) -> ((Number) get(args, 0, 1)).doubleValue() + v.doubleValue());
+		put(MATH, "addc", "Make a function that adds a constant (not x+n because '+' is white-space in a URL).", args -> (Number v) -> ((Number) get(args, 0, 1)).doubleValue() + v.doubleValue());
 		put(MATH, "x-c", "Make a function that substracts a constant.", args -> (Number v) -> v.doubleValue() - ((Number) get(args, 0, 1)).doubleValue());
 		put(MATH, "x*c", "Make a function that multiplies a constant.", args -> (Number v) -> ((Number) get(args, 0, 1)).doubleValue() * v.doubleValue());
 		put(MATH, "x/c", "Make a function that divides by a constant.", args -> (Number v) -> ((Number) get(args, 0, 1)).doubleValue() / v.doubleValue());

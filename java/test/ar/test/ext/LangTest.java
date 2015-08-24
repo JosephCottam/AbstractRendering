@@ -3,15 +3,25 @@ package ar.test.ext;
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import org.junit.Test;
 
+import ar.ext.lang.BasicLibrary;
 import static org.hamcrest.Matchers.*;
 import static ar.ext.lang.Parser.*;
-import static ar.ext.lang.BasicLibrary.*;
 import static ar.ext.lang.Parser.TreeNode.*;
 
 public class LangTest {
+	public static final Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
+	static {
+		LIBRARY.putAll(BasicLibrary.COLOR);
+		LIBRARY.putAll(BasicLibrary.COMMON);
+	}
+	
 	@Test
 	public void tokenize() {
 		assertThat(tokens("test"), contains("test"));
@@ -20,6 +30,8 @@ public class LangTest {
 		assertThat(tokens("(test, comas, too)"), contains("(", "test", "comas", "too", ")"));
 		assertThat(tokens("((nested))"), contains("(", "(", "nested", ")", ")"));
 		assertThat(tokens("((nested (deeply)) shallowly)"), contains("(", "(", "nested", "(", "deeply", ")", ")", "shallowly", ")"));
+		assertThat(tokens("x+c"), contains("x+c"));
+		assertThat(tokens("(x+c)"), contains("(", "x+c", ")"));
 	}
 	
 	@Test
@@ -33,16 +45,16 @@ public class LangTest {
 	
 	@Test
 	public void reifyAtom() {
-		assertThat(reify(parse("1"), COLOR), is(Integer.valueOf(1)));
-		assertThat(reify(parse("1.3"), COLOR), is(Double.valueOf(1.3)));
-		assertThat(reify(parse("1.3b"), COLOR), is("1.3b"));
-		assertThat(reify(parse("hello"), COLOR), is("hello"));
+		assertThat(reify(parse("1"), LIBRARY), is(Integer.valueOf(1)));
+		assertThat(reify(parse("1.3"), LIBRARY), is(Double.valueOf(1.3)));
+		assertThat(reify(parse("1.3b"), LIBRARY), is("1.3b"));
+		assertThat(reify(parse("hello"), LIBRARY), is("hello"));
 	}
 	
 	@Test
 	public void reifyNested() {
-		assertThat(reify(parse("(rgb 0 0 0)"), COLOR), is(new Color(0,0,0)));
-		assertThat(reify(parse("(rgb 255 255 255)"), COLOR), is(new Color(255,255,255)));
-		assertThat(reify(parse("(string 255 255 255)"), COLOR), is("255 255 255"));
+		assertThat(reify(parse("(rgb 0 0 0)"), LIBRARY), is(new Color(0,0,0)));
+		assertThat(reify(parse("(rgb 255 255 255)"), LIBRARY), is(new Color(255,255,255)));
+		assertThat(reify(parse("(string (space) 255 255 255)"), LIBRARY), is("255 255 255"));
 	}
 }

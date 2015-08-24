@@ -157,6 +157,6 @@ public class Parser {
 	}
 	
 	public static String functionHelp(Map<?, ?> funcs, String format, String sep) {
-		return funcs.values().stream().map(e -> e.toString()).map(s -> String.format(format, s)).collect(Collectors.joining(sep));
+		return funcs.values().stream().map(e -> e.toString()).map(s -> String.format(format, s)).sorted().collect(Collectors.joining(sep));
 	}
 }

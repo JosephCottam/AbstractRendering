@@ -113,9 +113,7 @@ public class ARServer extends NanoHTTPD {
 		Transfer transfer = getTransferByList(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
 		
 		try {transfer = params.containsKey("arl") ? parseTransfer(params.get("arl")) : transfer;}
-		catch (Exception e) {
-			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
-		}
+		catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
 		
         long start = System.currentTimeMillis();
         Response rsp;
@@ -447,9 +445,9 @@ public class ARServer extends NanoHTTPD {
 					+ "crop: x;y;w;h -- Sets a clip-rectangle as list x,y,w,h on the aggregates in bin coordinates;  Will only return values in the crop.<br>"
 					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br><br>"
 					+ "select and latlon have may process values outside of the specified bounding rectangles<br><br>"
-					+ "arl: AR-language string (superceeds transfers argument, if present)<br>\n" 
+					+ "arl: AR-language string (see below for details)<br>\n" 
 					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
-					//+ "transfers:  semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n"
+					+ "transfers:  (depricated, use 'arl' instead) semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n"
 					+ "<hr>"
 					+ "<h3>AR Language:</h3>"
 					+ Parser.basicHelp("<br>") + "<br><br>"
@@ -465,12 +463,20 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	public Transfer<?,?> parseTransfer(String source) {
+		Parser.TreeNode<?> tree;
+		try{tree = Parser.parse(source);}
+		catch (Exception e) {
+			System.out.println(Parser.tokens(source).stream().collect(Collectors.joining(" -- ")));
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage() + "\n While parsing " + source);
+		}
+
+		
 		try {
-			Transfer<?,?> t = (Transfer<?,?>) Parser.reify(Parser.parse(source), BasicLibrary.ALL);
-			return t;
+			return (Transfer<?,?>) Parser.reify(tree, BasicLibrary.ALL);
 		} catch (Throwable e) {
 			e.printStackTrace();
-			throw e;
+			throw new RuntimeException(e.getMessage() + "\n While processing " + tree.toString());
 		}
 	}
 	
