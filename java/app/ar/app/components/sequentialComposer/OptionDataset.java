@@ -20,6 +20,7 @@ import ar.glyphsets.implicitgeometry.Valuer.Binary;
 import ar.rules.CategoricalCounts;
 import ar.util.Util;
 
+//TODO: Make the ARL definition generate the other defaults so they don't have to be kept in sync
 public final class OptionDataset<G,I> {	
 	public final String name;				//Name to appear in convenient locations
 	public final Glyphset<G,I> glyphset;	//Actual glyphset to load
@@ -27,6 +28,7 @@ public final class OptionDataset<G,I> {
 	public final Shaper<Indexed, G> shaper; //How shapes were determined
 	public final Valuer<Indexed, I> valuer; //How values were determined
 	public final OptionAggregator<? super I,?> defaultAggregator;
+	public final String arl;		//AR Language description 
 	public final List<OptionTransfer<?>> defaultTransfers;
 	public final Set<String> flags;	//Hints, allegations and other information about the data set
 	
@@ -35,18 +37,20 @@ public final class OptionDataset<G,I> {
 			String name, 
 			File file, 
 			Shaper<Indexed, G> shaper, 
-			Valuer<Indexed,I> valuer, 
+			Valuer<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
+			String arl,
 			OptionTransfer<?>... defTrans) {
-		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, Arrays.asList(defTrans), new HashSet<>());
+		this(name, new MemMapList<>(file, shaper, valuer), file, shaper, valuer, defAgg, arl, Arrays.asList(defTrans), new HashSet<>());
 	}
 	
 	public OptionDataset(
 			String name, 
 			Glyphset<G,I> glyphset,
 			OptionAggregator<? super I,?> defAgg,
+			String arl,
 			OptionTransfer<?>... defTrans) {
-		this(name, glyphset, null, null, null, defAgg, Arrays.asList(defTrans), new HashSet<>());
+		this(name, glyphset, null, null, null, defAgg, arl, Arrays.asList(defTrans), new HashSet<>());
 	}
 		
 	public OptionDataset(
@@ -54,6 +58,7 @@ public final class OptionDataset<G,I> {
 			Glyphset<G,I> glyphset,
 			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
+			String arl,
 			List<OptionTransfer<?>> defTrans,
 			Set<String> flags) {
 		this.name = name;
@@ -62,6 +67,7 @@ public final class OptionDataset<G,I> {
 		this.valuer = valuer;
 		this.glyphset = glyphset;
 		this.defaultAggregator = defAgg;
+		this.arl = arl;
 		this.defaultTransfers = defTrans;
 		this.flags = flags;
 	}
@@ -97,6 +103,7 @@ public final class OptionDataset<G,I> {
 					new Indexed.ToPoint(true, 0, 1),
 					new ToValue<>(2, new Binary<Integer,String>(0, "Hit", "Miss")),
 					OptionAggregator.COC_COMP,
+					"(seq(colorkey)(catInterpolate))",
 					new OptionTransfer.ColorKey(),
 					new OptionTransfer.ColorCatInterpolate());
 		} catch (Exception e) {temp = null;}
@@ -113,6 +120,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				OptionAggregator.MERGE_CATS,
+				"(seq(toCount)(spread)(fn,(log))(interpolate)))",
 				new OptionTransfer.Spread(),
 				new OptionTransfer.ToCount(),
 				new OptionTransfer.MathTransfer(),
@@ -135,6 +143,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
+				"(seq(colorkey)(catInterpolate))",
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
@@ -154,6 +163,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
+				"(seq(colorkey)(catInterpolate))",
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
@@ -173,6 +183,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.Constant<Indexed, Color>(Color.RED),
 				OptionAggregator.COUNT,
+				"(seq(fn(log))(interpolate))",
 				new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
@@ -189,26 +200,27 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.Constant<Indexed, Color>(Color.RED),
 				OptionAggregator.COUNT,
+				"(seq(fn(log))(interpolate))",
 				new OptionTransfer.MathTransfer(),
 				new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
 		KIVA = temp;
 	}
 	
-//	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
-//	static {
-//		OptionDataset<Rectangle2D, Color> temp;
-//		try {
-//			temp = new OptionDataset<>(
-//			"Circle Scatter",
-//			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
-//			OptionAggregator.COUNT,
-//			new OptionTransfer.Interpolate());
-//		} catch (Exception e) {temp = null;}
-//		CIRCLE_SCATTER = temp;
-//	}
-	
-	
+////	public static final OptionDataset<Rectangle2D, Color> CIRCLE_SCATTER;
+////	static {
+////		OptionDataset<Rectangle2D, Color> temp;
+////		try {
+////			temp = new OptionDataset<>(
+////			"Circle Scatter",
+////			GlyphsetUtils.autoLoad(new File("../data/circlepoints.csv"), .1, DynamicQuadTree.<Rectangle2D, Color>make()),
+////			OptionAggregator.COUNT,
+////			new OptionTransfer.Interpolate());
+////		} catch (Exception e) {temp = null;}
+////		CIRCLE_SCATTER = temp;
+////	}
+//	
+//	
 	public static final OptionDataset<Rectangle2D, Integer> CIRCLE_SCATTER;
 	static {
 		OptionDataset<Rectangle2D, Integer> temp;
@@ -219,6 +231,7 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToRect(.1,0,1),
 			new Valuer.Constant<Indexed, Integer>(1),
 			OptionAggregator.COUNT,
+			"(interpolate)",
 			new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
 		CIRCLE_SCATTER = temp;
@@ -232,7 +245,7 @@ public final class OptionDataset<G,I> {
 				String.format("Synthetic Points (%,d points)", size),
 				new SyntheticGlyphset<>(size, new SyntheticGlyphset.UniformPoints(), c->0),
 				OptionAggregator.COUNT,
+				"(interpolate)",
 				new OptionTransfer.Interpolate());
 	}
-
 }

@@ -62,6 +62,7 @@ public class SequentialComposer extends JPanel  {
 				source.shaper, 
 				source.valuer, 
 				source.defaultAggregator, 
+				source.arl,
 				source.defaultTransfers, 
 				source.flags);
 		

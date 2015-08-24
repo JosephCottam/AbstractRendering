@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -110,9 +111,9 @@ public class ARServer extends NanoHTTPD {
 		Object requesterID = params.getOrDefault("requesterID", Double.toString(Math.random()));
 		
 		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-		Transfer transfer = getTransferByList(params.getOrDefault("transfers", null), baseConfig.defaultTransfers);
+		Transfer transfer;
 		
-		try {transfer = params.containsKey("arl") ? parseTransfer(params.get("arl")) : transfer;}
+		try {transfer = params.containsKey("arl") ? parseTransfer(params.get("arl")) : defaultTransfer(baseConfig.defaultTransfers);}
 		catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
 		
         long start = System.currentTimeMillis();
@@ -320,15 +321,9 @@ public class ARServer extends NanoHTTPD {
 	}
 		
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public Transfer<?,?> getTransferByList(String transferIds, List<OptionTransfer<?>> def) {
-		List<OptionTransfer<?>> transfers = def;
-		
-		if (transferIds!=null && !transferIds.trim().equals("")) {
-			transfers = Arrays.stream(transferIds.split(";")).map(this::getTransfer).collect(Collectors.toList());
-		} else {
-			transfers = new ArrayList<>();
-			transfers.addAll(def);
-		}
+	public Transfer<?,?> defaultTransfer(List<OptionTransfer<?>> def) {
+		List<OptionTransfer<?>> transfers = new ArrayList();
+		transfers.addAll(def);
 		
 		Collections.reverse(transfers);
 		Transfer<?,?> t=null;
@@ -380,11 +375,6 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 
-	public OptionTransfer<?> getTransfer(String transfer) {
-		if (!TRANSFERS.containsKey(transfer)) {throw new IllegalArgumentException("Could not find indicated transfer: " + transfer);}
-		return TRANSFERS.get(transfer);
-	}
-
 	/**Get an item from the parameters dictionary. 
 	 * If it is not present, return an exception with the given error message.**/ 
 	public String errorGet(Map<String,String> params, String key) {
@@ -397,8 +387,8 @@ public class ARServer extends NanoHTTPD {
 	public Collection<String> getTransfers() {return TRANSFERS.keySet();}
 	
 	/**@return collection of known transfer names**/
-	public Collection<String> getAggregators() {return getFieldsOfType(OptionAggregator.class, OptionAggregator.class);}
-	public Collection<String> getDatasets() {return getFieldsOfType(OptionDataset.class, OptionDataset.class);}
+	public Collection<Field> getAggregators() {return getFieldsOfType(OptionAggregator.class, OptionAggregator.class);}
+	public Collection<Field> getDatasets() {return getFieldsOfType(OptionDataset.class, OptionDataset.class);}
 	
 	public Collection<String> getContainedClasses(Class<?> source, Class<?> type) {
 		return Arrays.stream(source.getClasses())
@@ -416,16 +406,21 @@ public class ARServer extends NanoHTTPD {
 						   catch (Throwable e) {return false;}};
 	}
 	
-	public Collection<String> getFieldsOfType(Class<?> source, Class<?> type) {
+	public static  String getArl(Field f) {
+		 try {return ((OptionDataset) f.get(null)).arl;}
+		 catch (Throwable e) {return "null";}
+	}
+
+	
+	public Collection<Field> getFieldsOfType(Class<?> source, Class<?> type) {
 		return Arrays.stream(source.getFields())
 				.filter(f -> f.getType().equals(type))
 				.filter(loaded(source))
-				.map(f -> f.getName())
 				.collect(Collectors.toList());
 	}
 	
-	private String asList(Collection<String> items, String format) {
-		return "<ul>" + items.stream().map(e -> String.format(format, e)).collect(Collectors.joining("\n")) + "</ul>\n\n";
+	private String asList(Collection<Field> items, Function<Field, Object[]> toString, String format) {
+		return "<ul>" + items.stream().map(toString).map(e -> String.format(format, e)).collect(Collectors.joining("\n")) + "</ul>\n\n";
 	}
 	public Response help() {
 		
@@ -434,7 +429,7 @@ public class ARServer extends NanoHTTPD {
 					+ "Simple interface to the default configurations in the extended AR demo application (ar.ap)p.components.sequentialComposer)<br>"
 					+ "The path sets the base configuration, query parameters modify that configuration.<br>"
 					+ "URL Format:  host\\base-configuration&...<br><br>"
-					+ "\nBase-Configurations: one of --\n" + asList(getDatasets(), "<li><a href='%1$s'>%1$s</a></li>") + "<br><br>" 
+					+ "\nBase-Configurations: one of --\n" + asList(getDatasets(), f->new Object[]{f.getName()}, "<li><a href='%1$s'>%1$s</a></li>") + "<br><br>" 
 					+ "Query Paramters ----------------<br>"
 					+ "width/height: Set in pixels, directly influencing zoom (as there is it always runs a 'zoom fit')<br>"
 					+ "format: either 'png' or 'json'<br>"
@@ -446,11 +441,12 @@ public class ARServer extends NanoHTTPD {
 					+ "enhance: x;y;w;h -- Sets a clip-rectangle for specialization in bin coordinates<br><br>"
 					+ "select and latlon have may process values outside of the specified bounding rectangles<br><br>"
 					+ "arl: AR-language string (see below for details)<br>\n" 
-					+ "aggregator: one of--\n" + asList(getAggregators(), "<li>%s</li>") + "\n\n"
-					+ "transfers:  (depricated, use 'arl' instead) semi-colon separated list of-- \n" + asList(getTransfers(), "<li>%s</li>") + "\n\n"
+					+ "aggregator: one of--\n" + asList(getAggregators(), f->new Object[]{f.getName()}, "<li>%s</li>") + "\n\n"
 					+ "<hr>"
 					+ "<h3>AR Language:</h3>"
 					+ Parser.basicHelp("<br>") + "<br><br>"
+					+ "A few examples (base configurations with the transfer spelled out):\n"
+					+ asList(getDatasets(), f->new String[]{f.getName(), getArl(f)},"<li><a href='%1$s?arl=%2$s'>%1$s</a></li>") + "<br><br>" 
 					+ "Available functions:<br>"
 					+ Parser.functionHelp(BasicLibrary.ALL, "<li>%s</li>", "\n");
 				
