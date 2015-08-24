@@ -52,9 +52,13 @@ public class LangTest {
 	}
 	
 	@Test
-	public void reifyNested() {
+	public void reifyFunctions() {
 		assertThat(reify(parse("(rgb 0 0 0)"), LIBRARY), is(new Color(0,0,0)));
 		assertThat(reify(parse("(rgb 255 255 255)"), LIBRARY), is(new Color(255,255,255)));
 		assertThat(reify(parse("(string (space) 255 255 255)"), LIBRARY), is("255 255 255"));
+		assertThat(reify(parse("(color,RED)"), LIBRARY), is(Color.RED));
+		assertThat(reify(parse("(color,red)"), LIBRARY), is(Color.RED));
+		assertThat(reify(parse("(color,Red)"), LIBRARY), is(Color.RED));
+		assertThat(reify(parse("(color,rEd)"), LIBRARY), is(Color.RED));
 	}
 }
