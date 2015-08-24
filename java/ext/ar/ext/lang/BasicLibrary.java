@@ -106,7 +106,7 @@ public class BasicLibrary {
 				args -> new Categories.DynamicRekey<>(
 								new CategoricalCounts<>(Util.COLOR_SORTER), 
 								get(args, 0, CABLE_COLORS), 
-								get(args, args.size()-1, Color.BLACK)));
+								get(args, args.size() > 1? args.size()-1 : -1, Color.BLACK)));
 
 		put(COMMON, "keyPercent",  "Color one way if a key category is over the threshold.", 
 				args ->  new Categories.KeyPercent<Color>(
