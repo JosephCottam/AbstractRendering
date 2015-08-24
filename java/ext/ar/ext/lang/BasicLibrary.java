@@ -20,10 +20,28 @@ import ar.rules.combinators.Combinators;
 import ar.rules.combinators.Seq;
 import ar.util.Util;
 
+/**Collections of transfer functions and related support functions.**/
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class BasicLibrary {	
+	/**Utility for storing functions with some documentation.**/
+	public static final class FunctionRecord<T> implements Function<List<Object>, T> {
+		public final String name;
+		public final String help;
+		public final Function<List<Object>, T> fn;
+		public FunctionRecord(String name, String help, Function<List<Object>, T> fn) {
+			this.name = name;
+			this.help = help;
+			this.fn = fn;
+		}
+		
+		@Override public int hashCode() {return name.hashCode();}
+		@Override public boolean equals(Object other) {return other instanceof FunctionRecord && this.name.equals(((FunctionRecord<?>) other).name);}
+		@Override public T apply(List<Object> args) {return fn.apply(args);}
+		@Override public String toString() {return name + ": " + help;}
+	}
+	
 	private static final <T> void put(Map<String, Function<List<Object>, T>> map, String name, String help, Function<List, T> fn) {
-		map.put(name, new Parser.FunctionRecord(name, help, fn));
+		map.put(name, new FunctionRecord(name, help, fn));
 	}
 
 	

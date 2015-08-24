@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import static java.util.stream.Collectors.*;
 
+/**Central utilities for AR language.**/
 public class Parser {
 	public static class TreeNode<A> implements Iterable<TreeNode<A>> {
 		  private Optional<A> value;
@@ -117,23 +118,6 @@ public class Parser {
 	
 	public static TreeNode<String> parse(String input) {return parseTree(tokens(input));}
 	
-	
-	/**Utility for storing functions with some documentation.**/
-	public static final class FunctionRecord<T> implements Function<List<Object>, T> {
-		public final String name;
-		public final String help;
-		public final Function<List<Object>, T> fn;
-		public FunctionRecord(String name, String help, Function<List<Object>, T> fn) {
-			this.name = name;
-			this.help = help;
-			this.fn = fn;
-		}
-		
-		@Override public int hashCode() {return name.hashCode();}
-		@Override public boolean equals(Object other) {return other instanceof FunctionRecord && this.name.equals(((FunctionRecord<?>) other).name);}
-		@Override public T apply(List<Object> args) {return fn.apply(args);}
-		@Override public String toString() {return name + ": " + help;}
-	}
 	
 	/**Create a help string for the language, including information on the function library passed in.
 	 * Returns two lists of strings.  The first is a brief description of syntax/semantics.  
