@@ -119,10 +119,9 @@ public class BasicLibrary {
 		put(COMMON, "const", "Return a specific value everywhere.", 
 				args -> new General.Const<>(get(args, 0, 1)));
 		
-		put(COMMON, "fn", "Apply the passed function everywhere.  Useful for mathematical transformations.",
-				args -> new General.TransferFn<>(
-								get(args, 0, (Object a) -> (Number) a), 
-								get(args, 1, (Number) 0d)));
+		put(COMMON, "fn", "Apply the passed function everywhere.  Unlike most things, you MUST supply a first argument and for non-double return functions, you must also supply the second argument..",
+				args -> new General.TransferFn((Function) args.get(0), get(args, 1, 0d)));
+		
 		put(COMMON, "string", "Make a list of symbols into a string, separated by item in the first argument",
 				args ->
 					args.size() == 0 
@@ -191,7 +190,7 @@ public class BasicLibrary {
 	public static final  Map<String, Function<List<Object>, Object>> ALL = new HashMap<>();
 	static {
 		ALL.putAll(COMMON);
-		ALL.putAll((Map<? extends String, ? extends Function<List<Object>, Object>>) MATH);
+		ALL.putAll((Map<? extends String, ? extends Function<List<Object>, Object>>) (Map) MATH);
 		ALL.putAll(COLOR);
 		ALL.putAll(SPREAD);
 		ALL.putAll(ADVISE);

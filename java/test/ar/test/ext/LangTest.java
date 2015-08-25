@@ -3,6 +3,7 @@ package ar.test.ext;
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -63,9 +64,13 @@ public class LangTest {
 		assertThat(reify(parse("(color,rEd)"), LIBRARY), is(Color.RED));
 	}
 	
-	@Test
+	
+	@Test 
 	public void refiyFunctionsWithDefaults() {
+		List<String> exclude = Arrays.asList("fn");	
 		for (String key: BasicLibrary.ALL.keySet()) {
+			if (exclude.contains(key)) {continue;}
+			
 			Object reified = reify(parse("("+key+")"), BasicLibrary.ALL);
 			assertThat("Reifying " + key, reified, is(notNullValue()));
 			assertThat(reified, instanceOf(BasicLibrary.ALL.get(key).apply(Collections.emptyList()).getClass()));
