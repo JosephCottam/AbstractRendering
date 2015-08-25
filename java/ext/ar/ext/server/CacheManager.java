@@ -33,7 +33,9 @@ public class CacheManager {
 		this.tileSize = tileSize;
 	}
 	
-
+	public int tileSize() {return tileSize;}
+	
+	
 	/**Which tiles are visible in the viewport, given the view transform.**/
 	public List<File> files(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle viewport) {
 		Path base = root(datasetId, aggregator, vt);
@@ -53,6 +55,8 @@ public class CacheManager {
 		return base.resolve(file).toFile();
 	}
 	
+	/**Computes the bounds for tiles in a render space. 
+	 * ASSUMES renderBounds is aligned to the tileSize (use renderBounds).**/
 	public List<Rectangle> tileBounds(Rectangle renderBounds) {
 		List<Rectangle> tiles = new ArrayList<>();
 		int highX = renderBounds.x+renderBounds.width;
@@ -71,8 +75,8 @@ public class CacheManager {
 		try {viewbounds = vt.createInverse().createTransformedShape(viewport).getBounds();
 		} catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
 		
-		int lowX = (int) (viewbounds.getMinX() - (viewbounds.getMinX()%tileSize));
-		int lowY = (int) (viewbounds.getMinY() - (viewbounds.getMinY()%tileSize));
+		int lowX = viewbounds.x - ((viewbounds.x%tileSize) + (viewbounds.x >= 0 ? 0 : tileSize));
+		int lowY = viewbounds.y - ((viewbounds.y%tileSize) + (viewbounds.y >= 0 ? 0 : tileSize));
 		int highX = (int) (viewbounds.getMaxX() + (tileSize - (viewbounds.getMaxX()%tileSize)));
 		int highY = (int) (viewbounds.getMaxY() + (tileSize - (viewbounds.getMaxY()%tileSize)));
 		

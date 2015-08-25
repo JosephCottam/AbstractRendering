@@ -541,6 +541,7 @@ public class ARServer extends NanoHTTPD {
 		boolean clearCache = Boolean.parseBoolean(ar.util.Util.argKey(args, "-clearCache", "false"));
 		
 		
+		//TODO: Move directory management things to the cache manager
 		if (clearCache) {
 			System.out.println("## Clearing the cache.");
 			Files.walkFileTree(cachedir.toPath(), 
