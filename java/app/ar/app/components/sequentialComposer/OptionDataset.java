@@ -103,7 +103,7 @@ public final class OptionDataset<G,I> {
 					new Indexed.ToPoint(true, 0, 1),
 					new ToValue<>(2, new Binary<Integer,String>(0, "Hit", "Miss")),
 					OptionAggregator.COC_COMP,
-					"(seq(colorkey)(catInterpolate))",
+					"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
 					new OptionTransfer.ColorKey(),
 					new OptionTransfer.ColorCatInterpolate());
 		} catch (Exception e) {temp = null;}
@@ -120,7 +120,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				OptionAggregator.MERGE_CATS,
-				"(seq(toCount)(spread)(fn(log))(interpolate)))",
+				"(seq(toCount)(spread)(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.Spread(),
 				new OptionTransfer.ToCount(),
 				new OptionTransfer.MathTransfer(),
@@ -143,7 +143,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
-				"(seq(colorkey)(catInterpolate))",
+				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
@@ -163,7 +163,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
-				"(seq(colorkey)(catInterpolate))",
+				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
@@ -183,7 +183,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.Constant<Indexed, Color>(Color.RED),
 				OptionAggregator.COUNT,
-				"(seq(fn(log))(interpolate))",
+				"(seq(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
@@ -200,7 +200,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.Constant<Indexed, Color>(Color.RED),
 				OptionAggregator.COUNT,
-				"(seq(fn(log))(interpolate))",
+				"(seq(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.MathTransfer(),
 				new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
@@ -231,21 +231,21 @@ public final class OptionDataset<G,I> {
 			new Indexed.ToRect(.1,0,1),
 			new Valuer.Constant<Indexed, Integer>(1),
 			OptionAggregator.COUNT,
-			"(interpolate)",
+			"(interpolate(color,pink)(color,red)(color,clear))",
 			new OptionTransfer.Interpolate());
 		} catch (Exception e) {temp = null;}
 		CIRCLE_SCATTER = temp;
 	}
 
 	
-	private static int SYNTHETIC_POINT_COUNT = 100_000_000;
+	private static int SYNTHETIC_POINT_COUNT = 1_000_000;
 	public static  OptionDataset<Point2D, Integer> SYNTHETIC = syntheticPoints(SYNTHETIC_POINT_COUNT);
 	public static OptionDataset<Point2D, Integer> syntheticPoints(int size) {
 		return new OptionDataset<>(
 				String.format("Synthetic Points (%,d points)", size),
 				new SyntheticGlyphset<>(size, new SyntheticGlyphset.UniformPoints(), c->0),
 				OptionAggregator.COUNT,
-				"(interpolate)",
+				"(interpolate(color,pink)(color,red)(color,clear))",
 				new OptionTransfer.Interpolate());
 	}
 }

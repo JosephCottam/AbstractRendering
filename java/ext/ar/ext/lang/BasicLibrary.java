@@ -68,7 +68,7 @@ public class BasicLibrary {
 		put(COLOR, "cableColors", "Colors based on the racial dot map.", args->CABLE_COLORS);
 		put(COLOR, "brewer12", "Palette based on ColorBrewer 12 item categorical.", args->BREWER12);
 		put(COLOR, "redBlue", "A useful red and blue.", args->RED_BLUE);
-
+		
 		put(COLOR, "rgb", "Color from 0-255 RGB values. Fourth alpha value is also acceptible.",
 				args -> new Color(get(args, 0, 0), get(args, 1, 0), get(args, 2, 0), get(args, 3, 255)));
 
@@ -88,13 +88,16 @@ public class BasicLibrary {
 									get(args, 3, 0d), 
 									get(args, 4, 1d), 
 									get(args, 2, Util.CLEAR))
-							: new Numbers.Interpolate<>(get(args, 0, CSS.get("pink")), get(args, 1, Color.RED), get(args, 2, Util.CLEAR)));
+							: new Numbers.Interpolate<>(
+									get(args, 0, CSS.get("pink")), 
+									get(args, 1, Color.RED), 
+									get(args, 2, Util.CLEAR)));
 		
 		put(COMMON, "catInterpolate", "Interpolate across multiple cateogories (category labels must be colors).",
 				args -> new Categories.HighDefAlpha(get(args, 0, Util.CLEAR), get(args, 1, .1), get(args, 2, true)));
 
 		put(COMMON, "present", "Fill areas with non-default value one color, and default value another.", 
-				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 0, Color.WHITE)));
+				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 1, Color.WHITE)));
 		
 		put(COMMON, "toCount", "Take mulit-category counts and combine them to a single set of counts.", 
 				args -> new Categories.ToCount<>());
@@ -353,5 +356,6 @@ public class BasicLibrary {
 		CSS.put("White", Color.decode("#FFFFFF"));
 		CSS.put("WhiteSmoke", Color.decode("#F5F5F5"));
 		CSS.put("Yellow", Color.decode("#FFFF00"));
+		CSS.put("Clear", Util.CLEAR);
 	}
 }
