@@ -12,10 +12,13 @@ import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,8 +32,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.apache.avro.generic.GenericRecord;
-
 import ar.Aggregates;
 import ar.Aggregator;
 import ar.Renderer;
@@ -43,7 +44,6 @@ import ar.app.components.sequentialComposer.OptionAggregator;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
-import ar.ext.avro.Converters;
 import ar.ext.lang.BasicLibrary;
 import ar.ext.lang.Parser;
 import ar.ext.server.NanoHTTPD.Response.Status;
@@ -51,7 +51,6 @@ import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
 import ar.rules.General;
@@ -64,14 +63,14 @@ public class ARServer extends NanoHTTPD {
 	public static final int DEFAULT_PORT = 6582; //In ascii A=65, R=82
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
 
-	private final Path cachedir;
 	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
+	private final CacheManager cache;
 
 	public ARServer(String hostname) {this(hostname, DEFAULT_PORT);}
 	public ARServer(String hostname, int port) {this(hostname, port, new File("./cache"));}
 	public ARServer(String hostname, int port, File cachedir) {
 		super(hostname, port);
-		this.cachedir = cachedir.toPath();
+		cache = new CacheManager(cachedir, 500);
 	}
 
 	
@@ -118,8 +117,9 @@ public class ARServer extends NanoHTTPD {
 		
         long start = System.currentTimeMillis();
         Response rsp;
+        Rectangle viewport = new Rectangle(0,0,width,height);
         try {
-        	rsp = execute(format, width, height, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, allowStretch);
+        	rsp = execute(format, viewport, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, allowStretch);
         } finally { 
             long end = System.currentTimeMillis();
             System.out.printf("## Excution time: %d ms%n", (end-start));
@@ -127,7 +127,8 @@ public class ARServer extends NanoHTTPD {
         return rsp;
 	}
 		
-	private <G,I,A,OUT> Response execute(String format, int width, int height, 
+	private <G,I,A,OUT> Response execute(String format, 
+			Rectangle viewport,
 			Aggregator<I,A> agg,
 			Transfer<A,OUT> transfer,
 			OptionDataset<G,I> baseConfig,
@@ -168,11 +169,11 @@ public class ARServer extends NanoHTTPD {
 			AffineTransform vt;
 			Rectangle2D renderBounds;
 			if (!allowStretch) {
-				vt = centerFit(zoomBounds, width, height);
-				renderBounds = expandSelection(vt, zoomBounds, width, height);
+				vt = centerFit(zoomBounds, viewport);
+				renderBounds = expandSelection(vt, zoomBounds, viewport);
 				zoomBounds = renderBounds;
 			} else {
-				vt = stretchFit(zoomBounds, width, height);
+				vt = stretchFit(zoomBounds, viewport);
 				renderBounds = zoomBounds;
 			}
  			
@@ -185,15 +186,16 @@ public class ARServer extends NanoHTTPD {
 			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
 			
-			File cacheFile = cacheFile(baseConfig, vt, agg);
-			Optional<Aggregates<A>> cached = !ignoreCached ? loadCached(cacheFile, baseConfig, vt, agg) : Optional.empty();
+			Optional<Aggregates<A>> cached = !ignoreCached ? cache.loadCached(baseConfig.name, agg, vt, viewport) : Optional.empty();
 			
 			Aggregates<A> aggs;
 			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
-			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
+			if (!ignoreCached && !cached.isPresent()) {
+				cache.save(baseConfig.name, agg, vt, aggs);
+			} 
 			
 			System.out.println("## Executing transfer");
  			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
@@ -239,13 +241,13 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	/**Zoom fit, but align the center of the bounding region (not top-left, as Util.zoomFit does)**/
-	public AffineTransform stretchFit(Rectangle2D content, int width, int height) {
+	public AffineTransform stretchFit(Rectangle2D content, Rectangle viewport) {
 		if (content == null) {return new AffineTransform();}
 
-		double ws = width/content.getWidth();
-		double hs = height/content.getHeight();
-		double xmargin = width/ws-content.getWidth();
-		double ymargin = height/hs-content.getHeight();
+		double ws = viewport.width/content.getWidth();
+		double hs = viewport.height/content.getHeight();
+		double xmargin = viewport.width/ws-content.getWidth();
+		double ymargin = viewport.height/hs-content.getHeight();
 		double tx = content.getMinX()-(xmargin/2);
 		double ty = content.getMinY()-(ymargin/2);
 
@@ -256,13 +258,13 @@ public class ARServer extends NanoHTTPD {
 
 	
 	/**Zoom fit, but align the center of the bounding region (not top-left, as Util.zoomFit does)**/
-	public AffineTransform centerFit(Rectangle2D bounds, int width, int height) {
-		AffineTransform vt = Util.zoomFit(bounds, width, height);
+	public AffineTransform centerFit(Rectangle2D bounds, Rectangle viewport) {
+		AffineTransform vt = Util.zoomFit(bounds, viewport.width, viewport.height);
 		Rectangle2D fit = vt.createTransformedShape(bounds).getBounds2D();
 		
 		
 		try {
-			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0, width - fit.getWidth(), height - fit.getHeight()))).getBounds2D();
+			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0,  viewport.width - fit.getWidth(),  viewport.height - fit.getHeight()))).getBounds2D();
 			double dtx = remainder.getWidth();
 			double dty = remainder.getHeight();
 			vt.translate(dtx/2, dty/2);
@@ -271,11 +273,11 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	/**Expand the given bounds so it fills width/height region under the given view transform**/
-	public Rectangle2D expandSelection(AffineTransform vt, Rectangle2D bounds, int width, int height) {
+	public Rectangle2D expandSelection(AffineTransform vt, Rectangle2D bounds, Rectangle viewport) {
 		Rectangle2D selection = vt.createTransformedShape(bounds).getBounds2D();
 		//TODO: Does not account for shear...so not fully general
 		try {
-			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0,width-selection.getWidth(), height-selection.getHeight()))).getBounds2D();
+			Rectangle2D remainder = vt.createInverse().createTransformedShape((new Rectangle2D.Double(0,0, viewport.width-selection.getWidth(),  viewport.height-selection.getHeight()))).getBounds2D();
 			double dtx = remainder.getWidth();
 			double dty = remainder.getHeight();
 			Rectangle2D newBounds = new Rectangle2D.Double(bounds.getX()-dtx/2, bounds.getY()-dty/2, bounds.getWidth()+dtx, bounds.getHeight()+dty);
@@ -283,43 +285,6 @@ public class ARServer extends NanoHTTPD {
 		} catch (Exception e) {throw new RuntimeException("Specified view cannot be realized.");}
 	}
 	
-	public File cacheFile(OptionDataset<?,?> config, AffineTransform vt, Aggregator<?,?> agg) {
-		String datasetId = config.name;
-		String aggId = agg.getClass().getSimpleName();
-		Rectangle renderBounds = vt.createTransformedShape(config.glyphset.bounds()).getBounds();
-		
-		int width = (renderBounds.width/10)*10;
-		int height = (renderBounds.height/10)*10;
-		
-		String base = Arrays.stream(new String[]{datasetId, aggId, Integer.toString(width), Integer.toString(height)}).collect(Collectors.joining("-"));
-		return cachedir.resolve(base + ".avsc").toFile();
-	}
-	
-	
-	//TODO: Add View transform (or derivative) to cache info?
-	public <A> Optional<Aggregates<A>> loadCached(File cacheFile, OptionDataset<?,?> baseConfig, AffineTransform vt, Aggregator<?,A> aggregator) {		
-		if (!cacheFile.exists()) {return Optional.empty();}
-		
-		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
-		
-		try {
-			System.out.println("## Loading cached aggregates.");
-			Aggregates<A> aggs = AggregateSerializer.deserialize(cacheFile, converter);
-			
-			Rectangle projected = vt.createTransformedShape(baseConfig.glyphset.bounds()).getBounds();
-
-			boolean renderMatches = (aggs.highX()-aggs.lowX() == projected.width|| aggs.highY()-aggs.lowY() == projected.height);
-			if (renderMatches) {return Optional.of(aggs);} 
-			else {
-				System.out.println("## Render match failed, scraping cached aggegates. " + projected);
-				return Optional.empty();}
-		} catch (Exception e) {
-			System.err.println("## Cache located for " + cacheFile + ", but error deserializing.");
-			e.printStackTrace();
-			return Optional.empty();
-		}
-	}
-		
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Transfer<?,?> defaultTransfer(List<OptionTransfer<?>> def) {
 		List<OptionTransfer<?>> transfers = new ArrayList();
@@ -331,19 +296,7 @@ public class ARServer extends NanoHTTPD {
 			t = option.transfer(option.control(null), t);
 		}
 		return t;
-	}
-	
-	
-	
-	public <A> void cache(Aggregates<A> aggs, File cacheFile) {		
-		try {
-			System.out.println("## Saving aggregates to cache.");
-			AggregateSerializer.serialize(aggs, new FileOutputStream(cacheFile));
-		} catch (IOException e) {
-			System.err.println("## Error saving to cache file " + cacheFile);
-			e.printStackTrace();
-		}
-	}
+	}	
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <A> Aggregates<A> aggregate(Renderer render, Glyphset glyphs, Aggregator agg, AffineTransform view) {
@@ -585,7 +538,26 @@ public class ARServer extends NanoHTTPD {
 		String host = ar.util.Util.argKey(args, "-host", "localhost");
 		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
 		File cachedir = new File(ar.util.Util.argKey(args, "-cache", "./cache"));
+		boolean clearCache = Boolean.parseBoolean(ar.util.Util.argKey(args, "-clearCache", "false"));
 		
+		
+		if (clearCache) {
+			System.out.println("## Clearing the cache.");
+			Files.walkFileTree(cachedir.toPath(), 
+					new SimpleFileVisitor<Path>(){
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
+							Files.deleteIfExists(file);
+							return FileVisitResult.CONTINUE;
+						}
+						
+						@Override
+						public FileVisitResult postVisitDirectory(Path file, IOException exc) throws IOException {
+							Files.deleteIfExists(file);
+							return FileVisitResult.CONTINUE;
+						}
+					});
+		}
 		if (!cachedir.exists()) {cachedir.mkdirs();}
 		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
 				
