@@ -446,7 +446,7 @@ public class ARServer extends NanoHTTPD {
 					+ "<h3>AR Language:</h3>"
 					+ Parser.basicHelp("<br>") + "<br><br>"
 					+ "A few examples (base configurations with the transfer spelled out):\n"
-					+ asList(getDatasets(), f->new String[]{f.getName(), getArl(f)},"<li><a href='%1$s?arl=%2$s'>%1$s</a></li>") + "<br><br>" 
+					+ asList(getDatasets(), f->new String[]{f.getName(), getArl(f)},"<li><a href='%1$s?arl=%2$s'>%1$s?arl=%2$s</a></li>") + "<br><br>" 
 					+ "Available functions:<br>"
 					+ Parser.functionHelp(BasicLibrary.ALL, "<li>%s</li>", "\n");
 				

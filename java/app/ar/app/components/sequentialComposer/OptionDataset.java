@@ -120,7 +120,7 @@ public final class OptionDataset<G,I> {
 				new Indexed.ToPoint(false, 0, 1),
 				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				OptionAggregator.MERGE_CATS,
-				"(seq(toCount)(spread)(fn,(log))(interpolate)))",
+				"(seq(toCount)(spread)(fn(log))(interpolate)))",
 				new OptionTransfer.Spread(),
 				new OptionTransfer.ToCount(),
 				new OptionTransfer.MathTransfer(),

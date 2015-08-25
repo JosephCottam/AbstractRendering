@@ -136,6 +136,11 @@ public class Parser {
 				"All expression arguments are evaluated before the function call is made.",
 				"For example (RGB 0 0 0) makes the color black. RGB is the function, 0 is a numeric literal.",
 				"Whitespace and comma are the separators.  All seperators are equal, so (RGB,0,0,0) works just as well.",
+				"",
+				"The most common problem is forgetting to place a singleton in call position.",
+				"For example, if the 'fn' function takes another function as its argument and 'log' is a function.",
+			    "'(fn log)' will not work because it is applying fn to the symbol 'log'.",
+			    "In contrast, '(fn(log))' does work because log is reified into a function."  
 		};
 		return Arrays.stream(basics).collect(Collectors.joining(lineSep)); 
 	}
