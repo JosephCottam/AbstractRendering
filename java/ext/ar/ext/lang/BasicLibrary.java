@@ -124,7 +124,10 @@ public class BasicLibrary {
 								get(args, 0, (Object a) -> (Number) a), 
 								get(args, 1, (Number) 0d)));
 		put(COMMON, "string", "Make a list of symbols into a string, separated by item in the first argument",
-				args -> args.subList(1, args.size()).stream().map(s -> s.toString()).collect(Collectors.joining(args.get(0).toString())));
+				args ->
+					args.size() == 0 
+							? ""
+							: args.subList(1, args.size()).stream().map(s -> s.toString()).collect(Collectors.joining(args.get(0).toString())));
 		
 		put(COMMON, "space", "Returns a single space...needed because there are no string literals.", args -> " ");
 	}

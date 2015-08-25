@@ -3,6 +3,7 @@ package ar.test.ext;
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,5 +61,24 @@ public class LangTest {
 		assertThat(reify(parse("(color,red)"), LIBRARY), is(Color.RED));
 		assertThat(reify(parse("(color,Red)"), LIBRARY), is(Color.RED));
 		assertThat(reify(parse("(color,rEd)"), LIBRARY), is(Color.RED));
+	}
+	
+	@Test
+	public void refiyFunctionsWithDefaults() {
+		for (String key: BasicLibrary.ALL.keySet()) {
+			Object reified = reify(parse("("+key+")"), BasicLibrary.ALL);
+			assertThat("Reifying " + key, reified, is(notNullValue()));
+			assertThat(reified, instanceOf(BasicLibrary.ALL.get(key).apply(Collections.emptyList()).getClass()));
+		}
+	}
+	
+	@Test
+	public void urlSafe() {
+		for(String key: BasicLibrary.ALL.keySet()) {
+			assertFalse(key.contains(" "));
+			assertFalse(key.contains("+"));
+			assertFalse(key.contains("&"));
+			assertFalse(key.contains("#"));
+		}
 	}
 }

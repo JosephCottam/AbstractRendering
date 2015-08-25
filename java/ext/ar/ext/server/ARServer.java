@@ -407,7 +407,7 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 	public static  String getArl(Field f) {
-		 try {return ((OptionDataset) f.get(null)).arl;}
+		 try {return ((OptionDataset<?,?>) f.get(null)).arl;}
 		 catch (Throwable e) {return "null";}
 	}
 
