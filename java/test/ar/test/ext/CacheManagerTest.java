@@ -43,12 +43,11 @@ public class CacheManagerTest {
 		AffineTransform vt = new AffineTransform();
 		CacheManager m = new CacheManager(new File("cache"), 100);
 		
-//		assertThat(m.renderBounds(vt, new Rectangle(0,0,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
-//		assertThat(m.renderBounds(vt, new Rectangle(0,0,101,101)), is(new Rectangle(0,0,m.tileSize()*2,m.tileSize()*2)));
-//		assertThat(m.renderBounds(vt, new Rectangle(1,1,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
-//		assertThat(m.renderBounds(vt, new Rectangle(-1,-1,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize()*2,m.tileSize()*2)));
+		assertThat(m.renderBounds(vt, new Rectangle(0,0,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
+		assertThat(m.renderBounds(vt, new Rectangle(0,0,101,101)), is(new Rectangle(0,0,m.tileSize()*2,m.tileSize()*2)));
+		assertThat(m.renderBounds(vt, new Rectangle(1,1,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
+		assertThat(m.renderBounds(vt, new Rectangle(-1,-1,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize()*2,m.tileSize()*2)));
 		assertThat(m.renderBounds(vt, new Rectangle(-10,-10,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize(),m.tileSize())));
-		
 	}
 	
 }

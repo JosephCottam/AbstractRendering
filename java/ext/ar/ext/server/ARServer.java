@@ -193,9 +193,7 @@ public class ARServer extends NanoHTTPD {
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
-			if (!ignoreCached && !cached.isPresent()) {
-				cache.save(baseConfig.name, agg, vt, aggs);
-			} 
+			if (!ignoreCached && !cached.isPresent()) {cache.save(baseConfig.name, agg, vt, aggs);}
 			
 			System.out.println("## Executing transfer");
  			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;

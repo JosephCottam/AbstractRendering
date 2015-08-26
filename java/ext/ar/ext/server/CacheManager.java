@@ -3,6 +3,7 @@ package ar.ext.server;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class CacheManager {
 
 	/**Root directory for the view/data/aggregator combination cache.**/
 	public Path root(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
-		return cacheRoot.resolve(datasetId).resolve(aggregator.toString()).resolve(Double.toString(vt.getScaleX())).resolve(Double.toString(vt.getScaleY()));
+		//HACK: Using the aggregator class name ignores parameters...and can cause cross-package conflicts...
+		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(Double.toString(vt.getScaleX())).resolve(Double.toString(vt.getScaleY()));
 	}
 
 	/**Given a tile bound, what is the file name?**/
@@ -70,15 +72,27 @@ public class CacheManager {
 		return tiles;
 	}
 	
+	
+	private static int roundTowardZero(int v, int size) {return v - (v%size);}
+	private static int roundAwayZero(int v, int size) {return v + (size - (v%size));}
 	public Rectangle renderBounds(AffineTransform vt, Rectangle viewport) {
-		Rectangle viewbounds;
-		try {viewbounds = vt.createInverse().createTransformedShape(viewport).getBounds();
-		} catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
+		Rectangle viewbounds;	//Graphics coordinates covered by the viewport under the view transform
+		Rectangle2D tile;		//Graphics coordinates covered by a single tile under the view transform
+		try {
+			AffineTransform ivt = vt.createInverse();
+			tile = ivt.createTransformedShape(new Rectangle(0,0,tileSize, tileSize)).getBounds2D();  //HACK: ignores shear
+			viewbounds = vt.createInverse().createTransformedShape(viewport).getBounds();}
+		catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
 		
-		int lowX = viewbounds.x - ((viewbounds.x%tileSize) + (viewbounds.x >= 0 ? 0 : tileSize));
-		int lowY = viewbounds.y - ((viewbounds.y%tileSize) + (viewbounds.y >= 0 ? 0 : tileSize));
-		int highX = (int) (viewbounds.getMaxX() + (tileSize - (viewbounds.getMaxX()%tileSize)));
-		int highY = (int) (viewbounds.getMaxY() + (tileSize - (viewbounds.getMaxY()%tileSize)));
+		int lowX = viewbounds.x;
+		int lowY = viewbounds.y;
+		int highX = viewbounds.x + viewbounds.width;
+		int highY = viewbounds.y + viewbounds.height;
+		
+		lowX = lowX >=0 ? roundTowardZero(lowX, tileSize) : roundAwayZero(lowX, -tileSize);
+		lowY = lowY >=0 ? roundTowardZero(lowY, tileSize) : roundAwayZero(lowY, -tileSize);
+		highX = highX >=0 ? roundAwayZero(highX, tileSize) : roundTowardZero(highX, -tileSize);
+		highY = highY >=0 ? roundAwayZero(highY, tileSize) : roundTowardZero(highY, -tileSize);
 		
 		return new Rectangle(lowX, lowY, highX-lowX, highY-lowY);
 	}
@@ -93,6 +107,7 @@ public class CacheManager {
 	public <A> Optional<Aggregates<A>> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
 		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
+		System.out.printf("Calc files with %s and %s%n", vt, viewport);
 		List<File> files = files(datasetId, aggregator, vt, viewport);
 		Rectangle renderBounds = renderBounds(vt, viewport);
 		
@@ -101,9 +116,8 @@ public class CacheManager {
 		
 		for (File f: files) {
 			if (!f.exists()) {
-				//TODO: Partial loading from file, partial rendering.
-				System.out.println("## Missing part from cached, aggregating");
-				return Optional.empty();
+				System.out.println("## Missing part from cached, aggregating  --- " + f.getName()); 
+				return Optional.empty(); //TODO: Return partially loaded aggregates (and bounds on unloaded parts)
 			}
 
 			try {
@@ -119,15 +133,23 @@ public class CacheManager {
 	}
 	
 	public <A> void save(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
+		AffineTransform ivt;
+		try {ivt = vt.createInverse();}
+		catch (NoninvertibleTransformException e1) {throw new RuntimeException("Error inverting view transform.  Values not saved.");}
+
+		
 		Path base = root(datasetId, aggregator, vt);
-		Rectangle renderBounds = AggregateUtils.bounds(aggs);
+		Rectangle renderBounds = renderBounds(vt, AggregateUtils.bounds(aggs));
+
 		List<Rectangle> tileBounds = tileBounds(renderBounds);
 		
 		System.out.println("## Saving aggregates to cache.");
 		for (Rectangle bound: tileBounds) {
-			Aggregates<A> tile = new SubsetWrapper<>(aggs, bound);
+			Aggregates<A> tile = new SubsetWrapper<>(aggs, ivt.createTransformedShape(bound).getBounds());
 			File f = tileName(base, bound);
+			System.out.printf("##    Saving %s to %s%n", bound, f.getName());
 			try {
+				f.getParentFile().mkdirs();
 				AggregateSerializer.serialize(tile, new FileOutputStream(f));
 			} catch (IOException e) {
 				System.err.println("## Error saving to cache file " + f);
