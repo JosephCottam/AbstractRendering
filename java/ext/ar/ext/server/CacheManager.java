@@ -73,28 +73,31 @@ public class CacheManager {
 	}
 	
 	
-	private static int roundTowardZero(int v, int size) {return v - (v%size);}
-	private static int roundAwayZero(int v, int size) {return v + (size - (v%size));}
+	private static double roundTowardZero(double v, double size) {return v - (v%size);}
+	private static double roundAwayZero(double v, double size) {return v + (size - (v%size));}
 	public Rectangle renderBounds(AffineTransform vt, Rectangle viewport) {
-		Rectangle viewbounds;	//Graphics coordinates covered by the viewport under the view transform
-		Rectangle2D tile;		//Graphics coordinates covered by a single tile under the view transform
+		Rectangle2D viewbounds;	//Graphics coordinates covered by the viewport under the view transform
+		Rectangle2D tilebounds; //Size of a tile in graphics coordinates
+		
 		try {
 			AffineTransform ivt = vt.createInverse();
-			tile = ivt.createTransformedShape(new Rectangle(0,0,tileSize, tileSize)).getBounds2D();  //HACK: ignores shear
-			viewbounds = vt.createInverse().createTransformedShape(viewport).getBounds();}
-		catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
+			viewbounds = ivt.createTransformedShape(viewport).getBounds2D();
+			tilebounds = ivt.createTransformedShape(new Rectangle(0,0,tileSize, tileSize)).getBounds2D();
+		} catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
 		
-		int lowX = viewbounds.x;
-		int lowY = viewbounds.y;
-		int highX = viewbounds.x + viewbounds.width;
-		int highY = viewbounds.y + viewbounds.height;
+		double lowX = viewbounds.getMinX();
+		double lowY = viewbounds.getMinY();
+		double highX = lowX + viewbounds.getWidth();
+		double highY = lowY + viewbounds.getHeight();
 		
-		lowX = lowX >=0 ? roundTowardZero(lowX, tileSize) : roundAwayZero(lowX, -tileSize);
-		lowY = lowY >=0 ? roundTowardZero(lowY, tileSize) : roundAwayZero(lowY, -tileSize);
-		highX = highX >=0 ? roundAwayZero(highX, tileSize) : roundTowardZero(highX, -tileSize);
-		highY = highY >=0 ? roundAwayZero(highY, tileSize) : roundTowardZero(highY, -tileSize);
+		lowX = lowX >=0 ? roundTowardZero(lowX, tilebounds.getWidth()) : roundAwayZero(lowX, -tilebounds.getWidth());
+		lowY = lowY >=0 ? roundTowardZero(lowY, tilebounds.getWidth()) : roundAwayZero(lowY, -tilebounds.getWidth());
+		highX = highX >=0 ? roundAwayZero(highX, tilebounds.getWidth()) : roundTowardZero(highX, -tilebounds.getWidth());
+		highY = highY >=0 ? roundAwayZero(highY, tilebounds.getWidth()) : roundTowardZero(highY, -tilebounds.getWidth());
 		
-		return new Rectangle(lowX, lowY, highX-lowX, highY-lowY);
+		Rectangle2D graphicsbounds = new Rectangle2D.Double(lowX, lowY, highX-lowX, highY-lowY); //Bounds of the covered tiles in graphics coordinates
+		Rectangle renderbounds = vt.createTransformedShape(graphicsbounds).getBounds();
+		return renderbounds;
 	}
 	
 	/**
@@ -111,7 +114,7 @@ public class CacheManager {
 		List<File> files = files(datasetId, aggregator, vt, viewport);
 		Rectangle renderBounds = renderBounds(vt, viewport);
 		
-		System.out.println("## Loading cached aggregates.");
+		System.out.printf("## Loading cached aggregates: %s%n", files.stream().map(f -> f.getName()).collect(joining(",")));
 		Aggregates<A> combined =  AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
 		
 		for (File f: files) {
