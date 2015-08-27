@@ -21,6 +21,8 @@ import ar.rules.combinators.Combinators;
 import ar.rules.combinators.Seq;
 import ar.util.Util;
 
+import static java.util.stream.Collectors.*;
+
 
 /**Collections of transfer functions and related support functions.**/
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -74,7 +76,8 @@ public class BasicLibrary {
 
 		put(COLOR, "color", "Color by name",
 				args -> CSS.getOrDefault(get(args, 0, "black"), get(args,1,Color.black)));
-
+		put(COLOR, "palette", "Build a palette from list of colors",
+				args -> args.stream().filter(s -> (s instanceof Color)).collect(toList()));
 	}
 
 
@@ -183,7 +186,7 @@ public class BasicLibrary {
 		put(MATH, "c/x", "Make a function that divides a constant.", args -> (Number v) -> v.doubleValue()/((Number) get(args, 0, 1)).doubleValue());
 		
 		put(MATH, "=", "Equal-to function.", args -> new MathValuers.EQ(get(args, 0, 0d)));
-		put(MATH, ">", "Greather-than function.", args -> new MathValuers.GT(get(args, 0, 0d)));
+		put(MATH, ">", "Greater-than function.", args -> new MathValuers.GT(get(args, 0, 0d)));
 		put(MATH, "<", "Less-than function.", args -> new MathValuers.GT(get(args, 0, 0d)));
 		put(MATH, ">=", "Greater-than-or-equal-to  function.", args -> new MathValuers.GTE(get(args, 0, 0d)));
 		put(MATH, "<=", "Less-than-or-equal-to function.", args -> new MathValuers.LTE(get(args, 0, 0d)));

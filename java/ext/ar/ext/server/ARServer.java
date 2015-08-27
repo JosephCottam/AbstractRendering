@@ -195,7 +195,7 @@ public class ARServer extends NanoHTTPD {
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
 			if (!ignoreCached && !cached.isPresent()) {cache(aggs, cacheFile);} 
 			
-			System.out.println("## Excuting transfer");
+			System.out.println("## Executing transfer");
  			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
 			Aggregates<A> target_aggs = crop.isPresent() ? new SubsetWrapper<>(aggs, crop.get()) : aggs; 
 			Transfer.Specialized<A,OUT> ts = transfer.specialize(spec_aggs);

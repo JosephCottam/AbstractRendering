@@ -126,7 +126,7 @@ public class Parser {
 		String[] basics = new String[]{
 				"Basic syntax follows s-epxressions: (item (item item item))",
 				"Looks like lisp, with all of the visual appeal and very little of the actual power!",
-				"There are separators, lists, numeric literals, symbol liteals and function calls.",
+				"There are separators, lists, numeric literals, symbol literals and function calls.",
 				"There are no strings, variables, function definitions, comments or other nice things like that.",
 				"There are first-class functions and externally defined higher-order functions, so you get some fun.",
 				"There is one namespace.",
@@ -135,7 +135,7 @@ public class Parser {
 				"Since there are no higher-order functions, the first item in each list must be a symbol.",
 				"All expression arguments are evaluated before the function call is made.",
 				"For example (RGB 0 0 0) makes the color black. RGB is the function, 0 is a numeric literal.",
-				"Whitespace and comma are the separators.  All seperators are equal, so (RGB,0,0,0) works just as well.",
+				"Whitespace and comma are the separators.  All separators are equal, so (RGB,0,0,0) works just as well.",
 				"",
 				"The most common problem is forgetting to place a singleton in call position.",
 				"For example, if the 'fn' function takes another function as its argument and 'log' is a function.",

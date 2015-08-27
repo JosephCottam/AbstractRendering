@@ -480,6 +480,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public int right() {return (int) right.getValue();}
 		}
 		
+		//TODO: Should this move to core?  
 		public static class FlexSpread<V> implements Transfer<V,V> {
 			final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>()};
 			final Spreader<V> spreader;
