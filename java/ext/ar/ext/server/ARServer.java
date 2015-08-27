@@ -122,7 +122,7 @@ public class ARServer extends NanoHTTPD {
         	rsp = execute(format, viewport, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, allowStretch);
         } finally { 
             long end = System.currentTimeMillis();
-            System.out.printf("## Excution time: %d ms%n", (end-start));
+            System.out.printf("## Execution time: %d ms%n", (end-start));
         }
         return rsp;
 	}
@@ -186,14 +186,14 @@ public class ARServer extends NanoHTTPD {
 			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
 			tasks.put(requesterID, render);
 			
-			Optional<Aggregates<A>> cached = !ignoreCached ? cache.loadCached(baseConfig.name, agg, vt, viewport) : Optional.empty();
+			Optional<Aggregates<A>> cached = !ignoreCached ? cache.loadCached(baseConfig, agg, vt, viewport) : Optional.empty();
 			
 			Aggregates<A> aggs;
 			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
 			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
-			if (!ignoreCached && !cached.isPresent()) {cache.save(baseConfig.name, agg, vt, aggs);}
+			if (!ignoreCached && !cached.isPresent()) {cache.save(baseConfig, agg, vt, aggs);}
 			
 			System.out.println("## Executing transfer");
  			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;

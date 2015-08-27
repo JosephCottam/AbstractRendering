@@ -18,6 +18,7 @@ import ar.Aggregates;
 import ar.Aggregator;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.SubsetWrapper;
+import ar.app.components.sequentialComposer.OptionDataset;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -38,9 +39,8 @@ public class CacheManager {
 	
 	
 	/**Which tiles are visible in the viewport, given the view transform.**/
-	public List<File> files(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle viewport) {
+	public List<File> files(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle renderBounds) {
 		Path base = root(datasetId, aggregator, vt);
-		Rectangle renderBounds = renderBounds(vt, viewport);
 		List<File> files = tileBounds(renderBounds).stream().map(r -> tileName(base, r)).collect(toList());
 		return files;
 	}	
@@ -61,8 +61,8 @@ public class CacheManager {
 	 * ASSUMES renderBounds is aligned to the tileSize (use renderBounds).**/
 	public List<Rectangle> tileBounds(Rectangle renderBounds) {
 		List<Rectangle> tiles = new ArrayList<>();
-		int highX = renderBounds.x+renderBounds.width;
-		int highY = renderBounds.y+renderBounds.height;
+		int highX = (int) renderBounds.getMaxX();
+		int highY = (int) renderBounds.getMaxY();
 
 		for (int x=renderBounds.x; x<highX; x+=tileSize) {
 			for (int y=renderBounds.y; y<highY; y+=tileSize) {
@@ -73,31 +73,36 @@ public class CacheManager {
 	}
 	
 	
-	private static double roundTowardZero(double v, double size) {return v - (v%size);}
-	private static double roundAwayZero(double v, double size) {return v + (size - (v%size));}
-	public Rectangle renderBounds(AffineTransform vt, Rectangle viewport) {
-		Rectangle2D viewbounds;	//Graphics coordinates covered by the viewport under the view transform
-		Rectangle2D tilebounds; //Size of a tile in graphics coordinates
+	private static int roundTowardZero(int v, int size) {return v - (v%size);}
+	private static int roundAwayZero(int v, int size) {return v + (size - (v%size));}
+	
+	/**@param viewbounds -- in global bin space.**/
+	public Rectangle renderBounds(Rectangle viewbounds) {		
+		int lowX = viewbounds.x;
+		int lowY = viewbounds.y;
+		int highX = viewbounds.x + viewbounds.width;
+		int highY = viewbounds.y + viewbounds.height;
 		
-		try {
-			AffineTransform ivt = vt.createInverse();
-			viewbounds = ivt.createTransformedShape(viewport).getBounds2D();
-			tilebounds = ivt.createTransformedShape(new Rectangle(0,0,tileSize, tileSize)).getBounds2D();
-		} catch (NoninvertibleTransformException e) {throw new RuntimeException("Invalid view transform for cache system.");}
+		lowX = lowX >=0 ? roundTowardZero(lowX, tileSize) : roundAwayZero(lowX, -tileSize);
+		lowY = lowY >=0 ? roundTowardZero(lowY, tileSize) : roundAwayZero(lowY, -tileSize);
+		highX = highX >=0 ? roundAwayZero(highX, tileSize) : roundTowardZero(highX, -tileSize);
+		highY = highY >=0 ? roundAwayZero(highY, tileSize) : roundTowardZero(highY, -tileSize);
 		
-		double lowX = viewbounds.getMinX();
-		double lowY = viewbounds.getMinY();
-		double highX = lowX + viewbounds.getWidth();
-		double highY = lowY + viewbounds.getHeight();
+		return new Rectangle(lowX, lowY, highX-lowX, highY-lowY);
+	}
+	
+
+	/**Transform that provides global bin coordinates that align with the current view transform.
+	 * 
+	 * Tiles are defined in terms of global bins, which are in term defined in terms of scaling and translating the whole dataset.
+	 * NOTE: The overall system based on gbt assumes that the min X/Y of the glyphset remain constant.
+	 * **/
+	public AffineTransform globalBinTransform(OptionDataset<?,?> base, AffineTransform vt) {
+		Rectangle2D bounds = base.glyphset.bounds();
+		AffineTransform gbt = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY()); 
+		gbt.translate(bounds.getMinX(), -bounds.getMinY());
 		
-		lowX = lowX >=0 ? roundTowardZero(lowX, tilebounds.getWidth()) : roundAwayZero(lowX, -tilebounds.getWidth());
-		lowY = lowY >=0 ? roundTowardZero(lowY, tilebounds.getWidth()) : roundAwayZero(lowY, -tilebounds.getWidth());
-		highX = highX >=0 ? roundAwayZero(highX, tilebounds.getWidth()) : roundTowardZero(highX, -tilebounds.getWidth());
-		highY = highY >=0 ? roundAwayZero(highY, tilebounds.getWidth()) : roundTowardZero(highY, -tilebounds.getWidth());
-		
-		Rectangle2D graphicsbounds = new Rectangle2D.Double(lowX, lowY, highX-lowX, highY-lowY); //Bounds of the covered tiles in graphics coordinates
-		Rectangle renderbounds = vt.createTransformedShape(graphicsbounds).getBounds();
-		return renderbounds;
+		return gbt;
 	}
 	
 	/**
@@ -107,17 +112,27 @@ public class CacheManager {
 	 * @param viewport	  Size of the screen viewport (in screen coordinates) //TODO: Should this be in graphics coordinates? 
 	 * @return
 	 */
-	public <A> Optional<Aggregates<A>> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
+	public <A> Optional<Aggregates<A>> loadCached(OptionDataset<?,?> base, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
 		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
-		System.out.printf("Calc files with %s and %s%n", vt, viewport);
-		List<File> files = files(datasetId, aggregator, vt, viewport);
-		Rectangle renderBounds = renderBounds(vt, viewport);
+
+		AffineTransform gbt = globalBinTransform(base, vt);
+
+		Rectangle viewbounds; //viewport in gbt space
+		try {viewbounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
+		catch (NoninvertibleTransformException e) {throw new RuntimeException(e);}
+
+		Rectangle renderBounds = renderBounds(viewbounds);
+		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
+
+		List<File> files = files(base.name, aggregator, vt, renderBounds);
 		
-		System.out.printf("## Loading cached aggregates: %s%n", files.stream().map(f -> f.getName()).collect(joining(",")));
+		
+		System.out.println("## Loading cached aggregates.");
 		Aggregates<A> combined =  AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
 		
 		for (File f: files) {
+			System.out.println("loading file " + f.getName());
 			if (!f.exists()) {
 				System.out.println("## Missing part from cached, aggregating  --- " + f.getName()); 
 				return Optional.empty(); //TODO: Return partially loaded aggregates (and bounds on unloaded parts)
@@ -135,21 +150,26 @@ public class CacheManager {
 		return Optional.of(combined);
 	}
 	
-	public <A> void save(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
-		AffineTransform ivt;
-		try {ivt = vt.createInverse();}
-		catch (NoninvertibleTransformException e1) {throw new RuntimeException("Error inverting view transform.  Values not saved.");}
-
+	public <A> void save(OptionDataset<?,?> base, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
+		AffineTransform gbt = globalBinTransform(base, vt);
+		Path root = root(base.name, aggregator, vt);
+		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);
 		
-		Path base = root(datasetId, aggregator, vt);
-		Rectangle renderBounds = renderBounds(vt, AggregateUtils.bounds(aggs));
-
+		//Compensate for existing translation...
+		double tx = gbt.getTranslateX()-vt.getTranslateX();
+		double ty = gbt.getTranslateY()-vt.getTranslateY();
+		
+		//Align rendered space to global bins, expand to full tiles and calculate tiles
+		Rectangle renderBounds = AffineTransform.getTranslateInstance(tx,ty).createTransformedShape(aggregateBounds).getBounds();
+		renderBounds = renderBounds(renderBounds);
 		List<Rectangle> tileBounds = tileBounds(renderBounds);
+		System.out.printf("Save: Calc files with %s and %s%n", vt, renderBounds);
+
 		
 		System.out.println("## Saving aggregates to cache.");
 		for (Rectangle bound: tileBounds) {
-			Aggregates<A> tile = new SubsetWrapper<>(aggs, ivt.createTransformedShape(bound).getBounds());
-			File f = tileName(base, bound);
+			Aggregates<A> tile = new SubsetWrapper<>(aggs, bound);
+			File f = tileName(root, bound);
 			System.out.printf("##    Saving %s to %s%n", bound, f.getName());
 			try {
 				f.getParentFile().mkdirs();
