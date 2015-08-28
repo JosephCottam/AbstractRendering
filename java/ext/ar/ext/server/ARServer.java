@@ -89,13 +89,13 @@ public class ARServer extends NanoHTTPD {
 	public Response serve(IHTTPSession session) {
 			
 		String uri = session.getUri();
-		//Map<String, String> headers = session.getHeaders(); 
+		Map<String, String> headers = session.getHeaders(); 
 		Map<String, String> params = session.getParms();
 		
 		if (uri.equals("/")) {return help();}
 		if (uri.equals("/favicon.ico")) {return newFixedLengthResponse(Status.NO_CONTENT, MIME_PLAINTEXT, "");} //TODO: AR favicon? :)
 		
-		System.out.printf("## Processing request: %s?%s%n", uri, session.getQueryParameterString());
+		System.out.printf("## Processing request: %s%s?%s%n", headers.getOrDefault("host", "<UNKNOWN>"), uri, session.getQueryParameterString());
 		
 		OptionDataset baseConfig = baseConfig(uri);
 		
