@@ -9,8 +9,10 @@ import static org.hamcrest.Matchers.*;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.List;
 
+import ar.Renderer;
 import ar.ext.server.CacheManager;
 import ar.rules.Numbers;
 import static java.util.stream.Collectors.*;
@@ -19,14 +21,14 @@ public class CacheManagerTest {
 
 	@Test
 	public void tileBounds() {
-		CacheManager m = new CacheManager(new File("cache"), 500);
+		CacheManager m = new CacheManager(new File("cache"), 500, Renderer.defaultInstance());
 		
 		assertThat(m.tileBounds(new Rectangle(0,0,10,10)).size(), is(1));
 		assertThat(m.tileBounds(new Rectangle(0,0,10,10)), contains(new Rectangle(0,0,m.tileSize(),m.tileSize())));
 		assertThat(m.tileBounds(new Rectangle(600,600,10,10)), contains(new Rectangle(600,600,m.tileSize(),m.tileSize())));
 		assertThat(m.tileBounds(new Rectangle(500,500,10,10)), contains(new Rectangle(500,500,m.tileSize(),m.tileSize())));
 		
-		m = new CacheManager(new File("cache"), 100);
+		m = new CacheManager(new File("cache"), 100, Renderer.defaultInstance());
 		assertThat(m.tileBounds(new Rectangle(0,0,10,10)).size(), is(1));
 		assertThat(m.tileBounds(new Rectangle(0,0,10,10)), contains(new Rectangle(0,0,m.tileSize(),m.tileSize())));
 		assertThat(m.tileBounds(new Rectangle(600,600,10,10)), contains(new Rectangle(600,600,m.tileSize(),m.tileSize())));
@@ -43,7 +45,7 @@ public class CacheManagerTest {
 	
 	@Test 
 	public void renderBounds() {
-		CacheManager m = new CacheManager(new File("cache"), 100);
+		CacheManager m = new CacheManager(new File("cache"), 100, Renderer.defaultInstance());
 		
 		assertThat(m.renderBounds(new Rectangle(0,0,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
 		assertThat(m.renderBounds(new Rectangle(0,0,101,101)), is(new Rectangle(0,0,m.tileSize()*2,m.tileSize()*2)));
@@ -54,8 +56,10 @@ public class CacheManagerTest {
 	
 	@Test
 	public void tileFiles() {
-		CacheManager m = new CacheManager(new File("cache"), 10);
-		List<File> files = m.tileFiles("test", new Numbers.Count<>(), new AffineTransform(), new Rectangle(0,0,100,100));
+		CacheManager m = new CacheManager(new File("cache"), 10, Renderer.defaultInstance());
+		List<Rectangle> tiles = m.tileBounds(new Rectangle(0,0,100,100));
+		Path root = m.tilesetPath("test", new Numbers.Count<>(), new AffineTransform());
+		List<File> files = tiles.stream().map(t -> CacheManager.tileFile(root, t)).collect(toList());
 		
 		assertThat("Unexected number of tiles", files.size(), is(100));
 		assertThat("Non-unique file path created", 

@@ -64,13 +64,15 @@ public class ARServer extends NanoHTTPD {
 	private static Map<String, OptionTransfer<?>> TRANSFERS;
 
 	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
-	private final CacheManager cache;
+	private final File cachedir;
+	private final int tileSize;
 
 	public ARServer(String hostname) {this(hostname, DEFAULT_PORT);}
-	public ARServer(String hostname, int port) {this(hostname, port, new File("./cache"));}
-	public ARServer(String hostname, int port, File cachedir) {
+	public ARServer(String hostname, int port) {this(hostname, port, new File("./cache"), 500);}
+	public ARServer(String hostname, int port, File cachedir, int tileSize) {
 		super(hostname, port);
-		cache = new CacheManager(cachedir, 500);
+		this.cachedir = cachedir;
+		this.tileSize = tileSize;
 	}
 
 	
@@ -183,17 +185,22 @@ public class ARServer extends NanoHTTPD {
 				glyphs = baseConfig.glyphset;
 			}
 			
-			Renderer render = new ThreadpoolRenderer(new ProgressRecorder.NOP());
+			
+			
+			CacheManager render = ignoreCached 
+					? new CacheManager.Shim(cachedir, tileSize, new ThreadpoolRenderer(new ProgressRecorder.NOP())) 
+					: new CacheManager(cachedir, tileSize, new ThreadpoolRenderer(new ProgressRecorder.NOP()));
+
 			tasks.put(requesterID, render);
-			
-			Optional<Aggregates<A>> cached = !ignoreCached ? cache.loadCached(baseConfig, agg, vt, viewport) : Optional.empty();
-			
+						
 			Aggregates<A> aggs;
-			try {aggs = cached.orElseGet(() -> aggregate(render, glyphs, agg, vt));}
-			catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
+			
+			try {
+				Selector<G> s = TouchesPixel.make(glyphs);
+				aggs = render.aggregate(glyphs, s, agg, vt, baseConfig.name, viewport);
+			} catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
-			if (!ignoreCached && !cached.isPresent()) {cache.save(baseConfig, agg, vt, aggs);}
 			
 			System.out.println("## Executing transfer");
  			Aggregates<A> spec_aggs = enhance.isPresent() ? new SubsetWrapper<>(aggs, enhance.get()) : aggs;
@@ -295,14 +302,7 @@ public class ARServer extends NanoHTTPD {
 		}
 		return t;
 	}	
-	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <A> Aggregates<A> aggregate(Renderer render, Glyphset glyphs, Aggregator agg, AffineTransform view) {
-		Selector<?> s = TouchesPixel.make(glyphs);
-		Aggregates<A> aggs = render.aggregate(glyphs, s, agg, view);
-		return aggs;
-	}
-			
+				
 	@SuppressWarnings({"rawtypes" })
 	public OptionDataset baseConfig(String uri) {
 		String config = uri.substring(1).toUpperCase(); //Trim off leading slash
@@ -537,6 +537,7 @@ public class ARServer extends NanoHTTPD {
 		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
 		File cachedir = new File(ar.util.Util.argKey(args, "-cache", "./cache"));
 		boolean clearCache = Boolean.parseBoolean(ar.util.Util.argKey(args, "-clearCache", "false"));
+		int tileSize = Integer.parseInt(ar.util.Util.argKey(args, "-tile", "500"));
 		
 		
 		//TODO: Move directory management things to the cache manager
@@ -560,7 +561,7 @@ public class ARServer extends NanoHTTPD {
 		if (!cachedir.exists()) {cachedir.mkdirs();}
 		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
 				
-		ARServer server = new ARServer(host, port, cachedir);
+		ARServer server = new ARServer(host, port, cachedir, tileSize);
 		
 		server.start();
 		

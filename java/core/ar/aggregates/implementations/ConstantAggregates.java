@@ -1,5 +1,6 @@
 package ar.aggregates.implementations;
 
+import java.awt.Rectangle;
 import java.util.Iterator;
 
 import ar.Aggregates;
@@ -19,6 +20,8 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 	
 	/**Create a constant aggregates with zero-extent, but a default value.**/
 	public ConstantAggregates(A value) {this(value,0,0,0,0);}
+	
+	public ConstantAggregates(A value, Rectangle bounds) {this(value, bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height);}
 	
 	/**Create an aggregate set with the given value at all locations
 	 * (i.e., default value IS the held value).

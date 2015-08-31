@@ -192,12 +192,14 @@ public class ThreadpoolRenderer implements Renderer {
 	@Override public ProgressRecorder recorder() {return recorder;}	
 	@Override public void stop() {pool.shutdownNow();}
 	
+	//TODO: Move to 'renderer' in general?
 	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/
 	public static <A> BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> defaultMerge(A defVal, BiFunction<A,A,A> rollup) {
 		return (result, from) -> AggregateUtils.__unsafeMerge(result, from, defVal, rollup);
 
 	}
 	
+	//TODO: Move to 'renderer' in general?
 	/**Allocate for full-bounds in the current view.**/
 	public static <A> Function<A, Aggregates<A>> defaultAllocator(Glyphset<?,?> glyphs, AffineTransform viewTransform) {
 		Rectangle bounds = viewTransform.createTransformedShape(glyphs.bounds()).getBounds();

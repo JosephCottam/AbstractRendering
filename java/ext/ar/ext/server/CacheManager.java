@@ -11,48 +11,124 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.apache.avro.generic.GenericRecord;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Glyphset;
+import ar.Renderer;
+import ar.Selector;
+import ar.Transfer.ItemWise;
+import ar.Transfer.Specialized;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.SubsetWrapper;
-import ar.app.components.sequentialComposer.OptionDataset;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
+import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Valuer;
+import ar.renderers.ProgressRecorder;
+import ar.renderers.ThreadpoolRenderer;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.*;
 
-//TODO: This should probably live somewhere else so other systems can use it (like the composer app)...maybe in the ext.avro or core.util package?
-public class CacheManager {
+//TODO: Generalize and move out to a more accessible location...
+public class CacheManager implements Renderer {
 	private final Path cacheRoot;
 	private final int tileSize;
-
-	public CacheManager(File cachedir, int tileSize) {
+	private final Renderer base;
+	
+	public CacheManager(File cachedir, int tileSize, Renderer base) {
 		this.cacheRoot = cachedir.toPath();
 		this.tileSize = tileSize;
+		this.base = base;
 	}
 	
 	public int tileSize() {return tileSize;}
 	
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+			Aggregator<I, A> aggregator, AffineTransform viewTransform) {
+		return base.aggregate(glyphs, selector, aggregator, viewTransform);
+	}
+
+	@Override
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+			Aggregator<I, A> aggregator, AffineTransform viewTransform,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge) {
+		return base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);		
+	}
+
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+			Aggregator<I, A> aggregator, AffineTransform viewTransform,
+			String targetId, Rectangle viewport) {
+		return this.aggregate(glyphs, selector, aggregator, viewTransform, 
+				ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform),
+				ThreadpoolRenderer.defaultMerge(aggregator.identity(), aggregator::rollup),
+				targetId, viewport);
+	}
+
 	
-	/**Which tiles are visible in the viewport, given the view transform.**/
-	public List<File> tileFiles(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle renderBounds) {
-		Path base = root(datasetId, aggregator, vt);
-		List<File> files = tileBounds(renderBounds).stream().map(r -> tileName(base, r)).collect(toList());
-		return files;
-	}	
+	public <I, G, A> Aggregates<A> aggregate(
+			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+			Aggregator<I, A> aggregator, AffineTransform viewTransform,
+			Function<A, Aggregates<A>> allocator,
+			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
+			String targetId,
+			Rectangle viewport) {
+		
+		CacheStatus<A> cacheStatus = loadCached(targetId, glyphs.bounds(), aggregator, viewTransform, viewport);
+		
+		Optional<Aggregates<A>> freshRendered = Optional.empty();
+		if (cacheStatus.remaining.isPresent()) {
+			AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+			try {
+				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
+				Glyphset<? extends G, ? extends I> subset = new BoundingWrapper<>(glyphs, renderBounds);
+				freshRendered = Optional.ofNullable(base.aggregate(subset, selector, aggregator, gbt, allocator, merge));
+			} catch (NoninvertibleTransformException e) {
+				throw new RuntimeException("Error calculating the region to render.", e);
+			}
+			save(targetId, glyphs.bounds(), aggregator, gbt, freshRendered.orElse(new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get())));
+		}
+
+		Aggregates<A> result = AggregateUtils.__unsafeMerge(
+									freshRendered.orElse(new ConstantAggregates<>(aggregator.identity())),
+									cacheStatus.cached.orElse(new ConstantAggregates<>(aggregator.identity())), 
+									aggregator.identity(), 
+									aggregator::rollup);
+		
+		return result;
+	}
+
+	@Override
+	public <IN, OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, Specialized<IN, OUT> t) {return base.transfer(aggregates, t);}
+
+	@Override
+	public <IN, OUT> Aggregates<OUT> transfer(Aggregates<? extends IN> aggregates, ItemWise<IN, OUT> t) {return base.transfer(aggregates, t);}
+
+	@Override
+	public ProgressRecorder recorder() {return base.recorder();}
+	
+	@Override
+	//TODO: Manage future work better....
+	public void stop() {base.stop();}
 
 	/**Root directory for the view/data/aggregator combination cache.**/
-	private Path root(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
+	public Path tilesetPath(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
 		//HACK: Using the aggregator class name ignores parameters...and can cause cross-package conflicts...
 		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(Double.toString(vt.getScaleX())).resolve(Double.toString(vt.getScaleY()));
 	}
 
 	/**Given a tile bound, what is the file name?**/
-	private static File tileName(Path base, Rectangle r) {
+	public static File tileFile(Path base, Rectangle r) {
 		String file = format("%s__%s__%s__%s.avsc", r.x,r.y, r.width, r.height);
 		return base.resolve(file).toFile();
 	}
@@ -108,6 +184,19 @@ public class CacheManager {
 		return gbt;
 	}
 	
+	
+	private static final class CacheStatus<A> {
+		/**Aggregates loaded from the cache.**/
+		public Optional<Aggregates<A>> cached;
+		
+		/**Region that still needs to be rendered (in global bin space).**/
+		public Optional<Rectangle> remaining;
+		public CacheStatus(Aggregates<A> aggs, Optional<Rectangle> remaining) {
+			this.cached = Optional.ofNullable(aggs.empty() ? null : aggs);
+			this.remaining = remaining;
+		}
+	}
+	
 	/**
 	 * @param datasetId   Name identifying source data
 	 * @param aggregator  Aggregator that will be used		//TODO: Aggregator based transformation in cache load (like CoC->ToCounts)?
@@ -115,11 +204,11 @@ public class CacheManager {
 	 * @param viewport	  Size of the screen viewport (in screen coordinates) //TODO: Should this be in graphics coordinates? 
 	 * @return
 	 */
-	public <A> Optional<Aggregates<A>> loadCached(OptionDataset<?,?> base, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
+	public <A> CacheStatus<A> loadCached(String datasetId, Rectangle2D glyphsetBounds, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
 		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
 
-		AffineTransform gbt = globalBinTransform(base.glyphset.bounds(), vt);
+		AffineTransform gbt = globalBinTransform(glyphsetBounds, vt);
 
 		Rectangle viewBounds; //viewport in gbt space
 		try {viewBounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
@@ -128,30 +217,32 @@ public class CacheManager {
 		Rectangle renderBounds = renderBounds(viewBounds);
 		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
 
-		List<File> files = tileFiles(base.name, aggregator, vt, renderBounds);
 		
 		
 		System.out.println("## Loading cached aggregates.");
 		Aggregates<A> combined =  AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
+		Optional<Rectangle> remaining = Optional.empty();
 		
-		for (File f: files) {
+		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
+		for (Rectangle tile: tileBounds(renderBounds)) {
+			File f = tileFile(tilesetRoot, tile);  
 			System.out.println("loading file " + f.getName());
 			if (!f.exists()) {
-				System.out.println("## Missing part from cached, aggregating  --- " + f.getName()); 
-				return Optional.empty(); //TODO: Return partially loaded aggregates (and bounds on unloaded parts)
-			}
-
-			try {
-				Aggregates<A> aggs = AggregateSerializer.deserialize(f, converter);
-				combined = AggregateUtils.__unsafeMerge(combined, aggs, aggregator.identity(), aggregator::rollup);
-			} catch (Exception e) {
-				System.err.println("## Cache located for " + f + ", but error deserializing.");
-				e.printStackTrace();
-				return Optional.empty();
+				System.out.println("## Missing part from cached, aggregating  --- " + f.getName());
+				remaining = Optional.of(remaining.isPresent() ? remaining.get().union(tile) : tile);
+			} else {
+				try {
+					Aggregates<A> aggs = AggregateSerializer.deserialize(f, converter);
+					combined = AggregateUtils.__unsafeMerge(combined, aggs, aggregator.identity(), aggregator::rollup);
+				} catch (Exception e) {
+					System.err.println("## Cache located for " + f + ", but error deserializing.");
+					e.printStackTrace();
+					remaining = Optional.of(remaining.isPresent() ? remaining.get().union(tile) : tile);
+				}
 			}
 		}
 		combined = new SubsetWrapper<>(combined, viewBounds);
-		return Optional.of(combined);
+		return new CacheStatus<>(combined, remaining);
 	}
 	
 	/**Save out a set of aggregates into tiles.
@@ -164,9 +255,9 @@ public class CacheManager {
 	 * @param aggs Aggregates to save
 	 *
 	 * **/
-	public <A> void save(OptionDataset<?,?> base, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
-		AffineTransform gbt = globalBinTransform(base.glyphset.bounds(), vt);
-		Path root = root(base.name, aggregator, vt);
+	public <A> void save(String datasetId, Rectangle2D glyphsetBounds, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
+		AffineTransform gbt = globalBinTransform(glyphsetBounds, vt);
+		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
 		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);
 		
 		//Compensate for existing translation...
@@ -183,7 +274,7 @@ public class CacheManager {
 		System.out.println("## Saving aggregates to cache.");
 		for (Rectangle bound: tileBounds) {
 			Aggregates<A> tile = new SubsetWrapper<>(aggs, bound);
-			File f = tileName(root, bound);
+			File f = tileFile(tilesetRoot, bound);
 			System.out.printf("##    Saving %s to %s%n", bound, f.getName());
 			try {
 				f.getParentFile().mkdirs();
@@ -195,6 +286,19 @@ public class CacheManager {
 		}
 		System.out.println("## Cache saved.");
 	}
+	
+	/**Same interface as the CacheManager, but NEVER looks at the cache.**/
+	public static final class Shim extends CacheManager {
+		public Shim(File cachedir, int tileSize, Renderer base) {super(cachedir, tileSize, base);}
 
-		
+		public <I, G, A> Aggregates<A> aggregate(
+				Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
+				Aggregator<I, A> aggregator, AffineTransform viewTransform,
+				Function<A, Aggregates<A>> allocator,
+				BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
+				String targetId,
+				Rectangle viewport) {
+			return super.base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);
+		}
+	}
 }
