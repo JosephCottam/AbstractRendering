@@ -121,11 +121,11 @@ public class CacheManager {
 
 		AffineTransform gbt = globalBinTransform(base.glyphset.bounds(), vt);
 
-		Rectangle viewbounds; //viewport in gbt space
-		try {viewbounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
+		Rectangle viewBounds; //viewport in gbt space
+		try {viewBounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
 		catch (NoninvertibleTransformException e) {throw new RuntimeException(e);}
 
-		Rectangle renderBounds = renderBounds(viewbounds);
+		Rectangle renderBounds = renderBounds(viewBounds);
 		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
 
 		List<File> files = tileFiles(base.name, aggregator, vt, renderBounds);
@@ -150,6 +150,7 @@ public class CacheManager {
 				return Optional.empty();
 			}
 		}
+		combined = new SubsetWrapper<>(combined, viewBounds);
 		return Optional.of(combined);
 	}
 	
