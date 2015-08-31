@@ -12,13 +12,7 @@ import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -540,27 +534,8 @@ public class ARServer extends NanoHTTPD {
 		int tileSize = Integer.parseInt(ar.util.Util.argKey(args, "-tile", "500"));
 		
 		
-		//TODO: Move directory management things to the cache manager
-		if (clearCache) {
-			System.out.println("## Clearing the cache.");
-			Files.walkFileTree(cachedir.toPath(), 
-					new SimpleFileVisitor<Path>(){
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
-							Files.deleteIfExists(file);
-							return FileVisitResult.CONTINUE;
-						}
-						
-						@Override
-						public FileVisitResult postVisitDirectory(Path file, IOException exc) throws IOException {
-							Files.deleteIfExists(file);
-							return FileVisitResult.CONTINUE;
-						}
-					});
-		}
-		if (!cachedir.exists()) {cachedir.mkdirs();}
-		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
-				
+		if (clearCache) {CacheManager.clearCache(cachedir);}
+
 		ARServer server = new ARServer(host, port, cachedir, tileSize);
 		
 		server.start();

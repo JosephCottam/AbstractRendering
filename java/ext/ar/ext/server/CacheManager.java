@@ -7,7 +7,11 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +48,9 @@ public class CacheManager implements Renderer {
 		this.cacheRoot = cachedir.toPath();
 		this.tileSize = tileSize;
 		this.base = base;
+		
+		if (!cachedir.exists()) {cachedir.mkdirs();}
+		if (!cachedir.isDirectory()) {throw new IllegalArgumentException("Indicated cache directory exists BUT is not a directory." + cachedir);}
 	}
 	
 	public int tileSize() {return tileSize;}
@@ -286,6 +293,28 @@ public class CacheManager implements Renderer {
 		}
 		System.out.println("## Cache saved.");
 	}
+	
+	
+	/**Delete the cache directory and everything in it.**/
+	public static void clearCache(File cachedir) throws IOException {
+		System.out.println("## Clearing the cache.");
+		Files.walkFileTree(cachedir.toPath(), 
+				new SimpleFileVisitor<Path>(){
+					@Override
+					public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
+						Files.deleteIfExists(file);
+						return FileVisitResult.CONTINUE;
+					}
+					
+					@Override
+					public FileVisitResult postVisitDirectory(Path file, IOException exc) throws IOException {
+						Files.deleteIfExists(file);
+						return FileVisitResult.CONTINUE;
+					}
+				});
+	}
+	
+			
 	
 	/**Same interface as the CacheManager, but NEVER looks at the cache.**/
 	public static final class Shim extends CacheManager {
