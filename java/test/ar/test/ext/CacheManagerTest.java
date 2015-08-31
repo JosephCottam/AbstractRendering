@@ -9,8 +9,11 @@ import static org.hamcrest.Matchers.*;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.*;
+import java.util.List;
 
 import ar.ext.server.CacheManager;
+import ar.rules.Numbers;
+import static java.util.stream.Collectors.*;
 
 public class CacheManagerTest {
 
@@ -40,14 +43,39 @@ public class CacheManagerTest {
 	
 	@Test 
 	public void renderBounds() {
-		AffineTransform vt = new AffineTransform();
 		CacheManager m = new CacheManager(new File("cache"), 100);
 		
-		assertThat(m.renderBounds(vt, new Rectangle(0,0,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
-		assertThat(m.renderBounds(vt, new Rectangle(0,0,101,101)), is(new Rectangle(0,0,m.tileSize()*2,m.tileSize()*2)));
-		assertThat(m.renderBounds(vt, new Rectangle(1,1,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
-		assertThat(m.renderBounds(vt, new Rectangle(-1,-1,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize()*2,m.tileSize()*2)));
-		assertThat(m.renderBounds(vt, new Rectangle(-10,-10,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize(),m.tileSize())));
+		assertThat(m.renderBounds(new Rectangle(0,0,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
+		assertThat(m.renderBounds(new Rectangle(0,0,101,101)), is(new Rectangle(0,0,m.tileSize()*2,m.tileSize()*2)));
+		assertThat(m.renderBounds(new Rectangle(1,1,10,0)), is(new Rectangle(0,0,m.tileSize(),m.tileSize())));
+		assertThat(m.renderBounds(new Rectangle(-1,-1,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize()*2,m.tileSize()*2)));
+		assertThat(m.renderBounds(new Rectangle(-10,-10,1,1)), is(new Rectangle(-m.tileSize(),-m.tileSize(),m.tileSize(),m.tileSize())));
+	}
+	
+	@Test
+	public void tileFiles() {
+		CacheManager m = new CacheManager(new File("cache"), 10);
+		List<File> files = m.tileFiles("test", new Numbers.Count<>(), new AffineTransform(), new Rectangle(0,0,100,100));
+		
+		assertThat("Unexected number of tiles", files.size(), is(100));
+		assertThat("Non-unique file path created", 
+				files.size(), 
+				is(files.stream().map(f -> f.toString()).collect(toSet()).size())); 
+	}
+	
+	@Test 
+	public void globalBinTransform() {
+		AffineTransform gbt = CacheManager.globalBinTransform(new Rectangle(0,0,100,100), new AffineTransform());
+		assertThat(gbt, is(new AffineTransform()));
+		
+		gbt = CacheManager.globalBinTransform(new Rectangle(10,10,100,100), new AffineTransform());
+		assertThat(gbt, is(AffineTransform.getTranslateInstance(10, -10)));
+		
+		gbt = CacheManager.globalBinTransform(new Rectangle(0,0,100,100), AffineTransform.getTranslateInstance(100, 100));
+		assertThat(gbt, is(new AffineTransform()));
+		
+		gbt = CacheManager.globalBinTransform(new Rectangle(0,0,100,100), AffineTransform.getScaleInstance(10, 3));
+		assertThat(gbt, is(AffineTransform.getScaleInstance(10,3)));
 	}
 	
 }

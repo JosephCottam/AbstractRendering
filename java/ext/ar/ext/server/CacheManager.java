@@ -39,20 +39,20 @@ public class CacheManager {
 	
 	
 	/**Which tiles are visible in the viewport, given the view transform.**/
-	public List<File> files(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle renderBounds) {
+	public List<File> tileFiles(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt, Rectangle renderBounds) {
 		Path base = root(datasetId, aggregator, vt);
 		List<File> files = tileBounds(renderBounds).stream().map(r -> tileName(base, r)).collect(toList());
 		return files;
 	}	
 
 	/**Root directory for the view/data/aggregator combination cache.**/
-	public Path root(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
+	private Path root(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
 		//HACK: Using the aggregator class name ignores parameters...and can cause cross-package conflicts...
 		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(Double.toString(vt.getScaleX())).resolve(Double.toString(vt.getScaleY()));
 	}
 
 	/**Given a tile bound, what is the file name?**/
-	public static File tileName(Path base, Rectangle r) {
+	private static File tileName(Path base, Rectangle r) {
 		String file = format("%s__%s__%s__%s.avsc", r.x,r.y, r.width, r.height);
 		return base.resolve(file).toFile();
 	}
@@ -76,7 +76,9 @@ public class CacheManager {
 	private static int roundTowardZero(int v, int size) {return v - (v%size);}
 	private static int roundAwayZero(int v, int size) {return v + (size - (v%size));}
 	
-	/**@param viewbounds -- in global bin space.**/
+	/**Compute the bounds of all of the tiles covered by the requested viewport
+	 * @param viewbounds -- in GLOBAL BIN SPACE.
+	 * **/
 	public Rectangle renderBounds(Rectangle viewbounds) {		
 		int lowX = viewbounds.x;
 		int lowY = viewbounds.y;
@@ -96,12 +98,13 @@ public class CacheManager {
 	 * 
 	 * Tiles are defined in terms of global bins, which are in term defined in terms of scaling and translating the whole dataset.
 	 * NOTE: The overall system based on gbt assumes that the min X/Y of the glyphset remain constant.
+	 * 
+	 * @param datasetBounds -- Full bounds of the source data
+	 * @param vt -- View transform for the current rendering.
 	 * **/
-	public AffineTransform globalBinTransform(OptionDataset<?,?> base, AffineTransform vt) {
-		Rectangle2D bounds = base.glyphset.bounds();
+	public static AffineTransform globalBinTransform(Rectangle2D datasetBounds, AffineTransform vt) {
 		AffineTransform gbt = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY()); 
-		gbt.translate(bounds.getMinX(), -bounds.getMinY());
-		
+		gbt.translate(datasetBounds.getMinX(), -datasetBounds.getMinY());
 		return gbt;
 	}
 	
@@ -116,7 +119,7 @@ public class CacheManager {
 		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
 
-		AffineTransform gbt = globalBinTransform(base, vt);
+		AffineTransform gbt = globalBinTransform(base.glyphset.bounds(), vt);
 
 		Rectangle viewbounds; //viewport in gbt space
 		try {viewbounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
@@ -125,7 +128,7 @@ public class CacheManager {
 		Rectangle renderBounds = renderBounds(viewbounds);
 		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
 
-		List<File> files = files(base.name, aggregator, vt, renderBounds);
+		List<File> files = tileFiles(base.name, aggregator, vt, renderBounds);
 		
 		
 		System.out.println("## Loading cached aggregates.");
@@ -150,8 +153,18 @@ public class CacheManager {
 		return Optional.of(combined);
 	}
 	
+	/**Save out a set of aggregates into tiles.
+	 * 
+	 * Assumes that the aggregates cover full tiles (easily done using the renderBounds method).
+	 * 
+	 * @param base Source dataset
+	 * @param aggregator Aggregator used to build the aggregates (influences the cache path)
+	 * @param vt View transform used to render the aggregates (used to align the aggregates to the global grid)
+	 * @param aggs Aggregates to save
+	 *
+	 * **/
 	public <A> void save(OptionDataset<?,?> base, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
-		AffineTransform gbt = globalBinTransform(base, vt);
+		AffineTransform gbt = globalBinTransform(base.glyphset.bounds(), vt);
 		Path root = root(base.name, aggregator, vt);
 		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);
 		
