@@ -21,7 +21,6 @@ import ar.aggregates.AggregateUtils;
 import ar.glyphsets.SingletonGlyphset;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.SerialRenderer;
-import ar.renderers.ThreadpoolRenderer;
 import ar.util.Util;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -47,8 +46,8 @@ public class RDDRender implements Serializable, Renderer {
 			Aggregator<I, A> aggregator, 
 			AffineTransform viewTransform) {
 		return aggregate(glyphs, selector, aggregator, viewTransform,
-				ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform), 
-				ThreadpoolRenderer.defaultMerge(aggregator.identity(), aggregator::rollup));
+				Renderer.simpleAllocator(glyphs, viewTransform), 
+				Renderer.simpleMerge(aggregator.identity(), aggregator::rollup));
 	}
 	
 

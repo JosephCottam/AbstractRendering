@@ -1,10 +1,13 @@
 package ar;
 
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import ar.aggregates.AggregateUtils;
+import ar.aggregates.wrappers.TouchedBoundsWrapper;
 import ar.renderers.ProgressRecorder;
 import ar.Selector;
 
@@ -94,4 +97,23 @@ public interface Renderer extends Serializable {
 
 	/**Signals that the rendering tasks were interrupted due to a call to stop.**/
 	public static final class StopSignaledException extends RuntimeException {}
+	
+
+	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/
+	public static <A> BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> simpleMerge(A defVal, BiFunction<A,A,A> rollup) {
+		return (result, from) -> AggregateUtils.__unsafeMerge(result, from, defVal, rollup);
+
+	}
+	
+	/**Allocate for full-bounds in the current view.**/
+	public static <A> Function<A, Aggregates<A>> simpleAllocator(Glyphset<?,?> glyphs, AffineTransform viewTransform) {
+		Rectangle bounds = viewTransform.createTransformedShape(glyphs.bounds()).getBounds();
+		return (defVal) ->
+			new TouchedBoundsWrapper<>(
+					AggregateUtils.make(
+							bounds.x, bounds.y,
+							bounds.x+bounds.width, bounds.y+bounds.height,
+							defVal),
+					false);		
+	}	
 }

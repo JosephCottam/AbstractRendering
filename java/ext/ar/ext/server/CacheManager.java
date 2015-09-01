@@ -36,7 +36,6 @@ import ar.ext.avro.Converters;
 import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
-import ar.renderers.ThreadpoolRenderer;
 import static java.lang.String.format;
 
 //TODO: Generalize and move out to a more accessible location...
@@ -78,7 +77,7 @@ public class CacheManager implements Renderer {
 			Aggregator<I, A> aggregator, AffineTransform viewTransform,
 			String targetId, Rectangle viewport) {
 		return this.aggregate(glyphs, selector, aggregator, viewTransform, 
-				ThreadpoolRenderer.defaultMerge(aggregator.identity(), aggregator::rollup),
+				Renderer.simpleMerge(aggregator.identity(), aggregator::rollup),
 				targetId, viewport);
 	}
 
@@ -98,7 +97,7 @@ public class CacheManager implements Renderer {
 		if (cacheStatus.remaining.isPresent()) {
 			System.out.println("## Rendering tile from source " + cacheStatus.remaining.get());
 			try {
-				Function<A, Aggregates<A>> allocator = ThreadpoolRenderer.defaultAllocator(glyphs, gbt);
+				Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, gbt);
 				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
 				Glyphset<? extends G, ? extends I> subset = renderBounds.contains(glyphs.bounds()) 
 														? glyphs
@@ -342,7 +341,7 @@ public class CacheManager implements Renderer {
 				String targetId,
 				Rectangle viewport) {
 
-			Function<A, Aggregates<A>> allocator = ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform);
+			Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, viewTransform);
 			return super.base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);
 		}
 	}

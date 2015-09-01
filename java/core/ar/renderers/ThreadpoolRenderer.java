@@ -1,6 +1,5 @@
 package ar.renderers;
 
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +21,6 @@ import ar.Renderer;
 import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
-import ar.aggregates.wrappers.TouchedBoundsWrapper;
 import ar.renderers.tasks.GlyphParallelAggregation;
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
@@ -109,8 +107,8 @@ public class ThreadpoolRenderer implements Renderer {
 			AffineTransform viewTransform) {
 
 		return aggregate(glyphs, selector, aggregator, viewTransform, 
-				defaultAllocator(glyphs, viewTransform),
-				defaultMerge(aggregator.identity(), aggregator::rollup)
+				Renderer.simpleAllocator(glyphs, viewTransform),
+				Renderer.simpleMerge(aggregator.identity(), aggregator::rollup)
 				);
 	}
 	
@@ -197,26 +195,6 @@ public class ThreadpoolRenderer implements Renderer {
 	@Override public void stop() {
 		for(Future<?> task: tasks) {task.cancel(true);}
 	}
-	
-	//TODO: Move to 'renderer' in general?
-	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/
-	public static <A> BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> defaultMerge(A defVal, BiFunction<A,A,A> rollup) {
-		return (result, from) -> AggregateUtils.__unsafeMerge(result, from, defVal, rollup);
-
-	}
-	
-	//TODO: Move to 'renderer' in general?
-	/**Allocate for full-bounds in the current view.**/
-	public static <A> Function<A, Aggregates<A>> defaultAllocator(Glyphset<?,?> glyphs, AffineTransform viewTransform) {
-		Rectangle bounds = viewTransform.createTransformedShape(glyphs.bounds()).getBounds();
-		return (defVal) ->
-			new TouchedBoundsWrapper<>(
-					AggregateUtils.make(
-							bounds.x, bounds.y,
-							bounds.x+bounds.width, bounds.y+bounds.height,
-							defVal),
-					false);		
-	}	
 	
 	private static final class TransferTask<IN,OUT> implements Callable<Aggregates<OUT>> {
 		private final int lowX, lowY, highX, highY;

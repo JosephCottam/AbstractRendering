@@ -100,7 +100,7 @@ public class ForkJoinRenderer implements Renderer {
 			Selector<G> selector,
 			Aggregator<I,A> op,
 			AffineTransform view) {
-		return aggregate(glyphs, selector, op, view, ThreadpoolRenderer.defaultAllocator(glyphs, view), ThreadpoolRenderer.defaultMerge(op.identity(), op::rollup));
+		return aggregate(glyphs, selector, op, view, Renderer.simpleAllocator(glyphs, view), Renderer.simpleMerge(op.identity(), op::rollup));
 	}
 	
 	private <I,G,A, GG extends G, II extends I> Aggregates<A> innerAggregate(
