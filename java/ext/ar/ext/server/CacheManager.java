@@ -305,8 +305,10 @@ public class CacheManager implements Renderer {
 	
 	
 	/**Delete the cache directory and everything in it.**/
-	public static void clearCache(File cachedir) throws IOException {
+	public static void clearCache(final File cachedir) throws IOException {
 		System.out.println("## Clearing the cache.");
+		if (!cachedir.exists()) {return;}
+		
 		Files.walkFileTree(cachedir.toPath(), 
 				new SimpleFileVisitor<Path>(){
 					@Override
@@ -317,7 +319,7 @@ public class CacheManager implements Renderer {
 					
 					@Override
 					public FileVisitResult postVisitDirectory(Path file, IOException exc) throws IOException {
-						Files.deleteIfExists(file);
+						if (!Files.isSameFile(file, cachedir.toPath())) {Files.deleteIfExists(file);} //Delete everything EXCEPT the cache directory itself
 						return FileVisitResult.CONTINUE;
 					}
 				});
