@@ -194,7 +194,7 @@ public class ARServer extends NanoHTTPD {
 			
 			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
 			CacheManager render = ignoreCached 
-					? new CacheManager.Shim(cachedir, tileSize, baseRenderer ) 
+					? new CacheManager.Shim(cachedir, tileSize, baseRenderer) 
 					: new CacheManager(cachedir, tileSize, baseRenderer);
 
 			tasks.put(requesterID, render);

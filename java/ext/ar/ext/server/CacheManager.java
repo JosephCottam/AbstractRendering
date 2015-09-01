@@ -96,7 +96,7 @@ public class CacheManager implements Renderer {
 		
 		Optional<Aggregates<A>> freshRendered = Optional.empty();
 		if (cacheStatus.remaining.isPresent()) {
-			System.out.println("## Rendering fragment " + cacheStatus.remaining.get());
+			System.out.println("## Rendering tile from source " + cacheStatus.remaining.get());
 			try {
 				Function<A, Aggregates<A>> allocator = ThreadpoolRenderer.defaultAllocator(glyphs, gbt);
 				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
@@ -334,13 +334,15 @@ public class CacheManager implements Renderer {
 	public static final class Shim extends CacheManager {
 		public Shim(File cachedir, int tileSize, Renderer base) {super(cachedir, tileSize, base);}
 
+		@Override
 		public <I, G, A> Aggregates<A> aggregate(
 				Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
 				Aggregator<I, A> aggregator, AffineTransform viewTransform,
-				Function<A, Aggregates<A>> allocator,
 				BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
-				@SuppressWarnings("unused") String targetId,
-				@SuppressWarnings("unused") Rectangle viewport) {
+				String targetId,
+				Rectangle viewport) {
+
+			Function<A, Aggregates<A>> allocator = ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform);
 			return super.base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);
 		}
 	}
