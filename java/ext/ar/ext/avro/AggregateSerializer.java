@@ -26,6 +26,7 @@ import org.apache.avro.io.EncoderFactory;
 
 import ar.Aggregates;
 import ar.aggregates.AggregateUtils;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
 
@@ -100,20 +101,25 @@ public class AggregateSerializer {
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, FORMAT format, Valuer<A, GenericRecord> converter) throws IOException {
 		Schema fullSchema = new SchemaComposer().add(itemSchema).addResource(AGGREGATES_SCHEMA).resolved();
 
-		List<GenericRecord> records = new ArrayList<GenericRecord>();
 		A defVal = aggs.defaultValue();
 		GenericRecord defrec = converter.apply(defVal);
 
-		for (int y=aggs.lowY(); y<aggs.highY(); y++) {
-			for (int x=aggs.lowX(); x<aggs.highX(); x++) {
-				A val = aggs.get(x,y);
-				//if (defVal == val || (defVal != null && defVal.equals(val))) {continue;}  TODO: Investigate reinstating default-value omission by making a union type with null...(maybe)
-				GenericRecord vr = converter.apply(val);
-				records.add(vr);
+		if (aggs instanceof ConstantAggregates) {
+ 			serializeContainer(aggs, out, fullSchema, format, defrec, null);
+		} else {
+			List<GenericRecord> records = new ArrayList<GenericRecord>();
+	
+			for (int y=aggs.lowY(); y<aggs.highY(); y++) {
+				for (int x=aggs.lowX(); x<aggs.highX(); x++) {
+					A val = aggs.get(x,y);
+					//if (defVal == val || (defVal != null && defVal.equals(val))) {continue;}  TODO: Investigate reinstating default-value omission by making a union type with null...(maybe)
+					GenericRecord vr = converter.apply(val);
+					records.add(vr);
+				}
 			}
+	
+			serializeContainer(aggs, out, fullSchema, format, defrec, records);
 		}
-
-		serializeContainer(aggs, out, fullSchema, format, defrec, records);
 	}
 
 
@@ -175,15 +181,20 @@ public class AggregateSerializer {
 			GenericData.Array<GenericRecord> entries = 
 					(GenericData.Array<GenericRecord>) r.get("values");
 
-			Aggregates<A> aggs = AggregateUtils.make(lowX, lowY, highX, highY, defVal);
-			for (int i=0; i<entries.size(); i++) {
-				int x = i % xCount;
-				int y = i / xCount;
-				A val = converter.apply(entries.get(i));
-				aggs.set(x+lowX, y+lowY, val);
+			Aggregates<A> aggs;
+			if (entries == null) {
+				aggs = new ConstantAggregates<>(defVal, lowX, lowY, highX, highY);
+			} else {
+				aggs = AggregateUtils.make(lowX, lowY, highX, highY, defVal);
+				for (int i=0; i<entries.size(); i++) {
+					int x = i % xCount;
+					int y = i / xCount;
+					A val = converter.apply(entries.get(i));
+					aggs.set(x+lowX, y+lowY, val);
+				}
+	
+				fr.close();
 			}
-
-			fr.close();
 			return aggs;
 		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
 	}

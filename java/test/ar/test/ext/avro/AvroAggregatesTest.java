@@ -1,6 +1,7 @@
-package ar.test.ext;
+package ar.test.ext.avro;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
@@ -28,6 +29,7 @@ import ar.rules.Categories;
 import ar.rules.Numbers;
 import ar.selectors.TouchesPixel;
 import ar.util.Util;
+import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.implementations.RefFlatAggregates;
 import ar.app.util.GlyphsetUtils;
 import ar.ext.avro.AggregateSerializer;
@@ -69,15 +71,15 @@ public class AvroAggregatesTest {
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
 			Aggregates<Integer> res = AggregateSerializer.deserialize(file, new Converters.ToCount());
 	
-			assertEquals(ref.lowX(), res.lowX());
-			assertEquals(ref.lowY(), res.lowY());
-			assertEquals(ref.highX(), res.highX());
-			assertEquals(ref.highY(), res.highY());
-			assertEquals(ref.defaultValue(), res.defaultValue());
+			assertThat(ref.lowX(), is(res.lowX()));
+			assertThat(ref.lowY(), is(res.lowY()));
+			assertThat(ref.highX(), is(res.highX()));
+			assertThat(ref.highY(), is(res.highY()));
+			assertThat(ref.defaultValue(), is(res.defaultValue()));
 			
 			for (int x=ref.lowX(); x<ref.highX(); x++) {
 				for (int y=ref.lowY(); y<ref.highY(); y++)
-					assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+					assertThat(String.format("Value at (%d, %d)",x,y), ref.get(x, y), is(res.get(x, y)));
 			}
 		}
 	}
@@ -93,15 +95,15 @@ public class AvroAggregatesTest {
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
 			Aggregates<Integer> res = AggregateSerializer.deserialize(file, new Converters.ToCount());
 		
-			assertEquals(ref.lowX(), res.lowX());
-			assertEquals(ref.lowY(), res.lowY());
-			assertEquals(ref.highX(), res.highX());
-			assertEquals(ref.highY(), res.highY());
-			assertEquals(ref.defaultValue(), res.defaultValue());
+			assertThat(ref.lowX(), is(res.lowX()));
+			assertThat(ref.lowY(), is(res.lowY()));
+			assertThat(ref.highX(), is(res.highX()));
+			assertThat(ref.highY(), is(res.highY()));
+			assertThat(ref.defaultValue(), is(res.defaultValue()));
 			
 			for (int x=ref.lowX(); x<ref.highX(); x++) {
 				for (int y=ref.lowY(); y<ref.highY(); y++)
-					assertEquals(String.format("Value at (%d, %d)",x,y), ref.get(x, y), res.get(x, y));
+					assertThat(String.format("Value at (%d, %d)",x,y), ref.get(x, y), is(res.get(x, y)));
 			}
 		}
 	}
@@ -122,10 +124,10 @@ public class AvroAggregatesTest {
 			int highX = n.get("xBinCount").getIntValue() + xOffset;
 			int highY = n.get("yBinCount").getIntValue() + yOffset;
 			
-			assertEquals(ref.lowX(), xOffset);
-			assertEquals(ref.lowY(), yOffset);
-			assertEquals(ref.highX(), highX);
-			assertEquals(ref.highY(), highY);
+			assertThat(ref.lowX(), is(xOffset));
+			assertThat(ref.lowY(), is(yOffset));
+			assertThat(ref.highX(), is(highX));
+			assertThat(ref.highY(), is(highY));
 		}
 	}
 	
@@ -142,25 +144,45 @@ public class AvroAggregatesTest {
 			Aggregates<CategoricalCounts<String>> res 
 				= AggregateSerializer.deserialize(file, new Converters.ToCoC());
 	
-			assertEquals(ref.lowX(), res.lowX());
-			assertEquals(ref.lowY(), res.lowY());
-			assertEquals(ref.highX(), res.highX());
-			assertEquals(ref.highY(), res.highY());
-			assertEquals(ref.defaultValue(), res.defaultValue());
+			assertThat(ref.lowX(), is(res.lowX()));
+			assertThat(ref.lowY(), is(res.lowY()));
+			assertThat(ref.highX(), is(res.highX()));
+			assertThat(ref.highY(), is(res.highY()));
+			assertThat(ref.defaultValue(), is(res.defaultValue()));
 			
 			for (int x=ref.lowX(); x<ref.highX(); x++) {
 				for (int y=ref.lowY(); y<ref.highY(); y++) {
 					CategoricalCounts<Color> rref = ref.get(x,y);
 					CategoricalCounts<String> rres = res.get(x,y);
-					assertEquals(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), rres.size());
+					assertThat(String.format("Unequal key count at (%d, %d)", x,y), rref.size(), is(rres.size()));
 					
 					for (int i=0; i<rres.size();i++) {
 						//HACK: Must test string-equality because generic serialization is based on string category key
-						assertEquals(String.format("Unequal key at %d",i), rref.key(i).toString(), rres.key(i));					
-						assertEquals(String.format("Unequal count at %d",i), rref.count(i), rres.count(i));					
+						assertThat(String.format("Unequal key at %d",i), rref.key(i).toString(), is(rres.key(i)));					
+						assertThat(String.format("Unequal count at %d",i), rref.count(i), is(rres.count(i)));					
 					}				
 				}
 			}
+		}
+	}
+	
+
+	@Test
+	public void ConstRoundTrip() throws Exception {
+		Aggregates<Integer> ref = new ConstantAggregates<>(34, 0,0,10000,10000);
+		
+		File file =  new File("./testResults/const.avro");
+		try (OutputStream out = new FileOutputStream(file)) {
+			Schema s = new SchemaComposer().addResource(AggregateSerializer.COUNTS_SCHEMA).resolved();
+			AggregateSerializer.serialize(ref, out, s, new Converters.FromCount(s));
+			Aggregates<Integer> res = AggregateSerializer.deserialize(file, new Converters.ToCount());
+	
+			assertThat("Constant aggregates did not deserialize to constant", res, instanceOf(ConstantAggregates.class));
+			assertThat(ref.lowX(), is(res.lowX()));
+			assertThat(ref.lowY(), is(res.lowY()));
+			assertThat(ref.highX(), is(res.highX()));
+			assertThat(ref.highY(), is(res.highY()));
+			assertThat(ref.defaultValue(), is(res.defaultValue()));
 		}
 	}
 }

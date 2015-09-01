@@ -1,4 +1,4 @@
-package ar.test.ext;
+package ar.test.ext.avro;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
