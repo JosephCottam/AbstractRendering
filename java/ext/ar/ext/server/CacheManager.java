@@ -95,7 +95,7 @@ public class CacheManager implements Renderer {
 		
 		Optional<Aggregates<A>> freshRendered = Optional.empty();
 		if (cacheStatus.remaining.isPresent()) {
-			System.out.println("## Rendering tile from source " + cacheStatus.remaining.get());
+			System.out.println("## Rendering tile(s) from source " + cacheStatus.remaining.get());
 			try {
 				Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, gbt);
 				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
@@ -274,20 +274,8 @@ public class CacheManager implements Renderer {
 	 * **/
 	public <A> void save(String datasetId, Aggregator<?,A> aggregator,  AffineTransform gbt, Aggregates<A> aggs) {		
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
-		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);
-		
-//		//Compensate for existing translation...
-//		double tx = gbt.getTranslateX();
-//		double ty = gbt.getTranslateY();
-//		
-//		//Align rendered space to global bins, expand to full tiles and calculate tiles
-//		Rectangle renderBounds = AffineTransform.getTranslateInstance(tx,ty).createTransformedShape(aggregateBounds).getBounds();
-//		renderBounds = renderBounds(renderBounds);
-//		List<Rectangle> tileBounds = tileBounds(aggregateBounds );
-//		System.out.printf("Save: Calc files with %s and %s%n", gbt, renderBounds);
-//
+		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);		
 		List<Rectangle> tileBounds = tileBounds(aggregateBounds);
-
 		
 		System.out.println("## Saving aggregates to cache.");
 		for (Rectangle bound: tileBounds) {
