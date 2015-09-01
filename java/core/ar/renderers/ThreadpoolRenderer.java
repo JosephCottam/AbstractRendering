@@ -144,13 +144,14 @@ public class ThreadpoolRenderer implements Renderer {
 		Aggregates<A> result = allocator.apply(op.identity());	//TODO: Maybe remove, not necessarily needed
 		try {
 			for (int i=0; i<segments.size() && !pool.isShutdown(); i++) {
+				Future<Aggregates<A>> future = service.take();
+				if (future.isCancelled()) {throw new Renderer.StopSignaledException();}
+				
 				Aggregates<A> from = service.take().get();
 				result = merge.apply(result, from);
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error completing aggregation", e);
-		} finally {
-			if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}
 		}
 
 		return result;
@@ -178,9 +179,7 @@ public class ThreadpoolRenderer implements Renderer {
 		try {pool.invokeAll(tasks);}
 		catch (InterruptedException e) {
 			throw new RuntimeException("Error completing transfer", e);
-		} finally {
-			if (pool.isShutdown()) {throw new Renderer.StopSignaledException();}
-		}
+		} 
 		
 		return result;
 	}
@@ -196,7 +195,7 @@ public class ThreadpoolRenderer implements Renderer {
 	
 	@Override public ProgressRecorder recorder() {return recorder;}	
 	@Override public void stop() {
-		for(Future<?> task: tasks) {task.cancel(false);}
+		for(Future<?> task: tasks) {task.cancel(true);}
 	}
 	
 	//TODO: Move to 'renderer' in general?
