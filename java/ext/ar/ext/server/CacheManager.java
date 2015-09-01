@@ -78,7 +78,6 @@ public class CacheManager implements Renderer {
 			Aggregator<I, A> aggregator, AffineTransform viewTransform,
 			String targetId, Rectangle viewport) {
 		return this.aggregate(glyphs, selector, aggregator, viewTransform, 
-				ThreadpoolRenderer.defaultAllocator(glyphs, viewTransform),
 				ThreadpoolRenderer.defaultMerge(aggregator.identity(), aggregator::rollup),
 				targetId, viewport);
 	}
@@ -87,7 +86,6 @@ public class CacheManager implements Renderer {
 	public <I, G, A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
 			Aggregator<I, A> aggregator, AffineTransform viewTransform,
-			Function<A, Aggregates<A>> allocator,
 			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
 			String targetId,
 			Rectangle viewport) {
@@ -100,9 +98,11 @@ public class CacheManager implements Renderer {
 		if (cacheStatus.remaining.isPresent()) {
 			System.out.println("## Rendering fragment " + cacheStatus.remaining.get());
 			try {
+				Function<A, Aggregates<A>> allocator = ThreadpoolRenderer.defaultAllocator(glyphs, gbt);
 				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
-				System.out.println(renderBounds);
-				Glyphset<? extends G, ? extends I> subset = new BoundingWrapper<>(glyphs, renderBounds);
+				Glyphset<? extends G, ? extends I> subset = renderBounds.contains(glyphs.bounds()) 
+														? glyphs
+														: new BoundingWrapper<>(glyphs, renderBounds);
 				freshRendered = Optional.ofNullable(base.aggregate(subset, selector, aggregator, gbt, allocator, merge));
 				
 				
@@ -110,15 +110,13 @@ public class CacheManager implements Renderer {
 				throw new RuntimeException("Error calculating the region to render.", e);
 			}
 			
-			//Aggregates<A> toSave = freshRendered.orElse(new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get()));
+			//Expand aggregates back out to full tile sizes
 			Aggregates<A> toSave = new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get());
 			toSave = freshRendered.isPresent() 
 									? new CompositeWrapper<>(freshRendered.get(), toSave, new CompositeWrapper.LeftBiased<>(freshRendered.get().defaultValue()))
 									: toSave;
 			save(targetId, aggregator, gbt, toSave);
 		}
-		
-
 
 		Aggregates<A> result = AggregateUtils.__unsafeMerge(
 									freshRendered.orElse(new ConstantAggregates<>(aggregator.identity())),
