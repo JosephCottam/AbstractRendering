@@ -138,7 +138,6 @@ public class CacheManager implements Renderer {
 	public ProgressRecorder recorder() {return base.recorder();}
 	
 	@Override
-	//TODO: Manage future work better....
 	public void stop() {base.stop();}
 
 	/**Root directory for the view/data/aggregator combination cache.**/
@@ -218,10 +217,12 @@ public class CacheManager implements Renderer {
 	}
 	
 	/**
+	 * TODO: Is aggregator conversion post-load valuable (like CoC->ToCounts)? Would enable a smaller on-disk cache....but might be too narrow to bother with. 
+	 * 
 	 * @param datasetId   Name identifying source data
-	 * @param aggregator  Aggregator that will be used		//TODO: Aggregator based transformation in cache load (like CoC->ToCounts)?
+	 * @param aggregator  Aggregator that will be used		
 	 * @param vt		  View transform applied to source data
-	 * @param viewport	  Size of the screen viewport (in screen coordinates) //TODO: Should this be in graphics coordinates? 
+	 * @param viewport	  Size of the screen viewport (in screen coordinates) 
 	 * @return
 	 */
 	public <A> CacheStatus<A> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, AffineTransform gbt, Rectangle viewport) {
