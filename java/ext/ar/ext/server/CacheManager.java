@@ -29,6 +29,7 @@ import ar.Transfer.ItemWise;
 import ar.Transfer.Specialized;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
+import ar.aggregates.wrappers.CompositeWrapper;
 import ar.aggregates.wrappers.SubsetWrapper;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
@@ -91,26 +92,41 @@ public class CacheManager implements Renderer {
 			String targetId,
 			Rectangle viewport) {
 		
-		CacheStatus<A> cacheStatus = loadCached(targetId, glyphs.bounds(), aggregator, viewTransform, viewport);
+		AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+		CacheStatus<A> cacheStatus = loadCached(targetId, aggregator, viewTransform, gbt, viewport);
+		
 		
 		Optional<Aggregates<A>> freshRendered = Optional.empty();
 		if (cacheStatus.remaining.isPresent()) {
-			AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+			System.out.println("## Rendering fragment " + cacheStatus.remaining.get());
 			try {
 				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
+				System.out.println(renderBounds);
 				Glyphset<? extends G, ? extends I> subset = new BoundingWrapper<>(glyphs, renderBounds);
 				freshRendered = Optional.ofNullable(base.aggregate(subset, selector, aggregator, gbt, allocator, merge));
+				
+				
 			} catch (NoninvertibleTransformException e) {
 				throw new RuntimeException("Error calculating the region to render.", e);
 			}
-			save(targetId, glyphs.bounds(), aggregator, gbt, freshRendered.orElse(new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get())));
+			
+			//Aggregates<A> toSave = freshRendered.orElse(new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get()));
+			Aggregates<A> toSave = new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get());
+			toSave = freshRendered.isPresent() 
+									? new CompositeWrapper<>(freshRendered.get(), toSave, new CompositeWrapper.LeftBiased<>(freshRendered.get().defaultValue()))
+									: toSave;
+			save(targetId, aggregator, gbt, toSave);
 		}
+		
+
 
 		Aggregates<A> result = AggregateUtils.__unsafeMerge(
 									freshRendered.orElse(new ConstantAggregates<>(aggregator.identity())),
 									cacheStatus.cached.orElse(new ConstantAggregates<>(aggregator.identity())), 
 									aggregator.identity(), 
 									aggregator::rollup);
+
+		result = new SubsetWrapper<>(result, viewport);
 		
 		return result;
 	}
@@ -187,7 +203,7 @@ public class CacheManager implements Renderer {
 	 * **/
 	public static AffineTransform globalBinTransform(Rectangle2D datasetBounds, AffineTransform vt) {
 		AffineTransform gbt = AffineTransform.getScaleInstance(vt.getScaleX(), vt.getScaleY()); 
-		gbt.translate(datasetBounds.getMinX(), -datasetBounds.getMinY());
+		gbt.translate(-datasetBounds.getMinX(), -datasetBounds.getMinY());
 		return gbt;
 	}
 	
@@ -211,20 +227,15 @@ public class CacheManager implements Renderer {
 	 * @param viewport	  Size of the screen viewport (in screen coordinates) //TODO: Should this be in graphics coordinates? 
 	 * @return
 	 */
-	public <A> CacheStatus<A> loadCached(String datasetId, Rectangle2D glyphsetBounds, Aggregator<?,A> aggregator, AffineTransform vt, Rectangle viewport) {
+	public <A> CacheStatus<A> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, AffineTransform gbt, Rectangle viewport) {
 		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
 		
-
-		AffineTransform gbt = globalBinTransform(glyphsetBounds, vt);
-
 		Rectangle viewBounds; //viewport in gbt space
 		try {viewBounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
 		catch (NoninvertibleTransformException e) {throw new RuntimeException(e);}
 
 		Rectangle renderBounds = renderBounds(viewBounds);
 		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
-
-		
 		
 		System.out.println("## Loading cached aggregates.");
 		Aggregates<A> combined =  AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
@@ -233,7 +244,6 @@ public class CacheManager implements Renderer {
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
 		for (Rectangle tile: tileBounds(renderBounds)) {
 			File f = tileFile(tilesetRoot, tile);  
-			System.out.println("loading file " + f.getName());
 			if (!f.exists()) {
 				System.out.println("## Missing part from cached, aggregating  --- " + f.getName());
 				remaining = Optional.of(remaining.isPresent() ? remaining.get().union(tile) : tile);
@@ -248,7 +258,7 @@ public class CacheManager implements Renderer {
 				}
 			}
 		}
-		combined = new SubsetWrapper<>(combined, viewBounds);
+		
 		return new CacheStatus<>(combined, remaining);
 	}
 	
@@ -259,23 +269,24 @@ public class CacheManager implements Renderer {
 	 * @param base Source dataset
 	 * @param aggregator Aggregator used to build the aggregates (influences the cache path)
 	 * @param vt View transform used to render the aggregates (used to align the aggregates to the global grid)
-	 * @param aggs Aggregates to save
+	 * @param aggs Aggregates to save (MUST be full tiles aligned to the tile grid)
 	 *
 	 * **/
-	public <A> void save(String datasetId, Rectangle2D glyphsetBounds, Aggregator<?,A> aggregator, AffineTransform vt, Aggregates<A> aggs) {		
-		AffineTransform gbt = globalBinTransform(glyphsetBounds, vt);
-		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
+	public <A> void save(String datasetId, Aggregator<?,A> aggregator,  AffineTransform gbt, Aggregates<A> aggs) {		
+		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
 		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);
 		
-		//Compensate for existing translation...
-		double tx = gbt.getTranslateX()-vt.getTranslateX();
-		double ty = gbt.getTranslateY()-vt.getTranslateY();
-		
-		//Align rendered space to global bins, expand to full tiles and calculate tiles
-		Rectangle renderBounds = AffineTransform.getTranslateInstance(tx,ty).createTransformedShape(aggregateBounds).getBounds();
-		renderBounds = renderBounds(renderBounds);
-		List<Rectangle> tileBounds = tileBounds(renderBounds);
-		System.out.printf("Save: Calc files with %s and %s%n", vt, renderBounds);
+//		//Compensate for existing translation...
+//		double tx = gbt.getTranslateX();
+//		double ty = gbt.getTranslateY();
+//		
+//		//Align rendered space to global bins, expand to full tiles and calculate tiles
+//		Rectangle renderBounds = AffineTransform.getTranslateInstance(tx,ty).createTransformedShape(aggregateBounds).getBounds();
+//		renderBounds = renderBounds(renderBounds);
+//		List<Rectangle> tileBounds = tileBounds(aggregateBounds );
+//		System.out.printf("Save: Calc files with %s and %s%n", gbt, renderBounds);
+//
+		List<Rectangle> tileBounds = tileBounds(aggregateBounds);
 
 		
 		System.out.println("## Saving aggregates to cache.");
