@@ -329,8 +329,10 @@ public class CacheManager implements Renderer {
 				String targetId,
 				Rectangle viewport) {
 
-			Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, viewTransform);
-			return super.base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);
+			AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+			Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, gbt);
+			Aggregates<A> aggs = super.base.aggregate(glyphs, selector, aggregator, gbt, allocator, merge);
+			return new SubsetWrapper<>(aggs, viewport);
 		}
 	}
 }
