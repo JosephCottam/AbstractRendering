@@ -73,7 +73,7 @@ public class CacheManagerTest {
 		assertThat(gbt, is(new AffineTransform()));
 		
 		gbt = CacheManager.globalBinTransform(new Rectangle(10,10,100,100), new AffineTransform());
-		assertThat(gbt, is(AffineTransform.getTranslateInstance(10, -10)));
+		assertThat(gbt, is(AffineTransform.getTranslateInstance(-10, -10)));
 		
 		gbt = CacheManager.globalBinTransform(new Rectangle(0,0,100,100), AffineTransform.getTranslateInstance(100, 100));
 		assertThat(gbt, is(new AffineTransform()));
