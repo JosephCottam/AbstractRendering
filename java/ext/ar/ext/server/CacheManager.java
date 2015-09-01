@@ -213,7 +213,7 @@ public class CacheManager implements Renderer {
 		/**Region that still needs to be rendered (in global bin space).**/
 		public Optional<Rectangle> remaining;
 		public CacheStatus(Aggregates<A> aggs, Optional<Rectangle> remaining) {
-			this.cached = Optional.ofNullable(aggs.empty() ? null : aggs);
+			this.cached = Optional.ofNullable((aggs == null || aggs.empty()) ? null : aggs);
 			this.remaining = remaining;
 		}
 	}
@@ -233,10 +233,10 @@ public class CacheManager implements Renderer {
 		catch (NoninvertibleTransformException e) {throw new RuntimeException(e);}
 
 		Rectangle renderBounds = renderBounds(viewBounds);
-		System.out.printf("Load: Calc files with %s and %s%n", vt, renderBounds);
 		
 		System.out.println("## Loading cached aggregates.");
-		Aggregates<A> combined =  AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
+		Aggregates<A> combined = AggregateUtils.make(renderBounds.x, renderBounds.y, renderBounds.x+renderBounds.width, renderBounds.y+renderBounds.height, aggregator.identity());
+		boolean combinedEmpty = true;
 		Optional<Rectangle> remaining = Optional.empty();
 		
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
@@ -249,6 +249,7 @@ public class CacheManager implements Renderer {
 				try {
 					Aggregates<A> aggs = AggregateSerializer.deserialize(f, converter);
 					combined = AggregateUtils.__unsafeMerge(combined, aggs, aggregator.identity(), aggregator::rollup);
+					combinedEmpty = false;
 				} catch (Exception e) {
 					System.err.println("## Cache located for " + f + ", but error deserializing.");
 					e.printStackTrace();
@@ -257,12 +258,14 @@ public class CacheManager implements Renderer {
 			}
 		}
 		
-		return new CacheStatus<>(combined, remaining);
+		return new CacheStatus<>(combinedEmpty ? null : combined, remaining);
 	}
 	
 	/**Save out a set of aggregates into tiles.
 	 * 
 	 * Assumes that the aggregates cover full tiles (easily done using the renderBounds method).
+	 * 
+	 * TODO: More efficiently save constant aggregates so it doesn't have to reload large swaths of single values
 	 * 
 	 * @param base Source dataset
 	 * @param aggregator Aggregator used to build the aggregates (influences the cache path)
@@ -327,7 +330,7 @@ public class CacheManager implements Renderer {
 	
 			
 	
-	/**Same interface as the CacheManager, but NEVER looks at the cache.**/
+	/**Same interface as the CacheManager, but NEVER looks at the cache (just uses the base renderer).**/
 	public static final class Shim extends CacheManager {
 		public Shim(File cachedir, int tileSize, Renderer base) {super(cachedir, tileSize, base);}
 
@@ -336,8 +339,8 @@ public class CacheManager implements Renderer {
 				Aggregator<I, A> aggregator, AffineTransform viewTransform,
 				Function<A, Aggregates<A>> allocator,
 				BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
-				String targetId,
-				Rectangle viewport) {
+				@SuppressWarnings("unused") String targetId,
+				@SuppressWarnings("unused") Rectangle viewport) {
 			return super.base.aggregate(glyphs, selector, aggregator, viewTransform, allocator, merge);
 		}
 	}
