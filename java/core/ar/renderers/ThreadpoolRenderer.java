@@ -4,11 +4,13 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -22,7 +24,6 @@ import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.wrappers.TouchedBoundsWrapper;
 import ar.renderers.tasks.GlyphParallelAggregation;
-
 
 /**Task-stealing renderer that works on a per-glyph basis, designed for use with a linear stored glyph-set.
  * Iterates the glyphs and produces many aggregate sets that are then combined
@@ -66,7 +67,7 @@ public class ThreadpoolRenderer implements Renderer {
 	
 	private final ExecutorService pool;
 	private final ProgressRecorder recorder;
-	
+	private final List<Future<?>> tasks = Collections.synchronizedList(new ArrayList<>());
 	private final int threadLoad;
 
 
@@ -129,12 +130,16 @@ public class ThreadpoolRenderer implements Renderer {
 		ExecutorCompletionService<Aggregates<A>> service = new ExecutorCompletionService<>(pool);
 		
 		Collection<Glyphset<GG, II>> segments = glyphs.segment(taskCount);
+		List<Future<Aggregates<A>>> futures = new ArrayList<>(); 
+		
 		for (Glyphset<GG, II> segment: segments) {
 			AggregateTask<G,I,A> task = new AggregateTask<>(
 					recorder, view,
 					segment, selector, op, allocator);
-			service.submit(task);
+			futures.add(service.submit(task));
 		}
+		
+		tasks.addAll(futures);
 		
 		Aggregates<A> result = allocator.apply(op.identity());	//TODO: Maybe remove, not necessarily needed
 		try {
@@ -190,7 +195,9 @@ public class ThreadpoolRenderer implements Renderer {
 	}	
 	
 	@Override public ProgressRecorder recorder() {return recorder;}	
-	@Override public void stop() {pool.shutdownNow();}
+	@Override public void stop() {
+		for(Future<?> task: tasks) {task.cancel(false);}
+	}
 	
 	//TODO: Move to 'renderer' in general?
 	/**Merge operation using the aggregator/rollup.  Assumes the first argument to the merge can be safely mutated.**/

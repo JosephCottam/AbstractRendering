@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -60,6 +63,14 @@ public class ARServer extends NanoHTTPD {
 	private final Map<Object, Renderer> tasks = new ConcurrentHashMap<>();
 	private final File cachedir;
 	private final int tileSize;
+	
+	private static final AtomicInteger threadCounter = new AtomicInteger(0); 
+	private final ExecutorService pool = Executors.newFixedThreadPool(ThreadpoolRenderer.RENDER_POOL_SIZE,
+			(Runnable r) -> {
+				Thread t = new Thread(r, "AR Server Renderer Pool -- " + threadCounter.getAndIncrement());
+				t.setDaemon(true);
+		        return t;
+		    });
 
 	public ARServer(String hostname) {this(hostname, DEFAULT_PORT);}
 	public ARServer(String hostname, int port) {this(hostname, port, new File("./cache"), 500);}
@@ -181,9 +192,10 @@ public class ARServer extends NanoHTTPD {
 			
 			
 			
+			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
 			CacheManager render = ignoreCached 
-					? new CacheManager.Shim(cachedir, tileSize, new ThreadpoolRenderer(new ProgressRecorder.NOP())) 
-					: new CacheManager(cachedir, tileSize, new ThreadpoolRenderer(new ProgressRecorder.NOP()));
+					? new CacheManager.Shim(cachedir, tileSize, baseRenderer ) 
+					: new CacheManager(cachedir, tileSize, baseRenderer);
 
 			tasks.put(requesterID, render);
 						
