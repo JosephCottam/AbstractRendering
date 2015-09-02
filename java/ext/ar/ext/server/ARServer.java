@@ -165,7 +165,6 @@ public class ARServer extends NanoHTTPD {
 			Rectangle2D zoomBounds;
 			if (selection.isPresent()) {
 				zoomBounds = selection.get();
-				ignoreCached = true; //TODO: implement caching logic with selections
 			} else {
 				zoomBounds = baseConfig.glyphset.bounds();
 			}
@@ -204,7 +203,7 @@ public class ARServer extends NanoHTTPD {
 			
 			try {
 				Selector<G> s = TouchesPixel.make(glyphs);
-				aggs = render.aggregate(glyphs, s, agg, vt, baseConfig.name, viewport);
+				aggs = render.aggregate(glyphs, s, agg, vt, baseConfig.glyphset.bounds(), baseConfig.name, viewport);
 			} catch (Renderer.StopSignaledException e) {return newFixedLengthResponse("Render stopped by signal before completion.");} 
 			
 			if (aggs == null && selection.isPresent()) {return newFixedLengthResponse("Empty selection, no result.");}
@@ -517,13 +516,13 @@ public class ARServer extends NanoHTTPD {
 		int tileSize = Integer.parseInt(ar.util.Util.argKey(args, "-tile", "500"));
 		
 		
+		System.out.printf("## AR Server started on %s: %d%n", host, port);
 		if (clearCache) {CacheManager.clearCache(cachedir);}
 
 		ARServer server = new ARServer(host, port, cachedir, tileSize);
 		
 		server.start();
 		
-		System.out.printf("AR Server started on %s: %d%n", host, port);
 		while (server.isAlive()) {synchronized(server) {server.wait(10000);;}}
 	}
 }

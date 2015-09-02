@@ -75,9 +75,11 @@ public class CacheManager implements Renderer {
 	public <I, G, A> Aggregates<A> aggregate(
 			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
 			Aggregator<I, A> aggregator, AffineTransform viewTransform,
+			Rectangle2D baseframe,
 			String targetId, Rectangle viewport) {
 		return this.aggregate(glyphs, selector, aggregator, viewTransform, 
 				Renderer.simpleMerge(aggregator.identity(), aggregator::rollup),
+				baseframe,
 				targetId, viewport);
 	}
 
@@ -86,10 +88,11 @@ public class CacheManager implements Renderer {
 			Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
 			Aggregator<I, A> aggregator, AffineTransform viewTransform,
 			BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
+			Rectangle2D baseframe,
 			String targetId,
 			Rectangle viewport) {
 		
-		AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+		AffineTransform gbt = globalBinTransform(baseframe, viewTransform);
 		CacheStatus<A> cacheStatus = loadCached(targetId, aggregator, viewTransform, gbt, viewport);
 		
 		
@@ -117,13 +120,16 @@ public class CacheManager implements Renderer {
 			save(targetId, aggregator, gbt, toSave);
 		}
 
+		Rectangle gbtViewport = AffineTransform.getTranslateInstance(-gbt.getTranslateX(), -gbt.getTranslateY()).createTransformedShape(viewport).getBounds();
 		Aggregates<A> result = AggregateUtils.__unsafeMerge(
 									freshRendered.orElse(new ConstantAggregates<>(aggregator.identity())),
-									cacheStatus.cached.orElse(new ConstantAggregates<>(aggregator.identity())), 
+									cacheStatus.cached.orElse(new ConstantAggregates<>(aggregator.identity(), gbtViewport)), 
 									aggregator.identity(), 
 									aggregator::rollup);
 
-		result = new SubsetWrapper<>(result, viewport);
+		int dx = (int) (gbt.getTranslateX() - viewTransform.getTranslateX());
+		int dy = (int) (gbt.getTranslateY() - viewTransform.getTranslateY());
+		result = new SubsetWrapper<>(new ShiftWrapper<>(result, dx, dy), viewport);
 		
 		return result;
 	}
@@ -327,13 +333,17 @@ public class CacheManager implements Renderer {
 				Glyphset<? extends G, ? extends I> glyphs, Selector<G> selector,
 				Aggregator<I, A> aggregator, AffineTransform viewTransform,
 				BiFunction<Aggregates<A>, Aggregates<A>, Aggregates<A>> merge,
+				Rectangle2D baseframe,
 				String targetId,
 				Rectangle viewport) {
 
-			AffineTransform gbt = globalBinTransform(glyphs.bounds(), viewTransform);
+			AffineTransform gbt = globalBinTransform(baseframe, viewTransform);
 			Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, gbt);
 			Aggregates<A> aggs = super.base.aggregate(glyphs, selector, aggregator, gbt, allocator, merge);
-			return new SubsetWrapper<>(aggs, viewport);
+
+			int dx = (int) (gbt.getTranslateX() - viewTransform.getTranslateX());
+			int dy = (int) (gbt.getTranslateY() - viewTransform.getTranslateY());
+			return new SubsetWrapper<>(new ShiftWrapper<>(aggs, dx, dy), viewport);
 		}
 	}
 }
