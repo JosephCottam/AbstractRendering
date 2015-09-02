@@ -13,6 +13,9 @@ import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.ext.lang.BasicLibrary;
 import ar.ext.lang.Parser;
+import ar.util.Util;
+import static ar.ext.lang.BasicLibrary.get;
+import static ar.ext.lang.BasicLibrary.put;
 
 public class ARLangExtensions {
 	public static  String getArl(Field f) {
@@ -59,16 +62,27 @@ public class ARLangExtensions {
 	public static final  Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
 	static {
 		LIBRARY.putAll(BasicLibrary.COMMON);
-		BasicLibrary.put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(BasicLibrary.get(args,0,"sx")));
+		put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
+		put(LIBRARY, "dynScale", "Dyanmically resize based on current view's zoom order-of-mangitude (a modified linear interpolate based on view scale). args: base-zoom, dely",
+				args -> dynScale(get(args, 0, 1), get(args, 1, 1)));
+
+	}
+	
+	private static int dynScale(Number baseScale, Number delay) {
+		double currentScale = Math.min(viewTransform.getScaleX(), viewTransform.getScaleY());		
+		double factor = (currentScale/baseScale.doubleValue())/delay.doubleValue();
+		factor = factor < 1 ? 1 : factor;
+		System.out.printf("Zoom factor: %s,%s --> %s%n", baseScale, currentScale, factor);
+		return (int) factor;
 	}
 	
 	private static AffineTransform viewTransform;
-	private static Function<?, Double> viewTransform(Object arg) {
+	private static double viewTransform(Object arg) {
 		switch (arg.toString()) {
-			case "sx": return a -> viewTransform.getScaleX();
-			case "sy": return a -> viewTransform.getScaleY();
-			case "tx": return a -> viewTransform.getTranslateX();
-			case "ty": return a -> viewTransform.getTranslateY();
+			case "sx": return viewTransform.getScaleX();
+			case "sy": return viewTransform.getScaleY();
+			case "tx": return viewTransform.getTranslateX();
+			case "ty": return viewTransform.getTranslateY();
 			default: throw new IllegalArgumentException("View transform parameter not recognized: " + arg);
 		}
 	}
