@@ -76,8 +76,8 @@ public class AggregateUtils {
 								OUT defVal,
 								BiFunction<L,R,OUT> op) {
 		
-		Rectangle rb = new Rectangle(right.lowX(), right.lowY(), right.highX()-right.lowX(), right.highY()-right.lowY());
-		Rectangle lb = new Rectangle(left.lowX(), left.lowY(), left.highX()-left.lowX(), left.highY()-left.lowY());
+		Rectangle rb = AggregateUtils.bounds(right);
+		Rectangle lb = AggregateUtils.bounds(left);
 		Rectangle bounds = rb.union(lb);
 
 		Aggregates<OUT> target = AggregateUtils.make((int) bounds.getMinX(), (int) bounds.getMinY(), 

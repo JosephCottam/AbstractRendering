@@ -56,4 +56,6 @@ public final class ConstantAggregates<A> implements Aggregates<A> {
 	public int lowY() {return lowY;}
 	public int highX() {return highX;}
 	public int highY() {return highY;}
+	
+	public String toString() {return String.format("%s from %d,%d to %d,%d.", this.getClass().getSimpleName(), lowX(), lowY(), highX(), highY());}
 }
