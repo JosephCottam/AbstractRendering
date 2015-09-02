@@ -100,7 +100,7 @@ public class BasicLibrary {
 				args -> new Categories.HighDefAlpha(get(args, 0, Util.CLEAR), get(args, 1, .1), get(args, 2, true)));
 
 		put(MISC, "present", "Fill areas with non-default value one color, and default value another.", 
-				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 1, Color.WHITE)));
+				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 1, Util.CLEAR)));
 		
 		put(MISC, "toCount", "Take mulit-category counts and combine them to a single set of counts.", 
 				args -> new Categories.ToCount<>());
@@ -174,6 +174,7 @@ public class BasicLibrary {
 		put(MATH, "ceiling", "Ceiling function",  args -> v -> Math.ceil(v.doubleValue()));
 		put(MATH, "floor", "Floor function", args -> v -> Math.floor(v.doubleValue()));
 		put(MATH, "round", "Round function", args -> v -> Math.round(v.doubleValue()));
+		put(MATH, "int", "Convert to an integer", args -> v -> v.intValue());
 		put(MATH, "sign", "Sign function; returns 0 for zero, 1 for positive, -1 for negative.", args -> v -> Math.signum(v.doubleValue()));
 		put(MATH, "abs", "Absolute value function.", args -> v -> Math.abs(v.doubleValue()));
 		put(MATH, "rad->deg", "Function to convert radians to degrees.", args -> v -> Math.toDegrees(v.doubleValue()));
