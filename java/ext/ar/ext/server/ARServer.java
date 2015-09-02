@@ -41,8 +41,6 @@ import ar.app.components.sequentialComposer.OptionAggregator;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
-import ar.ext.lang.BasicLibrary;
-import ar.ext.lang.Parser;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -117,16 +115,14 @@ public class ARServer extends NanoHTTPD {
 		Object requesterID = params.getOrDefault("requesterID", Double.toString(Math.random()));
 		
 		Aggregator<?,?> agg = getAgg(params.getOrDefault("aggregator", null), baseConfig.defaultAggregator);
-		Transfer transfer;
-		
-		try {transfer = params.containsKey("arl") ? parseTransfer(params.get("arl")) : defaultTransfer(baseConfig.defaultTransfers);}
-		catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
-		
+		Transfer transfer = defaultTransfer(baseConfig.defaultTransfers);
+		Optional<String> arl = Optional.ofNullable(params.getOrDefault("arl", null));
+				
         long start = System.currentTimeMillis();
         Response rsp;
         Rectangle viewport = new Rectangle(0,0,width,height);
         try {
-        	rsp = execute(format, viewport, agg, transfer, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, allowStretch);
+        	rsp = execute(format, viewport, agg, transfer, arl, baseConfig, selection, latlon, crop, enhance, requesterID, ignoreCached, allowStretch);
         } finally { 
             long end = System.currentTimeMillis();
             System.out.printf("## Execution time: %d ms%n", (end-start));
@@ -138,6 +134,7 @@ public class ARServer extends NanoHTTPD {
 			Rectangle viewport,
 			Aggregator<I,A> agg,
 			Transfer<A,OUT> transfer,
+			Optional<String> arl,
 			OptionDataset<G,I> baseConfig,
 			Optional<Rectangle2D> selection, Optional<List<Point2D>> latlon, Optional<Rectangle> crop, Optional<Rectangle> enhance, 
 			Object requesterID,
@@ -189,6 +186,10 @@ public class ARServer extends NanoHTTPD {
 			} else {
 				glyphs = baseConfig.glyphset;
 			}
+			
+			try {transfer = arl.isPresent() ?  (Transfer<A, OUT>) ARLangExtensions.parseTransfer(arl.get(), vt) : transfer;}
+			catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
+
 			
 			
 			
@@ -363,12 +364,6 @@ public class ARServer extends NanoHTTPD {
 						   catch (Throwable e) {return false;}};
 	}
 	
-	public static  String getArl(Field f) {
-		 try {return ((OptionDataset<?,?>) f.get(null)).arl;}
-		 catch (Throwable e) {return "null";}
-	}
-
-	
 	public Collection<Field> getFieldsOfType(Class<?> source, Class<?> type) {
 		return Arrays.stream(source.getFields())
 				.filter(f -> f.getType().equals(type))
@@ -399,13 +394,7 @@ public class ARServer extends NanoHTTPD {
 					+ "select and latlon have may process values outside of the specified bounding rectangles<br><br>"
 					+ "arl: AR-language string (see below for details)<br>\n" 
 					+ "aggregator: one of--\n" + asList(getAggregators(), f->new Object[]{f.getName()}, "<li>%s</li>") + "\n\n"
-					+ "<hr>"
-					+ "<h3>AR Language:</h3>"
-					+ Parser.basicHelp("<br>") + "<br><br>"
-					+ "A few examples (base configurations with the transfer spelled out):\n"
-					+ asList(getDatasets(), f->new String[]{f.getName(), getArl(f)},"<li><a href='%1$s?arl=%2$s'>%1$s?arl=%2$s</a></li>") + "<br><br>" 
-					+ "Available functions:<br>"
-					+ Parser.functionHelp(BasicLibrary.ALL, "<li>%s</li>", "\n");
+					+ ARLangExtensions.help(getDatasets());
 				
 		
 		
@@ -413,24 +402,6 @@ public class ARServer extends NanoHTTPD {
 					
 		
 		return newFixedLengthResponse(Status.OK, MIME_HTML, help);
-	}
-
-	public Transfer<?,?> parseTransfer(String source) {
-		Parser.TreeNode<?> tree;
-		try{tree = Parser.parse(source);}
-		catch (Exception e) {
-			System.out.println(Parser.tokens(source).stream().collect(Collectors.joining(" -- ")));
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage() + "\n While parsing " + source);
-		}
-
-		
-		try {
-			return (Transfer<?,?>) Parser.reify(tree, BasicLibrary.ALL);
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage() + "\n While processing " + tree.toString());
-		}
 	}
 	
 	static {

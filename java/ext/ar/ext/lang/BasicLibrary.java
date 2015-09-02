@@ -44,7 +44,7 @@ public class BasicLibrary {
 		@Override public String toString() {return name + ": " + help;}
 	}
 	
-	private static final <T> void put(Map<String, Function<List<Object>, T>> map, String name, String help, Function<List, T> fn) {
+	public static final <T> void put(Map<String, Function<List<Object>, T>> map, String name, String help, Function<List, T> fn) {
 		map.put(name, new FunctionRecord(name, help, fn));
 	}
 
@@ -81,9 +81,9 @@ public class BasicLibrary {
 	}
 
 
-	public static final Map<String, Function<List<Object>, Object>> COMMON = new HashMap<>();	
+	public static final Map<String, Function<List<Object>, Object>> MISC = new HashMap<>();	
 	static {
-		put(COMMON, "interpolate", "Number to colors interpolation (use catInterpolate for multi-category  interpolation).", 
+		put(MISC, "interpolate", "Number to colors interpolation (use catInterpolate for multi-category  interpolation).", 
 				args -> args.size() > 3
 							? new Numbers.FixedInterpolate<>(
 									get(args, 0, Color.WHITE), 
@@ -96,25 +96,25 @@ public class BasicLibrary {
 									get(args, 1, Color.RED), 
 									get(args, 2, Util.CLEAR)));
 		
-		put(COMMON, "catInterpolate", "Interpolate across multiple cateogories (category labels must be colors).",
+		put(MISC, "catInterpolate", "Interpolate across multiple cateogories (category labels must be colors).",
 				args -> new Categories.HighDefAlpha(get(args, 0, Util.CLEAR), get(args, 1, .1), get(args, 2, true)));
 
-		put(COMMON, "present", "Fill areas with non-default value one color, and default value another.", 
+		put(MISC, "present", "Fill areas with non-default value one color, and default value another.", 
 				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 1, Color.WHITE)));
 		
-		put(COMMON, "toCount", "Take mulit-category counts and combine them to a single set of counts.", 
+		put(MISC, "toCount", "Take mulit-category counts and combine them to a single set of counts.", 
 				args -> new Categories.ToCount<>());
 		
-		put(COMMON, "seq", "Execute a sequence of transfers (like the thrush combinator).",
+		put(MISC, "seq", "Execute a sequence of transfers (like the thrush combinator).",
 				args -> seqFromList((List<Transfer>) (List) args));
 		
-		put(COMMON, "colorkey", "Replace existing category labels with colors.  Often used before catInterpolate.",
+		put(MISC, "colorkey", "Replace existing category labels with colors.  Often used before catInterpolate.",
 				args -> new Categories.DynamicRekey<>(
 								new CategoricalCounts<>(Util.COLOR_SORTER), 
 								get(args, 0, CABLE_COLORS), 
 								get(args, args.size() > 1? args.size()-1 : -1, Color.BLACK)));
 
-		put(COMMON, "keyPercent",  "Color one way if a key category is over the threshold.", 
+		put(MISC, "keyPercent",  "Color one way if a key category is over the threshold.", 
 				args ->  new Categories.KeyPercent<Color>(
 								get(args, 0, 50)/100d, 
 								get(args, 1, Color.blue), 
@@ -122,19 +122,19 @@ public class BasicLibrary {
 								get(args, 3, Color.blue),
 								get(args, 4, Color.red)));
 		
-		put(COMMON, "const", "Return a specific value everywhere.", 
+		put(MISC, "const", "Return a specific value everywhere.", 
 				args -> new General.Const<>(get(args, 0, 1)));
 		
-		put(COMMON, "fn", "Apply the passed function everywhere.  Unlike most things, you MUST supply a first argument and for non-double return functions, you must also supply the second argument..",
+		put(MISC, "fn", "Apply the passed function everywhere.  Unlike most things, you MUST supply a first argument and for non-double return functions, you must also supply the second argument..",
 				args -> new General.TransferFn((Function) args.get(0), get(args, 1, 0d)));
 		
-		put(COMMON, "string", "Make a list of symbols into a string, separated by item in the first argument",
+		put(MISC, "string", "Make a list of symbols into a string, separated by item in the first argument",
 				args ->
 					args.size() == 0 
 							? ""
 							: args.subList(1, args.size()).stream().map(s -> s.toString()).collect(Collectors.joining(args.get(0).toString())));
 		
-		put(COMMON, "space", "Returns a single space...needed because there are no string literals.", args -> " ");
+		put(MISC, "space", "Returns a single space...needed because there are no string literals.", args -> " ");
 	}
 		
 	public static final Map<String, Function<List<Object>, Object>> ADVISE = new HashMap<>();
@@ -193,16 +193,16 @@ public class BasicLibrary {
 
 	}
 	
-	public static final  Map<String, Function<List<Object>, Object>> ALL = new HashMap<>();
+	public static final  Map<String, Function<List<Object>, Object>> COMMON = new HashMap<>();
 	static {
-		ALL.putAll(COMMON);
-		ALL.putAll((Map<? extends String, ? extends Function<List<Object>, Object>>) (Map) MATH);
-		ALL.putAll(COLOR);
-		ALL.putAll(SPREAD);
-		ALL.putAll(ADVISE);
+		COMMON.putAll(MISC);
+		COMMON.putAll((Map<? extends String, ? extends Function<List<Object>, Object>>) (Map) MATH);
+		COMMON.putAll(COLOR);
+		COMMON.putAll(SPREAD);
+		COMMON.putAll(ADVISE);
 	}
 	
-	private static final <A> A get(List<Object> list, int n, A def) {
+	public static final <A> A get(List<?> list, int n, A def) {
 		return (n < list.size() && n>=0) ? (A) list.get(n) : def;
 	}
 	

@@ -21,7 +21,7 @@ public class LangTest {
 	public static final Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
 	static {
 		LIBRARY.putAll(BasicLibrary.COLOR);
-		LIBRARY.putAll(BasicLibrary.COMMON);
+		LIBRARY.putAll(BasicLibrary.MISC);
 	}
 	
 	@Test
@@ -68,18 +68,18 @@ public class LangTest {
 	@Test 
 	public void refiyFunctionsWithDefaults() {
 		List<String> exclude = Arrays.asList("fn");	
-		for (String key: BasicLibrary.ALL.keySet()) {
+		for (String key: BasicLibrary.COMMON.keySet()) {
 			if (exclude.contains(key)) {continue;}
 			
-			Object reified = reify(parse("("+key+")"), BasicLibrary.ALL);
+			Object reified = reify(parse("("+key+")"), BasicLibrary.COMMON);
 			assertThat("Reifying " + key, reified, is(notNullValue()));
-			assertThat(reified, instanceOf(BasicLibrary.ALL.get(key).apply(Collections.emptyList()).getClass()));
+			assertThat(reified, instanceOf(BasicLibrary.COMMON.get(key).apply(Collections.emptyList()).getClass()));
 		}
 	}
 	
 	@Test
 	public void urlSafe() {
-		for(String key: BasicLibrary.ALL.keySet()) {
+		for(String key: BasicLibrary.COMMON.keySet()) {
 			assertFalse(key.contains(" "));
 			assertFalse(key.contains("+"));
 			assertFalse(key.contains("&"));
