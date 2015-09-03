@@ -58,11 +58,7 @@ Image retargeting based on [seam-carving](http://en.wikipedia.org/wiki/Seam_carv
 
 ### Server
 The ARServer is a self-contained HTTP server that responds to post messages that describe
-a dataset and treatment.  It returns json-encoded aggregates that result. Using an ARExt.jar
-file built using "ant fetch-ext ext" to get the extensions, the server can be executed with
-"java -jar ARExt.jar ar.ext.server.ARServer".  Optional parameters are -host and -port.  
-The server uses the Avro extensions to format the returned result and keeps a cache of
-aggregates for faster processing.  Visit the server's home-page to get details on the URL.
+a dataset and treatment.  Details on the server are in the [server documentation](./java/ext/ar/ext/server/Readme.md).
 
 ### Spark
 Abstract Rendering implementation to run in the [AMP Spark](http://spark-project.org/) framework.
