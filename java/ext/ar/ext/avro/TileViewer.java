@@ -20,6 +20,8 @@ public class TileViewer extends JPanel{
 	
 	public <A> TileViewer(File f, String converterName) throws Exception {
 		Optional<Class<?>> converterClass = Arrays.stream(Converters.class.getClasses()).filter(c -> c.getSimpleName().equals(converterName)).findFirst();
+
+		@SuppressWarnings("unchecked")
 		Function<GenericRecord, A> converter = (Function<GenericRecord, A>) converterClass.get().newInstance();
 		
 		Aggregates<A> aggs = AggregateSerializer.deserialize(f, converter);

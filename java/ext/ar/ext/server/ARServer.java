@@ -188,9 +188,6 @@ public class ARServer extends NanoHTTPD {
 			
 			try {transfer = arl.isPresent() ?  (Transfer<A, OUT>) ARLangExtensions.parseTransfer(arl.get(), vt) : transfer;}
 			catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
-
-			
-			
 			
 			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
 			CacheManager render = ignoreCached 

@@ -241,16 +241,7 @@ public class CacheManager implements Renderer {
 	 * @return
 	 */
 	public <A> CacheStatus<A> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, AffineTransform gbt, Rectangle viewport) {
-		//HACK: TODO: Figure out how to auto-record the CoC key type...
-		Valuer<GenericRecord, A> converter;
-		if (datasetId.equals(OptionDataset.BOOST_MEMORY.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
-		else if (datasetId.equals(OptionDataset.KIVA.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
-		else if (datasetId.equals(OptionDataset.SYNTHETIC.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
-		else if (datasetId.equals(OptionDataset.CENSUS_NY_SYN_PEOPLE.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
-		else if (datasetId.equals(OptionDataset.CENSUS_SYN_PEOPLE.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
-		else if (datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
-		else {throw new IllegalArgumentException("Cannot load from cache because root type could not be discerned");}
-		
+		Valuer<GenericRecord, A> converter = converter(datasetId);
 		aggregator.identity();
 		
 		Rectangle viewBounds; //viewport in gbt space
@@ -284,6 +275,18 @@ public class CacheManager implements Renderer {
 		}
 		
 		return new CacheStatus<>(combinedEmpty ? null : combined, remaining);
+	}
+	
+	//HACK: TODO: Figure out how to auto-record the CoC key type...
+	@SuppressWarnings("unchecked")
+	private static final <A> Valuer<GenericRecord, A> converter(String datasetId) {
+		if (datasetId.equals(OptionDataset.BOOST_MEMORY.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.KIVA.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.SYNTHETIC.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.CENSUS_NY_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
+		else if (datasetId.equals(OptionDataset.CENSUS_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
+		else if (datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
+		else {throw new IllegalArgumentException("Cannot load from cache because root type could not be discerned");}
 	}
 	
 	/**Save out a set of aggregates into tiles.
