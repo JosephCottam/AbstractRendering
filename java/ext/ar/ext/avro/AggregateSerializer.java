@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
@@ -27,7 +28,6 @@ import org.apache.avro.io.EncoderFactory;
 import ar.Aggregates;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
 
 public class AggregateSerializer {
@@ -95,10 +95,10 @@ public class AggregateSerializer {
 	}
 
 
-	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, Valuer<A, GenericRecord> converter) throws IOException {
+	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, Function<A, GenericRecord> converter) throws IOException {
 		serialize(aggs,out,itemSchema,FORMAT.BINARY, converter);
 	}
-	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, FORMAT format, Valuer<A, GenericRecord> converter) throws IOException {
+	public static <A> void serialize(Aggregates<A> aggs, OutputStream out, Schema itemSchema, FORMAT format, Function<A, GenericRecord> converter) throws IOException {
 		Schema fullSchema = new SchemaComposer().add(itemSchema).addResource(AGGREGATES_SCHEMA).resolved();
 
 		A defVal = aggs.defaultValue();
@@ -137,18 +137,18 @@ public class AggregateSerializer {
 	public static <A> void serialize(Aggregates<A> aggs, OutputStream outputStream, FORMAT format) throws IOException {
 		Object v = aggs.defaultValue();
 		Schema schema;
-		Valuer<A, GenericRecord> conv;
+		Function<A, GenericRecord> conv;
 		if (v == null) {throw new IllegalArgumentException("Could not auto-detect aggregate type, defualt value was null.");} 
 		else if (v instanceof Integer) {
 			schema = new SchemaComposer().addResource(COUNTS_SCHEMA).resolved();
-			conv = (Valuer<A, GenericRecord>) new Converters.FromCount(schema);
+			conv = (Function<A, GenericRecord>) new Converters.FromCount(schema);
 
 		} else if (v instanceof CategoricalCounts) {
 			schema = new SchemaComposer().addResource(COC_SCHEMA).resolved();
-			conv = (Valuer<A, GenericRecord>) new Converters.FromCoC<A>(schema);
+			conv = (Function<A, GenericRecord>) new Converters.FromCoC<A>(schema);
 		} else if (v instanceof Color) {
 			schema = new SchemaComposer().addResource(COLOR_SCHEMA).resolved();
-			conv = (Valuer<A, GenericRecord>) new Converters.FromColor(schema);
+			conv = (Function<A, GenericRecord>) new Converters.FromColor(schema);
 		} else {
 			throw new IllegalArgumentException("Aggreagte type not supported in auto-detection: " + v.getClass().getName());
 		}
@@ -157,13 +157,13 @@ public class AggregateSerializer {
 	}
 
 
-	public static <A> Aggregates<A> deserialize(File file, Valuer<GenericRecord, A> converter) throws IOException {
+	public static <A> Aggregates<A> deserialize(File file, Function<GenericRecord, A> converter) throws IOException {
 		try (FileInputStream fs = new FileInputStream(file)) {
 			return deserialize(fs, converter);
 		}
 	}
-	
-	public static <A> Aggregates<A> deserialize(InputStream stream, Valuer<GenericRecord, A> converter) {
+
+	public static <A> Aggregates<A> deserialize(InputStream stream, Function<GenericRecord, A> converter) {
 		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
 		try (DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr)) {
 			
@@ -198,38 +198,4 @@ public class AggregateSerializer {
 			return aggs;
 		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
 	}
-	
-	/**Deserialize a tile that is encoded as an set of aggregates.
-	 * 
-	 * TODO: Remove when tiles include bounds metadata  (also remove dependency fetcher from download)
-	 * **/
-	@SuppressWarnings("unchecked")
-	public static <A> Aggregates<A> deserializeTile(
-			String filename, Valuer<GenericRecord, A> converter, 
-			int lowX, int lowY, int highX, int highY) {
-		DatumReader<GenericRecord> dr = new GenericDatumReader<GenericRecord>();
-		try (InputStream stream = new FileInputStream(filename);
-			 DataFileStream<GenericRecord> fr =new DataFileStream<GenericRecord>(stream, dr)) {
-			
-			GenericRecord r = fr.next();
-			A defVal = converter.apply((GenericRecord) r.get("default"));			
-			GenericData.Array<GenericData.Array<GenericRecord>> rows = 
-					(GenericData.Array<GenericData.Array<GenericRecord>>) r.get("values");
-
-			Aggregates<A> aggs = AggregateUtils.make(lowX, lowY, highX, highY, defVal);
-			for (int row=0; row<rows.size(); row++) {
-				int x = row+aggs.lowX();
-				GenericData.Array<GenericRecord> cols = rows.get(row);
-				for (int col=0; col<cols.size(); col++){
-					int y=col+aggs.lowY();
-					GenericRecord val = cols.get(col);
-					aggs.set(x, y, converter.apply(val));
-				}
-			}
-			fr.close();
-			return aggs;
-		} catch (IOException e) {throw new RuntimeException("Error deserializing.", e);}
-	}
-
-	
 }

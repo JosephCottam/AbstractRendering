@@ -142,7 +142,7 @@ public class AvroAggregatesTest {
 			Schema s = new SchemaComposer().addResource(AggregateSerializer.COC_SCHEMA).resolved();
 			AggregateSerializer.serialize(ref, out, s, new Converters.FromCoC(s));
 			Aggregates<CategoricalCounts<String>> res 
-				= AggregateSerializer.deserialize(file, new Converters.ToCoC(null));
+				= AggregateSerializer.deserialize(file, new Converters.ToCoCString());
 	
 			assertThat(ref.lowX(), is(res.lowX()));
 			assertThat(ref.lowY(), is(res.lowY()));

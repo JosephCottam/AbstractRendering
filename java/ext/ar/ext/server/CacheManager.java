@@ -31,6 +31,7 @@ import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.CompositeWrapper;
 import ar.aggregates.wrappers.SubsetWrapper;
+import ar.app.components.sequentialComposer.OptionDataset;
 import ar.ext.avro.AggregateSerializer;
 import ar.ext.avro.Converters;
 import ar.glyphsets.BoundingWrapper;
@@ -99,18 +100,20 @@ public class CacheManager implements Renderer {
 		Optional<Aggregates<A>> freshRendered = Optional.empty();
 		if (cacheStatus.remaining.isPresent()) {
 			System.out.println("## Rendering tile(s) from source " + cacheStatus.remaining.get());
-			try {
-				Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(glyphs, gbt);
-				Rectangle2D renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();
-				Glyphset<? extends G, ? extends I> subset = renderBounds.contains(glyphs.bounds()) 
-														? glyphs
-														: new BoundingWrapper<>(glyphs, renderBounds);
-				freshRendered = Optional.ofNullable(base.aggregate(subset, selector, aggregator, gbt, allocator, merge));
+			
+			Rectangle2D renderBounds;
+			try {renderBounds = gbt.createInverse().createTransformedShape(cacheStatus.remaining.get()).getBounds2D();} 
+			catch (NoninvertibleTransformException e) {throw new RuntimeException("Error calculating the region to render.", e);}
+
+			Glyphset<? extends G, ? extends I> subset = renderBounds.contains(glyphs.bounds()) 
+													? glyphs
+													: new BoundingWrapper<>(glyphs, renderBounds);
+			Function<A, Aggregates<A>> allocator = Renderer.simpleAllocator(subset, gbt);
+
+			System.out.println("## Aggregating for source " + subset.bounds());
+			freshRendered = Optional.ofNullable(base.aggregate(subset, selector, aggregator, gbt, allocator, merge));
 				
 				
-			} catch (NoninvertibleTransformException e) {
-				throw new RuntimeException("Error calculating the region to render.", e);
-			}
 			
 			//Expand aggregates back out to full tile sizes
 			Aggregates<A> toSave = new ConstantAggregates<>(aggregator.identity(), cacheStatus.remaining.get());
@@ -238,7 +241,17 @@ public class CacheManager implements Renderer {
 	 * @return
 	 */
 	public <A> CacheStatus<A> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, AffineTransform gbt, Rectangle viewport) {
-		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator, ((String s) -> ((A) (Character) s.charAt(0))));
+		//HACK: TODO: Figure out how to auto-record the CoC key type...
+		Valuer<GenericRecord, A> converter;
+		if (datasetId.equals(OptionDataset.BOOST_MEMORY.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.KIVA.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.SYNTHETIC.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (datasetId.equals(OptionDataset.CENSUS_NY_SYN_PEOPLE.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
+		else if (datasetId.equals(OptionDataset.CENSUS_SYN_PEOPLE.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
+		else if (datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {converter = (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
+		else {throw new IllegalArgumentException("Cannot load from cache because root type could not be discerned");}
+		
+		aggregator.identity();
 		
 		Rectangle viewBounds; //viewport in gbt space
 		try {viewBounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}

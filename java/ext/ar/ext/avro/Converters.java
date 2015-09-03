@@ -11,30 +11,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
-import ar.Aggregator;
 import ar.glyphsets.implicitgeometry.Valuer;
 import ar.rules.CategoricalCounts;
-import ar.rules.Categories;
-import ar.rules.Numbers;
 import ar.util.Util;
 
+/**Tools to save/load values.**/
 public class Converters {
-	
-	/**Get a deserializing valuer based on the passed aggregator.*/
-	//TODO: Make more general...
-	@SuppressWarnings("unchecked")
-	public static <A> Valuer<GenericRecord, A> getDeserialize(Aggregator<?,A> aggregator, Function<String, A> fn) {
-		if (aggregator instanceof Numbers.Count<?>) {
-			return (Valuer<GenericRecord, A>) new ToCount();
-		} else if (aggregator instanceof Categories.CountCategories<?>
-			|| aggregator instanceof Categories.MergeCategories<?>) {
-			if (fn == null) {return (Valuer<GenericRecord, A>) new ToCoCString();}
-			else {return (Valuer<GenericRecord, A>) new ToCoC(fn);}
-		} else {
-			throw new IllegalArgumentException("No converter known for aggregator " + aggregator.toString());
-		}
-	}
-	
 	public static class ToCount implements Valuer<GenericRecord, Integer> {
 		private static final long serialVersionUID = 1015273131104304754L;
 
@@ -56,27 +38,13 @@ public class Converters {
 			return r;
 		}
 	}
-
-	/**Generic deserialization for CoC (category labels are strings).*/	
-	public static class ToCoCString implements Valuer<GenericRecord, CategoricalCounts<String>> {
-		private static final long serialVersionUID = 2979290290172689482L;
-		private static final Comparator<String> COMP = new Util.ComparableComparator<>();
-
-		public CategoricalCounts<String> apply(GenericRecord from) {
-			List<?> ks = (List<?>) from.get("keys");
-			@SuppressWarnings("unchecked")
-			List<Integer> vs = (List<Integer>) from.get("counts");
-			List<String> keys = new ArrayList<>();
-			for (int i=0; i < ks.size(); i++) {
-				keys.add(ks.get(i).toString());
-			}
-			
-			return CategoricalCounts.make(keys, vs, COMP);			
-		}
-	}
+	
+	public static class ToCoCChar extends ToCoC<Character> {public ToCoCChar() {super(s -> s.charAt(0));}}	
+	public static class ToCoCString extends ToCoC<String> {public ToCoCString() {super(s -> s);}}	
+	public static class ToCoCInteger extends ToCoC<Integer> {public ToCoCInteger() {super(s -> Integer.parseInt(s));}}	
 	
 	/**CoC deserialization that converts categories by some function.*/	
-	public static class ToCoC<A extends Comparable<A>> implements Valuer<GenericRecord, CategoricalCounts<A>> {
+	private static class ToCoC<A extends Comparable<A>> implements Valuer<GenericRecord, CategoricalCounts<A>> {
 		private static final long serialVersionUID = 2979290290172689482L;
 		private final Comparator<A> COMP = new Util.ComparableComparator<>();
 		private final Function<String, A> fn;
@@ -98,9 +66,8 @@ public class Converters {
 	
 	/**Generic serialization for CoC.  
 	 * 
-	 * Can only safely handle categories that are isomorphic to their toString
-	 * since the CoC schema uses strings as keys.
-	 */
+	 * Can only safely handle categories that can be directly encoded as strings.
+	 ***/
 	public static class FromCoC<T> implements Valuer<CategoricalCounts<T>, GenericRecord> {
 		private static final long serialVersionUID = 6201382979970104470L;
 		private final Schema schema;

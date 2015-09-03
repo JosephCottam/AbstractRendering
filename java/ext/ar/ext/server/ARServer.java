@@ -180,7 +180,7 @@ public class ARServer extends NanoHTTPD {
 				renderBounds = zoomBounds;
 			}
  			
-			if (selection.isPresent()) {
+			if (selection.isPresent() && ignoreCached) {
 				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
 			} else {
 				glyphs = baseConfig.glyphset;
@@ -513,7 +513,7 @@ public class ARServer extends NanoHTTPD {
 		int port = Integer.parseInt(ar.util.Util.argKey(args, "-port", Integer.toString(DEFAULT_PORT)));
 		File cachedir = new File(ar.util.Util.argKey(args, "-cache", "./cache"));
 		boolean clearCache = Boolean.parseBoolean(ar.util.Util.argKey(args, "-clearCache", "false"));
-		int tileSize = Integer.parseInt(ar.util.Util.argKey(args, "-tile", "500"));
+		int tileSize = Integer.parseInt(ar.util.Util.argKey(args, "-tile", "1000"));
 		
 		
 		System.out.printf("## AR Server started on %s: %d%n", host, port);
