@@ -58,7 +58,7 @@ Image retargeting based on [seam-carving](http://en.wikipedia.org/wiki/Seam_carv
 
 ### Server
 The ARServer is a self-contained HTTP server that responds to post messages that describe
-a dataset and treatment.  Details on the server are in the [server documentation](./java/ext/ar/ext/server/Readme.md).
+a dataset and treatment.  Details on the server are in the [server documentation](./ext/ar/ext/server/README.md).
 
 ### Spark
 Abstract Rendering implementation to run in the [AMP Spark](http://spark-project.org/) framework.
