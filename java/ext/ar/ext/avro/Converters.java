@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -22,12 +23,13 @@ public class Converters {
 	/**Get a deserializing valuer based on the passed aggregator.*/
 	//TODO: Make more general...
 	@SuppressWarnings("unchecked")
-	public static <A> Valuer<GenericRecord, A> getDeserialize(Aggregator<?,A> aggregator) {
+	public static <A> Valuer<GenericRecord, A> getDeserialize(Aggregator<?,A> aggregator, Function<String, A> fn) {
 		if (aggregator instanceof Numbers.Count<?>) {
 			return (Valuer<GenericRecord, A>) new ToCount();
 		} else if (aggregator instanceof Categories.CountCategories<?>
 			|| aggregator instanceof Categories.MergeCategories<?>) {
-			return (Valuer<GenericRecord, A>) new ToCoC();
+			if (fn == null) {return (Valuer<GenericRecord, A>) new ToCoCString();}
+			else {return (Valuer<GenericRecord, A>) new ToCoC(fn);}
 		} else {
 			throw new IllegalArgumentException("No converter known for aggregator " + aggregator.toString());
 		}
@@ -55,10 +57,8 @@ public class Converters {
 		}
 	}
 
-	/**Generic deserialization for CoC.
-	 * Keys are kept as strings.
-	 */	
-	public static class ToCoC implements Valuer<GenericRecord, CategoricalCounts<String>> {
+	/**Generic deserialization for CoC (category labels are strings).*/	
+	public static class ToCoCString implements Valuer<GenericRecord, CategoricalCounts<String>> {
 		private static final long serialVersionUID = 2979290290172689482L;
 		private static final Comparator<String> COMP = new Util.ComparableComparator<>();
 
@@ -66,9 +66,30 @@ public class Converters {
 			List<?> ks = (List<?>) from.get("keys");
 			@SuppressWarnings("unchecked")
 			List<Integer> vs = (List<Integer>) from.get("counts");
-			List<String> keys = new ArrayList<String>();
+			List<String> keys = new ArrayList<>();
 			for (int i=0; i < ks.size(); i++) {
 				keys.add(ks.get(i).toString());
+			}
+			
+			return CategoricalCounts.make(keys, vs, COMP);			
+		}
+	}
+	
+	/**CoC deserialization that converts categories by some function.*/	
+	public static class ToCoC<A extends Comparable<A>> implements Valuer<GenericRecord, CategoricalCounts<A>> {
+		private static final long serialVersionUID = 2979290290172689482L;
+		private final Comparator<A> COMP = new Util.ComparableComparator<>();
+		private final Function<String, A> fn;
+		
+		public ToCoC(Function<String, A> fn) {this.fn = fn;}
+		
+		public CategoricalCounts<A> apply(GenericRecord from) {
+			List<?> ks = (List<?>) from.get("keys");
+			@SuppressWarnings("unchecked")
+			List<Integer> vs = (List<Integer>) from.get("counts");
+			List<A> keys = new ArrayList<>();
+			for (int i=0; i < ks.size(); i++) {
+				keys.add(fn.apply(ks.get(i).toString()));
 			}
 			
 			return CategoricalCounts.make(keys, vs, COMP);			

@@ -146,10 +146,16 @@ public class CacheManager implements Renderer {
 	@Override
 	public void stop() {base.stop();}
 
-	/**Root directory for the view/data/aggregator combination cache.**/
+	/**Root directory for the view/data/aggregator combination cache.
+	 * 
+	 * HACK: Trims the scale to 4 decimal places to forestall rounding error that was making tiles not found A LOT of the time even on simple navigation
+	 * 
+	 * **/
 	public Path tilesetPath(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
 		//HACK: Using the aggregator class name ignores parameters...and can cause cross-package conflicts...
-		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(Double.toString(vt.getScaleX())).resolve(Double.toString(vt.getScaleY()));
+		String sx = String.format("%.4f", vt.getScaleX());
+		String sy = String.format("%.4f", vt.getScaleY());
+		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(sx).resolve(sy);
 	}
 
 	/**Given a tile bound, what is the file name?**/
@@ -232,7 +238,7 @@ public class CacheManager implements Renderer {
 	 * @return
 	 */
 	public <A> CacheStatus<A> loadCached(String datasetId, Aggregator<?,A> aggregator, AffineTransform vt, AffineTransform gbt, Rectangle viewport) {
-		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator);
+		Valuer<GenericRecord, A> converter = Converters.getDeserialize(aggregator, ((String s) -> ((A) (Character) s.charAt(0))));
 		
 		Rectangle viewBounds; //viewport in gbt space
 		try {viewBounds = gbt.createTransformedShape(vt.createInverse().createTransformedShape(viewport).getBounds2D()).getBounds();}
