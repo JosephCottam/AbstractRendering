@@ -280,7 +280,7 @@ public class CacheManager implements Renderer {
 	//HACK: TODO: Figure out how to auto-record the CoC key type...
 	@SuppressWarnings("unchecked")
 	private static final <A> Valuer<GenericRecord, A> converter(String datasetId) {
-		if (OptionDataset.BOOST_MEMORY != null && datasetId.equals(OptionDataset.BOOST_MEMORY.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		if (OptionDataset.BOOST_MEMORY != null && datasetId.equals(OptionDataset.BOOST_MEMORY.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCString();}
 		else if (OptionDataset.KIVA != null && datasetId.equals(OptionDataset.KIVA.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
 		else if (OptionDataset.SYNTHETIC != null && datasetId.equals(OptionDataset.SYNTHETIC.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
 		else if (OptionDataset.CENSUS_NY_SYN_PEOPLE != null && datasetId.equals(OptionDataset.CENSUS_NY_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
