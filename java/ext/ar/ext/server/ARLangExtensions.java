@@ -2,7 +2,6 @@ package ar.ext.server;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,9 +46,8 @@ public class ARLangExtensions {
 
 	}
 	
-	public static Transfer<?,?> parseTransfer(String source, AffineTransform vt, Rectangle2D databounds) {
+	public static Transfer<?,?> parseTransfer(String source, AffineTransform vt) {
 		ARLangExtensions.viewTransform = vt;
-		ARLangExtensions.databounds = databounds;
 		
 		Parser.TreeNode<?> tree;
 		try{tree = Parser.parse(source);}
@@ -71,15 +69,17 @@ public class ARLangExtensions {
 	public static final  Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
 	static {
 		LIBRARY.putAll(BasicLibrary.COMMON);
-		put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
-		put(LIBRARY, "dynSpread", "Spreading function where the radius is determined at specialization time. The parameter is the target minimum percent of non-empty bins.", args -> new DensitySpread<>(get(args, 0, 10.0), get(args, 0, 0d)));
-		put(LIBRARY, "dynScale", "Dyanmically resize based on current view's zoom order-of-mangitude (a modified linear interpolate based on view scale). args: base-zoom, dely",
+		 put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
+		
+		put(LIBRARY, "dynSpread", "Spreading function where the radius is determined at specialization time. The parameter is the target minimum percent of non-empty bins.", 
+				args -> new DensitySpread<>(get(args, 0, 10.0)));
+		
+		put(LIBRARY, "dynScale", "Dyanmically resize based on current view's zoom order-of-mangitude (a modified linear interpolate based on view scale). args: base-zoom, damp",
 				args -> dynScale(get(args, 0, 1), get(args, 1, 1)));
 
 	}
 
 	private static AffineTransform viewTransform;
-	private static Rectangle2D databounds;
 
 	private static int dynScale(Number baseScale, Number delay) {
 		double currentScale = Math.min(viewTransform.getScaleX(), viewTransform.getScaleY());		
@@ -101,7 +101,6 @@ public class ARLangExtensions {
 	
 
 	public static class DensitySpread<V> implements Transfer<V,V> {
-		final V identity;
 		final Double targetCoverage;
 
 		/** 
@@ -111,23 +110,22 @@ public class ARLangExtensions {
 		 * 
 		 * @param targetCoverage Minimum desired non-empty pixel percentage.
 		 */
-		public DensitySpread(Double targetCoverage, V identity) {
+		public DensitySpread(double targetCoverage) {
 			this.targetCoverage = targetCoverage;
-			this.identity = identity;
 		}
 		
-		@Override public V emptyValue() {return identity;}
+		@Override public V emptyValue() {return null;}
 		
 		@Override
 		public Specialized<V> specialize(Aggregates<? extends V> aggregates) {
-			return new Specialized<>(targetCoverage, identity, aggregates);
+			return new Specialized<>(targetCoverage, aggregates);
 		}
 		
 		public static final class Specialized<V> extends DensitySpread<V> implements Transfer.Specialized<V, V> {
 			private final Transfer.Specialized<V,V> inner;
 			
-			public Specialized(Double targetCoverage, V identity, Aggregates<? extends V> aggs) {
-				super(targetCoverage, identity);
+			public Specialized(Double targetCoverage, Aggregates<? extends V> aggs) {
+				super(targetCoverage);
 				
 				int count = 0;
 				V defVal = aggs.defaultValue();
@@ -139,11 +137,6 @@ public class ARLangExtensions {
 				
 				Rectangle bounds = AggregateUtils.bounds(aggs);
 				double radius = Math.sqrt((targetCoverage*bounds.width*bounds.height)/(count*Math.PI));
-				System.out.println("------- Bins \t" + bounds.width*bounds.height);
-				System.out.println("------- Filled \t" + count);
-				System.out.println("------- Pct \t" + ((double) count)/(bounds.width*bounds.height));
-				System.out.println("------- Target \t" + targetCoverage);
-				System.out.println("------- Radius \t" + radius);
 				
 				radius = 1+Math.round(radius);
 				if (radius < 2) {inner = new General.Echo<>(aggs.defaultValue());}

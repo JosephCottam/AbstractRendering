@@ -31,3 +31,20 @@ Server side caching is controlled at startup with three parameters:
 * -cache <directory> : Sets the cache directory (default is "./cache")
 * -clearCache <True/False>: Delete the contents of the cache directory at startup, default is false.
 * -tile <size>: How large should the cached tiles be made (default is 1000).
+
+
+### Server language function
+The AR server provides some additional operators in ARL. 
+
+* *(dynSpread <targetPercent>)* Transfer function that spreads based on the observed percent of non-empty bins.
+The spreading is circular with a radius that if all points were evenly distributed, the total
+ percent would be near the target percent.  Its impossible to guarantee the target percent given
+ that the radius must always be an integer. Additionally, the actual data distribution may be clumpy,
+ resulting in a slightly lower overall bin coverage.
+
+* *(dynScale <characteristic-zoom> <damp-factor>)* Expand-time function that computes the ratio between the characteristic
+zoom and the actual zoom then applies the damping factor.  This can be used to do dynamic spreading per (spread(circle(dynScale,1))).
+The result is similar to dynSpread, but more difficult to get right (you need to know something about the dataset).
+dynScale is more flexible and faster than dynSpread.
+
+* *(vt field)* Return part of the view transform (sx,sy,tx,ty).
