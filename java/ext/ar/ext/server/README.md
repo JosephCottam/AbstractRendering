@@ -45,6 +45,8 @@ The spreading is circular with a radius that if all points were evenly distribut
 * *(dynScale <characteristic-zoom> <damp-factor>)* Expand-time function that computes the ratio between the characteristic
 zoom and the actual zoom then applies the damping factor.  This can be used to do dynamic spreading per (spread(circle(dynScale,1))).
 The result is similar to dynSpread, but more difficult to get right (you need to know something about the dataset).
-dynScale is more flexible and faster than dynSpread.
+dynScale is more flexible and faster than dynSpread.  One way to discover the 'characteristic zoom' is to render the dataset
+at a zoom that looks good with a spread of 0, and include '(print(vt,sx))' in the transfer sequence.
 
-* *(vt field)* Return part of the view transform (sx,sy,tx,ty).
+* *(vt <field>)* Return part of the view transform. 'field is one of sx,sy,tx,ty.
+* *(print <msg>)* Transfer thatt prints out the message at execution time, returns the aggregates passed in.

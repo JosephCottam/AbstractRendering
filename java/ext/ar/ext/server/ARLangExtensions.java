@@ -76,6 +76,9 @@ public class ARLangExtensions {
 		
 		put(LIBRARY, "dynScale", "Dyanmically resize based on current view's zoom order-of-mangitude (a modified linear interpolate based on view scale). args: base-zoom, damp",
 				args -> dynScale(get(args, 0, 1), get(args, 1, 1)));
+		
+		put(LIBRARY, "print", "Print out a value at specialization time.  Otherwise acts as echo, returning aggregates equivalent to those passed in.  args: msg",
+				args -> new Print<>(get(args,0,"here")));
 
 	}
 
@@ -99,6 +102,19 @@ public class ARLangExtensions {
 		}
 	}
 	
+	public static class Print<V> implements Transfer.Specialized<V,V> {
+		final String msg;
+		public Print(Object msg) {this.msg = msg.toString();}
+		
+		@Override public V emptyValue() {return null;}
+
+		@Override
+		public Aggregates<V> process(Aggregates<? extends V> aggregates,Renderer rend) {
+			System.out.println(msg);
+			return AggregateUtils.copy(aggregates, aggregates.defaultValue());
+		}
+		
+	}
 
 	public static class DensitySpread<V> implements Transfer<V,V> {
 		final Double targetCoverage;
