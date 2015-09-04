@@ -479,41 +479,39 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 			public int left() {return (int) left.getValue();}
 			public int right() {return (int) right.getValue();}
 		}
+	}
+
+	//TODO: Should this move to core?  
+	public static class FlexSpread<V> implements Transfer<V,V> {
+		final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>()};
+		final Spreader<V> spreader;
+		public FlexSpread(Spreader<V> spreader) {this.spreader = spreader;}
 		
-		//TODO: Should this move to core?  
-		public static class FlexSpread<V> implements Transfer<V,V> {
-			final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>()};
-			final Spreader<V> spreader;
-			public FlexSpread(Spreader<V> spreader) {this.spreader = spreader;}
-			
-			@Override public V emptyValue() {throw new UnsupportedOperationException();}
-			@Override public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return new Specialized<>(spreader, aggregates);}
+		@Override public V emptyValue() {throw new UnsupportedOperationException();}
+		@Override public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return new Specialized<>(spreader, aggregates);}
 
-			
-			public static class Specialized<V> extends FlexSpread<V> implements Transfer.Specialized<V,V> {
-				final General.Spread<V> base;
-				public Specialized(Spreader<V> spreader, Aggregates<? extends V> aggs) {
-					super(spreader);
-					Class<?> targetClass = aggs.defaultValue().getClass();
-					Aggregator combiner = null;
-					for (Aggregator a: combiners) {
-						if (a.identity().getClass().isAssignableFrom(targetClass)) {
-							combiner = a; break;
-						}
-					}					
-					if (combiner == null) {throw new IllegalArgumentException("Could not match " + targetClass.getSimpleName() + " from provided aggregators.");} 
-					base = new General.Spread<>(spreader, combiner);
-				}
-
-				@Override public V emptyValue() {return base.emptyValue();}
-				
-				@Override
-				public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {return base.process(aggregates, rend);}
+		
+		public static class Specialized<V> extends FlexSpread<V> implements Transfer.Specialized<V,V> {
+			final General.Spread<V> base;
+			public Specialized(Spreader<V> spreader, Aggregates<? extends V> aggs) {
+				super(spreader);
+				Class<?> targetClass = aggs.defaultValue().getClass();
+				Aggregator combiner = null;
+				for (Aggregator a: combiners) {
+					if (a.identity().getClass().isAssignableFrom(targetClass)) {
+						combiner = a; break;
+					}
+				}					
+				if (combiner == null) {throw new IllegalArgumentException("Could not match " + targetClass.getSimpleName() + " from provided aggregators.");} 
+				base = new General.Spread<>(spreader, combiner);
 			}
 
+			@Override public V emptyValue() {return base.emptyValue();}
+			
+			@Override
+			public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {return base.process(aggregates, rend);}
 		}
-		
-		
+
 	}
 	
 	public static final class ColorKey extends OptionTransfer<ColorKey.Controls> {

@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import ar.Transfer;
-import ar.app.components.sequentialComposer.OptionTransfer.Spread.FlexSpread;
+import ar.app.components.sequentialComposer.OptionTransfer.FlexSpread;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;

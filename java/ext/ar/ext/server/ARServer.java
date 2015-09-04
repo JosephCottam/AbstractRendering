@@ -186,7 +186,7 @@ public class ARServer extends NanoHTTPD {
 				glyphs = baseConfig.glyphset;
 			}
 			
-			try {transfer = arl.isPresent() ?  (Transfer<A, OUT>) ARLangExtensions.parseTransfer(arl.get(), vt) : transfer;}
+			try {transfer = arl.isPresent() ?  (Transfer<A, OUT>) ARLangExtensions.parseTransfer(arl.get(), vt, baseConfig.glyphset.bounds()) : transfer;}
 			catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
 			
 			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
