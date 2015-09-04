@@ -102,7 +102,7 @@ public class Parser {
 			
 			List<Object> args = parts.subList(1, parts.size());
 			try {return fn.apply(args);}
-			catch (Exception e) {throw new RuntimeException("Error reifying " + tree + "\n" + e.getMessage());}
+			catch (Exception e) {throw new RuntimeException("Error reifying " + tree + "\n" + e.getMessage(), e);}
 		}
 		
 		String val = tree.value().get().toString();
