@@ -209,8 +209,8 @@ public class Util {
 	 * @param v Current value 
 	 * **/
 	public static Color interpolate(Color low, Color high, double min, double max, double v) {
-		if (v>max) {v=max;}
-		if (v<min) {v=min;}
+		if (v>=max) {return high;}
+		if (v<=min) {return low;}
 		double distance = 1-((max-v)/(max-min));
 		if (Double.isNaN(distance) || Double.isInfinite(distance)) {return high;}
 		int r = (int) weightedAverage(high.getRed(), low.getRed(), distance);
