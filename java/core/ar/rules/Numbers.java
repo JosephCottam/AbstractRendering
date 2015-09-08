@@ -118,7 +118,9 @@ public final class Numbers {
 
 		@Override
 		public Color at(int x, int y, Aggregates<? extends IN> aggregates) {
-			return Util.interpolate(low, high, lowv, highv, aggregates.get(x, y).doubleValue());
+			double v = aggregates.get(x, y).doubleValue();
+			if (v < lowv) {return background;}
+			return Util.interpolate(low, high, lowv, highv, v);
 		}
 		
 		@Override public Color emptyValue() {return background;}
