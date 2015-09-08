@@ -28,51 +28,61 @@ public class Advise {
 		protected final Transfer<A,Color> ref;
 		protected final double tolerance; 
 		protected final Comparator<A> comp;
+		protected final Color background;
 		
-		/**@param reference Transfer function that determines representation
-		 * @param Comparator that measures the difference between two values
-		 * @param Threshold for ecuclidean distance bweteen two colors to be 'different'; 5 is a reasonable default **/
-		public UnderSaturate(Transfer<A,Color> reference, Comparator<A> comp, double tolerance) {
+		/**@param reference transfer function returning the results to analyze
+		 * @param Comparator that measures the difference between two input values
+		 * @param Background color for alpha overlay  (white is the default)
+		 * @param Threshold for Euclidean distance between two colors to be 'different'; (5 is the default) **/
+		public UnderSaturate(Transfer<A,Color> reference, Color background, Comparator<A> comp, double tolerance) {
 			this.ref = reference;
 			this.comp = comp;
 			this.tolerance = tolerance;
+			this.background = background;
 		}
+
+		public UnderSaturate(Transfer<A,Color> reference, Comparator<A> comp) {
+			this(reference, Color.white, comp, 5);
+		}
+
 		
 		/**What is the maximum distance two items can be apart and still considered the same.**/
 		public double tolerance() {return tolerance;}
 		
 		@Override public Boolean emptyValue() {return Boolean.FALSE;}
 		public UnderSaturate.Specialized<A> specialize(Aggregates<? extends A> aggregates) {
-			return new Specialized<>(ref.specialize(aggregates), comp, tolerance);
+			return new Specialized<>(ref.specialize(aggregates), comp, background, tolerance);
 		}
 		
 		protected static final class Specialized<A> extends UnderSaturate<A> implements Transfer.Specialized<A, Boolean> {
 			private static final long serialVersionUID = 470073013225719009L;
 			private final Transfer.Specialized<A, Color> ref;
 			
-			public Specialized(Transfer.Specialized<A,Color> ref, Comparator<A> comp, double tolerance) {
-				super(ref, comp, tolerance);
+			public Specialized(Transfer.Specialized<A,Color> ref, Comparator<A> comp, Color background, double tolerance) {
+				super(ref, background, comp, tolerance);
 				this.ref = ref;
 			}
 			 
 			@Override
 			public Aggregates<Boolean> process(Aggregates<? extends A> aggregates, Renderer rend) {
 				Aggregates<Color> refImg = rend.transfer(aggregates, ref);
-				return rend.transfer(aggregates, new Inner<>(refImg, ref.emptyValue(), comp, tolerance));
+				return rend.transfer(aggregates, new Inner<>(refImg, ref.emptyValue(), background, comp, tolerance));
 			}
 		}
 		
 		private static final class Inner<A> implements Transfer.ItemWise<A, Boolean> {
-			private final Color emptyRef;
-			private final double tolerance;
-			private final Comparator<A> comp;
 			private final Aggregates<Color> refImg;
-
-			public Inner(Aggregates<Color> refImg, Color emptyRef, Comparator<A> comp, double tolerance) {
-				this.emptyRef = emptyRef;
+			private final Color emptyRef;
+			private final Color background;
+			private final Comparator<A> comp;
+			private final double tolerance;
+			
+			public Inner(Aggregates<Color> refImg, Color emptyRef, Color background, Comparator<A> comp, double tolerance) {
+				this.refImg = refImg;
+				this.emptyRef = Util.premultiplyAlpha(emptyRef, background);
 				this.tolerance = tolerance;
 				this.comp = comp;
-				this.refImg = refImg;
+				this.background = background;
 			}
 			
 			@Override public Boolean emptyValue() {return Boolean.FALSE;}
@@ -82,7 +92,7 @@ public class Advise {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
 				Color out = refImg.get(x, y);
-				double distance = euclidean(emptyRef, out);
+				double distance = euclidean(emptyRef, Util.premultiplyAlpha(out, background));
 				return comp.compare(val, def) != 0 && distance < tolerance;
 			}		
 		}
@@ -173,13 +183,19 @@ public class Advise {
 		protected final Transfer<A, Boolean> under;
 		protected final Transfer<A, Boolean> over;
 		protected final Comparator<A> comp;
-		protected final Color overColor, underColor;
+		protected final Color overColor, underColor, background;
 		protected final double lowTolerance; //TODO: use under.tolerance instead....
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance) {
-			this(overColor, underColor, base, lowTolerance, new Util.ComparableComparator());
+			this(overColor, underColor, Color.white, base, lowTolerance, new Util.ComparableComparator());
 		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public Clipwarn(Color overColor, Color underColor, Color background, Transfer<A, Color> base, double lowTolerance) {
+			this(overColor, underColor, background, base, lowTolerance, new Util.ComparableComparator());
+		}
+
 		
 		/**
 		 * @param overColor Color to mark over saturation
@@ -188,13 +204,14 @@ public class Advise {
 		 * @param lowTolerance How close should be considered too-close in undersaturation
 		 * @param comp Comparator used to determine similarity between items
 		 */
-		public Clipwarn(Color overColor, Color underColor, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
+		public Clipwarn(Color overColor, Color underColor, Color background, Transfer<A, Color> base, double lowTolerance, Comparator<A> comp) {
 			this.overColor = overColor;
 			this.underColor = underColor;
+			this.background = background;
 			this.base = base;
 			this.lowTolerance = lowTolerance;
 			this.comp = comp;
-			this.under = new Advise.UnderSaturate<A>(base, comp, lowTolerance);
+			this.under = new Advise.UnderSaturate<A>(base, background, comp, lowTolerance);
 			this.over = new Advise.OverSaturate<A>(base, comp);
 		}
 		
@@ -207,7 +224,7 @@ public class Advise {
 			Transfer.Specialized<A,Color> b2 = base.specialize(aggregates);
 			Transfer.Specialized<A, Boolean> o2 = over.specialize(aggregates);
 			Transfer.Specialized<A, Boolean> u2 = under.specialize(aggregates);
-			return new Specialized<A>(overColor, underColor, b2,o2,u2, comp, lowTolerance);
+			return new Specialized<A>(overColor, underColor, background, b2,o2,u2, comp, lowTolerance);
 		}
 		
 		protected static final class Specialized<A> extends Clipwarn<A> implements Transfer.Specialized<A, Color> {
@@ -217,13 +234,13 @@ public class Advise {
 			private final Transfer.Specialized<A, Boolean> over;
 
 			public Specialized(
-					Color overColor, Color underColor,
+					Color overColor, Color underColor, Color background,
 					Transfer.Specialized<A, Color> base,
 					Transfer.Specialized<A, Boolean> over,
 					Transfer.Specialized<A, Boolean> under,
 					Comparator<A> comp,
 					double lowTolerance) {
-				super(overColor, underColor, base, lowTolerance, comp);
+				super(overColor, underColor, background, base, lowTolerance, comp);
 				this.base = base;
 				this.under = under;
 				this.over = over;

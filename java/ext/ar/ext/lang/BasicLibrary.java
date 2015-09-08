@@ -146,7 +146,8 @@ public class BasicLibrary {
 				args -> new Advise.Clipwarn<>(
 								get(args, 1, Color.black), 
 								get(args, 2, Color.gray), 
-								get(args, 0, new Numbers.Interpolate<>(Color.pink, Color.red)), 
+								get(args, 4, Color.white),
+								get(args, 0, new Numbers.Interpolate<>(Color.pink, Color.red)),
 								get(args, 3, 5d)));
 	}
 
