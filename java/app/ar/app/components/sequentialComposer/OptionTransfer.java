@@ -787,7 +787,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 						out.set(x, y, right.get(x, y));
 					} else {
 						Color under = right.get(x, y);
-						out.set(x,y, Util.premultiplyAlpha(over, under));
+						out.set(x,y, Util.blendAlpha(over, under));
 					}						
 				}
 			}

@@ -352,7 +352,7 @@ public class Util {
 	public static void writeImage(BufferedImage src, File f, boolean removeAlpha) {
 		try {
 			if (f.getParentFile() != null && !f.getParentFile().exists()) {f.getParentFile().mkdirs();}
-			if (removeAlpha) {src = premultiplyAlpha(src, Color.white);}
+			if (removeAlpha) {src = blendAlpha(src, Color.white);}
 			if (!f.getName().toUpperCase().endsWith("PNG")) {f = new File(f.getName()+".png");}
 			if (!ImageIO.write(src, "PNG", f)) {throw new RuntimeException("Could not find encoder for file:"+f.getName());}
 		}catch (Exception e) {
@@ -363,7 +363,7 @@ public class Util {
 	/**Write a buffered image to a file.**/
 	public static void writeImage(BufferedImage src, OutputStream s, boolean removeAlpha) {
 		try {
-			if (removeAlpha) {src = premultiplyAlpha(src, Color.white);}
+			if (removeAlpha) {src = blendAlpha(src, Color.white);}
 			if (!ImageIO.write(src, "PNG", s)) {throw new RuntimeException("Could not find encoder for stream");}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -371,19 +371,19 @@ public class Util {
 	}
 
 	/**Remove the alpha component from the source image.**/
-	public static final BufferedImage premultiplyAlpha(BufferedImage src, Color bgColor) {
+	public static final BufferedImage blendAlpha(BufferedImage src, Color bgColor) {
 		BufferedImage noAlpha = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
 		for (int x=0; x<src.getWidth(); x++) {
 			for (int y=0; y<src.getHeight();y++) {
 				Color fgColor = new Color(src.getRGB(x,y), true);
-				noAlpha.setRGB(x, y, premultiplyAlpha(fgColor, bgColor).getRGB());
+				noAlpha.setRGB(x, y, blendAlpha(fgColor, bgColor).getRGB());
 			}
 		}
 		return noAlpha;
 	}
 	
 	/**Combine a foreground color with a background color per the foreground color's alpha.**/
-	public static final Color premultiplyAlpha(Color fgColor, Color bgColor) {
+	public static final Color blendAlpha(Color fgColor, Color bgColor) {
 		int r, g, b;
 		int fgAlpha = fgColor.getAlpha();
 		r = fgColor.getRed() * fgAlpha + bgColor.getRed() * (255 - fgAlpha);

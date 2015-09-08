@@ -330,7 +330,7 @@ public class Legend<A> implements Transfer<A, Color> {
 				int rMax = Integer.MIN_VALUE, gMax = Integer.MIN_VALUE, bMax = Integer.MIN_VALUE;
 				int rMin = Integer.MAX_VALUE, gMin = Integer.MAX_VALUE, bMin = Integer.MAX_VALUE;
 				for (Color c: outAggs) {
-					Color display = Util.premultiplyAlpha(c, Color.white);
+					Color display = Util.blendAlpha(c, Color.white);
 					rMax = Math.max(rMax, display.getRed());
 					gMax = Math.max(gMax, display.getBlue());
 					bMax = Math.max(bMax, display.getGreen());

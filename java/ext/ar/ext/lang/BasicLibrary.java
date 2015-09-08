@@ -142,7 +142,7 @@ public class BasicLibrary {
 		put(ADVISE, "neighborhood", "Highlight neighborhoods where bins have signficanlty different values.  Can be used for sub-pixel distribution analysis.",
 				args -> new Advise.NeighborhoodDistribution(get(args, 0, 2)));
 		
-		put(ADVISE, "clipwarn", "Highlight areas of under and over saturation. args: transfer, over-color, under-color, delta-under",
+		put(ADVISE, "clipwarn", "Highlight areas of under and over saturation. args: transfer, over-color, under-color, delta-under, background-color",
 				args -> new Advise.Clipwarn<>(
 								get(args, 1, Color.black), 
 								get(args, 2, Color.gray), 

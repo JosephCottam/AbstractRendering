@@ -79,7 +79,7 @@ public class Advise {
 			
 			public Inner(Aggregates<Color> refImg, Color emptyRef, Color background, Comparator<A> comp, double tolerance) {
 				this.refImg = refImg;
-				this.emptyRef = Util.premultiplyAlpha(emptyRef, background);
+				this.emptyRef = Util.blendAlpha(emptyRef, background);
 				this.tolerance = tolerance;
 				this.comp = comp;
 				this.background = background;
@@ -92,7 +92,7 @@ public class Advise {
 				A def = aggregates.defaultValue();
 				A val = aggregates.get(x, y);
 				Color out = refImg.get(x, y);
-				double distance = euclidean(emptyRef, Util.premultiplyAlpha(out, background));
+				double distance = euclidean(emptyRef, Util.blendAlpha(out, background));
 				return comp.compare(val, def) != 0 && distance < tolerance;
 			}		
 		}
