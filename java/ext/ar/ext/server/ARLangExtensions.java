@@ -1,6 +1,7 @@
 package ar.ext.server;
 
 import java.awt.Rectangle;
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -20,6 +21,7 @@ import ar.ext.lang.BasicLibrary;
 import ar.ext.lang.Parser;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
+import ar.rules.Numbers;
 import ar.util.Util;
 import static ar.ext.lang.BasicLibrary.get;
 import static ar.ext.lang.BasicLibrary.put;
@@ -69,7 +71,7 @@ public class ARLangExtensions {
 	public static final  Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
 	static {
 		LIBRARY.putAll(BasicLibrary.COMMON);
-		 put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
+		put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
 		
 		put(LIBRARY, "dynSpread", "Spreading function where the radius is determined at specialization time. The parameter is the target minimum percent of non-empty bins.", 
 				args -> new DensitySpread<>(get(args, 0, 10.0)));
@@ -79,7 +81,9 @@ public class ARLangExtensions {
 		
 		put(LIBRARY, "print", "Print out a value at specialization time.  Otherwise acts as echo, returning aggregates equivalent to those passed in.  args: msg",
 				args -> new Print<>(get(args,0,"here")));
-
+		
+		put(LIBRARY, "alpha", "Simulate single-color alpha composition on simple counts. args: color, alpha value (double)",
+				args -> new Numbers.FixedInterpolate<Number>(Color.WHITE, get(args,0,Color.RED), 1, 1/get(args,1,1.0), Util.CLEAR));
 	}
 
 	private static AffineTransform viewTransform;
