@@ -13,7 +13,7 @@ public class MemMapDecoder {
 	public static void main(String[] args) throws IOException {
 		File source = new File(args[0]);
 
-		final BigFileByteBuffer buffer = new BigFileByteBuffer(source , 1000, FileChannel.MapMode.READ_WRITE);
+		final BigFileByteBuffer buffer = new BigFileByteBuffer(source , 1000, FileChannel.MapMode.READ_ONLY);
 		Header header = Header.from(buffer);
 		
 		final long entries = (buffer.fileSize()-header.dataTableOffset)/header.recordLength;

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class DelimitedReader implements Iterator<String[]> {
 	/**Expression for simple CSV splitting (does not handle escaped strings).**/
 	public static final String CSV = "\\s*,\\s*";
+	public static final String TSV = "\\t";
 	
 	private BufferedReader reader;
 	private final Pattern splitter;

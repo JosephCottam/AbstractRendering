@@ -249,9 +249,18 @@ public class MemMapEncoder {
 		}			
 	}
 
+	private static boolean validate(char[] types, String[] entry) {
+		for (int i=0;i<types.length;i++) {
+			if (types[i]=='x') {continue;}
+			try {asBinary(entry[i], types[i]);}
+			catch (Exception e) {return false;}	
+		}
+		return true;
+	}
+	
 	/**Write from source text to indicated binary files.**/ 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
-		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
+		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.TSV); 
 		
 		
 		int entriesRead = 0;
@@ -262,6 +271,7 @@ public class MemMapEncoder {
 			while(source.hasNext()) {
 				String[] entry = source.next();
 				if (entry == null) {continue;}
+				if (!validate(types,entry)) {continue;}
 				for (int i=0;i<types.length;i++) {
 					if (types[i]=='x') {continue;}
 					byte[] value = asBinary(entry[i], types[i]);
