@@ -44,7 +44,7 @@ public class ARLangExtensions {
 				+ "A few examples (base configurations with the transfer spelled out):\n"
 				+ asList(datasets, f->new String[]{f.getName(), getArl(f)},"<li><a href='%1$s?arl=%2$s'>%1$s?arl=%2$s</a></li>") + "<br><br>" 
 				+ "Available functions:<br>"
-				+ Parser.functionHelp(BasicLibrary.COMMON, "<li>%s</li>", "\n");
+				+ Parser.functionHelp(LIBRARY, "<li>%s</li>", "\n");
 
 	}
 	
