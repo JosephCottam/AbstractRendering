@@ -152,6 +152,30 @@ public final class OptionDataset<G,I> {
 		} catch (Exception e) {temp = null;}
 		CENSUS_SYN_PEOPLE = temp;
 	}
+	
+
+	public static final OptionDataset<Point2D, Integer> GDELT_YEAR;
+	static {
+		OptionDataset<Point2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>( 
+					"GDELT (Year)",
+					new File("../data/gdelt.hbin"),
+					new Indexed.ToPoint(false, 4,3),
+					new Indexed.ToValue<>(0),
+					OptionAggregator.COC_COMP,
+					"(seq(toCount)(spread)(fn(cbrt))(interpolate))",
+					new OptionTransfer.ToCount(),
+					new OptionTransfer.Spread(),
+					new OptionTransfer.MathTransfer(),
+					new OptionTransfer.Interpolate()
+					);
+			temp.flags.add("NegativeDown");
+		} catch (Exception e) {
+			e.printStackTrace();
+			temp = null;}
+		GDELT_YEAR = temp;
+	}
 
 	public static final OptionDataset<Point2D, Character> CENSUS_NY_SYN_PEOPLE;
 	static {
@@ -189,6 +213,7 @@ public final class OptionDataset<G,I> {
 		} catch (Exception e) {temp = null;}
 		WIKIPEDIA = temp;
 	}
+	
 	
 	public static final OptionDataset<Point2D, Color> KIVA;
 	static {
