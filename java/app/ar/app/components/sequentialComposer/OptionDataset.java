@@ -106,7 +106,11 @@ public final class OptionDataset<G,I> {
 					"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
 					new OptionTransfer.ColorKey(),
 					new OptionTransfer.ColorCatInterpolate());
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading BOOST_MEMORY dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
 		BOOST_MEMORY = temp;
 	}
 	
@@ -128,7 +132,11 @@ public final class OptionDataset<G,I> {
 			
 			temp.flags.add("NegativeDown");
 			temp.flags.add("LatLon");
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading CENSUS_TRACTS dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
 		CENSUS_TRACTS = temp;
 	}
 
@@ -149,7 +157,12 @@ public final class OptionDataset<G,I> {
 			
 			temp.flags.add("NegativeDown");
 			temp.flags.add("EPSG:900913");
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading CENSUS_SYN_PEOPLE dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
 		CENSUS_SYN_PEOPLE = temp;
 	}
 	
@@ -172,8 +185,10 @@ public final class OptionDataset<G,I> {
 					);
 			temp.flags.add("NegativeDown");
 		} catch (Exception e) {
-			e.printStackTrace();
-			temp = null;}
+			System.err.println("Error loading GDELT_YEAR dataset, load canceled::");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
 		GDELT_YEAR = temp;
 	}
 
@@ -193,7 +208,12 @@ public final class OptionDataset<G,I> {
 			
 			temp.flags.add("NegativeDown");
 			temp.flags.add("EPSG:900913");
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading CENSUS_SYN_PEPOLE (NY) dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
 		CENSUS_NY_SYN_PEOPLE = temp;
 	}
 	
@@ -210,7 +230,12 @@ public final class OptionDataset<G,I> {
 				"(seq(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.MathTransfer(),
 			new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading WIKIPEDIA dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
 		WIKIPEDIA = temp;
 	}
 	
@@ -228,7 +253,12 @@ public final class OptionDataset<G,I> {
 				"(seq(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.MathTransfer(),
 				new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading KIVA dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
 		KIVA = temp;
 	}
 	
@@ -258,7 +288,12 @@ public final class OptionDataset<G,I> {
 			OptionAggregator.COUNT,
 			"(interpolate(color,pink)(color,red)(color,clear))",
 			new OptionTransfer.Interpolate());
-		} catch (Exception e) {temp = null;}
+		} catch (Exception e) {
+			System.err.println("Error loading CIRCLE_SCATTER dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
 		CIRCLE_SCATTER = temp;
 	}
 
