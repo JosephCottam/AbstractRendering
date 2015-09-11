@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import ar.Aggregates;
+import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
@@ -171,5 +173,60 @@ public class ARLangExtensions {
 			public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {return inner.process(aggregates, rend);}
 		}
 	}
+	
+	public static class AverageCat<K, T extends Map.Entry<K, Double>> implements Aggregator<T, Map<K, AverageCat.Cell>> {
+		public static final class Cell {
+			public final int count;
+			public final double val;
+			public final double avg;
+			public Cell(int count, double val) {
+				this.count = count;
+				this.val = val;
+				this.avg = val/count;
+			}
+			public Cell update(double val) {return new Cell(count+1, this.val+val);}
+			public Cell update(Cell update) {return new Cell(count+update.count, val+update.val);}
+		}
+		
+		private final Supplier<Map<K, Cell>> identitySupplier;
+		public AverageCat() {this(() -> new HashMap<>());}
+		
+		/**@param allocator Function to invoke to create the identity object.**/
+		public AverageCat(Supplier<Map<K, Cell>> identitySupplier) {this.identitySupplier = identitySupplier;}
+
+		@Override public Map<K, Cell> identity() {return identitySupplier.get();}
+
+		@Override
+		public Map<K, Cell> combine(Map<K, Cell> current, T update) {
+			if (update.getValue() == 0) {return current;}
+			current.get(update.getKey()).update(update.getValue());
+			return current;
+		}
+
+
+		@Override
+		public Map<K, Cell> rollup(Map<K, Cell> left, Map<K, Cell> right) {
+			if (left.isEmpty()) {return right;}
+			if (right.isEmpty()) {return left;}
+			
+			Map<K, Cell> into = right, from = left;
+			if (left.size() > right.size()) {
+				into = left;
+				from = right;
+			}
+			
+			for (Map.Entry<K, Cell> e: from.entrySet()) {
+				K key = e.getKey();
+				if (into.containsKey(key)) {
+					into.put(key, into.get(key).update(e.getValue()));
+				} else {
+					into.put(key, e.getValue());
+				}
+			}
+			return into;
+		}
+	}
+
+	
 	
 }
