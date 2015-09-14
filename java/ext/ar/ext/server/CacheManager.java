@@ -156,8 +156,8 @@ public class CacheManager implements Renderer {
 	 * **/
 	public Path tilesetPath(String datasetId, Aggregator<?,?> aggregator, AffineTransform vt) {
 		//HACK: Using the aggregator class name ignores parameters...and can cause cross-package conflicts...
-		String sx = String.format("%.4f", vt.getScaleX());
-		String sy = String.format("%.4f", vt.getScaleY());
+		String sx = String.format("%.6f", vt.getScaleX());
+		String sy = String.format("%.6f", vt.getScaleY());
 		return cacheRoot.resolve(datasetId).resolve(aggregator.getClass().getSimpleName()).resolve(sx).resolve(sy);
 	}
 
@@ -235,8 +235,9 @@ public class CacheManager implements Renderer {
 	 * TODO: Is aggregator conversion post-load valuable (like CoC->ToCounts)? Would enable a smaller on-disk cache....but might be too narrow to bother with. 
 	 * 
 	 * @param datasetId   Name identifying source data
-	 * @param aggregator  Aggregator that will be used		
+	 * @param aggregator  Aggregator that will be used
 	 * @param vt		  View transform applied to source data
+	 * @param gbt		  Global bin transform		
 	 * @param viewport	  Size of the screen viewport (in screen coordinates) 
 	 * @return
 	 */
@@ -255,7 +256,9 @@ public class CacheManager implements Renderer {
 		boolean combinedEmpty = true;
 		Optional<Rectangle> remaining = Optional.empty();
 		
-		Path tilesetRoot = tilesetPath(datasetId, aggregator, vt);
+		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
+		System.out.println(" ---Load--- " + tilesetRoot);
+		System.out.println(" ---Load--- " + gbt);
 		for (Rectangle tile: tileBounds(renderBounds)) {
 			File f = tileFile(tilesetRoot, tile);  
 			if (!f.exists()) {
@@ -298,12 +301,15 @@ public class CacheManager implements Renderer {
 	 * 
 	 * @param base Source dataset
 	 * @param aggregator Aggregator used to build the aggregates (influences the cache path)
-	 * @param vt View transform used to render the aggregates (used to align the aggregates to the global grid)
+	 * @param gbt View transform used to render the aggregates (used to align the aggregates to the global grid)
 	 * @param aggs Aggregates to save (MUST be full tiles aligned to the tile grid)
 	 *
 	 * **/
 	public <A> void save(String datasetId, Aggregator<?,A> aggregator,  AffineTransform gbt, Aggregates<A> aggs) {		
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
+		System.out.println(" ---save--- " + tilesetRoot);
+		System.out.println(" ---save--- " + gbt);
+		
 		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);		
 		List<Rectangle> tileBounds = tileBounds(aggregateBounds);
 		
