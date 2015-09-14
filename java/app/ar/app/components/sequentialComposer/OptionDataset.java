@@ -5,6 +5,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,6 +115,27 @@ public final class OptionDataset<G,I> {
 		BOOST_MEMORY = temp;
 	}
 	
+	
+
+	private static final Comparator<String> COMP = new Util.ComparableComparator<String>();	
+	private static final Valuer<Indexed, CategoricalCounts<String>> TRACT_RACE_VALUER = new Valuer<Indexed,CategoricalCounts<String>>() {
+		@Override
+		public CategoricalCounts<String> apply(Indexed from) {
+			int key = ((Integer) from.get(3)).intValue();
+			String code;
+			switch(key) {
+				case 2: code = "w"; break;
+				case 3: code = "b"; break;
+				case 4: code = "h"; break;
+				case 5: code = "a"; break;
+				default: code = "o"; 
+			}
+			int val = ((Integer) from.get(2)).intValue();
+			return new CategoricalCounts<>(COMP, code, val); 
+		}
+		
+	};
+	
 	public static final OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS;
 	static {
 		OptionDataset<Point2D, CategoricalCounts<String>>  temp;
@@ -122,7 +144,8 @@ public final class OptionDataset<G,I> {
 				"US Census Tracts", 
 				new File("../data/2010Census_RaceTract.hbin"), 
 				new Indexed.ToPoint(false, 0, 1),
-				new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
+				//new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
+				TRACT_RACE_VALUER,
 				OptionAggregator.MERGE_CATS,
 				"(seq(toCount)(spread)(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",
 				new OptionTransfer.Spread(),
@@ -139,6 +162,8 @@ public final class OptionDataset<G,I> {
 		}
 		CENSUS_TRACTS = temp;
 	}
+	
+	
 
 	
 	public static final OptionDataset<Point2D, Character> CENSUS_SYN_PEOPLE;
