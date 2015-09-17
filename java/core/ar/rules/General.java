@@ -226,7 +226,7 @@ public class General {
 		/**
 		 * @param spreader Function to spread with
 		 * @param combiner How to combine values
-		 * @param identity Identity value on spreading (used to intialized output aggregates)
+		 * @param identity Identity value on spreading (used to initialized output aggregates)
 		 * 
 		 * NOTE: combiner/identity can be satisfied by Aggregator.rollup() and Aggregator.identity()
 		 */
@@ -239,7 +239,7 @@ public class General {
 		@Override public V emptyValue() {return identity;}
 		
 		@Override 
-		//TODO: Parallelize...
+		//TODO: Parallelize: spreader returns list of points, sources.map(p -> source.get(p.x,p.y)).reduce(combiner) run as itemwise. 
 		public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {
 			Aggregates<V> target = spreader.extend(aggregates, emptyValue());
 			
@@ -283,7 +283,6 @@ public class General {
 			public void spread(Aggregates<V> target, int x, int y, V base, BiFunction<V,V,V> op) {
 				for (int xx=-left; xx<=right; xx++) {
 					for (int yy=-up; yy<=down; yy++) {
-
 						int xv = x+xx;
 						int yv = y+yy;
 						V update = target.get(xv, yv);
@@ -334,11 +333,18 @@ public class General {
 		
 		/**Spread in a circular pattern with original value at center, 
 		 * circle area is determined derived from the value found in the cell.
-		 * (Radius is sqrt of the passed cell value).
 		 */
 		public static class ValueCircle<N extends Number> implements Spreader<N> {
+			protected final Function<N,Double> seed;
+			public ValueCircle() {this(a -> a.doubleValue());}
+			
+			/** @param seed Function to derive a number from the input.**/
+			public ValueCircle(Function<N,Double> seed) {this.seed = seed;}
+			
 			public void spread(Aggregates<N> target, final int x, final int y, N base, BiFunction<N,N,N> op) {
-				int radius = (int) Math.ceil(Math.sqrt(base.doubleValue()));
+				double root = seed.apply(base).doubleValue();
+				int radius = (int) Math.floor(Math.sqrt(root));
+				if (radius < 1) {return;}
 				Ellipse2D e = new Ellipse2D.Double(x-radius,y-radius,2*radius,2*radius);
 				Point2D p = new Point2D.Double();
 				for (int xx=-radius; xx<=radius; xx++) {

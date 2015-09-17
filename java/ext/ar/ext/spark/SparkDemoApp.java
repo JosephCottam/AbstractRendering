@@ -106,7 +106,7 @@ public class SparkDemoApp {
 			base = source.map(new StringToIndexed("\\s*,\\s*"));
 		}
 
-		Glypher<G,I> glypher = new Glypher<G,I>(dataset.shaper,dataset.valuer);
+		Glypher<G,I> glypher = new Glypher<G,I>(dataset.shaper,dataset.info);
 		GlyphsetRDD<G, I> glyphs = new GlyphsetRDD<>(base.map(glypher), true, partition);
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
  		Selector selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());

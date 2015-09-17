@@ -9,17 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import ar.Aggregates;
-import ar.Aggregator;
 import ar.Renderer;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.lang.BasicLibrary;
+import ar.ext.lang.BasicLibrary.ARConfig;
 import ar.ext.lang.Parser;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
@@ -50,7 +49,8 @@ public class ARLangExtensions {
 
 	}
 	
-	public static Transfer<?,?> parseTransfer(String source, AffineTransform vt) {
+	
+	public static ARConfig parse(String source, AffineTransform vt) {
 		ARLangExtensions.viewTransform = vt;
 		
 		Parser.TreeNode<?> tree;
@@ -61,9 +61,17 @@ public class ARLangExtensions {
 			throw new RuntimeException(e.getMessage() + "\n While parsing " + source);
 		}
 
-		
 		try {
-			return (Transfer<?,?>) Parser.reify(tree, LIBRARY);
+			Object r = Parser.reify(tree, LIBRARY);
+			if (r instanceof Transfer) {
+				@SuppressWarnings("rawtypes")
+				Transfer<?,?> t = (Transfer) r;
+				return new ARConfig(null, null, t);
+			} else if (r instanceof ARConfig) {
+				return (ARConfig) r;
+			} else {
+				throw new IllegalArgumentException("Can only use 'AR' or transfer as as root in ARL for AR server");
+			}
 		} catch (Throwable e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage() + "\n While processing " + tree.toString());
@@ -73,6 +81,8 @@ public class ARLangExtensions {
 	public static final  Map<String, Function<List<Object>, Object>> LIBRARY = new HashMap<>();
 	static {
 		LIBRARY.putAll(BasicLibrary.COMMON);
+		LIBRARY.putAll(GDelt.LIBRARY);
+		
 		put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
 		
 		put(LIBRARY, "dynSpread", "Spreading function where the radius is determined at specialization time. The parameter is the target minimum percent of non-empty bins.", 
@@ -164,7 +174,7 @@ public class ARLangExtensions {
 				if (radius < 2) {inner = new General.Echo<>(aggs.defaultValue());}
 				else {
 					Spreader<V> spreader = new General.Spread.UnitCircle<V>((int) radius);
-					inner = new OptionTransfer.FlexSpread<>(spreader).specialize(aggs);
+					inner = new OptionTransfer.FlexSpread<>(spreader, null, null).specialize(aggs);
 				}
 				
 			}
@@ -173,60 +183,4 @@ public class ARLangExtensions {
 			public Aggregates<V> process(Aggregates<? extends V> aggregates, Renderer rend) {return inner.process(aggregates, rend);}
 		}
 	}
-	
-	public static class AverageCat<K, T extends Map.Entry<K, Double>> implements Aggregator<T, Map<K, AverageCat.Cell>> {
-		public static final class Cell {
-			public final int count;
-			public final double val;
-			public final double avg;
-			public Cell(int count, double val) {
-				this.count = count;
-				this.val = val;
-				this.avg = val/count;
-			}
-			public Cell update(double val) {return new Cell(count+1, this.val+val);}
-			public Cell update(Cell update) {return new Cell(count+update.count, val+update.val);}
-		}
-		
-		private final Supplier<Map<K, Cell>> identitySupplier;
-		public AverageCat() {this(() -> new HashMap<>());}
-		
-		/**@param allocator Function to invoke to create the identity object.**/
-		public AverageCat(Supplier<Map<K, Cell>> identitySupplier) {this.identitySupplier = identitySupplier;}
-
-		@Override public Map<K, Cell> identity() {return identitySupplier.get();}
-
-		@Override
-		public Map<K, Cell> combine(Map<K, Cell> current, T update) {
-			if (update.getValue() == 0) {return current;}
-			current.get(update.getKey()).update(update.getValue());
-			return current;
-		}
-
-
-		@Override
-		public Map<K, Cell> rollup(Map<K, Cell> left, Map<K, Cell> right) {
-			if (left.isEmpty()) {return right;}
-			if (right.isEmpty()) {return left;}
-			
-			Map<K, Cell> into = right, from = left;
-			if (left.size() > right.size()) {
-				into = left;
-				from = right;
-			}
-			
-			for (Map.Entry<K, Cell> e: from.entrySet()) {
-				K key = e.getKey();
-				if (into.containsKey(key)) {
-					into.put(key, into.get(key).update(e.getValue()));
-				} else {
-					into.put(key, e.getValue());
-				}
-			}
-			return into;
-		}
-	}
-
-	
-	
 }

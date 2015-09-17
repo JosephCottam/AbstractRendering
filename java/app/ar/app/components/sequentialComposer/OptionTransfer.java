@@ -447,7 +447,7 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 	public static final class Spread extends OptionTransfer<Spread.Controls> {
 		@Override
 		public Transfer<?, ?> transfer(Controls params, Transfer subsequent) {
-			Transfer t = new FlexSpread(params.spreader());
+			Transfer t = new FlexSpread(params.spreader(), null, null);
 			return extend(t, subsequent);
 		}
 
@@ -483,27 +483,37 @@ public abstract class OptionTransfer<P extends OptionTransfer.ControlPanel> {
 
 	//TODO: Should this move to core?  
 	public static class FlexSpread<V> implements Transfer<V,V> {
-		final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>()};
+		final Aggregator[] combiners = new Aggregator[]{new Numbers.Count<Integer>(), new Categories.MergeCategories<Color>(), new General.AggregatorFn<Number>(0d, (a,b)->Math.max(a.doubleValue(),b.doubleValue()))};
 		final Spreader<V> spreader;
-		public FlexSpread(Spreader<V> spreader) {this.spreader = spreader;}
+		final BiFunction combiner;
+		final V identity;
+
+		public FlexSpread(Spreader<V> spreader, BiFunction<V,V,V> combiner, V identity) {
+			this.spreader = spreader;
+			this.combiner = combiner;
+			this.identity = identity;
+		}
 		
 		@Override public V emptyValue() {throw new UnsupportedOperationException();}
-		@Override public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return new Specialized<>(spreader, aggregates);}
-
+		@Override public ar.Transfer.Specialized<V, V> specialize(Aggregates<? extends V> aggregates) {return new Specialized<>(spreader, combiner, identity, aggregates);}
 		
 		public static class Specialized<V> extends FlexSpread<V> implements Transfer.Specialized<V,V> {
 			final General.Spread<V> base;
-			public Specialized(Spreader<V> spreader, Aggregates<? extends V> aggs) {
-				super(spreader);
+			public Specialized(Spreader<V> spreader, BiFunction<V,V,V> combiner, V identity, Aggregates<? extends V> aggs) {
+				super(spreader, combiner, identity);
 				Class<?> targetClass = aggs.defaultValue().getClass();
-				Aggregator combiner = null;
-				for (Aggregator a: combiners) {
-					if (a.identity().getClass().isAssignableFrom(targetClass)) {
-						combiner = a; break;
+				
+				if (combiner == null) {
+					for (Aggregator agg: combiners) {
+						if (agg.identity().getClass().isAssignableFrom(targetClass)) {
+							combiner = (a,b) -> (V) agg.rollup(a,b); 
+							identity = (V) agg.identity();
+							break;
+						}
 					}
-				}					
+				}
 				if (combiner == null) {throw new IllegalArgumentException("Could not match " + targetClass.getSimpleName() + " from provided aggregators.");} 
-				base = new General.Spread<>(spreader, combiner);
+				base = new General.Spread<>(spreader, combiner, identity);
 			}
 
 			@Override public V emptyValue() {return base.emptyValue();}

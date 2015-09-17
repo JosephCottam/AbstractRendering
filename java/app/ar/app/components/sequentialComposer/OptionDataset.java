@@ -27,11 +27,11 @@ public final class OptionDataset<G,I> {
 	public final Glyphset<G,I> glyphset;	//Actual glyphset to load
 	public final File sourceFile;			//Where it came from
 	public final Shaper<Indexed, G> shaper; //How shapes were determined
-	public final Valuer<Indexed, I> valuer; //How values were determined
+	public final Valuer<Indexed, I> info; 	//How values were determined
 	public final OptionAggregator<? super I,?> defaultAggregator;
-	public final String arl;		//AR Language description 
+	public final String arl;				//AR Language description 
 	public final List<OptionTransfer<?>> defaultTransfers;
-	public final Set<String> flags;	//Hints, allegations and other information about the data set
+	public final Set<String> flags;			//Hints, allegations and other information about the data set
 	
 	
 	public OptionDataset(
@@ -57,7 +57,9 @@ public final class OptionDataset<G,I> {
 	public OptionDataset(
 			String name, 
 			Glyphset<G,I> glyphset,
-			File file, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer,
+			File file, 
+			Shaper<Indexed,G> shaper, 
+			Valuer<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
 			String arl,
 			List<OptionTransfer<?>> defTrans,
@@ -65,7 +67,7 @@ public final class OptionDataset<G,I> {
 		this.name = name;
 		this.sourceFile = file;
 		this.shaper = shaper;
-		this.valuer = valuer;
+		this.info = valuer;
 		this.glyphset = glyphset;
 		this.defaultAggregator = defAgg;
 		this.arl = arl;
@@ -117,18 +119,18 @@ public final class OptionDataset<G,I> {
 	
 	
 
-	private static final Comparator<String> COMP = new Util.ComparableComparator<String>();	
-	private static final Valuer<Indexed, CategoricalCounts<String>> TRACT_RACE_VALUER = new Valuer<Indexed,CategoricalCounts<String>>() {
+	private static final Comparator<Character> COMP = new Util.ComparableComparator<>();	
+	private static final Valuer<Indexed, CategoricalCounts<Character>> TRACT_RACE_VALUER = new Valuer<Indexed,CategoricalCounts<Character>>() {
 		@Override
-		public CategoricalCounts<String> apply(Indexed from) {
+		public CategoricalCounts<Character> apply(Indexed from) {
 			int key = ((Integer) from.get(3)).intValue();
-			String code;
+			Character code;
 			switch(key) {
-				case 2: code = "w"; break;
-				case 3: code = "b"; break;
-				case 4: code = "h"; break;
-				case 5: code = "a"; break;
-				default: code = "o"; 
+				case 2: code = 'w'; break;
+				case 3: code = 'b'; break;
+				case 4: code = 'h'; break;
+				case 5: code = 'a'; break;
+				default: code = 'o'; 
 			}
 			int val = ((Integer) from.get(2)).intValue();
 			return new CategoricalCounts<>(COMP, code, val); 
@@ -136,15 +138,14 @@ public final class OptionDataset<G,I> {
 		
 	};
 	
-	public static final OptionDataset<Point2D, CategoricalCounts<String>> CENSUS_TRACTS;
+	public static final OptionDataset<Point2D, CategoricalCounts<Character>> CENSUS_TRACTS;
 	static {
-		OptionDataset<Point2D, CategoricalCounts<String>>  temp;
+		OptionDataset<Point2D, CategoricalCounts<Character>>  temp;
 		try {
 			temp = new OptionDataset<>(
 				"US Census Tracts", 
 				new File("../data/2010Census_RaceTract.hbin"), 
 				new Indexed.ToPoint(false, 0, 1),
-				//new Valuer.CategoryCount<>(new Util.ComparableComparator<String>(), 3,2),
 				TRACT_RACE_VALUER,
 				OptionAggregator.MERGE_CATS,
 				"(seq(toCount)(spread)(fn(log,10.0))(interpolate(color,pink)(color,red)(color,clear)))",

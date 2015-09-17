@@ -60,7 +60,7 @@ public class SequentialComposer extends JPanel  {
 				new TransformWrapper<>(source.glyphset, AffineTransform.getScaleInstance(1, -1)),
 				source.sourceFile, 
 				source.shaper, 
-				source.valuer, 
+				source.info, 
 				source.defaultAggregator, 
 				source.arl,
 				source.defaultTransfers, 

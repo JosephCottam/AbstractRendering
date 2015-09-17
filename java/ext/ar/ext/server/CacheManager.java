@@ -257,8 +257,6 @@ public class CacheManager implements Renderer {
 		Optional<Rectangle> remaining = Optional.empty();
 		
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
-		System.out.println(" ---Load--- " + tilesetRoot);
-		System.out.println(" ---Load--- " + gbt);
 		for (Rectangle tile: tileBounds(renderBounds)) {
 			File f = tileFile(tilesetRoot, tile);  
 			if (!f.exists()) {
@@ -288,7 +286,7 @@ public class CacheManager implements Renderer {
 		else if (OptionDataset.SYNTHETIC != null && datasetId.equals(OptionDataset.SYNTHETIC.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
 		else if (OptionDataset.CENSUS_NY_SYN_PEOPLE != null && datasetId.equals(OptionDataset.CENSUS_NY_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
 		else if (OptionDataset.CENSUS_SYN_PEOPLE != null && datasetId.equals(OptionDataset.CENSUS_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
-		else if (OptionDataset.CENSUS_TRACTS != null && datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
+		else if (OptionDataset.CENSUS_TRACTS != null && datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
 		else if (OptionDataset.GDELT_YEAR != null && datasetId.equals(OptionDataset.GDELT_YEAR.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
 		else {throw new IllegalArgumentException("Cannot load from cache because root type could not be discerned");}
 	}
@@ -307,8 +305,6 @@ public class CacheManager implements Renderer {
 	 * **/
 	public <A> void save(String datasetId, Aggregator<?,A> aggregator,  AffineTransform gbt, Aggregates<A> aggs) {		
 		Path tilesetRoot = tilesetPath(datasetId, aggregator, gbt);
-		System.out.println(" ---save--- " + tilesetRoot);
-		System.out.println(" ---save--- " + gbt);
 		
 		Rectangle aggregateBounds = AggregateUtils.bounds(aggs);		
 		List<Rectangle> tileBounds = tileBounds(aggregateBounds);
@@ -321,7 +317,7 @@ public class CacheManager implements Renderer {
 			try {
 				f.getParentFile().mkdirs();
 				AggregateSerializer.serialize(tile, new FileOutputStream(f));
-			} catch (IOException e) {
+			} catch (Exception e) {
 				System.err.println("## Error saving to cache file " + f);
 				e.printStackTrace();
 			}

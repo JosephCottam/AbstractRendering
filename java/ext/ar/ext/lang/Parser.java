@@ -125,6 +125,7 @@ public class Parser {
 	public static String basicHelp(String lineSep) {
 		String[] basics = new String[]{
 				"Basic syntax follows s-epxressions: (item (item item item))",
+				"",
 				"Looks like lisp, with all of the visual appeal and very little of the actual power!",
 				"There are separators, lists, numeric literals, symbol literals and function calls.",
 				"There are no strings, variables, function definitions, comments or other nice things like that.",

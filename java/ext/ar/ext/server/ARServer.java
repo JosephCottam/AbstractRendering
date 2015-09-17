@@ -41,11 +41,14 @@ import ar.app.components.sequentialComposer.OptionAggregator;
 import ar.app.components.sequentialComposer.OptionDataset;
 import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.avro.AggregateSerializer;
+import ar.ext.lang.BasicLibrary.ARConfig;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
+import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Shaper;
+import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
 import ar.rules.General;
@@ -180,14 +183,39 @@ public class ARServer extends NanoHTTPD {
 				renderBounds = zoomBounds;
 			}
  			
+			try {
+				if (arl.isPresent()) {
+					ARConfig c = ARLangExtensions.parse(arl.get(), vt);
+					transfer  = (Transfer<A,OUT>) c.transfer.orElse(transfer);
+					agg = (Aggregator<I, A>) c.agg.orElse(agg);
+					Valuer<Indexed, I> info = (Valuer<Indexed, I>) c.info.orElse(baseConfig.info);
+					
+					//HACK: Piping the info in like this is...not pretty
+					if (baseConfig.glyphset instanceof MemMapList) {
+						baseConfig = new OptionDataset<>(
+								baseConfig.name,
+								new MemMapList<>(baseConfig.sourceFile, baseConfig.shaper, info),  
+								baseConfig.sourceFile,
+								baseConfig.shaper, 
+								info, 
+								baseConfig.defaultAggregator, 
+								"", 
+								baseConfig.defaultTransfers, 
+								baseConfig.flags);
+						
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
+			}
+	
+			
 			if (selection.isPresent() && ignoreCached) {
 				glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
 			} else {
 				glyphs = baseConfig.glyphset;
 			}
-			
-			try {transfer = arl.isPresent() ?  (Transfer<A, OUT>) ARLangExtensions.parseTransfer(arl.get(), vt) : transfer;}
-			catch (Exception e) {return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());}
 			
 			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
 			CacheManager render = ignoreCached 
@@ -244,7 +272,7 @@ public class ARServer extends NanoHTTPD {
 			return rslt;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error:" + e.toString());
+			return newFixedLengthResponse(Status.ACCEPTED, MIME_PLAINTEXT, "Error: " + e.toString());
 		}
 	}
 
@@ -320,7 +348,7 @@ public class ARServer extends NanoHTTPD {
 		if (aggId == null) {return def.aggregator();}
 		aggId = aggId.trim();
 		if (aggId.equals("") || aggId.equals("null")) {return def.aggregator();}
-		
+
 		try {
 			OptionAggregator<?,?> option = (OptionAggregator<?,?>) OptionAggregator.class.getField(aggId).get(null);
 			return option.aggregator();

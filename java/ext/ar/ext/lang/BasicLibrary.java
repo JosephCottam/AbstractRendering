@@ -5,22 +5,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ar.Aggregator;
 import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionTransfer.FlexSpread;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.rules.Advise;
 import ar.rules.CategoricalCounts;
 import ar.rules.Categories;
+import ar.rules.Debug;
 import ar.rules.General;
 import ar.rules.Numbers;
 import ar.rules.combinators.Combinators;
 import ar.rules.combinators.Seq;
 import ar.util.Util;
-
 import static java.util.stream.Collectors.*;
 
 
@@ -81,8 +83,24 @@ public class BasicLibrary {
 	}
 
 
+	/**Object to cary various parts of an AR configuration**/
+	public static class ARConfig {
+		public final Optional<Function<?,?>> info;
+		public final Optional<Aggregator<?,?>> agg;
+		public final Optional<Transfer<?,?>> transfer;
+		public ARConfig(Function<?,?> info, Aggregator<?,?> agg, Transfer<?,?> t) {
+			this.info = Optional.ofNullable(info);
+			this.agg = Optional.ofNullable(agg);
+			this.transfer = Optional.ofNullable(t);
+		}
+	}
+	
 	public static final Map<String, Function<List<Object>, Object>> MISC = new HashMap<>();	
 	static {
+		put(MISC, "AR", "AR configuration (info, aggregator, transfer)", args -> new ARConfig(get(args,0,null), get(args,1,null), get(args,2,null)));
+		put(MISC, "null", "returns null", args -> null);
+		put(MISC, "count", "Count aggregator", args -> new Numbers.Count<>());
+		
 		put(MISC, "interpolate", "Number to colors interpolation (use catInterpolate for multi-category  interpolation).", 
 				args -> args.size() > 3
 							? new Numbers.FixedInterpolate<>(
@@ -154,11 +172,15 @@ public class BasicLibrary {
 	
 	public static final Map<String, Function<List<Object>, Object>> SPREAD = new HashMap<>();
 	static {
-		put(SPREAD, "spread", "Spread values into adjacent bins.", args -> new FlexSpread(get(args, 0, new General.Spread.UnitCircle(2))));
+		put(SPREAD, "spread", "Spread values into adjacent bins.", 
+				args -> new FlexSpread(
+							get(args, 0, new General.Spread.UnitCircle(2)),
+							get(args, 1, null),
+							get(args, 2, null)));
 		put(SPREAD, "square", "Spreader.  Square shape (up/down/left/right all the same).", args -> new General.Spread.UnitRectangle<>(get(args,0,1)));
 		put(SPREAD, "rect", "Spreader. Separately secified up/down/left/right amount. All default to 1", args -> new General.Spread.UnitRectangle<>(get(args,0,1), get(args,1,1), get(args,2,1), get(args,3,1)));
 		put(SPREAD, "circle", "Spreader.  Fixed size circle (default radius 1).", args -> new General.Spread.UnitCircle<>(get(args,0,1)));
-		put(SPREAD, "valueCircle", "Spreader.  Spread in a circle based on the value in the source bin.", args -> new General.Spread.ValueCircle<>());
+		put(SPREAD, "valueCircle", "Spreader.  Spread in a circle based on the value in the source bin.", args -> new General.Spread.ValueCircle<>(get(args,0,a->a.doubleValue())));
 	}
 	
 	public static final Map<String, Function<List<Object>, Function<Number,?>>> MATH = new HashMap<>();
@@ -195,8 +217,16 @@ public class BasicLibrary {
 
 	}
 	
+	
+	public static final Map<String, Function<List<Object>, Object>> DEBUG = new HashMap<>();
+	static {
+		put(DEBUG, "stats" ,"Print out numeric statistics", args -> new Debug.Stats<Number>(get(args,0,0d)));
+	}
+
+	
 	public static final  Map<String, Function<List<Object>, Object>> COMMON = new HashMap<>();
 	static {
+		COMMON.putAll(DEBUG);
 		COMMON.putAll(MISC);
 		COMMON.putAll((Map<? extends String, ? extends Function<List<Object>, Object>>) (Map) MATH);
 		COMMON.putAll(COLOR);
