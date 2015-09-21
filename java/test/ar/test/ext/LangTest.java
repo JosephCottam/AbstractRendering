@@ -72,8 +72,12 @@ public class LangTest {
 			if (exclude.contains(key)) {continue;}
 			
 			Object reified = reify(parse("("+key+")"), BasicLibrary.COMMON);
-			assertThat("Reifying " + key, reified, is(notNullValue()));
-			assertThat(reified, instanceOf(BasicLibrary.COMMON.get(key).apply(Collections.emptyList()).getClass()));
+			if (!key.equals("null")) {
+				assertThat("Reifying " + key, reified, is(notNullValue()));
+				assertThat(reified, instanceOf(BasicLibrary.COMMON.get(key).apply(Collections.emptyList()).getClass()));
+			} else {
+				assertThat("Reifying " + key, reified, is(nullValue()));
+			}
 		}
 	}
 	

@@ -260,7 +260,7 @@ public class MemMapEncoder {
 	
 	/**Write from source text to indicated binary files.**/ 
 	public static void write(File sourceFile, int skip, File target, char[] types) throws Exception {
-		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.TSV); 
+		DelimitedReader source = new DelimitedReader(sourceFile, skip, DelimitedReader.CSV); 
 		
 		
 		int entriesRead = 0;
@@ -280,6 +280,7 @@ public class MemMapEncoder {
 				entriesRead++;
 				if (entriesRead % 100000 ==0) {System.out.printf("Processed %,d entries.\n", entriesRead);}
 			}
+			file.flush();
 			System.out.printf("Processed %,d entries.\n", entriesRead);
 			updateMinMax(target);
 			
