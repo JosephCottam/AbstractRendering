@@ -50,6 +50,7 @@ public class ARLangExtensions {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	public static ARConfig parse(String source, AffineTransform vt) {
 		ARLangExtensions.viewTransform = vt;
 		
@@ -64,11 +65,10 @@ public class ARLangExtensions {
 		try {
 			Object r = Parser.reify(tree, LIBRARY);
 			if (r instanceof Transfer) {
-				@SuppressWarnings("rawtypes")
 				Transfer<?,?> t = (Transfer) r;
-				return new ARConfig(null, null, t);
+				return new ARConfig<>(null, null, t);
 			} else if (r instanceof ARConfig) {
-				return (ARConfig) r;
+				return (ARConfig<?,?,?,?>) r;
 			} else {
 				throw new IllegalArgumentException("Can only use 'AR' or transfer as as root in ARL for AR server");
 			}

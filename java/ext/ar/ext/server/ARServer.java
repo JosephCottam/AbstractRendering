@@ -48,7 +48,6 @@ import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
 import ar.rules.General;
@@ -185,10 +184,12 @@ public class ARServer extends NanoHTTPD {
  			
 			try {
 				if (arl.isPresent()) {
-					ARConfig c = ARLangExtensions.parse(arl.get(), vt);
-					transfer  = (Transfer<A,OUT>) c.transfer.orElse(transfer);
-					agg = (Aggregator<I, A>) c.agg.orElse(agg);
-					Valuer<Indexed, I> info = (Valuer<Indexed, I>) c.info.orElse(baseConfig.info);
+					@SuppressWarnings("unchecked")
+					ARConfig<Indexed, I, A, OUT> c = ARLangExtensions.parse(arl.get(), vt);
+					
+					transfer  = c.transfer.orElse(transfer);
+					agg = c.agg.orElse(agg);
+					Function<Indexed, I> info = c.info.orElse(baseConfig.info);
 					
 					//HACK: Piping the info in like this is...not pretty
 					if (baseConfig.glyphset instanceof MemMapList) {
@@ -462,7 +463,7 @@ public class ARServer extends NanoHTTPD {
 	}
 	
 
-	/**Convert values in the latitude, longitude to EPSG:900913 meters system (used by google maps)
+	/**Convert values in the latitude, longitude to EPSG:900913/EPSG:3587/WGS 84 Web Mercator "meters" system (used by google maps)
 	 * 
 	 * based on: https://gist.github.com/onderaltintas/6649521
 	 */
@@ -492,11 +493,11 @@ public class ARServer extends NanoHTTPD {
 		}
 	}
 	
-	/**Convert values in the EPSG:900913 meters system (used by google maps) to latitude, longitude.
+	/**Convert values in the EPSG:900913/EPSG:3587/WGS 84 Web Mercator "meters" system (used by google maps) to latitude, longitude.
 	 * 
 	 * based on: https://gist.github.com/onderaltintas/6649521
 	 */
-	public static final class MetersToDegrees implements Shaper<Indexed, Point2D> {
+	public static final class MetersToDegrees implements Shaper.SafeApproximate<Indexed, Point2D> {
 		private final int xIdx, yIdx;
 		private static final double PI2 = Math.PI / 20037508.34;
 		
@@ -508,7 +509,7 @@ public class ARServer extends NanoHTTPD {
 			final double y = ((Number) t.get(yIdx)).doubleValue();
 			final double lon = x *  180 / 20037508.34 ;
 			final double lat = Math.atan(Math.exp(y * PI2)) * 360 / Math.PI - 90;
-			final Point2D rslt = new Point2D.Double(lon, -lat);
+			final Point2D rslt = new Point2D.Double(lon, lat);
 			return rslt;
 		}
 	}

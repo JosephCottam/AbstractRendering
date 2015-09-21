@@ -7,13 +7,13 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import ar.Glyph;
 import ar.Glyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.IndexedEncoding;
 import ar.glyphsets.implicitgeometry.Shaper;
-import ar.glyphsets.implicitgeometry.Valuer;
 import ar.util.axis.Axis;
 import ar.util.axis.DescriptorPair;
 import ar.util.memoryMapping.MappedFile;
@@ -62,7 +62,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	private final MappedFile buffer;
 
 	private final TYPE[] types;
-	private final Valuer<Indexed,I> valuer;
+	private final Function<Indexed,I> valuer;
 	private final Shaper<Indexed,G> shaper;
 
 	private final File source; //TODO: Remove, make this a general "ByteBackedList" or something like that..
@@ -74,7 +74,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 
 	/**Create a new memory mapped list, types are read from the source.
 	 * @throws IOException **/
-	public MemMapList(File source, Shaper<Indexed, G> shaper, Valuer<Indexed,I> valuer) {
+	public MemMapList(File source, Shaper<Indexed, G> shaper, Function<Indexed,I> valuer) {
 		this.valuer = valuer;
 		this.shaper = shaper;
 		this.source = source;
@@ -114,7 +114,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 		
 	}
 	
-	public MemMapList(MappedFile buffer, File source, Shaper<Indexed,G> shaper, Valuer<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
+	public MemMapList(MappedFile buffer, File source, Shaper<Indexed,G> shaper, Function<Indexed,I> valuer, TYPE[] types, long dataTableOffset) {
 		this.buffer = buffer;
 		this.shaper = shaper;
 		this.valuer = valuer;
@@ -140,7 +140,7 @@ public class MemMapList<G,I> implements Glyphset.RandomAccess<G,I> {
 	}
 
 	/**Valuer being used to establish a value for each entry.**/
-	public Valuer<Indexed,I> valuer() {return valuer;}
+	public Function<Indexed,I> valuer() {return valuer;}
 	
 	/**Shaper being used to provide geometry for each entry.**/ 
 	public Shaper<Indexed,G> shaper() {return shaper;}

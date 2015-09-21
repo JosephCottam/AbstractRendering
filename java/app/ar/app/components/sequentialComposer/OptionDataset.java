@@ -9,8 +9,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import ar.Glyphset;
+import ar.ext.server.ARServer;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -27,7 +29,7 @@ public final class OptionDataset<G,I> {
 	public final Glyphset<G,I> glyphset;	//Actual glyphset to load
 	public final File sourceFile;			//Where it came from
 	public final Shaper<Indexed, G> shaper; //How shapes were determined
-	public final Valuer<Indexed, I> info; 	//How values were determined
+	public final Function<Indexed, I> info; 	//How values were determined
 	public final OptionAggregator<? super I,?> defaultAggregator;
 	public final String arl;				//AR Language description 
 	public final List<OptionTransfer<?>> defaultTransfers;
@@ -59,7 +61,7 @@ public final class OptionDataset<G,I> {
 			Glyphset<G,I> glyphset,
 			File file, 
 			Shaper<Indexed,G> shaper, 
-			Valuer<Indexed,I> valuer,
+			Function<Indexed,I> valuer,
 			OptionAggregator<? super I,?> defAgg,
 			String arl,
 			List<OptionTransfer<?>> defTrans,
@@ -174,7 +176,8 @@ public final class OptionDataset<G,I> {
 			temp = new OptionDataset<>(
 				"US Census Synthetic People", 
 				new File("../data/2010Census_RacePersonPoints.hbin"),
-				new Indexed.ToPoint(false, 0, 1),
+				//new Indexed.ToPoint(false, 0, 1),
+				new ARServer.MetersToDegrees(0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
 				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
@@ -182,7 +185,7 @@ public final class OptionDataset<G,I> {
 				new OptionTransfer.ColorCatInterpolate());
 			
 			temp.flags.add("NegativeDown");
-			temp.flags.add("EPSG:900913");
+			//temp.flags.add("EPSG:900913");
 		} catch (Exception e) {
 			System.err.println("Error loading CENSUS_SYN_PEOPLE dataset, load canceled:");
 			System.err.println("\t" + e.getMessage());
@@ -193,6 +196,33 @@ public final class OptionDataset<G,I> {
 	}
 	
 
+	public static final OptionDataset<Point2D, Character> CENSUS_NY_SYN_PEOPLE;
+	static {
+		OptionDataset<Point2D, Character> temp;
+		try {
+			temp = new OptionDataset<>(
+				"US Census Synthetic People (NY)", 
+				new File("../data/2010Census_RacePersonPoints_NY.hbin"), 
+				//new Indexed.ToPoint(false, 0, 1),
+				new ARServer.MetersToDegrees(0, 1),
+				new Indexed.ToValue<Indexed,Character>(2),
+				OptionAggregator.COC_COMP,
+				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
+				new OptionTransfer.ColorKey(),
+				new OptionTransfer.ColorCatInterpolate());
+			
+			temp.flags.add("NegativeDown");
+//			temp.flags.add("EPSG:900913");
+		} catch (Exception e) {
+			System.err.println("Error loading CENSUS_SYN_PEPOLE (NY) dataset, load canceled:");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+
+		CENSUS_NY_SYN_PEOPLE = temp;
+	}
+	
+	
 	public static final OptionDataset<Point2D, Integer> GDELT_YEAR;
 	static {
 		OptionDataset<Point2D, Integer> temp;
@@ -218,30 +248,6 @@ public final class OptionDataset<G,I> {
 		GDELT_YEAR = temp;
 	}
 
-	public static final OptionDataset<Point2D, Character> CENSUS_NY_SYN_PEOPLE;
-	static {
-		OptionDataset<Point2D, Character> temp;
-		try {
-			temp = new OptionDataset<>(
-				"US Census Synthetic People (NY)", 
-				new File("../data/2010Census_RacePersonPoints_NY.hbin"), 
-				new Indexed.ToPoint(false, 0, 1),
-				new Indexed.ToValue<Indexed,Character>(2),
-				OptionAggregator.COC_COMP,
-				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
-				new OptionTransfer.ColorKey(),
-				new OptionTransfer.ColorCatInterpolate());
-			
-			temp.flags.add("NegativeDown");
-			temp.flags.add("EPSG:900913");
-		} catch (Exception e) {
-			System.err.println("Error loading CENSUS_SYN_PEPOLE (NY) dataset, load canceled:");
-			System.err.println("\t" + e.getMessage());
-			temp = null;
-		}
-
-		CENSUS_NY_SYN_PEOPLE = temp;
-	}
 	
 	public static final OptionDataset<Point2D, Color> WIKIPEDIA;
 	static {

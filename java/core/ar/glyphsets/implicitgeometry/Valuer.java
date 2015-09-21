@@ -20,6 +20,7 @@ import ar.util.Util;
  * <I> Input value type
  * <V> Output value type
  * **/
+@FunctionalInterface
 public interface Valuer<I,V> extends Serializable, Function<I,V> {
 	/**Pass-through valuer.  Value-in=value-out.*/
 	public static class Identity<I> implements Valuer<I,I> {

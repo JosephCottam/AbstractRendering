@@ -82,13 +82,17 @@ public class BasicLibrary {
 				args -> args.stream().filter(s -> (s instanceof Color)).collect(toList()));
 	}
 
-
-	/**Object to cary various parts of an AR configuration**/
-	public static class ARConfig {
-		public final Optional<Function<?,?>> info;
-		public final Optional<Aggregator<?,?>> agg;
-		public final Optional<Transfer<?,?>> transfer;
-		public ARConfig(Function<?,?> info, Aggregator<?,?> agg, Transfer<?,?> t) {
+	/**Object to cary various parts of an AR configuration
+	 * @param <E> Encoding type
+	 * @param <I> Info type
+	 * @param <A> Aggregate type
+	 * @param <O> Output type
+	 */
+	public static class ARConfig<E,I,A,O> {
+		public final Optional<Function<E,I>> info;
+		public final Optional<Aggregator<I,A>> agg;
+		public final Optional<Transfer<A,O>> transfer;
+		public ARConfig(Function<E,I> info, Aggregator<I,A> agg, Transfer<A,O> t) {
 			this.info = Optional.ofNullable(info);
 			this.agg = Optional.ofNullable(agg);
 			this.transfer = Optional.ofNullable(t);

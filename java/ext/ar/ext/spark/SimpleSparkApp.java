@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.function.Function;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -52,8 +53,8 @@ public class SimpleSparkApp {
 		JavaRDD<String> source = ctx.textFile(inFile);
 		JavaRDD<Indexed> base = source.map(new StringToIndexed("\\s*,\\s*"));
 		Shaper<Indexed, Rectangle2D> shaper = new ToRect(.1, .1, false, 2, 3);
-		Valuer<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
-
+		Function<Indexed,Integer> valuer = new Valuer.Constant<Indexed,Integer>(1);
+		
 		GlyphsetRDD<Rectangle2D, Integer> glyphs = new GlyphsetRDD<>(base.map(new Glypher<>(shaper, valuer)));
 		AffineTransform view = Util.zoomFit(glyphs.bounds(), width, height);
 		Selector<Rectangle2D> selector = TouchesPixel.make(glyphs.exemplar().shape().getClass());
