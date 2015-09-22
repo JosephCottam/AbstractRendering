@@ -65,10 +65,13 @@ public class CategoricalCounts<T> implements Serializable {
 		return 0;
 	}
 	
-	/**How many categorie are there?**/
+	/**How many categories are there?**/
 	public int size() {return labels.length;}
 	
-	/**What is the summ of all of the categories?**/
+	/**What is the sum of all of the categories?
+	 * 
+	 * TODO: Rename to 'fullCount'
+	 * **/
 	public int fullSize() {return fullSize;}
 	public String toString() {
 		if (size() ==0) {return "<empty>";}
