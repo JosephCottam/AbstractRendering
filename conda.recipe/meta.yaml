@@ -1,11 +1,10 @@
 package:
     name: abstractrendering-java
-    version: "0.1"
+    version: "dev_snapshot"
 
 source:
-    git_rev: 14efc3bfee82a7b64f6c5d0e868c975043cd7f48
-    #    git_url: https://github.com/JosephCottam/AbstractRendering.git (Built against a patched version downstream of this repo)
-    git_url: https://github.com/ahmadia/AbstractRendering.git
+    git_rev: 03c8f1019d703702ea7313c01028faa9f5fd8945
+    git_url: https://github.com/JosephCottam/AbstractRendering.git
 
 build:
     number: 0
