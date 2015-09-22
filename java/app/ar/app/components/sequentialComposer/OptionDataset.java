@@ -12,9 +12,9 @@ import java.util.Set;
 import java.util.function.Function;
 
 import ar.Glyphset;
-import ar.ext.server.ARServer;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.SyntheticGlyphset;
+import ar.glyphsets.implicitgeometry.Cartography;
 import ar.glyphsets.implicitgeometry.Indexed;
 import ar.glyphsets.implicitgeometry.Shaper;
 import ar.glyphsets.implicitgeometry.Valuer;
@@ -177,7 +177,7 @@ public final class OptionDataset<G,I> {
 				"US Census Synthetic People", 
 				new File("../data/2010Census_RacePersonPoints.hbin"),
 				//new Indexed.ToPoint(false, 0, 1),
-				new ARServer.MetersToDegrees(0, 1),
+				new Cartography.MetersToDegrees(0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
 				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
@@ -204,7 +204,7 @@ public final class OptionDataset<G,I> {
 				"US Census Synthetic People (NY)", 
 				new File("../data/2010Census_RacePersonPoints_NY.hbin"), 
 				//new Indexed.ToPoint(false, 0, 1),
-				new ARServer.MetersToDegrees(0, 1),
+				new Cartography.MetersToDegrees(0, 1),
 				new Indexed.ToValue<Indexed,Character>(2),
 				OptionAggregator.COC_COMP,
 				"(seq(colorkey(cableColors))(catInterpolate(color,clear),.1))",
@@ -340,4 +340,6 @@ public final class OptionDataset<G,I> {
 				"(interpolate(color,pink)(color,red)(color,clear))",
 				new OptionTransfer.Interpolate());
 	}
+	
+
 }
