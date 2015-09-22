@@ -25,6 +25,18 @@ import ar.util.Util;
 
 //TODO: Make the ARL definition generate the other defaults so they don't have to be kept in sync
 public final class OptionDataset<G,I> {	
+	/**Indicate this is a latitude/longitude encoding.**/
+	public static final String LAT_LON = "LatLon";
+	
+	/**Indicate a Web Mercator encoding.**/
+	public static final String WEB_MERCATOR = "EPSG:900913";
+	
+	/**Indicate that a negative Y-value is down.**/
+	public static final String NEGATIVE_DOWN = "NegativeDown";
+	
+	/**Indicate that it produces count data, and some of those counts may be zero.**/
+	public static final String ZERO_COUNTS = "ZeroCounts";
+	
 	public final String name;				//Name to appear in convenient locations
 	public final Glyphset<G,I> glyphset;	//Actual glyphset to load
 	public final File sourceFile;			//Where it came from
@@ -156,8 +168,9 @@ public final class OptionDataset<G,I> {
 				new OptionTransfer.MathTransfer(),
 				new OptionTransfer.Interpolate());
 			
-			temp.flags.add("NegativeDown");
-			temp.flags.add("LatLon");
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
+			temp.flags.add(ZERO_COUNTS);
 		} catch (Exception e) {
 			System.err.println("Error loading CENSUS_TRACTS dataset, load canceled:");
 			System.err.println("\t" + e.getMessage());
@@ -184,8 +197,9 @@ public final class OptionDataset<G,I> {
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
-			temp.flags.add("NegativeDown");
-			//temp.flags.add("EPSG:900913");
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
+			//temp.flags.add(WEB_MERCATOR);
 		} catch (Exception e) {
 			System.err.println("Error loading CENSUS_SYN_PEOPLE dataset, load canceled:");
 			System.err.println("\t" + e.getMessage());
@@ -211,8 +225,9 @@ public final class OptionDataset<G,I> {
 				new OptionTransfer.ColorKey(),
 				new OptionTransfer.ColorCatInterpolate());
 			
-			temp.flags.add("NegativeDown");
-//			temp.flags.add("EPSG:900913");
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
+			//temp.flags.add(WEB_MERCATOR);
 		} catch (Exception e) {
 			System.err.println("Error loading CENSUS_SYN_PEPOLE (NY) dataset, load canceled:");
 			System.err.println("\t" + e.getMessage());
@@ -239,7 +254,8 @@ public final class OptionDataset<G,I> {
 					new OptionTransfer.MathTransfer(),
 					new OptionTransfer.Interpolate()
 					);
-			temp.flags.add("NegativeDown");
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
 		} catch (Exception e) {
 			System.err.println("Error loading GDELT_YEAR dataset, load canceled::");
 			System.err.println("\t" + e.getMessage());
