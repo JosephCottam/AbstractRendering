@@ -29,11 +29,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import ar.Aggregates;
-import ar.Aggregator;
-import ar.Renderer;
-import ar.Selector;
-import ar.Transfer;
+
+import ar.*;
 import ar.aggregates.AggregateUtils;
 import ar.aggregates.implementations.ConstantAggregates;
 import ar.aggregates.wrappers.SubsetWrapper;
@@ -44,6 +41,7 @@ import ar.ext.avro.AggregateSerializer;
 import ar.ext.lang.BasicLibrary.ARConfig;
 import ar.ext.server.NanoHTTPD.Response.Status;
 import ar.glyphsets.BoundingWrapper;
+import ar.glyphsets.FilterGlyphs;
 import ar.glyphsets.MemMapList;
 import ar.glyphsets.implicitgeometry.Cartography;
 import ar.glyphsets.implicitgeometry.Indexed;
@@ -51,6 +49,7 @@ import ar.glyphsets.implicitgeometry.MathValuers;
 import ar.renderers.ProgressRecorder;
 import ar.renderers.ThreadpoolRenderer;
 import ar.rules.General;
+import ar.rules.CategoricalCounts;
 import ar.selectors.TouchesPixel;
 import ar.util.HasViewTransform;
 import ar.util.Util;
@@ -155,7 +154,7 @@ public class ARServer extends NanoHTTPD {
 			System.out.println("## Loading dataset");
 			if (latlon.isPresent()) {
 				Rectangle2D bounds;
-				if (baseConfig.flags.contains("EPSG:900913")) {
+				if (baseConfig.flags.contains(OptionDataset.WEB_MERCATOR)) {
 					bounds = Cartography.DegreesToMeters.from(latlon.get().get(0), latlon.get().get(1));
 				} else {
 					bounds = new Line2D.Double(latlon.get().get(0), latlon.get().get(1)).getBounds2D();
@@ -218,6 +217,12 @@ public class ARServer extends NanoHTTPD {
 				glyphs = baseConfig.glyphset;
 			}
 			
+			if (baseConfig.flags.contains(OptionDataset.ZERO_COUNTS)) {
+				glyphs = new FilterGlyphs<>(glyphs, g -> ((CategoricalCounts) ((Glyph) g).info()).fullSize() > 0);
+				System.out.println("FITLERING!!!! -------------------------");
+			}
+			
+			
 			Renderer baseRenderer = new ThreadpoolRenderer(pool, ThreadpoolRenderer.RENDER_THREAD_LOAD, new ProgressRecorder.NOP());
 			CacheManager render = ignoreCached 
 					? new CacheManager.Shim(cachedir, tileSize, baseRenderer) 
@@ -256,7 +261,7 @@ public class ARServer extends NanoHTTPD {
 			if (format.equals("png")) {
 				@SuppressWarnings("unchecked")
 				BufferedImage img = AggregateUtils.asImage((Aggregates<Color>) full_size);
-				if (baseConfig.flags.contains("NegativeDown")) {
+				if (baseConfig.flags.contains(OptionDataset.NEGATIVE_DOWN)) {
 					BufferedImageOp op = new AffineTransformOp(flipHorizontal(img.getHeight()), AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 					BufferedImage src = img;
 					img = op.createCompatibleDestImage(src, src.getColorModel());
