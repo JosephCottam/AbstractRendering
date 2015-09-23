@@ -218,8 +218,8 @@ public class ARServer extends NanoHTTPD {
 			}
 			
 			if (baseConfig.flags.contains(OptionDataset.ZERO_COUNTS)) {
+				//HACK: VERY Fragile...
 				glyphs = new FilterGlyphs<>(glyphs, g -> ((CategoricalCounts) ((Glyph) g).info()).fullSize() > 0);
-				System.out.println("FITLERING!!!! -------------------------");
 			}
 			
 			

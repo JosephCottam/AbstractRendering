@@ -1,14 +1,18 @@
 package ar.ext.lang;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ar.Aggregator;
 import ar.Transfer;
@@ -99,11 +103,30 @@ public class BasicLibrary {
 		}
 	}
 	
+
+	public static final Collector<Object, ArrayList, Stream<ArrayList>> PAIR =
+			Collector.of(ArrayList::new, 
+						(ArrayList acc,  Object v) -> 
+							{if (acc.size() == 0 || (acc.size() > 0 && ((ArrayList) acc.get(acc.size()-1)).size() == 2)) {
+								List l = new ArrayList();
+								l.add(v);
+								acc.add(l);
+							} else {
+								((ArrayList) acc.get(acc.size()-1)).add(v);
+							}},
+						(ArrayList acc1, ArrayList acc2) -> {acc1.addAll(acc2); return acc1;},
+						(ArrayList acc) -> acc.stream());
+	
+	
 	public static final Map<String, Function<List<Object>, Object>> MISC = new HashMap<>();	
 	static {
 		put(MISC, "AR", "AR configuration (info, aggregator, transfer)", args -> new ARConfig(get(args,0,null), get(args,1,null), get(args,2,null)));
 		put(MISC, "null", "returns null", args -> null);
 		put(MISC, "count", "Count aggregator", args -> new Numbers.Count<>());
+		put(MISC, "char", "First character from string as a 'char'", args -> args.size() == 0 ? '\0' : args.get(0).toString().charAt(0));
+		put(MISC, "dict", "Crate a dictionary. (map <key> <value> ...)", 
+				args -> ((Stream<ArrayList>) args.stream().collect(PAIR))
+								.collect(Collectors.toMap((ArrayList e)->e.get(0), (ArrayList e) -> e.get(1))));
 		
 		put(MISC, "interpolate", "Number to colors interpolation (use catInterpolate for multi-category  interpolation).", 
 				args -> args.size() > 3
@@ -134,8 +157,14 @@ public class BasicLibrary {
 				args -> new Categories.DynamicRekey<>(
 								new CategoricalCounts<>(Util.COLOR_SORTER), 
 								get(args, 0, CABLE_COLORS), 
-								get(args, args.size() > 1? args.size()-1 : -1, Color.BLACK)));
+								get(args, args.size() > 1? args.size()-1 : -1, Color.GRAY)));
 
+		put(MISC, "rekey", "Replace existing category labels with other labels.",
+				args -> new Categories.Rekey<>(
+								makeExampleForRekey(get(args, 0, new HashMap<>())),
+								get(args, 0, new HashMap<>()),
+								get(args, args.size() > 1? args.size()-1 : -1, Color.GRAY)));
+										
 		put(MISC, "keyPercent",  "Color one way if a key category is over the threshold.", 
 				args ->  new Categories.KeyPercent<Color>(
 								get(args, 0, 50)/100d, 
@@ -158,7 +187,19 @@ public class BasicLibrary {
 		
 		put(MISC, "space", "Returns a single space...needed because there are no string literals.", args -> " ");
 	}
-		
+	
+	
+	/**Assumes all output mappings are of the same type, so it only inspects the first.
+	 * Only works for color and comparable...
+	 */
+	public static final <IN,OUT> CategoricalCounts<OUT> makeExampleForRekey(Map<IN,OUT> mapping) {
+		if (mapping.size() == 0) {return new CategoricalCounts();}
+		OUT item = mapping.values().iterator().next();
+		if (item instanceof Color) {return new CategoricalCounts<OUT>(((Comparator<OUT>) Util.COLOR_SORTER));}
+		if (item instanceof Comparable) {return new CategoricalCounts<OUT>(((Comparator<OUT>) new Util.ComparableComparator<>()));}
+		throw new IllegalArgumentException("Cannot rekey to items of type " + item.getClass() + " because no default comparator is known.");
+	}
+	
 	public static final Map<String, Function<List<Object>, Object>> ADVISE = new HashMap<>();
 	static {
 		put(ADVISE, "neighborhood", "Highlight neighborhoods where bins have signficanlty different values.  Can be used for sub-pixel distribution analysis.",

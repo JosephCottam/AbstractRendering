@@ -64,6 +64,17 @@ public class LangTest {
 		assertThat(reify(parse("(color,rEd)"), LIBRARY), is(Color.RED));
 	}
 	
+	@Test
+	public void dict() {
+		assertThat(reify(parse("(dict)"), LIBRARY), instanceOf(Map.class));
+		assertThat(reify(parse("(dict a b)"), LIBRARY), instanceOf(Map.class));
+		assertThat(((Map<?,?>) reify(parse("(dict a b)"), LIBRARY)).size(), is(1));
+		assertThat(((Map<?,?>) reify(parse("(dict a b c d)"), LIBRARY)).size(), is(2));
+		assertThat(((Map<?,?>) reify(parse("(dict a b c d e f)"), LIBRARY)).size(), is(3));
+		assertThat(((Map<?,?>) reify(parse("(dict a b c d e f)"), LIBRARY)).get("a"), is("b"));
+		assertThat(((Map<?,?>) reify(parse("(dict a b c d e f)"), LIBRARY)).get("e"), is("f"));
+	}
+	
 	
 	@Test 
 	public void refiyFunctionsWithDefaults() {
