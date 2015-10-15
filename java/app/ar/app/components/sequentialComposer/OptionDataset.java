@@ -237,6 +237,60 @@ public final class OptionDataset<G,I> {
 		CENSUS_NY_SYN_PEOPLE = temp;
 	}
 	
+	public static final OptionDataset<Point2D, Integer> TAXI_PICKUP;
+	static {
+		OptionDataset<Point2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>( 
+					"NYC Taxi Pickup",
+					new File("../data/ny_taxi_trip1.hbin"),
+					new Indexed.ToPoint(false, 3,4), //pickup
+					new Indexed.ToValue<>(0),		//Passengers
+					//new Indexed.ToValue<>(1),		//trip elapse time
+					//new Indexed.ToValue<>(2),		//trip distance
+					OptionAggregator.COUNT,
+					"(seq(spread)(fn(cbrt))(interpolate))",
+					new OptionTransfer.Spread(),
+					new OptionTransfer.MathTransfer(),
+					new OptionTransfer.Interpolate()
+					);
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
+		} catch (Exception e) {
+			System.err.println("Error loading TAXI dataset, load canceled::");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+		TAXI_PICKUP = temp;
+	}
+	
+	public static final OptionDataset<Point2D, Integer> TAXI_DROPOFF;
+	static {
+		OptionDataset<Point2D, Integer> temp;
+		try {
+			temp = new OptionDataset<>( 
+					"NYC Taxi drop off",
+					new File("../data/ny_taxi_trip1.hbin"),
+					new Indexed.ToPoint(false, 5,6), //drop off
+					new Indexed.ToValue<>(0),		//Passengers
+					//new Indexed.ToValue<>(1),		//trip elapse time
+					//new Indexed.ToValue<>(2),		//trip distance
+					OptionAggregator.COUNT,
+					"(seq(spread)(fn(cbrt))(interpolate))",
+					new OptionTransfer.Spread(),
+					new OptionTransfer.MathTransfer(),
+					new OptionTransfer.Interpolate()
+					);
+			temp.flags.add(NEGATIVE_DOWN);
+			temp.flags.add(LAT_LON);
+		} catch (Exception e) {
+			System.err.println("Error loading TAXI dataset, load canceled::");
+			System.err.println("\t" + e.getMessage());
+			temp = null;
+		}
+		TAXI_DROPOFF = temp;
+	}
+
 	
 	public static final OptionDataset<Point2D, Integer> GDELT_YEAR;
 	static {

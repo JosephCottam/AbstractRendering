@@ -288,6 +288,8 @@ public class CacheManager implements Renderer {
 		else if (OptionDataset.CENSUS_SYN_PEOPLE != null && datasetId.equals(OptionDataset.CENSUS_SYN_PEOPLE.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
 		else if (OptionDataset.CENSUS_TRACTS != null && datasetId.equals(OptionDataset.CENSUS_TRACTS.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCChar();}
 		else if (OptionDataset.GDELT_YEAR != null && datasetId.equals(OptionDataset.GDELT_YEAR.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCoCInteger();}
+		else if (OptionDataset.TAXI_DROPOFF != null && datasetId.equals(OptionDataset.TAXI_DROPOFF.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
+		else if (OptionDataset.TAXI_PICKUP != null && datasetId.equals(OptionDataset.TAXI_PICKUP.name)) {return (Valuer<GenericRecord, A>) new Converters.ToCount();}
 		else {throw new IllegalArgumentException("Cannot load from cache because root type could not be discerned");}
 	}
 	
