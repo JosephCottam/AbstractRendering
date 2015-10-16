@@ -24,7 +24,7 @@ public class ServerTest {
 		
 		
 		assertThat(server.getDatasets().size(), is(greaterThan(0)));
-		assertEquals(7, server.getAggregators().size());
+		assertEquals(8, server.getAggregators().size());
 		assertEquals(18, server.getTransfers().size());
 	}
 	
