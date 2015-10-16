@@ -34,6 +34,9 @@ public final class OptionAggregator<G,A> {
 	public static final OptionAggregator<Object, Integer> COUNT  
 		= new OptionAggregator<>("Count (int)", new Numbers.Count<Object>());
 	
+	public static final OptionAggregator<Integer, Integer> SUM  
+	= new OptionAggregator<>("Sum (int)", new Numbers.Sum.Integer());
+
 	public static final OptionAggregator<Color, CategoricalCounts<Color>> COC_COLOR  
 		= new OptionAggregator<>("Categorical Counts (CoC<Colors>)",new Categories.CountCategories<Color>(Util.COLOR_SORTER));
 		
