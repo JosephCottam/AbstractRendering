@@ -399,17 +399,26 @@ public class General {
 	public static final class Echo<T> implements Transfer.ItemWise<T,T> {
 		private static final long serialVersionUID = -7963684190506107639L;
 		private final T empty;
+		public boolean copy;
 		
-		/** @param empty Value used for empty; "at" always echos what's in the aggregates, 
+		public Echo(T empty) {this(empty, true);}
+		
+		/**@param copy If set to false, just returns passed aggregates.  This can lead to heap pollution.
+		 * @param empty Value used for empty; "at" always echos what's in the aggregates, 
 		 *               but some methods need an empty value independent of the aggregates set.**/
-		public Echo(T empty) {this.empty = empty;}
-		
+		public Echo(T empty, boolean copy) {
+			this.empty = empty;
+			this.copy=copy;
+		}
+				
 		@Override public T at(int x, int y, Aggregates<? extends T> aggregates) {return aggregates.get(x, y);}
 		@Override public T emptyValue() {return empty;}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public Aggregates<T> process(Aggregates<? extends T> aggregates, Renderer rend) {
-			return AggregateUtils.copy(aggregates, emptyValue());
+			if (copy) {return AggregateUtils.copy(aggregates, emptyValue());}
+			else {return (Aggregates<T>) aggregates;}
 		}
 	}
 

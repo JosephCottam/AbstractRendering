@@ -14,6 +14,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ar.Aggregates;
 import ar.Aggregator;
 import ar.Transfer;
 import ar.app.components.sequentialComposer.OptionTransfer.FlexSpread;
@@ -118,6 +119,19 @@ public class BasicLibrary {
 						(ArrayList acc) -> acc.stream());
 	
 	
+	public static final class SafeToCount implements Transfer<Object, Integer> {
+		@Override
+		public Integer emptyValue() {return 0;}
+		
+		@Override
+		public Specialized<Object,Integer> specialize(Aggregates<? extends Object> aggregates) {
+			if (aggregates.defaultValue() instanceof Integer) {return new General.Echo(emptyValue(), false);}
+			else {return new Categories.ToCount();}
+		}
+	}
+	
+
+	
 	public static final Map<String, Function<List<Object>, Object>> MISC = new HashMap<>();	
 	static {
 		put(MISC, "AR", "AR configuration (info, aggregator, transfer)", args -> new ARConfig(get(args,0,null), get(args,1,null), get(args,2,null)));
@@ -148,7 +162,7 @@ public class BasicLibrary {
 				args -> new General.Present<>(get(args, 0, Color.RED), get(args, 1, Util.CLEAR)));
 		
 		put(MISC, "toCount", "Take mulit-category counts and combine them to a single set of counts.", 
-				args -> new Categories.ToCount<>());
+				args -> new SafeToCount());
 		
 		put(MISC, "seq", "Execute a sequence of transfers (like the thrush combinator).",
 				args -> seqFromList((List<Transfer>) (List) args));
