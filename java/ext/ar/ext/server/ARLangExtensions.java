@@ -8,11 +8,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import ar.Aggregates;
+import ar.Aggregator;
+import ar.Glyphset;
 import ar.Renderer;
+import ar.Selector;
 import ar.Transfer;
 import ar.aggregates.AggregateUtils;
 import ar.app.components.sequentialComposer.OptionDataset;
@@ -23,6 +28,7 @@ import ar.ext.lang.Parser;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
+import ar.selectors.TouchesPixel;
 import ar.util.Util;
 import static ar.ext.lang.BasicLibrary.get;
 import static ar.ext.lang.BasicLibrary.put;
@@ -48,7 +54,6 @@ public class ARLangExtensions {
 				+ Parser.functionHelp(LIBRARY, "<li>%s</li>", "\n");
 
 	}
-	
 	
 	@SuppressWarnings("rawtypes")
 	public static ARConfig parse(String source, AffineTransform vt) {
@@ -83,6 +88,17 @@ public class ARLangExtensions {
 		LIBRARY.putAll(BasicLibrary.COMMON);
 		LIBRARY.putAll(GDelt.LIBRARY);
 		
+		put(LIBRARY, "sub", "Binary minus function", args-> new BiFunction<Number, Number, Double>(){public Double apply(Number a, Number b) {return a.doubleValue()-b.doubleValue();}});
+
+		put(LIBRARY, "aggregate", "Basic aggregate configuration; includes source glyphset, info and aggregate functions.", 
+				args -> new Aggregate<>(get(args, 0, null), get(args, 1, null), get(args, 2, null)));
+		
+		put(LIBRARY, "local", "Compute a spatial kernel.  Args: kernel, radius, empty-value",
+				args -> makeLocal(get(args, 0, null), get(args, 1, 1), get(args, 2, 0d)));
+		
+		put(LIBRARY, "zscore", "Replace values with their zscores.",
+				args -> new ZScore<>());
+		
 		put(LIBRARY, "vt", "Get parts fo the view transform: sx,sy,tx,ty", args -> ARLangExtensions.viewTransform(get(args,0,"sx")));
 		
 		put(LIBRARY, "dynSpread", "Spreading function where the radius is determined at specialization time. The parameter is the target minimum percent of non-empty bins.", 
@@ -98,6 +114,94 @@ public class ARLangExtensions {
 				args -> new Numbers.FixedInterpolate<Number>(Color.WHITE, get(args,0,Color.RED), 1, 1/get(args,1,1.0), Util.CLEAR));
 	}
 
+	public static <V> Transfer<V,V> makeLocal(BiFunction<V,V,V> kernel, int radius, V defVal) {
+		if (kernel == null) {throw new IllegalArgumentException("Must supply a kernel function");}
+		General.Spread.Spreader<V> spreader = new General.Spread.UnitRectangle<>(radius);
+		return new General.Spread<>(spreader, kernel, defVal);
+	}
+	
+	public static final class Context {
+		Renderer r;
+		AffineTransform vt;
+	}
+	
+	/**Tagging interface, dynaimcally inspectable to get context->aggregates**/
+	public static interface AggregatorFunction<A> extends Function<Context, Aggregates<A>> {}
+	
+	/**Object to carry various parts of an AR configuration
+	 * @param <E> Encoding type
+	 * @param <I> Info type
+	 * @param <A> Aggregate type
+	 * @param <O> Output type
+	 */
+	public static class Aggregate<E,I,A> implements AggregatorFunction<A> {
+		public final Optional<String> path;
+		public final Optional<Function<E,I>> info;
+		public final Optional<Aggregator<I,A>> agg;
+		public Aggregate(String path, Function<E,I> info, Aggregator<I,A> agg) {
+			this.path = Optional.ofNullable(path);
+			this.info = Optional.ofNullable(info);
+			this.agg = Optional.ofNullable(agg);
+		}
+		
+		@Override public Aggregates<A> apply(Context t) {return inner(t);}
+		
+		private <G> Aggregates<A> inner(Context t) {
+			Glyphset<G,I> glyphs = null;
+			Selector<G> s = TouchesPixel.make(glyphs);
+			return t.r.aggregate(glyphs, s, agg.get(), viewTransform);
+
+		}
+	}
+	
+	public static class Merge<L,R,M> implements AggregatorFunction<M> {
+		AggregatorFunction<L> left;
+		AggregatorFunction<R> right;
+		BiFunction<L,R, M> merge;
+		M defVal;
+		
+		public Merge(AggregatorFunction<L> left, AggregatorFunction<R> right, BiFunction<L,R,M> merge, M defVal) {
+			this.left = left;
+			this.right = right;
+			this.merge = merge;
+			this.defVal = defVal;
+		}
+		
+		public Aggregates<M> apply(Context context) {
+			Aggregates<L> l = left.apply(context);
+			Aggregates<R> r = right.apply(context);
+			return AggregateUtils.alignedMerge(l, r, defVal, merge);
+		}
+		
+	}
+	public static class ZScore<N extends Number> implements Transfer<N, Double> {
+
+		@Override public Double emptyValue() {return 0d;}
+		public Specialized<N> specialize(Aggregates<? extends N> aggregates) {
+			Util.Stats<N> stats = Util.stats(aggregates);
+			return new Specialized<>(stats.stdev, stats.mean);
+		}
+		
+		public static class Specialized<N extends Number> implements Transfer.ItemWise<N, Double> {
+			protected final double stddev;
+			protected final double mean;
+			public Specialized(double stddev, double mean) {
+				this.stddev = stddev;
+				this.mean = mean;
+			} 
+			@Override public Double emptyValue() {return 0d;}
+
+			@Override
+			public Double at(int x, int y, Aggregates<? extends N> input) {
+				return (input.get(x, y).doubleValue()-mean)/stddev;
+			}
+			
+			
+		}
+	}
+ 
+	
+	
 	private static AffineTransform viewTransform;
 
 	private static int dynScale(Number baseScale, Number delay) {
