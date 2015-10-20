@@ -87,7 +87,7 @@ public class BasicLibrary {
 				args -> args.stream().filter(s -> (s instanceof Color)).collect(toList()));
 	}
 
-	/**Object to cary various parts of an AR configuration
+	/**Object to carry various parts of an AR configuration
 	 * @param <E> Encoding type
 	 * @param <I> Info type
 	 * @param <A> Aggregate type
