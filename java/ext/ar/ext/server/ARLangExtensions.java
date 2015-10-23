@@ -3,6 +3,8 @@ package ar.ext.server;
 import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 import ar.Aggregates;
 import ar.Aggregator;
+import ar.Glyph;
 import ar.Glyphset;
 import ar.Renderer;
 import ar.Selector;
@@ -25,6 +28,13 @@ import ar.app.components.sequentialComposer.OptionTransfer;
 import ar.ext.lang.BasicLibrary;
 import ar.ext.lang.BasicLibrary.ARConfig;
 import ar.ext.lang.Parser;
+import ar.ext.server.NanoHTTPD.Response.Status;
+import ar.glyphsets.BoundingWrapper;
+import ar.glyphsets.FilterGlyphs;
+import ar.glyphsets.MemMapList;
+import ar.glyphsets.implicitgeometry.Cartography;
+import ar.glyphsets.implicitgeometry.Indexed;
+import ar.rules.CategoricalCounts;
 import ar.rules.General;
 import ar.rules.General.Spread.Spreader;
 import ar.rules.Numbers;
@@ -34,6 +44,9 @@ import static ar.ext.lang.BasicLibrary.get;
 import static ar.ext.lang.BasicLibrary.put;
 
 public class ARLangExtensions {
+	private static AffineTransform viewTransform;
+	private static Map<String, OptionDataset<?,?>> glyphsets;
+	
 	public static  String getArl(Field f) {
 		 try {return ((OptionDataset<?,?>) f.get(null)).arl;}
 		 catch (Throwable e) {return "null";}
@@ -56,8 +69,9 @@ public class ARLangExtensions {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static ARConfig parse(String source, AffineTransform vt) {
+	public static ARConfig parse(String source, AffineTransform vt, Map<String, OptionDataset<?,?>> glyphsets) {
 		ARLangExtensions.viewTransform = vt;
+		ARLangExtensions.glyphsets = glyphsets;
 		
 		Parser.TreeNode<?> tree;
 		try{tree = Parser.parse(source);}
@@ -87,11 +101,17 @@ public class ARLangExtensions {
 	static {
 		LIBRARY.putAll(BasicLibrary.COMMON);
 		LIBRARY.putAll(GDelt.LIBRARY);
+
+		put(LIBRARY, "rect", "Make a rectangle (x1, y1, x2, y2)", 
+				args->new Rectangle2D.Double((double) args.get(0), (double) args.get(1), 
+											 (double) args.get(0) - (double) args.get(2), (double) args.get(1) - (double) args.get(3)));
+		
+		put(LIBRARY, "data", "Load a named dataset", args->makeGlyphset(args));
 		
 		put(LIBRARY, "sub", "Binary minus function", args-> new BiFunction<Number, Number, Double>(){public Double apply(Number a, Number b) {return a.doubleValue()-b.doubleValue();}});
 
-		put(LIBRARY, "aggregate", "Basic aggregate configuration; includes source glyphset, info and aggregate functions.", 
-				args -> new Aggregate<>(get(args, 0, null), get(args, 1, null), get(args, 2, null)));
+		put(LIBRARY, "aggregate", "Basic aggregate configuration: glypshet and aggregate functions.", 
+				args -> new Aggregate<>(get(args, 0, null), get(args, 1, null), get(args,2, null), get(args, 3, true)));
 		
 		put(LIBRARY, "local", "Compute a spatial kernel.  Args: kernel, radius, empty-value",
 				args -> makeLocal(get(args, 0, null), get(args, 1, 1), get(args, 2, 0d)));
@@ -113,7 +133,59 @@ public class ARLangExtensions {
 		put(LIBRARY, "alpha", "Simulate single-color alpha composition on simple counts. args: color, alpha value (double)",
 				args -> new Numbers.FixedInterpolate<Number>(Color.WHITE, get(args,0,Color.RED), 1, 1/get(args,1,1.0), Util.CLEAR));
 	}
-
+	
+	public static <G,I> Glyphset<G,I> makeGlyphset(List args) {
+		OptionDataset<G,I> baseConfig = (OptionDataset<G,I>) glyphsets.get(args.get(0));
+		Map<String, Object> opts = get(args, 1, new HashMap<>());
+		Rectangle2D bound = (Rectangle2D) opts.getOrDefault("bound", null);
+		Rectangle viewport = (Rectangle) opts.getOrDefault("view", new Rectangle(0,0,400,400));
+		boolean latlon = (boolean) opts.getOrDefault("latlon", false);
+		boolean allowStretch = (boolean) opts.getOrDefault("stretch", false);
+		
+		Optional<Rectangle2D> selection = Optional.empty();
+		if (latlon) {
+			Rectangle2D bounds;
+			if (baseConfig.flags.contains(OptionDataset.WEB_MERCATOR)) {
+				bounds = Cartography.DegreesToMeters.from(bound);
+			} else {
+				bounds = bound;
+			}
+			selection = Optional.of(bounds);
+		}
+		
+		Glyphset<G,I> glyphs;
+		Rectangle2D zoomBounds;
+		if (selection.isPresent()) {
+			zoomBounds = selection.get();
+		} else {
+			zoomBounds = baseConfig.glyphset.bounds();
+		}
+		
+		AffineTransform vt;
+		Rectangle2D renderBounds;
+		if (!allowStretch) {
+			vt = ARServer.centerFit(zoomBounds, viewport);
+			renderBounds = ARServer.expandSelection(vt, zoomBounds, viewport);
+			zoomBounds = renderBounds;
+		} else {
+			vt = ARServer.stretchFit(zoomBounds, viewport);
+			renderBounds = zoomBounds;
+		}		
+		
+		if (selection.isPresent()) {
+			glyphs = new BoundingWrapper<>(baseConfig.glyphset, zoomBounds);
+		} else {
+			glyphs = baseConfig.glyphset;
+		}
+		
+		if (baseConfig.flags.contains(OptionDataset.ZERO_COUNTS)) {
+			//HACK: VERY Fragile...
+			glyphs = new FilterGlyphs<>(glyphs, g -> ((CategoricalCounts) ((Glyph) g).info()).fullSize() > 0);
+		}
+		
+		return glyphs;
+	}
+	
 	public static <V> Transfer<V,V> makeLocal(BiFunction<V,V,V> kernel, int radius, V defVal) {
 		if (kernel == null) {throw new IllegalArgumentException("Must supply a kernel function");}
 		General.Spread.Spreader<V> spreader = new General.Spread.UnitRectangle<>(radius);
@@ -125,32 +197,27 @@ public class ARLangExtensions {
 		AffineTransform vt;
 	}
 	
-	/**Tagging interface, dynaimcally inspectable to get context->aggregates**/
+	/**Tagging interface, dynamically inspectable to get context->aggregates**/
 	public static interface AggregatorFunction<A> extends Function<Context, Aggregates<A>> {}
 	
-	/**Object to carry various parts of an AR configuration
-	 * @param <E> Encoding type
-	 * @param <I> Info type
-	 * @param <A> Aggregate type
-	 * @param <O> Output type
+	/**Make a glyphset in the passed context
+	 * TODO: Merge this with ar.ext.lang.BasicLibrary.ARConfig
 	 */
-	public static class Aggregate<E,I,A> implements AggregatorFunction<A> {
-		public final Optional<String> path;
-		public final Optional<Function<E,I>> info;
+	public static class Aggregate<G,I,A> implements AggregatorFunction<A> {
+		public final Optional<Glyphset<G,I>> glyphs;
 		public final Optional<Aggregator<I,A>> agg;
-		public Aggregate(String path, Function<E,I> info, Aggregator<I,A> agg) {
-			this.path = Optional.ofNullable(path);
-			this.info = Optional.ofNullable(info);
+		public final Rectangle2D bounds;
+		public Aggregate(Glyphset<G,I> glyphs, Aggregator<I,A> agg, Rectangle2D bounds, boolean latlon) {
+			this.glyphs = Optional.ofNullable(glyphs);
 			this.agg = Optional.ofNullable(agg);
+			this.bounds = bounds != null ? bounds : (glyphs == null ? null : glyphs.bounds()); 
 		}
 		
 		@Override public Aggregates<A> apply(Context t) {return inner(t);}
 		
-		private <G> Aggregates<A> inner(Context t) {
-			Glyphset<G,I> glyphs = null;
-			Selector<G> s = TouchesPixel.make(glyphs);
-			return t.r.aggregate(glyphs, s, agg.get(), viewTransform);
-
+		private Aggregates<A> inner(Context t) {
+			Selector<G> s = TouchesPixel.make(glyphs.get());
+			return t.r.aggregate(glyphs.get(), s, agg.get(), viewTransform);
 		}
 	}
 	
@@ -202,7 +269,6 @@ public class ARLangExtensions {
  
 	
 	
-	private static AffineTransform viewTransform;
 
 	private static int dynScale(Number baseScale, Number delay) {
 		double currentScale = Math.min(viewTransform.getScaleX(), viewTransform.getScaleY());		

@@ -283,7 +283,7 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	/**Zoom fit, but align the center of the bounding region (not top-left, as Util.zoomFit does)**/
-	public AffineTransform stretchFit(Rectangle2D content, Rectangle viewport) {
+	public static AffineTransform stretchFit(Rectangle2D content, Rectangle viewport) {
 		if (content == null) {return new AffineTransform();}
 
 		double ws = viewport.width/content.getWidth();
@@ -300,7 +300,7 @@ public class ARServer extends NanoHTTPD {
 
 	
 	/**Zoom fit, but align the center of the bounding region (not top-left, as Util.zoomFit does)**/
-	public AffineTransform centerFit(Rectangle2D bounds, Rectangle viewport) {
+	public static AffineTransform centerFit(Rectangle2D bounds, Rectangle viewport) {
 		AffineTransform vt = Util.zoomFit(bounds, viewport.width, viewport.height);
 		Rectangle2D fit = vt.createTransformedShape(bounds).getBounds2D();
 		
@@ -315,7 +315,7 @@ public class ARServer extends NanoHTTPD {
 	}
 
 	/**Expand the given bounds so it fills width/height region under the given view transform**/
-	public Rectangle2D expandSelection(AffineTransform vt, Rectangle2D bounds, Rectangle viewport) {
+	public static Rectangle2D expandSelection(AffineTransform vt, Rectangle2D bounds, Rectangle viewport) {
 		Rectangle2D selection = vt.createTransformedShape(bounds).getBounds2D();
 		//TODO: Does not account for shear...so not fully general
 		try {
